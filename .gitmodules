@@ -1,0 +1,3 @@
+[submodule "libunwind/rustc"]
+	path = libunwind/rustc
+	url = https://github.com/rust-lang/rust
