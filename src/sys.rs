@@ -104,18 +104,18 @@ sys_lib! {
 
 /// Stores the state of the GE.
 #[repr(C)]
-struct GeContext {
+pub struct GeContext {
     context: [u32; 512]
 }
 
 #[repr(C)]
 /// Structure storing a stack (for CALL/RET)
-struct GeStack {
+pub struct GeStack {
     stack: [u32;8]
 }
 
 #[repr(C)]
-struct GeCallbackData {
+pub struct GeCallbackData {
     signal_func: fn(id: i32, arg: *const c_void),
     signal_arg: *const c_void,
     finish_func: fn(id: i32, arg: *const c_void),
@@ -123,7 +123,7 @@ struct GeCallbackData {
 }
 
 #[repr(C)]
-struct GeListArgs {
+pub struct GeListArgs {
     size: u32,
     context: *const GeContext,
     numStacks: u32,
@@ -132,13 +132,13 @@ struct GeListArgs {
 
 #[repr(C)]
 /// Drawing queue interruption parameter
-struct GeBreakParam {
+pub struct GeBreakParam {
     buf: [u32;4]
 }
 
 /// GE matrix types.
 #[repr(i32)]
-enum GeMatrixType {
+pub enum GeMatrixType {
     /// Bone matrices.
     Bone0 = 0,
     Bone1,
@@ -160,7 +160,7 @@ enum GeMatrixType {
 
 /// List status for sce_ge_list_sync() and sce_ge_draw_sync().
 #[repr(i32)]
-enum GeListState {
+pub enum GeListState {
     Done = 0,
     Queued,
     DrawingDone,
