@@ -319,7 +319,7 @@ sys_lib! {
     /// # Return value
     ///
     /// < 0 on error
-    pub unsafe fn sce_ge_list_update_stall_addr(qid: i32, stall: *const c_void) -> i32;
+    pub unsafe fn sce_ge_list_update_stall_addr(qid: i32, stall: *mut c_void) -> i32;
 
     #[psp(0x03444EB4)]
     /// Wait for synchronisation of a list.
@@ -359,7 +359,7 @@ sys_lib! {
     /// # Return value
     ///
     /// The stopped queue ID if mode isnt set to 0, otherwise 0, and < 0 on error.
-    pub unsafe fn sce_ge_break(mode: i32, p_param: *const GeBreakParam) -> i32;
+    pub unsafe fn sce_ge_break(mode: i32, p_param: *mut GeBreakParam) -> i32;
 
     #[psp(0x4C06E472)]
     /// Restart drawing queue.
