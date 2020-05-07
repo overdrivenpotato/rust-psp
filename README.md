@@ -24,6 +24,7 @@ See `examples` directory for sample programs.
 - [x] PSP system library support
 - [x] `alloc` support
 - [x] `panic = "unwind"` support
+- [ ] Figure out a strategy for the VFPU
 - [ ] Migrate to LLVM-based linker
 - [ ] Rewrite `psp-prxgen` in rust?
 
