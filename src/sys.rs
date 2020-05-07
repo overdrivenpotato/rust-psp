@@ -278,7 +278,7 @@ sys_lib! {
     /// # Return value
     ///
     /// ID of the queue, < 0 on error.
-    pub unsafe fn sce_ge_list_enqueue(list: *const c_void, stall: *const c_void, cbid: i32, arg: GeListArgs) -> i32;
+    pub unsafe fn sce_ge_list_enqueue(list: *const c_void, stall: *mut c_void, cbid: i32, arg: GeListArgs) -> i32;
 
     #[psp(0x1C0D95A6)]
     /// Enqueue a display list at the head of the GE display list queue.
@@ -294,7 +294,7 @@ sys_lib! {
     /// # Return value
     ///
     /// ID of the queue, < 0 on error.
-    pub unsafe fn sce_ge_list_enqueue_head(list: *const c_void, stall: *const c_void, cbid: i32, arg: GeListArgs) -> i32;
+    pub unsafe fn sce_ge_list_enqueue_head(list: *const c_void, stall: *mut c_void, cbid: i32, arg: GeListArgs) -> i32;
 
    #[psp(0x5FB86AB0)]
     /// Cancel a queued or running list.
