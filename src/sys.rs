@@ -117,18 +117,18 @@ pub struct GeStack {
 #[repr(C)]
 /// Structure to hold the callback data
 pub struct GeCallbackData {
-    signal_func: fn(id: i32, arg: *const c_void),
-    signal_arg: *const c_void,
-    finish_func: fn(id: i32, arg: *const c_void),
-    finish_arg: *const c_void,
+    signal_func: fn(id: i32, arg: *mut c_void),
+    signal_arg: *mut c_void,
+    finish_func: fn(id: i32, arg: *mut c_void),
+    finish_arg: *mut c_void,
 }
 
 #[repr(C)]
 pub struct GeListArgs {
     size: u32,
-    context: *const GeContext,
+    context: *mut GeContext,
     num_stacks: u32,
-    stacks: *const GeStack,
+    stacks: *mut GeStack,
 }
 
 #[repr(C)]
@@ -188,7 +188,7 @@ sys_lib! {
     /// # Return value
     ///
     /// A pointer to the base of the eDRAM.
-    pub unsafe fn sce_ge_edram_get_addr() -> *const u8;
+    pub unsafe fn sce_ge_edram_get_addr() -> *mut u8;
 
     #[psp(0xB77905EA)]
     /// Set the eDRAM address translation mode.
@@ -379,7 +379,7 @@ sys_lib! {
     /// # Return value 
     ///
     /// The callback ID, < 0 on error.
-    pub unsafe fn sce_ge_set_callback(cb: *const GeCallbackData) -> i32;
+    pub unsafe fn sce_ge_set_callback(cb: *mut GeCallbackData) -> i32;
 
     #[psp(0x05DB22CE)]
     /// Unregister the callback handlers.
