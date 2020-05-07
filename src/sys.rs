@@ -126,7 +126,7 @@ pub struct GeCallbackData {
 pub struct GeListArgs {
     size: u32,
     context: *const GeContext,
-    numStacks: u32,
+    num_stacks: u32,
     stacks: *const GeStack,
 }
 
@@ -326,13 +326,13 @@ sys_lib! {
     /// # Parameters
     ///
     /// `qid` - The queue ID of the list to sync.
-    /// `syncType` - 0 if you want to wait for the list to be completed, or 1 if you just 
+    /// `sync_type` - 0 if you want to wait for the list to be completed, or 1 if you just 
     /// want to peek the actual state.
     ///
     /// # Return value
     ///
     /// The specified queue status, one of GeListState.
-    pub unsafe fn sce_ge_list_sync(qid: i32, syncType: i32) -> i32;
+    pub unsafe fn sce_ge_list_sync(qid: i32, sync_type: i32) -> i32;
 
     #[psp(0xB287BD61)]
     /// Wait for drawing to complete.
@@ -345,7 +345,7 @@ sys_lib! {
     /// # Return value
     /// 
     /// The current queue status, one of GeListState.
-    pub unsafe fn sce_ge_draw_sync(syncType: i32) -> i32;
+    pub unsafe fn sce_ge_draw_sync(sync_type: i32) -> i32;
 
     #[psp(0xB448EC0D)]
     /// Interrupt drawing queue.
@@ -353,12 +353,12 @@ sys_lib! {
     /// # Parameters
     ///
     /// `mode` - If set to 1, reset all the queues.
-    /// `pParam` - Unused (just K1-checked).
+    /// `p_param` - Unused (just K1-checked).
     ///
     /// # Return value
     ///
     /// The stopped queue ID if mode isnt set to 0, otherwise 0, and < 0 on error.
-    pub unsafe fn sce_ge_break(mode: i32, pParam: *const GeBreakParam) -> i32;
+    pub unsafe fn sce_ge_break(mode: i32, p_param: *const GeBreakParam) -> i32;
 
     #[psp(0x4C06E472)]
     /// Restart drawing queue.
