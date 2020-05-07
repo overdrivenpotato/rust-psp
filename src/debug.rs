@@ -111,8 +111,8 @@ unsafe fn init() {
     VRAM_BASE = (0x4000_0000u32 | sys::sce_ge_edram_get_addr() as u32) as *mut u32;
 
     // TODO: Change sys types to usize.
-    sys::sce_display_set_mode(0, DISPLAY_WIDTH as u32, DISPLAY_HEIGHT as u32);
-    sys::sce_display_set_frame_buf(VRAM_BASE as *const u8, BUFFER_WIDTH as u32, VRAM_MODE, 1);
+    sys::sce_display_set_mode(sys::DisplayMode::Lcd, DISPLAY_WIDTH, DISPLAY_HEIGHT);
+    sys::sce_display_set_frame_buf(VRAM_BASE as *const u8, BUFFER_WIDTH, VRAM_MODE, 1);
 }
 
 #[doc(hidden)]

@@ -55,7 +55,7 @@ sys_lib! {
     /// `func` - A pointer to a function that will be called as the callback.
     /// `arg` - Argument for the callback?
     ///
-    /// # Returns
+    /// # Return value
     ///
     /// >= 0 A callback id which can be used in subsequent functions, < 0 an error.
     pub unsafe fn sce_kernel_create_callback(
@@ -97,7 +97,7 @@ sys_lib! {
     /// # Parameters
     /// `cbid` - Callback id
     ///
-    /// # Returns
+    /// # Return value
     /// < 0 on error
     pub unsafe fn sce_kernel_register_exit_callback(id: u32) -> u32;
 }
@@ -111,18 +111,40 @@ sys_lib! {
     pub unsafe fn sce_ge_edram_get_addr() -> *const u8;
 }
 
+#[repr(u32)]
+/// Display mode.
+///
+/// Display modes other than LCD are unknown.
+pub enum DisplayMode {
+    // https://github.com/hrydgard/ppsspp/blob/25197451e5cdb1b83dc69fea14c501bdb1e13b1a/Core/HLE/sceDisplay.cpp#L922
+    Lcd = 0,
+
+    // TODO: What are the other modes?
+}
+
 sys_lib! {
     #![name = "sceDisplay"]
     #![flags = 0x4001]
     #![version = (0, 0)]
 
     #[psp(0x0E20F177)]
-    pub unsafe fn sce_display_set_mode(mode: u32, width: u32, height: u32) -> u32;
+    /// Set display mode
+    ///
+    /// # Parameters
+    ///
+    /// `mode` - Display mode, normally `DisplayMode::Lcd`.
+    /// `width` - Width of screen in pixels.
+    /// `height` - Height of screen in pixels.
+    ///
+    /// # Return value
+    ///
+    /// ???
+    pub unsafe fn sce_display_set_mode(mode: DisplayMode, width: usize, height: usize) -> u32;
 
     #[psp(0x289D82FE)]
     pub unsafe fn sce_display_set_frame_buf(
         top_addr: *const u8,
-        buffer_width: u32,
+        buffer_width: usize,
         pixel_format: u32,
         sync: u32,
     ) -> u32;
