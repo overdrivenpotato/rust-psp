@@ -115,6 +115,7 @@ pub struct GeStack {
 }
 
 #[repr(C)]
+/// Structure to hold the callback data
 pub struct GeCallbackData {
     signal_func: fn(id: i32, arg: *const c_void),
     signal_arg: *const c_void,
