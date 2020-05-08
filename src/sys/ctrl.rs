@@ -70,7 +70,7 @@ pub struct SceCtrlData {
     /// Analogue stick, Y axis.
     pub ly: u8,
     /// Reserved.
-    pub jsrv: [u8; 6usize],
+    pub rsrv: [u8; 6],
 }
 
 #[repr(C)]
@@ -89,11 +89,11 @@ sys_lib! {
     #[psp(0x6A2774F3)]
     /// Set the controller cycle setting.
     ///
-    /// Parameters
+    /// # Parameters
     ///
     /// `cycle` - Cycle. Normally set to 0.
     ///
-    /// Return value
+    /// # Return value
     ///
     /// The previous cycle setting.
     pub unsafe fn sce_ctrl_set_sampling_cycle(cycle: i32) -> i32;
@@ -101,11 +101,11 @@ sys_lib! {
     #[psp(0x02BAAD91)]
     /// Get the controller current cycle setting.
     /// 
-    /// Parameters
+    /// # Parameters
     ///
     /// `pcycle` - Return value.
     ///
-    /// Return value
+    /// # Return value
     ///
     /// 0
     pub unsafe fn sce_ctrl_get_sampling_cycle(pcycle: *mut i32) -> i32;
@@ -113,11 +113,11 @@ sys_lib! {
     #[psp(0x1F4011E6)]
     /// Set the controller mode.
     ///
-    /// Parameters
+    /// # Parameters
     ///
     /// `mode` - One of PspCtrlMode.
     ///
-    /// Return Value
+    /// # Return Value
     ///
     /// The previous mode.
     pub unsafe fn sce_ctrl_set_sampling_mode(mode: i32) -> i32;
@@ -125,11 +125,11 @@ sys_lib! {
     #[psp(0xDA6B76A1)]
     /// Get the current controller mode.
     ///
-    /// Parameters
+    /// # Parameters
     ///
     /// `pmode` - Return value.
     ///
-    /// Return value
+    /// # Return value
     ///
     /// 0
     pub unsafe fn sce_ctrl_get_sampling_mode(pmode: *mut i32) -> i32;
@@ -143,7 +143,7 @@ sys_lib! {
     #[psp(0x1F803938)]
     /// Read buffer positive
     ///
-    /// Parameters
+    /// # Parameters
     ///
     /// `pad_data` - Pointer to a SceCtrlData structure used to hold the returned pad data.
     /// `count` - Number of SceCtrlData buffers to read.
@@ -161,7 +161,7 @@ sys_lib! {
     #[psp(0xA7144800)]
     /// Set analog threshold relating to the idle timer.
     ///
-    /// Parameters
+    /// # Parameters
     ///
     /// `idlereset` -  Movement needed by the analog to reset the idle timer.
     /// `idleback` - Movement needed by the analog to bring the PSP back from an idle state.
@@ -170,7 +170,7 @@ sys_lib! {
     /// Set between 1-128 to specify the movement on either axis needed by the analog 
     /// to fire the  event.
     ///
-    /// Return value
+    /// # Return value
     ///
     /// < 0 on error.
     pub unsafe fn sce_ctrl_set_idle_cancel_threshold(idlereset: i32, idleback: i32) -> i32;
@@ -178,12 +178,12 @@ sys_lib! {
     #[psp(0x687660FA)]
     /// Get the idle threshold values.
     ///
-    /// Parameters
+    /// # Parameters
     ///
     /// `idlereset` - Movement needed by the analog to reset the idle timer.
     /// `idleback` - Movement needed by the analog to bring the PSP back from an idle state.
     ///
-    /// Return value
+    /// # Return value
     ///
     /// < 0 on error.
     pub unsafe fn sce_ctrl_get_idle_cancel_threshold(idlereset: *mut i32, idleback: *mut i32) -> i32;
