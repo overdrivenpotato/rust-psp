@@ -102,7 +102,7 @@ macro_rules! sys_lib {
             //
             // TODO: Replace this with assembly for better performance.
             let f = mem::transmute::<_, Target>(
-                macros::black_box(expr! { [< __ $name _stub >] } as usize)
+                $crate::sys::macros::black_box(expr! { [< __ $name _stub >] } as usize)
             );
 
             f($($arg),*)
@@ -112,9 +112,9 @@ macro_rules! sys_lib {
     // Generate body with an ABI mapper
     (__BODY $abi:ident $name:ident ($($arg:ident : $arg_ty:ty)*) $(-> $ret:ty)?) => {
         {
-            core::mem::transmute(macros::black_box($abi(
+            core::mem::transmute($crate::sys::macros::black_box($abi(
                 $($arg as u32),*,
-                macros::black_box(core::mem::transmute(expr! { [< __ $name _stub >] } as usize)),
+                $crate::sys::macros::black_box(core::mem::transmute(expr! { [< __ $name _stub >] } as usize)),
             )))
         }
     };
@@ -131,14 +131,15 @@ macro_rules! sys_lib {
             $(-> $ret:ty)?;
         )*
     ) => {
+
         item! {
             #[link_section = ".rodata.sceResident"]
             #[no_mangle]
-            static [< __ $lib_name _RESIDENT >] : [u8; macros::lib_name_bytes_len($lib_name)] = macros::lib_name_bytes($lib_name);
+            static [< __ $lib_name _RESIDENT >] : [u8; $crate::sys::macros::lib_name_bytes_len($lib_name)] = $crate::sys::macros::lib_name_bytes($lib_name);
 
             #[link_section = ".lib.stub"]
             #[no_mangle]
-            static [< __ $lib_name _STUB >] : SceStubLibraryEntry = SceStubLibraryEntry {
+            static [< __ $lib_name _STUB >] : $crate::sys::SceStubLibraryEntry = $crate::sys::SceStubLibraryEntry {
                 name: expr! { & [< __ $lib_name _RESIDENT >] [0] },
                 version: [$lib_major_version, $lib_minor_version],
                 flags: $lib_flags,

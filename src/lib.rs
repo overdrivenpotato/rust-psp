@@ -180,7 +180,7 @@ macro_rules! module {
             #[no_mangle]
             extern "C" fn module_start(_argc: isize, _argv: *const *const u8) -> isize {
                 unsafe {
-                    let id = $crate::sys::sce_kernel_create_thread(
+                    let id = $crate::sys::kernel::sce_kernel_create_thread(
                         &b"main_thread\0"[0],
                         |_argc, _argv| {
                             // TODO: Maybe print any error to debug screen?
@@ -204,7 +204,7 @@ macro_rules! module {
                         core::ptr::null(),
                     );
 
-                    $crate::sys::sce_kernel_start_thread(id, 0, core::ptr::null());
+                    $crate::sys::kernel::sce_kernel_start_thread(id, 0, core::ptr::null());
                 }
 
                 0
@@ -222,20 +222,20 @@ pub fn enable_home_button() {
 
     unsafe {
         // Enable the home button.
-        let id = sys::sce_kernel_create_thread(
+        let id = sys::kernel::sce_kernel_create_thread(
             &b"exit_thread\0"[0],
             |_, _| {
-                let id = sys::sce_kernel_create_callback(
+                let id = sys::kernel::sce_kernel_create_callback(
                     &b"exit_callback"[0],
                     |_, _, _| {
-                        sys::sce_kernel_exit_game();
+                        sys::kernel::sce_kernel_exit_game();
                         0
                     },
                     ptr::null(),
                 );
 
-                sys::sce_kernel_register_exit_callback(id);
-                sys::sce_kernel_sleep_thread_cb();
+                sys::kernel::sce_kernel_register_exit_callback(id);
+                sys::kernel::sce_kernel_sleep_thread_cb();
 
                 0
             },
@@ -245,6 +245,6 @@ pub fn enable_home_button() {
             ptr::null(),
         );
 
-        sys::sce_kernel_start_thread(id, 0, ptr::null());
+        sys::kernel::sce_kernel_start_thread(id, 0, ptr::null());
     }
 }
