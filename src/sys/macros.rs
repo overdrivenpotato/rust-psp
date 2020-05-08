@@ -1,3 +1,4 @@
+
 /// Generate a zero-sized sentinel value.
 ///
 /// Used to mark the top of a section, e.g. `.sceStub.text.ThreadManForUser`.

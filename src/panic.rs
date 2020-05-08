@@ -13,7 +13,7 @@ fn print_and_die(s: String) -> ! {
     dprintln!("{}", s);
 
     unsafe {
-        sys::sce_kernel_exit_delete_thread(1);
+        sys::kernel::sce_kernel_exit_delete_thread(1);
         core::intrinsics::unreachable()
     }
 }
