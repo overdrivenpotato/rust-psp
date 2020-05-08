@@ -1,6 +1,4 @@
 use crate::eabi::{i5, i6};
-use crate::sys::SceStubLibraryEntry;
-use crate::sys::macros;
 use core::ffi::c_void;
 
 sys_lib! {

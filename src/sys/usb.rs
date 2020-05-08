@@ -1,5 +1,3 @@
-use crate::sys::macros;
-use crate::sys::SceStubLibraryEntry;
 use core::ffi::c_void;
 
 pub const USBBUS_DRIVERNAME: &str = "USBBusDriver";
