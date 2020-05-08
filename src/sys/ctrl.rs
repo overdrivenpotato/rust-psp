@@ -62,23 +62,23 @@ pub enum PspCtrlMode
 /// Returned controller data
 pub struct SceCtrlData {
     /// The current read frame.
-    pub TimeStamp: u32,
+    pub timestamp: u32,
     /// Bit mask containing zero or more of ::PspCtrlButtons.
-    pub Buttons: u32,
+    pub buttons: u32,
     /// Analogue stick, X axis.
-    pub Lx: u8,
+    pub lx: u8,
     /// Analogue stick, Y axis.
-    pub Ly: u8,
+    pub ly: u8,
     /// Reserved.
-    pub Rsrv: [u8; 6usize],
+    pub jsrv: [u8; 6usize],
 }
 
 #[repr(C)]
 pub struct SceCtrlLatch {
-    pub uiMake: u32,
-    pub uiBreak: u32,
-    pub uiPress: u32,
-    pub uiRelease: u32,
+    pub ui_make: u32,
+    pub ui_break: u32,
+    pub ui_press: u32,
+    pub ui_release: u32,
 }
 
 sys_lib! {
@@ -186,7 +186,7 @@ sys_lib! {
     /// Return value
     ///
     /// < 0 on error.
-    pub unsafe fn sce_ctrl_get_idle_cancel_threshold(idlereset: *mut i32, idleback: *mut i32) -> i32
+    pub unsafe fn sce_ctrl_get_idle_cancel_threshold(idlereset: *mut i32, idleback: *mut i32) -> i32;
 
 }
 
