@@ -74,11 +74,9 @@ impl Font for MsxFont {
     }
 }
 
-const PSP_DISPLAY_PIXEL_FORMAT_8888: u32 = 3;
 const BUFFER_WIDTH: usize = 512;
 const DISPLAY_HEIGHT: usize = 272;
 const DISPLAY_WIDTH: usize = 480;
-const VRAM_MODE: u32 = PSP_DISPLAY_PIXEL_FORMAT_8888;
 static mut VRAM_BASE: *mut u32 = 0 as *mut u32;
 
 unsafe fn clear_screen(color: u32) {
@@ -112,7 +110,7 @@ unsafe fn init() {
 
     // TODO: Change sys types to usize.
     sys::display::sce_display_set_mode(sys::display::DisplayMode::Lcd, DISPLAY_WIDTH, DISPLAY_HEIGHT);
-    sys::display::sce_display_set_frame_buf(VRAM_BASE as *const u8, BUFFER_WIDTH, VRAM_MODE, 1);
+    sys::display::sce_display_set_frame_buf(VRAM_BASE as *const u8, BUFFER_WIDTH, sys::display::DisplayPixelFormat::_8888, sys::display::DisplaySetBufSync::NextFrame);
 }
 
 #[doc(hidden)]
