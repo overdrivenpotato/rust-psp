@@ -1,11 +1,6 @@
-#[macro_use]
-use crate::sys::macros;
-use crate::sys::SceStubLibraryEntry;
-use core::ffi::c_void;
-
-#[repr(u32)]
 /// Enumeration for the digital controller buttons.
 /// NOTE: Home, Note, Screen, VolUp, VolDown, Disc, WlanUp, Remote, MS can only be read in kernel mode
+#[repr(u32)]
 pub enum PspCtrlButtons {
     /// Select button. 
     Select     = 0x000001,
@@ -61,18 +56,19 @@ pub enum PspCtrlMode
     Digital = 0,
     /// Analog.
     Analaog
-};
+}
 
 #[repr(C)]
+/// Returned controller data
 pub struct SceCtrlData {
     /// The current read frame.
-    pub TimeStamp: u32 
+    pub TimeStamp: u32,
     /// Bit mask containing zero or more of ::PspCtrlButtons.
-    pub Buttons: u32 
+    pub Buttons: u32,
     /// Analogue stick, X axis.
-    pub Lx: u8 
+    pub Lx: u8,
     /// Analogue stick, Y axis.
-    pub Ly: u8 
+    pub Ly: u8,
     /// Reserved.
     pub Rsrv: [u8; 6usize],
 }
@@ -114,6 +110,7 @@ sys_lib! {
     /// 0
     pub unsafe fn sce_ctrl_get_sampling_cycle(pcycle: *mut i32) -> i32;
 
+    #[psp(0x1F4011E6)]
     /// Set the controller mode.
     ///
     /// Parameters
@@ -123,7 +120,6 @@ sys_lib! {
     /// Return Value
     ///
     /// The previous mode.
-    #[psp(0x1F4011E6)]
     pub unsafe fn sce_ctrl_set_sampling_mode(mode: i32) -> i32;
     
     #[psp(0xDA6B76A1)]
