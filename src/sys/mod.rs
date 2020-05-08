@@ -1,6 +1,7 @@
 #[macro_use]
 mod macros;
 
+pub mod ctrl;
 pub mod display;
 pub mod ge;
 pub mod kernel;
