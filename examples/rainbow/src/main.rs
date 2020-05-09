@@ -23,7 +23,6 @@ fn psp_main() {
                 let color = wheel(pos);
                 VRAM = (0x4000_0000u32 | ge::sce_ge_edram_get_addr() as u32) as *mut u32;
                 for _pixel in 0..(BUFFER_WIDTH * DISPLAY_HEIGHT) {
-                    //psp::dprintln!("{:#x}", VRAM as u32);
                     *VRAM = color;
                     VRAM = VRAM.wrapping_offset(1);
                 }
