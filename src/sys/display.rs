@@ -32,14 +32,6 @@ pub enum DisplaySetBufSync {
     NextFrame = 1,
 }
 
-#[repr(u32)]
-pub enum DisplayErrorCode
-{
-   Ok_    = 0,
-   Pointer    = 0x80000103,
-   Argument   = 0x80000107
-}
-
 sys_lib! {
     #![name = "sceDisplay"]
     #![flags = 0x4001]
