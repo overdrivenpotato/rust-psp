@@ -35,12 +35,11 @@ fn psp_main() {
 fn wheel(mut pos: u8) -> u32 {
     {
         pos = 255 - pos;
-        if(pos < 85)
+        if pos < 85
         {
-            let color: u32;
             u32::from_be_bytes([255 - pos * 3, 0, pos * 3, 255])
         }
-        else if(pos < 170)
+        else if pos < 170
         {
             pos -= 85;
             u32::from_be_bytes([0, pos * 3, 255 - pos * 3, 255])
