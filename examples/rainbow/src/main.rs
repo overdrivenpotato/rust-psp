@@ -19,6 +19,7 @@ fn psp_main() {
         VRAM = (0x4000_0000u32 | ge::sce_ge_edram_get_addr() as u32) as *mut u32;
         display::sce_display_set_frame_buf(VRAM as *const u8, BUFFER_WIDTH, display::DisplayPixelFormat::_8888, display::DisplaySetBufSync::NextFrame);
         loop {
+            display::sce_display_wait_vblank_start();
             for pos in 0..255  {
                 let color = wheel(pos);
                 VRAM = (0x4000_0000u32 | ge::sce_ge_edram_get_addr() as u32) as *mut u32;
@@ -26,7 +27,6 @@ fn psp_main() {
                     *VRAM = color;
                     VRAM = VRAM.wrapping_offset(1);
                 }
-                display::sce_display_wait_vblank_start();
             }
         }
     }
