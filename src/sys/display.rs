@@ -120,7 +120,7 @@ sys_lib! {
 
     #[psp(0xDBA6C4C4)]
     /// Get number of frames per second
-    pub unsafe fn sce_display_get_fps() -> f32;
+    pub unsafe fn sce_display_get_frame_per_sec() -> f32;
 
     #[psp(0xB4F378FA)]
     /// Get whether or not frame buffer is being displayed
