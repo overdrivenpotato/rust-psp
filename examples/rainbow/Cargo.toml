@@ -1,0 +1,11 @@
+[package]
+name = "psp-rainbow"
+version = "0.1.0"
+authors = [
+    "Paul Sajna <sajattack@gmail.com>",
+    "Marko Mijalkovic <marko.mijalkovic97@gmail.com>"
+]
+edition = "2018"
+
+[dependencies]
+psp = { path = "../.." }
