@@ -23,7 +23,7 @@
             "--verbose",
             "--emit-relocs",
             "--script",
-            "./linkfile.prx"
+            "./linkfile.ld"
         ]
     }
 }
