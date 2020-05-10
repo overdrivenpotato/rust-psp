@@ -7,6 +7,8 @@ pub mod ge;
 pub mod kernel;
 pub mod usb;
 pub mod power;
+pub mod wlan;
+pub mod rtc;
 
 use core::ffi::c_void;
 
