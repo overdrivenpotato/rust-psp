@@ -9,6 +9,7 @@ pub mod usb;
 pub mod power;
 pub mod wlan;
 pub mod rtc;
+pub mod audio;
 
 use core::ffi::c_void;
 
