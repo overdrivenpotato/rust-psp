@@ -1,0 +1,8 @@
+[package]
+name = "wlan-test"
+version = "0.1.0"
+authors = ["Nathan Bourgeois <iridescentrosesfall@gmail.com>"]
+edition = "2018"
+
+[dependencies]
+psp = { path = "../.." }

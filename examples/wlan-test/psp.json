@@ -1,0 +1,29 @@
+{
+    "llvm-target": "mipsallegrexel-unknown-psp-prx",
+    "target-endian": "little",
+    "target-pointer-width": "32",
+    "target-c-int-width": "32",
+    "data-layout": "e-p:32:32:32-i1:8:8-i8:8:8-i16:16:16-i32:32:32-i64:64:64-f32:32:32-f64:64:64-v64:64:64-v128:64:128-a0:0:64-n32",
+
+    "os": "psp",
+    "arch": "mips",
+    "cpu": "mips2",
+
+    "features": "+single-float",
+    "llvm-args": [
+        "-mno-check-zero-division"
+    ],
+    "linker": "psp-ld",
+    "linker-flavor": "ld",
+    "executables": true,
+    "relocation-model": "static",
+    "pre-link-args": {
+        "ld": [
+            "--eh-frame-hdr",
+            "--verbose",
+            "--emit-relocs",
+            "--script",
+            "./linkfile.ld"
+        ]
+    }
+}
