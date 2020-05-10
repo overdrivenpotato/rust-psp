@@ -12,7 +12,7 @@ pub struct Time{
 
 ///Errors
 #[repr(i32)]
-pub enum CheckValidErrors{
+pub enum CheckValidError{
     InvalidYear         = -1,
     InvalidMonth        = -2,
     InvalidDay          = -3,
@@ -32,7 +32,7 @@ sys_lib!{
     ///
     /// # Return Value
     ///
-    /// Return number of ticks per second
+    /// Number of ticks per second
     pub unsafe fn sce_rtc_get_tick_resolution() -> u32;
 
     #[psp(0x3F7AD767)]
@@ -40,11 +40,11 @@ sys_lib!{
     ///
     /// # Parameters
     ///
-    /// tick - Pointer to u64 to receive tick count
+    /// `tick` - Pointer to u64 to receive tick count
     ///
     /// # Return Value
     ///
-    /// Return 0 on success, < 0 on error
+    ///  0 on success, < 0 on error
     pub unsafe fn sce_rtc_get_current_tick(tick: *mut u64) -> i32;
 
     #[psp(0x4CFA57B0)]
@@ -52,13 +52,13 @@ sys_lib!{
     ///
     /// # Parameters
     ///
-    /// tm - pointer to Time struct to receive time
+    /// `tm` - pointer to Time struct to receive time
     ///
-    /// tz - time zone to adjust to (minutes from UTC)
+    /// `tz` - time zone to adjust to (minutes from UTC)
     ///
     /// # Return Value
     ///
-    /// Return 0 on success, < 0 on error
+    ///  0 on success, < 0 on error
     pub unsafe fn sce_rtc_get_current_clock(tm: Time, tz: i32) -> i32;
 
     #[psp(0xE7C27D1B)]
@@ -66,11 +66,11 @@ sys_lib!{
     ///
     /// # Parameters
     ///
-    /// tm - pointer to Time struct to receive time
+    /// `tm` - pointer to Time struct to receive time
     ///
     /// # Return Value
     ///
-    /// Return 0 on success, < 0 on error
+    ///  0 on success, < 0 on error
     pub unsafe fn sce_rtc_get_current_clock_local_time(tm: Time) -> i32;
 
     #[psp(0x34885E0D)]
@@ -78,13 +78,13 @@ sys_lib!{
     ///
     /// # Parameters
     ///
-    /// tick_utc - pointer to u64 tick in UTC time
+    /// `tick_utc` - pointer to u64 tick in UTC time
     ///
-    /// tick_local - pointer to u64 tick to receive in local time
+    /// `tick_local` - pointer to u64 tick to receive in local time
     ///
     /// # Return Value
     ///
-    /// Return 0 on success, < 0 on error
+    ///  0 on success, < 0 on error
     pub unsafe fn sce_rtc_convert_utc_to_local_time(tick_utc: *const u64, tick_local: *mut u64) -> i32;
 
     #[psp(0x779242A2)]
@@ -92,13 +92,13 @@ sys_lib!{
     ///
     /// # Parameters
     ///
-    /// tick_local - pointer to u64 tick in UTC time
+    /// `tick_local` - pointer to u64 tick in UTC time
     ///
-    /// tick_utc - pointer to u64 tick to receive in local time
+    /// `tick_utc` - pointer to u64 tick to receive in local time
     ///
     /// # Return Value
     ///
-    /// Return 0 on success, < 0 on error
+    ///  0 on success, < 0 on error
     pub unsafe fn sce_rtc_convert_local_to_utc_time(tick_local: *const u64, tick_utc: *mut u64) -> i32;
 
     #[psp(0x42307A17)]
@@ -106,11 +106,11 @@ sys_lib!{
     ///
     /// # Parameters
     ///
-    /// year - year to check if is a leap year
+    /// `year` - year to check if is a leap year
     ///
     /// # Return Value
     ///
-    /// Return 1 on leapyear, 0 if not
+    ///  1 on leapyear, 0 if not
     pub unsafe fn sce_rtc_is_leap_year(year: i32) -> i32;
 
     #[psp(0x05EF322C)]
@@ -118,9 +118,9 @@ sys_lib!{
     ///
     /// # Parameters
     ///
-    /// year - year in which to check
+    /// `year` - year in which to check
     ///
-    /// month - month to get number of days for
+    /// `month` - month to get number of days for
     ///
     /// # Return Value
     ///
@@ -132,15 +132,15 @@ sys_lib!{
     ///
     /// # Parameters
     ///
-    /// year - year in which to check
+    /// `year` - year in which to check
     ///
-    /// month - month the day is in
+    /// `month` - month the day is in
     ///
-    /// day - day to get day of week for
+    /// `day` - day to get day of week for
     ///
     /// # Return Value
     ///
-    /// Return day of week with 0 representing monday
+    ///  day of week with 0 representing monday
     pub unsafe fn sce_rtc_get_day_of_week(year: i32, month: i32, day: i32) -> i32;
 
     #[psp(0x4B1B5E82)]
@@ -148,11 +148,11 @@ sys_lib!{
     ///
     /// # Parameters
     /// 
-    /// date - pointer to pspDate struct to be checked
+    /// `date` - pointer to pspDate struct to be checked
     ///
     /// # Return Value
     ///
-    /// Return 0 on success, one of ::CheckValidErrors on error
+    ///  0 on success, one of ::CheckValidErrors on error
     pub unsafe fn sce_rtc_check_valid(date: *const Time) -> i32;
 
     #[psp(0x7ED29E40)]
@@ -160,13 +160,13 @@ sys_lib!{
     ///
     /// # Parameters
     ///
-    /// date - pointer to pspTime struct to set
+    /// `date` - pointer to pspTime struct to set
     ///
-    /// tick - pointer to ticks to convert
+    /// `tick` - pointer to ticks to convert
     ///
     /// # Return Value
     ///
-    /// return 0 on success, < 0 on error
+    ///  0 on success, < 0 on error
     pub unsafe fn sce_rtc_set_tick(date: *mut Time, tick: *const u64) -> i32;
 
     #[psp(0x6FF40ACC)]
@@ -174,9 +174,9 @@ sys_lib!{
     ///
     /// # Parameters
     ///
-    /// date - pointer to pspTime to convert
+    /// `date` - pointer to pspTime to convert
     ///
-    /// tick - pointer to tick to set
+    /// `tick` - pointer to tick to set
     ///
     /// # Return Value
     ///
@@ -188,13 +188,13 @@ sys_lib!{
     ///
     /// # Parameters
     ///
-    /// tick1 - pointer to first tick
+    /// `tick1` - pointer to first tick
     ///
-    /// tick2 - pointer to second tick
+    /// `tick2` - pointer to second tick
     ///
     /// # Return Value
     ///
-    /// Return 0 on equal, < 0 when tick1 < tick2, > 0 when tick1 > tick2
+    ///  0 on equal, < 0 when tick1 < tick2, > 0 when tick1 > tick2
     pub unsafe fn sce_rtc_compare_tick(tick1: *const u64, tick2: *const u64) -> i32;
 
     #[psp(0x44F45E05)]
@@ -202,11 +202,11 @@ sys_lib!{
     ///
     /// # Parameters
     ///
-    /// dest_tick - pointer to tick to hold result
+    /// `dest_tick` - pointer to tick to hold result
     ///
-    /// src_tick - pointer to source tick
+    /// `src_tick` - pointer to source tick
     /// 
-    /// num_ticks - number of ticks to add
+    /// `num_ticks` - number of ticks to add
     ///
     /// # Return Value
     ///
@@ -218,11 +218,11 @@ sys_lib!{
     ///
     /// # Parameters
     ///
-    /// dest_tick - pointer to tick to hold result
+    /// `dest_tick` - pointer to tick to hold result
     ///
-    /// src_tick - pointer to source tick
+    /// `src_tick` - pointer to source tick
     /// 
-    /// num_tms - number of ms to add
+    /// `num_tms` - number of ms to add
     ///
     /// # Return Value
     ///
@@ -234,11 +234,11 @@ sys_lib!{
     ///
     /// # Parameters
     ///
-    /// dest_tick - pointer to tick to hold result
+    /// `dest_tick` - pointer to tick to hold result
     ///
-    /// src_tick - pointer to source tick
+    /// `src_tick` - pointer to source tick
     /// 
-    /// num_seconds - number of seconds to add
+    /// `num_seconds` - number of seconds to add
     ///
     /// # Return Value
     ///
@@ -250,11 +250,11 @@ sys_lib!{
     ///
     /// # Parameters
     ///
-    /// dest_tick - pointer to tick to hold result
+    /// `dest_tick` - pointer to tick to hold result
     ///
-    /// src_tick - pointer to source tick
+    /// `src_tick` - pointer to source tick
     /// 
-    /// num_minutes - number of minutes to add
+    /// `num_minutes` - number of minutes to add
     ///
     /// # Return Value
     ///
@@ -267,11 +267,11 @@ sys_lib!{
     ///
     /// # Parameters
     ///
-    /// dest_tick - pointer to tick to hold result
+    /// `dest_tick` - pointer to tick to hold result
     ///
-    /// src_tick - pointer to source tick
+    /// `src_tick` - pointer to source tick
     /// 
-    /// num_hours - number of hours to add
+    /// `num_hours` - number of hours to add
     ///
     /// # Return Value
     ///
@@ -284,11 +284,11 @@ sys_lib!{
     ///
     /// # Parameters
     ///
-    /// dest_tick - pointer to tick to hold result
+    /// `dest_tick` - pointer to tick to hold result
     ///
-    /// src_tick - pointer to source tick
+    /// `src_tick` - pointer to source tick
     /// 
-    /// num_days - number of days to add
+    /// `num_days` - number of days to add
     ///
     /// # Return Value
     ///
@@ -301,11 +301,11 @@ sys_lib!{
     ///
     /// # Parameters
     ///
-    /// dest_tick - pointer to tick to hold result
+    /// `dest_tick` - pointer to tick to hold result
     ///
-    /// src_tick - pointer to source tick
+    /// `src_tick` - pointer to source tick
     /// 
-    /// num_weeks - number of weeks to add
+    /// `num_weeks` - number of weeks to add
     ///
     /// # Return Value
     ///
@@ -318,11 +318,11 @@ sys_lib!{
     ///
     /// # Parameters
     ///
-    /// dest_tick - pointer to tick to hold result
+    /// `dest_tick` - pointer to tick to hold result
     ///
-    /// src_tick - pointer to source tick
+    /// `src_tick` - pointer to source tick
     /// 
-    /// num_months - number of months to add
+    /// `num_months` - number of months to add
     ///
     /// # Return Value
     ///
@@ -334,11 +334,11 @@ sys_lib!{
     ///
     /// # Parameters
     ///
-    /// dest_tick - pointer to tick to hold result
+    /// `dest_tick` - pointer to tick to hold result
     ///
-    /// src_tick - pointer to source tick
+    /// `src_tick` - pointer to source tick
     /// 
-    /// num_years - number of years to add
+    /// `num_years` - number of years to add
     ///
     /// # Return Value
     ///
