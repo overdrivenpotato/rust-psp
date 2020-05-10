@@ -17,16 +17,16 @@ pub enum Format {
 #[repr(C)]
 pub struct InputParams {
     /// Unknown. Pass 0
-    unknown1: i32,
-    gain: i32,
+    pub unknown1: i32,
+    pub gain: i32,
     /// Unknown. Pass 0
-    unknown2: i32,
+    pub unknown2: i32,
     /// Unknown. Pass 0
-    unknown3: i32,
+    pub unknown3: i32,
     /// Unknown. Pass 0
-    unknown4: i32,
+    pub unknown4: i32,
     /// Unknown. Pass 0
-    unknown5: i32,
+    pub unknown5: i32,
 
 }
 
