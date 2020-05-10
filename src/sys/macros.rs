@@ -181,6 +181,7 @@ macro_rules! sys_lib {
                 );
             }
 
+            $(#[$attr])*
             pub unsafe fn $name($($arg : $arg_ty),*) $(-> $ret)? {
                 sys_lib!(
                     __BODY $($abi)?
