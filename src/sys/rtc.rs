@@ -1,3 +1,5 @@
+use num_enum::TryFromPrimitive;
+
 ///PSP Time Structure
 #[repr(C)]
 pub struct Time{
@@ -12,6 +14,7 @@ pub struct Time{
 
 ///Errors
 #[repr(i32)]
+#[derive(Eq, PartialEq, TryFromPrimitive)]
 pub enum CheckValidError{
     InvalidYear         = -1,
     InvalidMonth        = -2,
