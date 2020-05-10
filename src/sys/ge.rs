@@ -3,36 +3,36 @@ use core::ffi::c_void;
 /// Stores the state of the GE.
 #[repr(C)]
 pub struct GeContext {
-    context: [u32; 512]
+    pub context: [u32; 512]
 }
 
 #[repr(C)]
 /// Structure storing a stack (for CALL/RET)
 pub struct GeStack {
-    stack: [u32;8]
+    pub stack: [u32;8]
 }
 
 #[repr(C)]
 /// Structure to hold the callback data
 pub struct GeCallbackData {
-    signal_func: fn(id: i32, arg: *mut c_void),
-    signal_arg: *mut c_void,
-    finish_func: fn(id: i32, arg: *mut c_void),
-    finish_arg: *mut c_void,
+    pub signal_func: fn(id: i32, arg: *mut c_void),
+    pub signal_arg: *mut c_void,
+    pub finish_func: fn(id: i32, arg: *mut c_void),
+    pub finish_arg: *mut c_void,
 }
 
 #[repr(C)]
 pub struct GeListArgs {
-    size: u32,
-    context: *mut GeContext,
-    num_stacks: u32,
-    stacks: *mut GeStack,
+    pub size: u32,
+    pub context: *mut GeContext,
+    pub num_stacks: u32,
+    pub stacks: *mut GeStack,
 }
 
 #[repr(C)]
 /// Drawing queue interruption parameter
 pub struct GeBreakParam {
-    buf: [u32;4]
+    pub buf: [u32;4]
 }
 
 /// GE matrix types.
