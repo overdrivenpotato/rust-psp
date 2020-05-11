@@ -2,14 +2,19 @@ use num_enum::TryFromPrimitive;
 
 ///PSP Time Structure
 #[repr(C)]
+#[derive(Debug, Copy)]
 pub struct Time{
-   pub year:           u16,
-   pub month:          u16,
-   pub day:            u16,
-   pub hour:           u16,
-   pub minutes:        u16,
-   pub seconds:        u16,
-   pub microseconds:   u32
+    year:           u16,
+    month:          u16,
+    day:            u16,
+    hour:           u16,
+    minutes:        u16,
+    seconds:        u16,
+    microseconds:   u32
+}
+
+impl Clone for Time {
+    fn clone(&self) -> Self { *self }
 }
 
 ///Errors
