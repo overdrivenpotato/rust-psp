@@ -30,6 +30,7 @@ mod eabi;
 mod alloc_impl;
 pub mod panic;
 pub mod sys;
+pub mod framebuf_gfx;
 
 #[repr(align(16))]
 pub struct Align16<T>(pub T);
