@@ -33,7 +33,6 @@ header() {
             /\/\/\/ `/ { if (!params) printf "    /// # Parameters\n    ///\n" }
             { if ($0 ~ /\s*\/\/\/ `/) params = 1; else params = 0 }
 
-            # TODO: Needed?
             { print }
 
             /-> \w+;/ { printf "\n"; }
