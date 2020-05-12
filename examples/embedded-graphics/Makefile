@@ -13,7 +13,7 @@ release:
 		"$(CARGO_TARGET_DIR)"/psp/release/$(TARGET_NAME) \
 		"$(CARGO_TARGET_DIR)"/psp/release/$(TARGET_NAME).prx
 
-	@mksfo "PSP Rust App" "$(CARGO_TARGET_DIR)"/psp/release/PARAM.SFO
+	@mksfo "Rust Embedded Gfx" "$(CARGO_TARGET_DIR)"/psp/release/PARAM.SFO
 	@pack-pbp "$(CARGO_TARGET_DIR)"/psp/release/EBOOT.PBP \
 		"$(CARGO_TARGET_DIR)"/psp/release/PARAM.SFO NULL NULL NULL NULL NULL \
 		"$(CARGO_TARGET_DIR)"/psp/release/$(TARGET_NAME).prx NULL
