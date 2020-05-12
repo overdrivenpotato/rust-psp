@@ -28,12 +28,19 @@ has not been merged into the rust compiler as of when this README was written.
 Work is underway in order to add the PSP as a first class Rust target here:
 
 https://github.com/rust-lang/rust/pull/72062
+
 https://github.com/pspdev/pspsdk/pull/34
 
 Once these two PRs land, it should be very easy to build the examples, and
 instructions will be posted.
 
 [here]: https://github.com/rust-lang/stdarch/pull/854/files
+
+## Dependencies
+
+You will need the [psp toolchain] installed, and the binaries in your `$PATH`.
+
+[psp toolchain]: https://github.com/pspdev/psptoolchain
 
 ## Features / Roadmap
 
