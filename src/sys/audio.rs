@@ -51,7 +51,7 @@ pub enum InputFrequency {
 }
 
 /// Make the given sample count a multiple of 64.
-pub fn sample_align(sample_count:i32) -> i32 {
+pub const fn sample_align(sample_count:i32) -> i32 {
     (sample_count + 63) & !63
 }
 
