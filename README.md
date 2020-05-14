@@ -29,10 +29,8 @@ Work is underway in order to add the PSP as a first class Rust target here:
 
 https://github.com/rust-lang/rust/pull/72062
 
-https://github.com/pspdev/pspsdk/pull/34
-
-Once these two PRs land, it should be very easy to build the examples, and
-instructions will be posted.
+Once this PR lands in rust nightly, it should be very easy to build the
+examples, and instructions will be posted.
 
 [here]: https://github.com/rust-lang/stdarch/pull/854/files
 
