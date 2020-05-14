@@ -1,0 +1,10 @@
+[package]
+name = "psp-embedded-graphics"
+version = "0.1.0"
+authors = ["Marko Mijalkovic <marko.mijalkovic97@gmail.com>"]
+edition = "2018"
+
+[dependencies]
+psp = { path = "../.." }
+embedded-graphics = "0.6.2"
+tinybmp = { version = "0.2.2", features = ["graphics"] }
