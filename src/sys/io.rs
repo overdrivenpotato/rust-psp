@@ -62,8 +62,7 @@ sys_lib! {
     /// # Return value
     ///
     /// A non-negative integer is a valid fd, anything else an error
-    pub unsafe fn sce_io_open(file: *const u8, flags: i32, mode: i32)
-     -> SceUid;
+    pub unsafe fn sce_io_open(file: *const u8, flags: i32, mode: i32) -> SceUid;
 
     #[psp(0x89AA9906)]
     /// Open or create a file for reading or writing (asynchronous)
@@ -77,8 +76,7 @@ sys_lib! {
     /// # Return value
     ///
     /// A non-negative integer is a valid fd, anything else an error
-    pub unsafe fn sce_io_open_async(file: *const u8, flags: i32,
-                          mode: i32) -> SceUid;
+    pub unsafe fn sce_io_open_async(file: *const u8, flags: i32, mode: i32) -> SceUid;
 
     #[psp(0x810C4BC3)]
     /// Delete a descriptor
@@ -405,8 +403,7 @@ sys_lib! {
     /// # Return value
     ///
     /// < 0 on error.
-    pub unsafe fn sce_io_chstat(file: *const u8, stat: *mut SceIoStat,
-                       bits: i32) -> i32;
+    pub unsafe fn sce_io_chstat(file: *const u8, stat: *mut SceIoStat, bits: i32) -> i32;
 
     #[psp(0x63632449)]
     /// Perform an ioctl on a device.
@@ -423,9 +420,14 @@ sys_lib! {
     /// # Return value
     ///
     /// 0 on success, < 0 on error
-    pub unsafe fn sce_io_ioctl(fd: SceUid, cmd: u32, indata: *mut c_void,
-                      inlen: i32, outdata: *mut c_void, outlen: i32)
-     -> i32;
+    pub unsafe fn sce_io_ioctl(
+        fd: SceUid,
+        cmd: u32,
+        indata: *mut c_void,
+        inlen: i32,
+        outdata: *mut c_void,
+        outlen: i32
+    ) -> i32;
 
     #[psp(0xE95A012B)]
     /// Perform an ioctl on a device. (asynchronous)
@@ -442,9 +444,14 @@ sys_lib! {
     /// # Return value
     ///
     /// 0 on success, < 0 on error
-    pub unsafe fn sce_io_ioctl_async(fd: SceUid, cmd: u32, indata: *mut c_void,
-                           inlen: i32, outdata: *mut c_void,
-                           outlen: i32) -> i32;
+    pub unsafe fn sce_io_ioctl_async(
+        fd: SceUid,
+        cmd: u32,
+        indata: *mut c_void,
+        inlen: i32,
+        outdata: *mut c_void,
+        outlen: i32
+    ) -> i32;
 
     #[psp(0xAB96437F)]
     /// Synchronise the file data on the device.
@@ -561,6 +568,9 @@ sys_lib! {
     /// # Return value
     ///
     /// < 0 on error.
-    pub unsafe fn sce_io_set_async_callback(fd: SceUid, cb: SceUid, argp: *mut c_void)
-     -> i32;
+    pub unsafe fn sce_io_set_async_callback(
+        fd: SceUid,
+        cb: SceUid,
+        argp: *mut c_void
+    ) -> i32;
 }
