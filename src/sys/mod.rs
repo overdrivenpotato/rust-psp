@@ -10,6 +10,7 @@ pub mod power;
 pub mod wlan;
 pub mod rtc;
 pub mod audio;
+pub mod atrac;
 
 use core::ffi::c_void;
 
