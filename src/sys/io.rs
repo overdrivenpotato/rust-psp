@@ -4,7 +4,7 @@ use core::ffi::c_void;
 
 /// Describes a single directory entry
 #[repr(C)]
-#[derive(Copy)]
+#[derive(Copy, Clone)]
 pub struct SceIoDirent {
     /// File status.
     pub d_stat: SceIoStat,
@@ -15,15 +15,9 @@ pub struct SceIoDirent {
     pub dummy: i32,
 }
 
-impl Clone for SceIoDirent {
-    fn clone(&self) -> Self {
-        *self
-    }
-}
-
 /// Structure to hold the status information about a file
 #[repr(C)]
-#[derive(Debug, Copy)]
+#[derive(Debug, Copy, Clone)]
 pub struct SceIoStat {
     pub st_mode: i32,
     pub st_attr: u32,
@@ -37,12 +31,6 @@ pub struct SceIoStat {
     pub st_mtime: Time,
     /// Device-specific data.
     pub st_private: [u32; 6usize],
-}
-
-impl Clone for SceIoStat {
-    fn clone(&self) -> Self {
-        *self
-    }
 }
 
 #[repr(u32)]
