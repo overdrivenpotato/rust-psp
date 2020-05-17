@@ -5,9 +5,9 @@ use core::ffi::c_void;
 /// Describes a single directory entry
 #[repr(C)]
 #[derive(Copy, Clone)]
-pub struct SceIoDirent {
+pub struct Dirent {
     /// File status.
-    pub d_stat: SceIoStat,
+    pub d_stat: Stat,
     /// File name.
     pub d_name: [u8; 256usize],
     /// Device-specific data.
@@ -18,9 +18,9 @@ pub struct SceIoDirent {
 /// Structure to hold the status information about a file
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
-pub struct SceIoStat {
-    pub st_mode: i32,
-    pub st_attr: u32,
+pub struct Stat {
+    pub st_mode: StatMode,
+    pub st_attr: StatAttr,
     /// Size of the file in bytes.
     pub st_size: i64,
     /// Creation time.
@@ -33,10 +33,62 @@ pub struct SceIoStat {
     pub st_private: [u32; 6usize],
 }
 
+bitflags::bitflags! {
+    pub struct StatMode: i32 {
+        /// Symbolic Link
+        const IFLNK = 0x4000;
+        /// Directory
+        const IFDIR = 0x1000;
+        /// Regular file
+        const IFREG = 0x2000;
+        /// Set UID
+        const ISUID = 0x0800;
+        /// Set GID
+        const ISGID = 0x0400;
+        /// Sticky
+        const ISVTX = 0x0200;
+        /// Read user permission
+        const IRUSR = 0x0100;
+        /// Write user permission 
+        const IWUSR = 0x0080;
+        /// Execute user permission
+        const IXUSR = 0x0040;
+        /// Read group permission
+        const IRGRP = 0x0020;
+        /// Write group permission
+        const IWGRP = 0x0010;
+        /// Execute group permission
+        const IXGRP = 0x0008;
+        /// Read others permission
+        const IROTH = 0x0004;
+        /// Write others permission
+        const IWOTH = 0x0002;
+        /// Execute others permission
+        const IXOTH = 0x0001;
+    }
+}
+
+bitflags::bitflags! {
+    pub struct StatAttr: u32 {
+        /// Symlink
+        const IFLNK = 0x0008;
+        /// Directory
+        const IFDIR = 0x0010;
+        /// Regular file
+        const IFREG = 0x0020;
+        /// Hidden read permisson
+        const IROTH = 0x0004;
+        /// Hidden write permission
+        const IWOTH = 0x0002;
+        /// Hidden execution permission
+        const IXOTH = 0x0001;
+    }
+}
+
 #[repr(u32)]
 /// Permission value for the sceIoAssign function
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
-pub enum IoAssignPerms { RdWr = 0, RdOnly = 1, }
+pub enum AssignPerms { RdWr = 0, RdOnly = 1, }
 
 #[repr(u32)]
 pub enum Whence {
@@ -271,7 +323,7 @@ sys_lib! {
     /// # Return value
     ///
     /// Returns the value 0 if its succesful otherwise -1
-    pub unsafe fn sce_io_mkdir(dir: *const u8, mode: OpenMode) -> i32;
+    pub unsafe fn sce_io_mkdir(dir: *const u8, mode: Permissions) -> i32;
 
     #[psp(0x1117C65F)]
     /// Remove a directory file
@@ -335,7 +387,7 @@ sys_lib! {
     /// -   0 - No more directory entries left
     /// - > 0 - More directory entired to go
     /// - < 0 - Error
-    pub unsafe fn sce_io_dread(fd: SceUid, dir: *mut SceIoDirent) -> i32;
+    pub unsafe fn sce_io_dread(fd: SceUid, dir: *mut Dirent) -> i32;
 
     #[psp(0xEB092469)]
     /// Close an opened directory file descriptor
@@ -364,9 +416,14 @@ sys_lib! {
     /// # Return value
     ///
     /// 0 on success, < 0 on error
-    pub unsafe fn sce_io_devctl(dev: *const u8, cmd: u32,
-                       indata: *mut c_void, inlen: i32,
-                       outdata: *mut c_void, outlen: i32) -> i32;
+    pub unsafe fn sce_io_devctl(
+        dev: *const u8,
+        cmd: u32,
+        indata: *mut c_void,
+        inlen: i32,
+        outdata: *mut c_void,
+        outlen: i32
+    ) -> i32;
 
     #[psp(0xB2A628C1)]
     /// Assigns one IO device to another (I guess)
@@ -376,7 +433,7 @@ sys_lib! {
     /// `dev1` - The device name to assign.
     /// `dev2` - The block device to assign from.
     /// `dev3` - The filesystem device to mape the block device to dev1
-    /// `mode` - Read/Write mode. One of IoAssignPerms.
+    /// `mode` - Read/Write mode. One of AssignPerms.
     /// `unk1` - Unknown, set to NULL.
     /// `unk2` - Unknown, set to 0.
     ///
@@ -387,7 +444,7 @@ sys_lib! {
         dev1: *const u8,
         dev2: *const u8,
         dev3: *const u8,
-        mode: IoAssignPerms,
+        mode: AssignPerms,
         unk1: *mut c_void,
         unk2: i32
     ) -> i32;
@@ -415,7 +472,7 @@ sys_lib! {
     /// # Return value
     ///
     /// < 0 on error.
-    pub unsafe fn sce_io_getstat(file: *const u8, stat: *mut SceIoStat)
+    pub unsafe fn sce_io_getstat(file: *const u8, stat: *mut Stat)
      -> i32;
 
     #[psp(0xB8A740F4)]
@@ -430,7 +487,7 @@ sys_lib! {
     /// # Return value
     ///
     /// < 0 on error.
-    pub unsafe fn sce_io_chstat(file: *const u8, stat: *mut SceIoStat, bits: i32) -> i32;
+    pub unsafe fn sce_io_chstat(file: *const u8, stat: *mut Stat, bits: i32) -> i32;
 
     #[psp(0x63632449)]
     /// Perform an ioctl on a device.
