@@ -46,7 +46,7 @@ pub enum Whence {
 }
 
 bitflags::bitflags! {
-    pub struct OpenMode: i32 {
+    pub struct OpenFlags: i32 {
         const RD_ONLY = 0x0001;
         const WR_ONLY = 0x0002;
         const RD_WR = 0x0003;
@@ -60,6 +60,9 @@ bitflags::bitflags! {
     }
 }
 
+/// Octal unix permissions
+pub type Permissions = i32;
+
 sys_lib! {
     #![name = "IoFileMgrForUser"]
     #![flags = 0x4001]
@@ -72,12 +75,12 @@ sys_lib! {
     ///
     /// `file` - Pointer to a string holding the name of the file to open
     /// `flags` - Libc styled flags that are or'ed together
-    /// `mode` - File access mode.
+    /// `permissions` - Octal unix permissions.
     ///
     /// # Return value
     ///
     /// A non-negative integer is a valid fd, anything else an error
-    pub unsafe fn sce_io_open(file: *const u8, flags: i32, mode: OpenMode) -> SceUid;
+    pub unsafe fn sce_io_open(file: *const u8, flags: OpenFlags, permissions: Permissions) -> SceUid;
 
     #[psp(0x89AA9906)]
     /// Open or create a file for reading or writing (asynchronous)
@@ -86,15 +89,15 @@ sys_lib! {
     ///
     /// `file` - Pointer to a string holding the name of the file to open
     /// `flags` - Libc styled flags that are or'ed together
-    /// `mode` - File access mode.
+    /// `permissions` - Octal unix permissions.
     ///
     /// # Return value
     ///
     /// A non-negative integer is a valid fd, anything else an error
     pub unsafe fn sce_io_open_async(
         file: *const u8,
-        flags: i32,
-        mode: OpenMode
+        flags: OpenFlags,
+        permissions: Permissions
     ) -> SceUid;
 
     #[psp(0x810C4BC3)]
