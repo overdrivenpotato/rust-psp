@@ -45,6 +45,21 @@ pub enum Whence {
     END = 2,
 }
 
+bitflags::bitflags! {
+    pub struct OpenMode: i32 {
+        const RD_ONLY = 0x0001;
+        const WR_ONLY = 0x0002;
+        const RD_WR = 0x0003;
+        const NBLOCK = 0x0004;
+        const DIR = 0x0008;
+        const APPEND = 0x0100;
+        const CREAT = 0x0200;
+        const TRUNC = 0x0400;
+        const EXCL = 0x0800;
+        const NO_WAIT = 0x8000;
+    }
+}
+
 sys_lib! {
     #![name = "IoFileMgrForUser"]
     #![flags = 0x4001]
@@ -62,7 +77,7 @@ sys_lib! {
     /// # Return value
     ///
     /// A non-negative integer is a valid fd, anything else an error
-    pub unsafe fn sce_io_open(file: *const u8, flags: i32, mode: i32) -> SceUid;
+    pub unsafe fn sce_io_open(file: *const u8, flags: i32, mode: OpenMode) -> SceUid;
 
     #[psp(0x89AA9906)]
     /// Open or create a file for reading or writing (asynchronous)
@@ -76,7 +91,11 @@ sys_lib! {
     /// # Return value
     ///
     /// A non-negative integer is a valid fd, anything else an error
-    pub unsafe fn sce_io_open_async(file: *const u8, flags: i32, mode: i32) -> SceUid;
+    pub unsafe fn sce_io_open_async(
+        file: *const u8,
+        flags: i32,
+        mode: OpenMode
+    ) -> SceUid;
 
     #[psp(0x810C4BC3)]
     /// Delete a descriptor
@@ -249,7 +268,7 @@ sys_lib! {
     /// # Return value
     ///
     /// Returns the value 0 if its succesful otherwise -1
-    pub unsafe fn sce_io_mkdir(dir: *const u8, mode: i32) -> i32;
+    pub unsafe fn sce_io_mkdir(dir: *const u8, mode: OpenMode) -> i32;
 
     #[psp(0x1117C65F)]
     /// Remove a directory file
@@ -361,9 +380,14 @@ sys_lib! {
     /// # Return value
     ///
     /// < 0 on error.
-    pub unsafe fn sce_io_assign(dev1: *const u8, dev2: *const u8,
-                       dev3: *const u8, mode: i32,
-                       unk1: *mut c_void, unk2: i32) -> i32;
+    pub unsafe fn sce_io_assign(
+        dev1: *const u8,
+        dev2: *const u8,
+        dev3: *const u8,
+        mode: IoAssignPerms,
+        unk1: *mut c_void,
+        unk2: i32
+    ) -> i32;
 
     #[psp(0x6D08A871)]
     /// Unassign an IO device.
