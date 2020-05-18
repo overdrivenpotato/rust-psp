@@ -1,5 +1,6 @@
 use crate::sys::kernel::SceUid;
 use crate::sys::rtc::Time;
+use crate::eabi::i6;
 use core::ffi::c_void;
 
 /// Describes a single directory entry
@@ -401,7 +402,7 @@ sys_lib! {
     /// < 0 on error
     pub unsafe fn sce_io_dclose(fd: SceUid) -> i32;
 
-    #[psp(0x54F5FB11)]
+    #[psp(0x54F5FB11, i6)]
     /// Send a devctl command to a device.
     ///
     ///  # Parameters
@@ -425,7 +426,7 @@ sys_lib! {
         outlen: i32
     ) -> i32;
 
-    #[psp(0xB2A628C1)]
+    #[psp(0xB2A628C1,i6)]
     /// Assigns one IO device to another (I guess)
     ///
     /// # Parameters
@@ -489,7 +490,7 @@ sys_lib! {
     /// < 0 on error.
     pub unsafe fn sce_io_chstat(file: *const u8, stat: *mut Stat, bits: i32) -> i32;
 
-    #[psp(0x63632449)]
+    #[psp(0x63632449, i6)]
     /// Perform an ioctl on a device.
     ///
     /// # Parameters
@@ -513,7 +514,7 @@ sys_lib! {
         outlen: i32
     ) -> i32;
 
-    #[psp(0xE95A012B)]
+    #[psp(0xE95A012B, i6)]
     /// Perform an ioctl on a device. (asynchronous)
     ///
     /// # Parameters
