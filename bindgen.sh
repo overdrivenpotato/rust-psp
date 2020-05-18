@@ -62,8 +62,29 @@ pspModule() {
         | cat - <(echo) # Add newline
 }
 
+# Utility function for awk
+AWK_CAMEL='
+    function camelToSnake(s,    last, i) {
+        out = ""
+
+        for (i = 0; i < length(s); i++) {
+            char = substr(s, i + 1, 1)
+
+            if (tolower(char) != char) {
+                if (last != i - 1) out = out "_"
+                last = i
+                out = out tolower(char)
+            } else {
+                out = out char
+            }
+        }
+
+        return out
+    }
+'
+
 cat <(pspModule $2) <(header $1 | rustfmt) \
-    | awk '
+    | awk "$AWK_CAMEL"'
         /^$/ { header_done = 1 }
 
         {
@@ -80,25 +101,7 @@ cat <(pspModule $2) <(header $1 | rustfmt) \
             }
         }
 
-        function camelToSnake(s,    last, i) {
-            out = ""
-
-            for (i = 0; i < length(s); i++) {
-                char = substr(s, i + 1, 1)
-
-                if (tolower(char) != char) {
-                    if (last != i - 1) out = out "_"
-                    last = i
-                    out = out tolower(char)
-                } else {
-                    out = out char
-                }
-            }
-
-            return out
-        }
-
-        # Camel case struct fields
+        # Fix camel case struct fields
         /\s*pub \w*:/ {
             # field name start and end index
             start = match($0, "pub ") + 4
@@ -175,6 +178,21 @@ cat <(pspModule $2) <(header $1 | rustfmt) \
             print substr($0, fn_return)
             printf "\n"
 
+            next
+        }
+
+        { print }
+    ' \
+    | awk "$AWK_CAMEL"'
+        # Fix camel case doc comment parameter names
+        /\s*\/\/\/ - `/ {
+            start = index($0, "`") + 1
+            end = index(substr($0, start), "`") + start
+            camel = substr($0, start, end - start)
+
+            sub(camel, camelToSnake(camel), $0)
+
+            print $0
             next
         }
 
