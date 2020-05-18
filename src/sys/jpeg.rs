@@ -48,7 +48,7 @@ sys_lib! {
     /// # Parameters
     ///
     /// - `jpeg_buf`: the buffer with the mjpeg frame
-    /// - `size`: size of the buffer pointed by jpegbuf
+    /// - `size`: size of the buffer pointed by `jpeg_buf`
     /// - `rgba`: buffer where the decoded data in RGBA format will be stored.
     ///           It should have a size of (width * height * 4).
     /// - `unk`: Unknown, pass 0
