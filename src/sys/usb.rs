@@ -124,7 +124,7 @@ pub struct CamSetupStillParam {
     pub comp_level: i32,
 }
 
-/// Structure for sceUsbCamSetupStillEx
+/// Structure for `sce_usb_cam_setup_still_ex`
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct CamSetupStillExParam {
@@ -186,7 +186,7 @@ pub struct CamSetupVideoParam {
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct CamSetupVideoExParam {
-    /// Size of the ::CamSetupVideoParam structure
+    /// Size of the `CamSetupVideoParam` structure
     pub size: i32,
     pub unk: u32,
     /// Resolution.
