@@ -9,6 +9,7 @@ pub mod usb;
 pub mod power;
 pub mod wlan;
 pub mod rtc;
+pub mod io;
 pub mod audio;
 pub mod atrac;
 
