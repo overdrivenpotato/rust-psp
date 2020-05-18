@@ -97,7 +97,14 @@ cat <(pspModule $2) <(header $1 | rustfmt) \
 
                 next
             } else if (!header_done) {
-                nid_map[substr($0, match($0, ",") + 1)] = substr($0, 1, match($0, ",") - 1)
+                nid_name = substr($0, match($0, ",") + 1)
+                nid_hex = substr($0, 1, match($0, ",") - 1)
+
+                # Remove carriage returns
+                gsub("\r", "", nid_name)
+
+                nid_map[nid_name] = nid_hex
+
                 next
             }
         }
