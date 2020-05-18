@@ -11,6 +11,7 @@ pub mod wlan;
 pub mod rtc;
 pub mod io;
 pub mod audio;
+pub mod atrac;
 
 use core::ffi::c_void;
 
