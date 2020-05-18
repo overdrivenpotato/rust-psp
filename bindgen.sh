@@ -17,10 +17,20 @@ header() {
             s/::std::os::raw::c_uint/u32/g
             s/::std::os::raw::c_void/c_void/g
             s/::std::os::raw::c_char/u8/g
+            s/::std::os::raw::c_uchar/u8/g
 
             s/uint/u32/g
+
             s/SceSize/usize/g
             s/SceSSize/isize/g
+            s/SceVoid/c_void/g
+
+            s/SceInt32/i32/g
+            s/SceShort16/i16/g
+
+            s/SceUInt32/u32/g
+            s/SceUChar8/u8/g
+
             s/pub fn/pub unsafe fn/
             s/@param (\w*)\s+- /- `\1`: /
             s/@return (.*)/# Return Value\n    \/\/\/\n    \/\/\/ \1/
@@ -173,7 +183,7 @@ cat <(pspModule $2) <(header $1 | rustfmt) \
                 sub(arg_camel, arg_snake, arg)
 
                 if (args_multiline) printf "        " arg ",\n"
-                else if (arg_comma) printf arg ","
+                else if (arg_comma) printf arg ", "
                 else                printf arg
 
                 # Advance the argument substring onto the next one
