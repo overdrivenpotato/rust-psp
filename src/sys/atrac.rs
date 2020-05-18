@@ -26,8 +26,8 @@ sys_lib! {
     ///
     /// # Parameters
     ///
-    /// `buf` - the buffer holding the atrac3 data, including the RIFF/WAVE header.
-    /// `bufsize` - the size of the buffer pointed by buf
+    /// - `buf`: the buffer holding the atrac3 data, including the RIFF/WAVE header.
+    /// - `bufsize`: the size of the buffer pointed by buf
     ///
     /// # Return Value
     ///
@@ -42,11 +42,11 @@ sys_lib! {
     ///
     /// # Parameters
     ///
-    /// `atracID` - the atrac ID
-    /// `outSamples` - pointer to a buffer that receives the decoded data of the current frame
-    /// `outN` - pointer to a integer that receives the number of audio samples of the decoded frame
-    /// `outEnd` - pointer to a integer that receives a boolean value indicating if the decoded frame is the last one
-    /// `outRemainFrame` - pointer to a integer that receives either -1 if all at3 data is already on memory,
+    /// - `atrac_id`: the atrac ID
+    /// - `out_samples`: pointer to a buffer that receives the decoded data of the current frame
+    /// - `out_n`: pointer to a integer that receives the number of audio samples of the decoded frame
+    /// - `out_end`: pointer to a integer that receives a boolean value indicating if the decoded frame is the last one
+    /// - `out_remain_frame`: pointer to a integer that receives either -1 if all at3 data is already on memory,
     ///  or the remaining (not decoded yet) frames at memory if not all at3 data is on memory
     ///
     ///
@@ -66,8 +66,8 @@ sys_lib! {
     ///
     /// # Parameters
     ///
-    /// `atracID` - the atrac ID
-    /// `outRemainFrame` - pointer to a integer that receives either -1 if all at3 data is already on memory,
+    /// - `atrac_id`: the atrac ID
+    /// - `out_remain_frame`: pointer to a integer that receives either -1 if all at3 data is already on memory,
     ///  or the remaining (not decoded yet) frames at memory if not all at3 data is on memory
     ///
     /// # Return Value
@@ -81,10 +81,10 @@ sys_lib! {
     #[psp(0x5D268707)]
     /// # Parameters
     ///
-    /// `atracID` - the atrac ID
-    /// `writePointer` - Pointer to where to read the atrac data
-    /// `availableBytes` - Number of bytes available at the writePointer location
-    /// `readOffset` - Offset where to seek into the atrac file before reading
+    /// - `atrac_id`: the atrac ID
+    /// - `write_pointer`: Pointer to where to read the atrac data
+    /// - `available_bytes`: Number of bytes available at the writePointer location
+    /// - `read_offset`: Offset where to seek into the atrac file before reading
     ///
     /// # Return Value
     ///
@@ -99,8 +99,8 @@ sys_lib! {
     #[psp(0x7DB31251)]
     /// # Parameters
     ///
-    /// `atracID` - the atrac ID
-    /// `bytesToAdd` - Number of bytes read into location given by sceAtracGetStreamDataInfo().
+    /// - `atrac_id`: the atrac ID
+    /// - `bytes_to_add`: Number of bytes read into location given by sceAtracGetStreamDataInfo().
     ///
     /// # Return Value
     ///
@@ -115,8 +115,8 @@ sys_lib! {
     ///
     /// # Parameters
     ///
-    /// `atracID` - the atracID
-    /// `outBitrate` - pointer to a integer that receives the bitrate in kbps
+    /// - `atrac_id`: the atracID
+    /// - `out_bitrate`: pointer to a integer that receives the bitrate in kbps
     ///
     /// # Return Value
     ///
@@ -131,8 +131,8 @@ sys_lib! {
     ///
     /// # Parameters
     ///
-    /// `atracID` - the atracID
-    /// `nloops` - the number of loops to set
+    /// - `atrac_id`: the atracID
+    /// - `nloops`: the number of loops to set
     ///
     /// # Return Value
     ///
@@ -147,7 +147,7 @@ sys_lib! {
     ///
     /// # Parameters
     ///
-    /// `atracID` - the atrac ID to release
+    /// - `atrac_id`: the atrac ID to release
     ///
     /// # Return Value
     ///
@@ -159,8 +159,8 @@ sys_lib! {
     ///
     /// # Parameters
     ///
-    /// `atracID` - the atrac ID
-    /// `outN` - pointer to receives the number of samples of the next frame.
+    /// - `atrac_id`: the atrac ID
+    /// - `out_n`: pointer to receives the number of samples of the next frame.
     ///
     /// # Return Value
     ///
@@ -176,8 +176,8 @@ sys_lib! {
     ///
     /// # Parameters
     ///
-    /// `atracID` - the atrac ID
-    /// `outMax`  - pointer to a integer that receives the maximum number of samples.
+    /// - `atrac_id`: the atrac ID
+    /// - `out_max`: pointer to a integer that receives the maximum number of samples.
     ///
     /// # Return Value
     ///
