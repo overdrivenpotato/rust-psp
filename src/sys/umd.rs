@@ -167,7 +167,7 @@ sys_lib! {
     /// # Return Value
     ///
     /// < 0 on error
-    pub unsafe fn sce_umd_register_umd_call_back(cbid: i32) -> i32;
+    pub unsafe fn sce_umd_register_umd_callback(cbid: i32) -> i32;
 
     #[psp(0xBD2BDE07)]
     /// Un-register a callback for the UMD drive
@@ -179,7 +179,7 @@ sys_lib! {
     /// # Return Value
     ///
     /// < 0 on error
-    pub unsafe fn sce_umd_un_register_umd_call_back(cbid: i32) -> i32;
+    pub unsafe fn sce_umd_un_register_umd_callback(cbid: i32) -> i32;
 
     #[psp(0xCBE9F02A)]
     /// Permit UMD disc being replaced
