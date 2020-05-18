@@ -110,14 +110,24 @@ macro_rules! sys_lib {
     };
 
     // Generate body with an ABI mapper
-    (__BODY $abi:ident $name:ident ($($arg:ident : $arg_ty:ty)*) $(-> $ret:ty)?) => {
+    (__BODY $abi:ident $name:ident ($($arg:ident : $arg_ty:ty)*) $(-> $ret:ty)?) => {{
+        #[cfg(target_os = "psp")]
         {
             core::mem::transmute($crate::sys::macros::black_box($abi(
-                $($arg as u32),*,
+                $(core::mem::transmute($arg)),*,
                 $crate::sys::macros::black_box(core::mem::transmute(expr! { [< __ $name _stub >] } as usize)),
             )))
         }
-    };
+
+        #[cfg(not(target_os = "psp"))]
+        {
+            // Remove unused warnings
+            let _abi = $abi;
+            $(let _arg: $arg_ty = $arg;)*
+
+            panic!("tried to call PSP system function on non-PSP target");
+        }
+    }};
 
     (
         #![name = $lib_name:expr]
