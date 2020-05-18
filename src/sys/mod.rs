@@ -13,6 +13,7 @@ pub mod io;
 pub mod audio;
 pub mod atrac;
 pub mod mp3;
+pub mod umd;
 
 use core::ffi::c_void;
 
