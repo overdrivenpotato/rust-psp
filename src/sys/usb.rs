@@ -1,6 +1,19 @@
 use core::ffi::c_void;
 
-pub const USBBUS_DRIVERNAME: &str = "USBBusDriver";
+/// For use with `sce_usb_activate` and `sce_usb_deactivate`.
+pub const USB_CAM_PID: i32 = 0x282;
+
+pub const USB_BUS_DRIVER_NAME: &str = "USBBusDriver";
+pub const USB_CAM_DRIVER_NAME: &str = "USBCamDriver";
+pub const USB_CAM_MIC_DRIVER_NAME: &str = "USBCamMicDriver";
+
+bitflags::bitflags! {
+    pub struct State: i32 {
+        const ACTIVATED = 0x200;
+        const CONNECTED = 0x020;
+        const ESTABLISHED = 0x002;
+    }
+}
 
 sys_lib! {
     #![name = "sceUsb"]
@@ -12,7 +25,9 @@ sys_lib! {
     ///
     /// # Parameters
     ///
-    /// - `driver_name`: name of the USB driver to start
+    /// - `driver_name`: name of the USB driver to start. You probably want to
+    ///   use `USB_BUS_DRIVER_NAME`. Other driver name constants are also
+    ///   available for the camera.
     /// - `size`: Size of arguments to pass to USB driver start
     /// - `args`: Arguments to pass to USB driver start
     ///
@@ -48,7 +63,8 @@ sys_lib! {
     ///
     /// # Parameters
     ///
-    /// - `pid`: Product ID for the default USB Driver
+    /// - `pid`: Product ID for the default USB Driver. An example is the
+    ///   constant `USB_CAM_PID`.
     ///
     /// # Return Value
     ///
@@ -72,8 +88,8 @@ sys_lib! {
     ///
     /// # Return Value
     ///
-    /// OR'd PSP_USB_* constants
-    pub unsafe fn sce_usb_get_state() -> i32;
+    /// USB `State`.
+    pub unsafe fn sce_usb_get_state() -> State;
 
     #[psp(0x112CC951)]
     /// Get state of a specific USB driver
@@ -92,79 +108,79 @@ sys_lib! {
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct CamSetupStillParam {
-    /// Size of the `CamSetupStillParam` structure
+    /// Size of the `CamSetupStillParam` structure.
     pub size: i32,
     /// Resolution.
     pub resolution: CamResolution,
-    /// Size of the jpeg image
-    pub jpegsize: i32,
-    /// Reverse effect to apply. Zero or more of `CamReverseFlags`
-    pub reverseflags: CamReverseFlags,
+    /// Size of the jpeg image.
+    pub jpeg_size: i32,
+    /// Reverse effect to apply. Zero or more of `CamReverseFlags`.
+    pub reverse_flags: CamReverseFlags,
     /// Delay to apply to take the picture.
     pub delay: CamDelay,
     /// JPEG compression level, a value from 1-63.
     ///
-    /// 1 -> less compression, better quality; 63 -> max compression, worse quality
-    pub complevel: i32,
+    /// 1 -> less compression, better quality; 63 -> max compression, worse quality.
+    pub comp_level: i32,
 }
 
 /// Structure for sceUsbCamSetupStillEx
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct CamSetupStillExParam {
-    /// Size of the `CamSetupStillExParam` structure
+    /// Size of the `CamSetupStillExParam` structure.
     pub size: i32,
     /// Unknown, set it to 9 at the moment.
     pub unk: u32,
     /// Resolution.
     pub resolution: CamResolutionEx,
-    /// Size of the jpeg image
-    pub jpegsize: i32,
+    /// Size of the jpeg image.
+    pub jpeg_size: i32,
     /// JPEG compression level, a value from 1-63.
     ///
-    /// 1 -> less compression, better quality; 63 -> max compression, worse quality
-    pub complevel: i32,
-    /// Unknown, set it to 0 at the moment
+    /// 1 -> less compression, better quality; 63 -> max compression, worse quality.
+    pub comp_level: i32,
+    /// Unknown, set it to 0 at the moment.
     pub unk2: u32,
-    /// Unknown, set it to 1 at the moment
+    /// Unknown, set it to 1 at the moment.
     pub unk3: u32,
-    /// Flag that indicates whether to flip the image
+    /// Flag that indicates whether to flip the image.
     pub flip: i32,
-    /// Flag that indicates whether to mirror the image
+    /// Flag that indicates whether to mirror the image.
     pub mirror: i32,
     /// Delay to apply to take the picture.
     pub delay: CamDelay,
-    /// Unknown, set it to 0 at the moment
+    /// Unknown, set it to 0 at the moment.
     pub unk4: [u32; 5usize],
 }
 
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct CamSetupVideoParam {
-    /// Size of the `CamSetupVideoParam` structure
+    /// Size of the `CamSetupVideoParam` structure.
     pub size: i32,
     /// Resolution.
     pub resolution: CamResolution,
     /// Framerate.
     pub framerate: CamFrameRate,
     /// White balance.
-    pub wb: CamWb,
-    /// Saturarion (0-255)
+    pub white_balance: CamWb,
+    /// Saturation (0-255).
     pub saturation: i32,
-    /// Brightness (0-255)
+    /// Brightness (0-255).
     pub brightness: i32,
-    /// Contrast (0-255)
+    /// Contrast (0-255).
     pub contrast: i32,
-    /// Sharpness (0-255)
+    /// Sharpness (0-255).
     pub sharpness: i32,
     /// Effect mode.
-    pub effectmode: CamEffectMode,
-    /// Size of jpeg video frame
-    pub framesize: i32,
+    pub effect_mode: CamEffectMode,
+    /// Size of jpeg video frame.
+    pub frame_size: i32,
     /// Unknown. Set it to 0 at the moment.
     pub unk: u32,
     /// Exposure value.
-    pub evlevel: CamEvLevel,
+    pub evl_evel: CamEvLevel,
 }
 
 #[repr(C)]
@@ -182,7 +198,7 @@ pub struct CamSetupVideoExParam {
     /// Unknown. Set it to 3 at the moment
     pub unk3: u32,
     /// White balance.
-    pub wb: CamWb,
+    pub white_balance: CamWb,
     /// Saturation (0-255)
     pub saturation: i32,
     /// Brightness (0-255)
@@ -198,7 +214,7 @@ pub struct CamSetupVideoExParam {
     /// Unknown. Set it to 0 at the moment
     pub unk6: [u32; 3usize],
     /// Effect mode.
-    pub effectmode: CamEffectMode,
+    pub effect_mode: CamEffectMode,
     /// Unknown. Set it to 1 at the moment
     pub unk7: u32,
     /// Unknown. Set it to 10 at the moment
@@ -210,11 +226,11 @@ pub struct CamSetupVideoExParam {
     /// Unknown. Set it to 1000 at the moment
     pub unk11: u32,
     /// Size of jpeg video frame
-    pub framesize: i32,
+    pub frame_size: i32,
     /// Unknown. Set it to 0 at the moment
     pub unk12: u32,
     /// Exposure value.
-    pub evlevel: CamEvLevel,
+    pub ev_level: CamEvLevel,
 }
 
 /// Resolutions for `sce_usb_cam_setup_still` & `sce_usb_cam_setup_video`
@@ -276,15 +292,15 @@ pub enum CamFrameRate {
     /// 3.75 FPS
     Fps3_75 = 0,
     /// 5 FPS
-    Fps5 = 1, 
+    Fps5 = 1,
     /// 7.5 FPS
     Fps7_5 = 2,
     /// 10 FPS
-    Fps10 = 3, 
+    Fps10 = 3,
     /// 15 FPS
-    Fps15 = 4, 
+    Fps15 = 4,
     /// 20 FPS
-    Fps20 = 5, 
+    Fps20 = 5,
     /// 30 FPS
     Fps30 = 6,
     /// 60 FPS
@@ -395,7 +411,7 @@ sys_lib! {
     /// # Return Value
     ///
     /// size of acquired image on success, < 0 on error
-    pub unsafe fn sce_usb_cam_still_input_blocking(buf: *mut u8,size: usize) -> i32;
+    pub unsafe fn sce_usb_cam_still_input_blocking(buf: *mut u8, size: usize) -> i32;
 
     #[psp(0xFB0A6C5D)]
     /// Gets a still image. The function returns inmediately, and
@@ -410,7 +426,7 @@ sys_lib! {
     /// # Return Value
     ///
     /// 0 on success, < 0 on error
-    pub unsafe fn sce_usb_cam_still_input(buf: *mut u8,size: usize) -> i32;
+    pub unsafe fn sce_usb_cam_still_input(buf: *mut u8, size: usize) -> i32;
 
     #[psp(0x7563AFA1)]
     /// Waits untils still input has been finished.
@@ -451,16 +467,16 @@ sys_lib! {
     /// # Parameters
     ///
     /// - `param`: Pointer to a `CamSetupVideoParam` structure.
-    /// - `workarea`: Pointer to a buffer used as work area by the driver.
-    /// - `wasize`: Size of the work area.
+    /// - `work_area`: Pointer to a buffer used as work area by the driver.
+    /// - `work_area_size`: Size of the work area.
     ///
     /// # Return Value
     ///
     /// 0 on success, < 0 on error
     pub unsafe fn sce_usb_cam_setup_video(
         param: *mut CamSetupVideoParam,
-        workarea: *mut c_void,
-        wasize: i32,
+        work_area: *mut c_void,
+        work_area_size: i32,
     ) -> i32;
 
     #[psp(0xCFE9E999)]
@@ -469,16 +485,16 @@ sys_lib! {
     /// # Parameters
     ///
     /// - `param`: Pointer to a `CamSetupVideoExParam` structure.
-    /// - `workarea`: Pointer to a buffer used as work area by the driver.
-    /// - `wasize`: Size of the work area.
+    /// - `work_area`: Pointer to a buffer used as work area by the driver.
+    /// - `work_area_size`: Size of the work area.
     ///
     /// # Return Value
     ///
     /// 0 on success, < 0 on error
     pub unsafe fn sce_usb_cam_setup_video_ex(
         param: *mut CamSetupVideoExParam,
-        workarea: *mut c_void,
-        wasize: i32,
+        work_area: *mut c_void,
+        work_area_size: i32,
     ) -> i32;
 
     #[psp(0x574A8C3F)]
@@ -509,7 +525,7 @@ sys_lib! {
     /// # Return Value
     ///
     /// size of acquired frame on success, < 0 on error
-    pub unsafe fn sce_usb_cam_read_video_frame_blocking(buf: *mut u8,size: usize) -> i32;
+    pub unsafe fn sce_usb_cam_read_video_frame_blocking(buf: *mut u8, size: usize) -> i32;
 
     #[psp(0x99D86281)]
     /// Reads a video frame. The function returns inmediately, and
@@ -524,7 +540,7 @@ sys_lib! {
     /// # Return Value
     ///
     /// 0 on success, < 0 on error
-    pub unsafe fn sce_usb_cam_read_video_frame(buf: *mut u8,size: usize) -> i32;
+    pub unsafe fn sce_usb_cam_read_video_frame(buf: *mut u8, size: usize) -> i32;
 
     #[psp(0xF90B2293)]
     /// Waits untils the current frame has been read.
@@ -604,36 +620,36 @@ sys_lib! {
     ///
     /// # Parameters
     ///
-    /// - `effectmode`: The effect mode, one of `CamEffectMode`
+    /// - `effect_mode`: The effect mode, one of `CamEffectMode`
     ///
     /// # Return Value
     ///
     /// 0 on success, < 0 on error
-    pub unsafe fn sce_usb_cam_set_image_effect_mode(effectmode: CamEffectMode) -> i32;
+    pub unsafe fn sce_usb_cam_set_image_effect_mode(effect_mode: CamEffectMode) -> i32;
 
     #[psp(0x1D686870)]
     /// Sets the exposure level
     ///
     /// # Parameters
     ///
-    /// - `ev`: The exposure level, one of `CamEvLevel`
+    /// - `exposure_level`: The exposure level, one of `CamEvLevel`
     ///
     /// # Return Value
     ///
     /// 0 on success, < 0 on error
-    pub unsafe fn sce_usb_cam_set_ev_level(ev: CamEvLevel) -> i32;
+    pub unsafe fn sce_usb_cam_set_ev_level(exposure_level: CamEvLevel) -> i32;
 
     #[psp(0x951BEDF5)]
     /// Sets the reverse mode
     ///
     /// # Parameters
     ///
-    /// - `reverseflags`: The reverse flags, zero or more of `CamReverseFlags`
+    /// - `reverse_flags`: The reverse flags, zero or more of `CamReverseFlags`
     ///
     /// # Return Value
     ///
     /// 0 on success, < 0 on error
-    pub unsafe fn sce_usb_cam_set_reverse_mode(reverseflags: CamReverseFlags) -> i32;
+    pub unsafe fn sce_usb_cam_set_reverse_mode(reverse_flags: CamReverseFlags) -> i32;
 
     #[psp(0xC484901F)]
     /// Sets the zoom.
@@ -698,13 +714,13 @@ sys_lib! {
     ///
     /// # Parameters
     ///
-    /// - `effectmode`: pointer to a variable that receives the current effect mode
+    /// - `effect_mode`: pointer to a variable that receives the current effect mode
     ///
     /// # Return Value
     ///
     /// 0 on success, < 0 on error
     pub unsafe fn sce_usb_cam_get_image_effect_mode(
-        effectmode: *mut CamEffectMode,
+        effect_mode: *mut CamEffectMode,
     ) -> i32;
 
     #[psp(0x2BCD50C0)]
@@ -712,25 +728,25 @@ sys_lib! {
     ///
     /// # Parameters
     ///
-    /// - `ev`: pointer to a variable that receives the current exposure level
+    /// - `exposure_level`: pointer to a variable that receives the current exposure level
     ///
     /// # Return Value
     ///
     /// 0 on success, < 0 on error
-    pub unsafe fn sce_usb_cam_get_ev_level(ev: *mut CamEvLevel) -> i32;
+    pub unsafe fn sce_usb_cam_get_ev_level(exposure_level: *mut CamEvLevel) -> i32;
 
     #[psp(0xD5279339)]
     /// Gets the current reverse mode.
     ///
     /// # Parameters
     ///
-    /// - `reverseflags`: pointer to a variable that receives the current reverse mode flags
+    /// - `reverse_flags`: pointer to a variable that receives the current reverse mode flags
     ///
     /// # Return Value
     ///
     /// 0 on success, < 0 on error
     pub unsafe fn sce_usb_cam_get_reverse_mode(
-        reverseflags: *mut CamReverseFlags,
+        reverse_flags: *mut CamReverseFlags,
     ) -> i32;
 
     #[psp(0x9E8AAF8D)]
