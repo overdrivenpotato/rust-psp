@@ -1,4 +1,5 @@
 use core::ffi::c_void;
+use crate::eabi::i5;
 
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
@@ -37,7 +38,7 @@ sys_lib! {
         bufsize: usize,
     ) -> i32;
 
-    #[psp(0x6A8C3CD5)]
+    #[psp(0x6A8C3CD5, i5)]
     /// Decode a frame of data.
     ///
     /// # Parameters
