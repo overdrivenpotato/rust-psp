@@ -12,6 +12,7 @@ pub mod rtc;
 pub mod io;
 pub mod audio;
 pub mod atrac;
+pub mod mp3;
 
 use core::ffi::c_void;
 
