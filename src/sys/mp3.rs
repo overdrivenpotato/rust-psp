@@ -14,11 +14,11 @@ pub struct InitArg {
     pub unk2: u32,
     /// Pointer to a buffer to contain raw mp3 stream data (+1472 bytes workspace)
     pub mp3_buf: *mut c_void,
-    /// Size of mp3Buf buffer (must be >= 8192)
+    /// Size of the `mp3_buf` buffer (must be >= 8192)
     pub mp3_buf_size: i32,
-    /// Pointer to decoded pcm samples buffer
+    /// Pointer to output buffer where decoded PCM samples will be written.
     pub pcm_buf: *mut c_void,
-    /// Size of pcmBuf buffer (must be >= 9216)
+    /// Size of `pcm_buf` buffer (must be >= 9216)
     pub pcm_buf_size: i32,
 }
 
@@ -91,8 +91,8 @@ sys_lib! {
     ///
     /// - `handle`: MP3 handle
     /// - `dst`: Pointer to stream data buffer
-    /// - `towrite`: Space remaining in stream data buffer
-    /// - `srcpos`: Position in source stream to start reading from
+    /// - `to_write`: Space remaining in stream data buffer
+    /// - `src_pos`: Position in source stream to start reading from
     ///
     /// # Return Value
     ///
@@ -100,8 +100,8 @@ sys_lib! {
     pub unsafe fn sce_mp3_get_info_to_add_stream_data(
         handle: Handle,
         dst: *mut *mut u8,
-        towrite: *mut i32,
-        srcpos: *mut i32,
+        to_write: *mut i32,
+        src_pos: *mut i32,
     ) -> i32;
 
     #[psp(0x0DB149F4)]
@@ -129,7 +129,7 @@ sys_lib! {
     /// # Parameters
     ///
     /// - `handle`: MP3 handle
-    /// - `loop`: Number of loops
+    /// - `loop_`: Number of loops
     ///
     /// # Return Value
     ///
