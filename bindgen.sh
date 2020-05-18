@@ -16,6 +16,7 @@ header() {
             s/::std::os::raw::c_int/i32/g
             s/::std::os::raw::c_uint/u32/g
             s/::std::os::raw::c_void/c_void/g
+            s/::std::os::raw::c_char/u8/g
 
             s/uint/u32/g
             s/SceSize/usize/g
