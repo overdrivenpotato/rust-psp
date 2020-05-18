@@ -282,7 +282,7 @@ sys_lib! {
     /// # Return value
     ///
     /// The position in the file after the seek.
-    pub unsafe fn sceio_lseek32(fd: SceUid, offset: i32, whence: Whence)
+    pub unsafe fn sce_io_lseek32(fd: SceUid, offset: i32, whence: Whence)
      -> i32;
 
     #[psp(0x1B385D8F)]
