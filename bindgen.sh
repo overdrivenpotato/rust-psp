@@ -21,7 +21,7 @@ header() {
             s/SceSize/usize/g
             s/SceSSize/isize/g
             s/pub fn/pub unsafe fn/
-            s/@param (\w*) - /- `\1`: /
+            s/@param (\w*)\s+- /- `\1`: /
             s/@return (.*)/# Return Value\n    \/\/\/\n    \/\/\/ \1/
 
             # Delete redundant types resulting from previous replacements
