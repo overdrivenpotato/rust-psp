@@ -10,5 +10,5 @@ sys_lib! {
     #![version = (0x00, 0x11)]
 
     #[psp(0xC69BEBCE)]
-    pub unsafe fn sce_open_psidget_open_psid(openpsid: *mut OpenPSID) -> i32;
+    pub unsafe fn sce_open_psid_get_open_psid(openpsid: *mut OpenPSID) -> i32;
 }
