@@ -16,6 +16,7 @@ pub mod mp3;
 pub mod jpeg;
 pub mod umd;
 pub mod mpeg;
+pub mod openpsid;
 
 use core::ffi::c_void;
 
