@@ -57,7 +57,7 @@ header() {
 
             { print }
 
-            /-> \w+;/ { printf "\n"; }
+            /-> .*;/ { printf "\n"; }
 
             END { print "}" }
         ' \
