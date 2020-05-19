@@ -1,4 +1,5 @@
 use core::ffi::c_void;
+use crate::eabi::{i5, i6, i7};
 
 /// A data handle used for various functions.
 ///
@@ -102,7 +103,7 @@ sys_lib! {
     /// < 0 if error else ringbuffer data size.
     pub unsafe fn sce_mpeg_ringbuffer_query_mem_size(packets: i32) -> i32;
 
-    #[psp(0x37295ED8)]
+    #[psp(0x37295ED8, i6)]
     /// # Parameters
     ///
     /// - `ringbuffer`: pointer to a sceMpegRingbuffer struct
@@ -166,7 +167,7 @@ sys_lib! {
     /// < 0 if error else decoder data size.
     pub unsafe fn sce_mpeg_query_mem_size(unk: i32) -> i32;
 
-    #[psp(0xD8C5F121)]
+    #[psp(0xD8C5F121, i7)]
     /// # Parameters
     ///
     /// - `mpeg`: will be filled
@@ -318,7 +319,7 @@ sys_lib! {
     /// 0 if success.
     pub unsafe fn sce_mpeg_avc_decode_mode(handle: Handle, mode: *mut AvcMode) -> i32;
 
-    #[psp(0x0E3C2E9D)]
+    #[psp(0x0E3C2E9D, i5)]
     /// # Parameters
     ///
     /// - `handle`: Instance handle
