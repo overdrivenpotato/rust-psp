@@ -94,3 +94,47 @@ pub unsafe extern "C" fn i5(
 
     core::intrinsics::unreachable()
 }
+
+/// Call a function accepting 7 arguments via the MIPS-EABI ABI.
+///
+/// See documentation for `i6` for details.
+#[inline(always)]
+pub unsafe fn i7(
+    a: u32,
+    b: u32,
+    c: u32,
+    d: u32,
+    e: u32,
+    f: u32,
+    g: u32,
+    ptr: fn(u32, u32, u32, u32, u32, u32, u32) -> u32,
+) -> u32 {
+    #[naked]
+    #[inline(never)]
+    unsafe fn inner() -> u32 {
+        llvm_asm!(r#"
+            addiu $$sp, -32
+            sw $$ra, 8($$sp)
+
+            lw $$t0, 48($$sp)
+            lw $$t1, 52($$sp)
+            lw $$t2, 56($$sp)
+
+            lw $$t3, 60($$sp)
+            jalr $$t3
+
+            lw $$ra, 8($$sp)
+            addiu $$sp, 32
+            jr $$ra
+        "#);
+
+        core::intrinsics::unreachable()
+    }
+
+    type Target = fn(
+        u32, u32, u32, u32, u32, u32, u32,
+        fn(u32, u32, u32, u32, u32, u32, u32) -> u32
+    ) -> u32;
+
+    core::mem::transmute::<_, Target>(inner as usize)(a, b, c, d, e, f, g, ptr)
+}

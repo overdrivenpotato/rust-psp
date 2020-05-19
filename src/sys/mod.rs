@@ -15,6 +15,7 @@ pub mod atrac;
 pub mod mp3;
 pub mod jpeg;
 pub mod umd;
+pub mod mpeg;
 
 use core::ffi::c_void;
 
