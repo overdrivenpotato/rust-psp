@@ -55,27 +55,27 @@ pub struct Ringbuffer {
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct Au {
-    /// presentation timestamp MSB
-    pub ipts_msb: u32,
-    /// presentation timestamp LSB
-    pub ipts: u32,
-    /// decode timestamp MSB
-    pub idts_msb: u32,
-    /// decode timestamp LSB
-    pub idts: u32,
+    /// Presentation timestamp MSB
+    pub pts_msb: u32,
+    /// Presentation timestamp LSB
+    pub pts: u32,
+    /// Decode timestamp MSB
+    pub dts_msb: u32,
+    /// Decode timestamp LSB
+    pub dts: u32,
     /// Es buffer handle
-    pub ies_buffer: u32,
+    pub es_buffer: u32,
     /// Au size
-    pub iau_size: u32,
+    pub au_size: u32,
 }
 
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct AvcMode {
-    /// unknown, set to -1
+    /// Unknown, set to -1
     pub unk0: i32,
     /// Decode pixelformat
-    pub ipixel_format: i32,
+    pub pixel_format: i32,
 }
 
 sys_lib! {
