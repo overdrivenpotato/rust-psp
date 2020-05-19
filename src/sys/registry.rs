@@ -1,4 +1,5 @@
 use core::ffi::c_void;
+use crate::eabi::i5;
 
 pub const SYSTEM_REGISTRY: [u8; 7] = *b"/system";
 pub const REG_KEYNAME_SIZE: u32 = 27;
@@ -142,7 +143,7 @@ sys_lib! {
     /// 0 on success, < 0 on error
     pub unsafe fn sce_reg_flush_category(dir_handle: Handle) -> i32;
 
-    #[psp(0xD4475AA8)]
+    #[psp(0xD4475AA8, i5)]
     /// Get a key's information
     ///
     /// # Parameters
