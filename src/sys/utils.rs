@@ -72,36 +72,43 @@ sys_lib! {
     /// Write back the data cache to memory
     pub unsafe fn sce_kernel_dcache_writeback_all();
 
+    #[psp(0xB435DEC5)]
     /// Write back and invalidate the data cache
-    pub unsafe fn sceKernelDcacheWritebackInvalidateAll();
+    pub unsafe fn sce_kernel_dcache_writeback_invalidate_all();
 
+    #[psp(0x3EE30821)]
     /// Write back a range of addresses from the data cache to memory
-    pub unsafe fn sceKernelDcacheWritebackRange(
+    pub unsafe fn sce_kernel_dcache_writeback_range(
         p: *const c_void,
         size: u32,
     );
 
+    #[psp(0x34B9FA9E)]
     /// Write back and invalidate a range of addresses in the data cache
-    pub unsafe fn sceKernelDcacheWritebackInvalidateRange(
+    pub unsafe fn sce_kernel_dcache_writeback_invalidate_range(
         p: *const c_void,
         size: u32,
     );
 
+    #[psp(0xBFA98062)]
     /// Invalidate a range of addresses in data cache
-    pub unsafe fn sceKernelDcacheInvalidateRange(
+    pub unsafe fn sce_kernel_dcache_invalidate_range(
         p: *const c_void,
         size: u32,
     );
 
+    #[psp(0x920F104A)]
     /// Invalidate the instruction cache
-    pub unsafe fn sceKernelIcacheInvalidateAll();
+    pub unsafe fn sce_kernel_icache_invalidate_all();
 
+    #[psp(0xC2DF770E)]
     /// Invalidate a range of addresses in the instruction cache
-    pub unsafe fn sceKernelIcacheInvalidateRange(
+    pub unsafe fn sce_kernel_icache_invalidate_range(
         p: *const c_void,
         size: u32,
     );
 
+    #[psp(0xE860E75E)]
     /// Function to initialise a mersenne twister context.
     ///
     /// # Parameters
@@ -112,7 +119,7 @@ sys_lib! {
     /// # Return Value
     ///
     /// < 0 on error.
-    pub unsafe fn sceKernelUtilsMt19937Init(
+    pub unsafe fn sce_kernel_utils_mt19937_init(
         ctx: *mut SceKernelUtilsMt19937Context,
         seed: u32,
     ) -> i32;
