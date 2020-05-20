@@ -41,7 +41,7 @@ header() {
         ' \
         | awk '
             # Bindgen generates multiple extern blocks so we want to merge them.
-            /^}$/ { if (found_extern) next }
+            /^}$/ { if (found_extern) { printf "\n"; next } }
             /^extern/ {
                 if (!found_extern) {
                     found_extern = 1;
@@ -56,8 +56,6 @@ header() {
             { if ($0 ~ /\s*\/\/\/ - `/) params = 1; else params = 0 }
 
             { print }
-
-            /-> .*;/ { printf "\n"; }
 
             END { print "}" }
         ' \
