@@ -1,14 +1,10 @@
 use core::ffi::c_void;
 
-pub type ClockType = u32;
-pub type TimeType = i32;
-pub type SusecondsType = i32;
-
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct TimeVal {
-    pub tv_sec: TimeType,
-    pub tv_usec: SusecondsType,
+    pub tv_sec: i32,
+    pub tv_usec: i32,
 }
 
 #[repr(C)]
@@ -21,7 +17,7 @@ pub struct Timezone {
 /// Type to hold a sha1 context
 #[repr(C)]
 #[derive(Copy, Clone)]
-pub struct SceKernelUtilsSha1Context {
+pub struct Sha1Context {
     pub h: [u32; 5usize],
     pub us_remains: u16,
     pub us_computed: u16,
@@ -32,7 +28,7 @@ pub struct SceKernelUtilsSha1Context {
 /// Structure for holding a mersenne twister context
 #[repr(C)]
 #[derive(Copy, Clone)]
-pub struct SceKernelUtilsMt19937Context {
+pub struct Mt19937Context {
     pub count: u32,
     pub state: [u32; 624usize],
 }
@@ -40,7 +36,7 @@ pub struct SceKernelUtilsMt19937Context {
 /// Structure to hold the MD5 context
 #[repr(C)]
 #[derive(Copy, Clone)]
-pub struct SceKernelUtilsMd5Context {
+pub struct Md5Context {
     pub h: [u32; 4usize],
     pub pad: u32,
     pub us_remains: u16,
@@ -57,11 +53,11 @@ sys_lib! {
     #[psp(0x27CC57F0)]
     /// Get the time in seconds since the epoc (1st Jan 1970)
     ///
-    pub unsafe fn sce_kernel_libc_time(t: *mut TimeType) -> TimeType;
+    pub unsafe fn sce_kernel_libc_time(t: *mut i32) -> i32;
 
     #[psp(0x91E4F6A7)]
     /// Get the processor clock used since the start of the process
-    pub unsafe fn sce_kernel_libc_clock() -> ClockType;
+    pub unsafe fn sce_kernel_libc_clock() -> u32;
 
     #[psp(0x71EC4271)]
     /// Get the current time of time and time zone information
@@ -120,7 +116,7 @@ sys_lib! {
     ///
     /// < 0 on error.
     pub unsafe fn sce_kernel_utils_mt19937_init(
-        ctx: *mut SceKernelUtilsMt19937Context,
+        ctx: *mut Mt19937Context,
         seed: u32,
     ) -> i32;
 
@@ -133,7 +129,7 @@ sys_lib! {
     /// # Return Value
     ///
     /// A pseudo random number (between 0 and MAX_INT).
-    pub unsafe fn sce_kernel_utils_mt19937_uint(ctx: *mut SceKernelUtilsMt19937Context) -> u32;
+    pub unsafe fn sce_kernel_utils_mt19937_uint(ctx: *mut Mt19937Context) -> u32;
 
     #[psp(0xC8186A58)]
     /// Function to perform an MD5 digest of a data block.
@@ -163,7 +159,7 @@ sys_lib! {
     /// # Return Value
     ///
     /// < 0 on error.
-    pub unsafe fn sce_kernel_utils_md5_block_init(ctx: *mut SceKernelUtilsMd5Context) -> i32;
+    pub unsafe fn sce_kernel_utils_md5_block_init(ctx: *mut Md5Context) -> i32;
 
     #[psp(0x61E1E525)]
     /// Function to update the MD5 digest with a block of data.
@@ -178,7 +174,7 @@ sys_lib! {
     ///
     /// < 0 on error.
     pub unsafe fn sce_kernel_utils_md5_block_update(
-        ctx: *mut SceKernelUtilsMd5Context,
+        ctx: *mut Md5Context,
         data: *mut u8,
         size: u32,
     ) -> i32;
@@ -195,7 +191,7 @@ sys_lib! {
     ///
     /// < 0 on error.
     pub unsafe fn sce_kernel_utils_md5_block_result(
-        ctx: *mut SceKernelUtilsMd5Context,
+        ctx: *mut Md5Context,
         digest: *mut u8,
     ) -> i32;
 
@@ -228,7 +224,7 @@ sys_lib! {
     ///
     /// < 0 on error.
     pub unsafe fn sce_kernel_utils_sha1_block_init(
-        ctx: *mut SceKernelUtilsSha1Context,
+        ctx: *mut Sha1Context,
     ) -> i32;
 
     #[psp(0x346F6DA8)]
@@ -244,7 +240,7 @@ sys_lib! {
     ///
     /// < 0 on error.
     pub unsafe fn sce_kernel_utils_sha1_block_update(
-        ctx: *mut SceKernelUtilsSha1Context,
+        ctx: *mut Sha1Context,
         data: *mut u8,
         size: u32,
     ) -> i32;
@@ -261,7 +257,7 @@ sys_lib! {
     ///
     /// < 0 on error.
     pub unsafe fn sce_kernel_utils_sha1_block_result(
-        ctx: *mut SceKernelUtilsSha1Context,
+        ctx: *mut Sha1Context,
         digest: *mut u8,
     ) -> i32;
 }
