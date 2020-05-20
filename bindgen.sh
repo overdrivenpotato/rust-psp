@@ -18,6 +18,8 @@ header() {
             s/::std::os::raw::c_void/c_void/g
             s/::std::os::raw::c_char/u8/g
             s/::std::os::raw::c_uchar/u8/g
+            s/::std::os::raw::c_ulong/u32/g
+            s/::std::os::raw::c_long/i32/g
 
             s/uint/u32/g
 
