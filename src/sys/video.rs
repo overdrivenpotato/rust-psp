@@ -28,7 +28,7 @@ sys_lib! {
     ) -> i32;
 
     #[psp(0x4F160BF4)]
-    pub unsafe fn sce_videocodec_release_edram(_buffer: *mut u32)
+    pub unsafe fn sce_videocodec_release_edram(buffer: *mut u32)
         -> i32;
 
 }
