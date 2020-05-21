@@ -61,38 +61,45 @@ pub unsafe fn i6(
 /// Call a function accepting 5 arguments via the MIPS-EABI ABI.
 ///
 /// See documentation for `i6` for details.
-// TODO: Naked functions should not take arguments. This should be implemented
-// like `i6` instead.
-#[naked]
 #[inline(never)]
-#[no_mangle]
-pub unsafe extern "C" fn i5(
-    _a: u32,
-    _b: u32,
-    _c: u32,
-    _d: u32,
-    _e: u32,
-    _ptr: fn(u32, u32, u32, u32, u32) -> u32,
+pub unsafe fn i5(
+    a: u32,
+    b: u32,
+    c: u32,
+    d: u32,
+    e: u32,
+    ptr: fn(u32, u32, u32, u32, u32) -> u32,
 ) -> u32 {
-    llvm_asm!(
-        "
-            addiu $$sp, -32
-            sw $$ra, 8($$sp)
+    #[naked]
+    #[inline(never)]
+    unsafe fn inner() -> u32 {
+        llvm_asm!(
+            "
+                addiu $$sp, -32
+                sw $$ra, 8($$sp)
 
-            lw $$t0, 48($$sp)
+                lw $$t0, 48($$sp)
 
-            // Load and call the bridged function.
-            lw $$t9, 52($$sp)
-            jalr $$t9
+                // Load and call the bridged function.
+                lw $$t9, 52($$sp)
+                jalr $$t9
 
-            // Restore the stack and return.
-            lw $$ra, 8($$sp)
-            addiu $$sp, 32
-            jr $$ra
-        "
-    );
+                // Restore the stack and return.
+                lw $$ra, 8($$sp)
+                addiu $$sp, 32
+                jr $$ra
+            "
+        );
 
-    core::intrinsics::unreachable()
+        core::intrinsics::unreachable()
+    }
+
+    type Target = fn(
+        u32, u32, u32, u32, u32,
+        fn(u32, u32, u32, u32, u32) -> u32
+    ) -> u32;
+
+    core::mem::transmute::<_, Target>(inner as usize)(a, b, c, d, e, ptr)
 }
 
 /// Call a function accepting 7 arguments via the MIPS-EABI ABI.
