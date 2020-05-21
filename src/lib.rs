@@ -30,6 +30,7 @@ mod eabi;
 mod alloc_impl;
 pub mod panic;
 pub mod sys;
+pub mod vfpu;
 
 #[cfg(feature="emb-gfx")]
 pub mod framebuf_gfx;
