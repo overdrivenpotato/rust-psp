@@ -1404,6 +1404,36 @@ macro_rules! instruction {
         )
     };
 
+    // vscl.p 01100101 0ttttttt 0sssssss 1ddddddd
+    (vscl_p $d:ident, $s:ident, $t:ident) => {
+        concat!(
+            "\n.byte 0x80 | ", $crate::register_pair!($d),
+            "\n.byte ", $crate::register_pair!($s),
+            "\n.byte ", $crate::register_single!($t),
+            "\n.byte 0b01100101",
+        )
+    };
+
+    // vscl.t 01100101 0ttttttt 1sssssss 0ddddddd
+    (vscl_t $d:ident, $s:ident, $t:ident) => {
+        concat!(
+            "\n.byte ", $crate::register_triple!($d),
+            "\n.byte 0x80 | ", $crate::register_triple!($s),
+            "\n.byte ", $crate::register_single!($t),
+            "\n.byte 0b01100101",
+        )
+    };
+
+    // vscl.q 01100101 0ttttttt 1sssssss 1ddddddd
+    (vscl_q $d:ident, $s:ident, $t:ident) => {
+        concat!(
+            "\n.byte 0x80 | ", $crate::register_quad!($d),
+            "\n.byte 0x80 | ", $crate::register_quad!($s),
+            "\n.byte ", $crate::register_single!($t),
+            "\n.byte 0b01100101",
+        )
+    };
+
     // Raw MIPS assembly code.
     (mips $expr:expr) => {
         concat!("\n", $expr, "\n")
