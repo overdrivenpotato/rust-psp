@@ -12,16 +12,22 @@ pub mod rtc;
 pub mod io;
 pub mod audio;
 pub mod atrac;
-pub mod mp3;
 pub mod jpeg;
 pub mod umd;
 pub mod mpeg;
-pub mod openpsid;
-pub mod registry;
-pub mod sircs;
-pub mod video;
 pub mod hprm;
-pub mod nand;
+
+// These fail with a bus error when being loaded (tested in user mode on a PSP-2000).
+// TODO: Investigate and fix this
+// pub mod mp3;
+// pub mod registry;
+
+// These are not found (likely because this was tested in user mode).
+// TODO: Add kernel module support to this crate.
+// pub mod openpsid;
+// pub mod sircs;
+// pub mod video;
+// pub mod nand;
 
 use core::ffi::c_void;
 
