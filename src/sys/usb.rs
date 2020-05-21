@@ -1,4 +1,5 @@
 use core::ffi::c_void;
+use crate::sys::kernel::SceUid;
 
 /// For use with `sce_usb_activate` and `sce_usb_deactivate`.
 pub const USB_CAM_PID: i32 = 0x282;
@@ -791,3 +792,52 @@ sys_lib! {
     /// is "looking to the other side".
     pub unsafe fn sce_usb_cam_get_lens_direction() -> i32;
 }
+
+sys_lib! {
+    #![name = "sceUsbstorBoot"]
+    #![flags = 0x4009]
+    #![version = (0x00, 0x00)]
+
+    #[psp(0x1F080078)]
+    /// Register an eventFlag to send notifications to.
+    ///
+    /// # Parameters
+    ///
+    /// - `event_flag`: Event flag created with 
+    /// kernel::sce_kernel_create_event_flag
+    ///
+    /// # Return Value
+    ///
+    /// 0 on success
+    pub unsafe fn sce_usbstor_boot_register_notify(event_flag: SceUid) -> i32;
+
+    #[psp(0xA55C9E16)]
+    /// Unregister a previously registered event flag.
+    ///
+    /// # Parameters
+    ///
+    /// - `event_flag`: event flag created with sceKernelCreateEventFlag
+    ///
+    /// # Return Value
+    ///
+    /// 0 on success
+    pub unsafe fn sce_usbstor_boot_unregister_notify(event_flag: u32) -> i32;
+
+    #[psp(0xE58818A8)]
+    /// Tell the USBstorBoot driver the size of MS
+    ///
+    /// Note: I'm not sure if this is the actual size of the media or not
+    /// as it seems to have no bearing on what size windows detects.
+    /// PSPPET passes 0x800000
+    ///
+    /// # Parameters
+    ///
+    /// - `size`: capacity of memory stick
+    ///
+    /// # Return Value
+    ///
+    /// 0 on success
+    pub unsafe fn sce_usbstor_boot_set_capacity(size: u32) -> i32;
+
+}
+

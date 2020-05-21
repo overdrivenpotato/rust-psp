@@ -1,10 +1,41 @@
 use crate::eabi::{i5, i6};
 use core::ffi::c_void;
 
+bitflags::bitflags!{
+    pub struct EventFlagAttribute: u32 {
+        const WAIT_MULTIPLE = 0x200;
+    }
+}
+
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct SceKernelEventFlagOptParam {
+    pub size: usize,
+}
+
 sys_lib! {
     #![name = "ThreadManForUser"]
     #![flags = 0x4001]
     #![version = (0, 0)]
+
+    #[psp(0x55C20A00)]
+    /// Create an event flag.
+    ///
+    /// # Parameters
+    ///
+    /// - `name`: The name of the event flag.
+    /// - `attr`: Attributes from EventFlagAttribute
+    /// - `bits`: Initial bit pattern.
+    /// - `opt`: Options, set to NULL
+    /// # Return Value
+    ///
+    /// < 0 on error. >= 0 event flag id.
+    pub unsafe fn sce_kernel_create_event_flag(
+        name: *const u8,
+        attr: EventFlagAttribute,
+        bits: i32,
+        opt: *mut SceKernelEventFlagOptParam,
+    ) -> SceUid;
 
     #[psp(0x446D8DE6, i6)]
     /// Create a thread.
