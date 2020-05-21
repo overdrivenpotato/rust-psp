@@ -406,3 +406,26 @@ pub enum SignalBehavior{
     BehaviorSuspend  = 1,
     BehaviorContinue = 2   
 }
+
+/* Color Macros, maps 8 bit unsigned channels into one 32-bit value */
+pub const fn abgr(a : u8,b : u8,g : u8,r : u8) -> u32{
+    let mut res: u32 = 0;
+    res += (a as u32) << 24;
+    res += (b as u32) << 16;
+    res += (g as u32) << 8;
+    res += r as u32;
+    return res;
+}
+
+pub const fn argb(a : u8,r : u8,g : u8,b : u8) -> u32{
+    abgr(a,b,g,r)
+}
+pub const fn rgba(r : u8,g : u8,b : u8,a : u8) -> u32{
+    argb(a,r,g,b)
+}
+
+/* Color Macro, maps floating point channels (0..1) into one 32-bit value */
+pub fn color(r : f32 ,g : f32 ,b : f32 ,a : f32 )	-> u32 {
+    rgba( (r * 255.0) as u8, (g * 255.0) as u8, (b * 255.0) as u8, (a * 255.0) as u8)
+}
+
