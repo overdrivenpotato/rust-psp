@@ -20,6 +20,7 @@ pub mod openpsid;
 pub mod registry;
 pub mod sircs;
 pub mod video;
+pub mod hprm;
 
 use core::ffi::c_void;
 
