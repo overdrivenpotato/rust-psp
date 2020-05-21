@@ -1,4 +1,5 @@
-
+use core::ffi::c_void;
+use core::ptr::null_mut;
 pub const PI: f32 = 3.141593;
 
 #[repr(u32)]
@@ -430,6 +431,158 @@ pub fn color(r : f32 ,g : f32 ,b : f32 ,a : f32 )	-> u32 {
 }
 
 
+pub type GuCallback = Option<fn(arg: i32)>;
+pub type GuSwapBuffersCallback = Option<fn(display: *mut *mut c_void, render:  *mut *mut c_void)>;
+
+//GU INTERNAL
+struct GuSettings{
+	sig: GuCallback,
+	fin: GuCallback,
+	signal_history: [i16; 16],
+	signal_offset : u32,
+	kernel_event_flag : u32,
+	ge_callback_id : u32,
+
+	swapBuffersCallback: GuSwapBuffersCallback,
+	swapBuffersBehaviour : u32
+}
+
+struct GuDisplayList{
+	start: *mut u32,
+	current: *mut u32,
+	parent_context: i32,
+}
+
+struct GuContext{
+	list: GuDisplayList,
+	scissor_enable : i32,
+	scissor_start : [i32; 2],
+	scissor_end : [i32; 2],
+	near_plane: i32,
+	far_plane : i32,
+	depth_offset : i32,
+	fragment_2x : i32,
+	texture_function: i32,
+	texture_proj_map_mode: i32,
+	texture_map_mode: i32,
+	sprite_mode : [i32; 4],
+	clear_color : u32,
+	clear_stencil: u32,
+	clear_depth : u32,
+	texture_mode: i32,
+}
+
+
+struct GuDrawBuffer{
+	pixel_size : i32,
+	frame_width : i32,
+	frame_buffer : *mut c_void,
+	disp_buffer : *mut c_void,
+	depth_buffer : *mut c_void,
+	depth_width : i32,
+	width : i32,
+	height : i32,
+}
+
+struct GuLightSettings{
+	/* row 0 */
+
+	enable : u8,	// Light enable
+	tpe : u8,	// Light type
+	xpos : u8,	// X position
+	ypos : u8,	// Y position
+
+	/* row 1 */
+
+	zpos : u8,	// Z position
+	xdir : u8,	// X direction
+	ydir : u8,	// Y direction
+	zdir : u8,	// Z direction
+
+	/* row 2 */
+
+	ambient : u8,	// Ambient color
+	diffuse : u8,	// Diffuse color
+	specular : u8,	// Specular color
+	constant : u8,	// Constant attenuation
+
+	/* row 3 */
+
+	linear : u8,	// Linear attenuation
+	quadratic : u8,// Quadratic attenuation
+	exponent : u8, // Light exponent
+	cutoff : u8	// Light cutoff
+}
+
+
+static mut gu_current_frame: u32 = 0;
+static mut gu_contexts: [GuContext;3] = [GuContext{list: GuDisplayList{start: null_mut(), current: null_mut(), parent_context: 0}, scissor_enable: 0, scissor_start: [0, 0], scissor_end: [0, 0], near_plane: 0, far_plane: 0,depth_offset : 0, fragment_2x : 0, texture_function: 0, texture_proj_map_mode: 0, texture_map_mode: 0, sprite_mode : [0, 0, 0, 0], clear_color : 0, clear_stencil: 0, clear_depth : 0, texture_mode: 0},
+GuContext{list: GuDisplayList{start: null_mut(), current: null_mut(), parent_context: 0}, scissor_enable: 0, scissor_start: [0, 0], scissor_end: [0, 0], near_plane: 0, far_plane: 0,depth_offset : 0, fragment_2x : 0, texture_function: 0, texture_proj_map_mode: 0, texture_map_mode: 0, sprite_mode : [0, 0, 0, 0], clear_color : 0, clear_stencil: 0, clear_depth : 0, texture_mode: 0}, 
+GuContext{list: GuDisplayList{start: null_mut(), current: null_mut(), parent_context: 0}, scissor_enable: 0, scissor_start: [0, 0], scissor_end: [0, 0], near_plane: 0, far_plane: 0,depth_offset : 0, fragment_2x : 0, texture_function: 0, texture_proj_map_mode: 0, texture_map_mode: 0, sprite_mode : [0, 0, 0, 0], clear_color : 0, clear_stencil: 0, clear_depth : 0, texture_mode: 0} ];
+
+static mut ge_list_executed: [i32; 2] = [0, 0];
+static mut ge_edram_address : *mut c_void = null_mut();
+
+static mut gu_settings : GuSettings = GuSettings{sig: None, fin: None, signal_history: [0; 16], signal_offset: 0, kernel_event_flag: 0, ge_callback_id: 0, swapBuffersBehaviour: 0, swapBuffersCallback: None};
+static mut gu_list: *mut GuDisplayList = null_mut();
+static mut gu_curr_context : i32 = 0;
+static mut gu_init : i32 = 0;
+static mut gu_display_on : i32 = 0;
+static mut gu_call_mode : i32 = 0;
+static mut gu_states : i32 = 0;
+
+static mut gu_draw_buffer: GuDrawBuffer = GuDrawBuffer{depth_buffer : null_mut(), frame_buffer: null_mut(), disp_buffer: null_mut(), width: 0, height: 0, depth_width: 0, frame_width: 0, pixel_size: 0};
+static mut gu_object_stack: *mut *mut u32 = null_mut();
+static mut gu_object_stack_depth : i32 = 0;
+static mut light_settings: [GuLightSettings; 4] = [
+	GuLightSettings{
+    enable: 0x18, tpe: 0x5f, xpos: 0x63, ypos: 0x64,
+		zpos: 0x65, xdir: 0x6f, ydir: 0x70, zdir: 0x71,
+		ambient: 0x8f, diffuse: 0x90, specular: 0x91, constant: 0x7b,
+		linear: 0x7c, quadratic: 0x7d, exponent: 0x87, cutoff: 0x8b
+	},
+
+	GuLightSettings{
+		enable: 0x19, tpe: 0x60, xpos: 0x66, ypos: 0x67,
+		zpos: 0x68, xdir: 0x72, ydir: 0x73, zdir: 0x74,
+		ambient: 0x92, diffuse: 0x93, specular: 0x94, constant: 0x7e,
+    linear: 0x7f, quadratic: 0x80, exponent: 0x88, cutoff: 0x8c
+  },
+  
+  GuLightSettings{
+		enable: 0x1A, tpe: 0x61, xpos: 0x69, ypos: 0x6A,
+		zpos: 0x6B, xdir: 0x75, ydir: 0x76, zdir: 0x77,
+		ambient: 0x95, diffuse: 0x99, specular: 0x9A, constant: 0x84,
+    linear: 0x82, quadratic: 0x83, exponent: 0x89, cutoff: 0x8d
+  },
+  
+  GuLightSettings{
+		enable: 0x1B, tpe: 0x62, xpos: 0x6c, ypos: 0x6d,
+		zpos: 0x6e, xdir: 0x78, ydir: 0x79, zdir: 0x7A,
+		ambient: 0x98, diffuse: 0x99, specular: 0x9A, constant: 0x84,
+    linear: 0x85, quadratic: 0x86, exponent: 0x8a, cutoff: 0x8e
+	},
+];
+
+
+///
+/// THIS IS UNIMPLEMENTED GU INTERNAL!
+///
+
+/*
+void sendCommandi(int cmd, int argument);
+void sendCommandiStall(int cmd, int argument);
+void sendCommandf(int cmd, float argument);
+
+void callbackSig(int id, void* arg);
+void callbackFin(int id, void* arg);
+void resetValues();
+*/
+
+
+///
+/// THIS IS UNIMPLEMENTED GU!
+///
 
 // Alright, so I just pasted all of pspgu.h that wasn't implemented yet let's goooooooooo
 
