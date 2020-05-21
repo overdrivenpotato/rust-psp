@@ -804,7 +804,7 @@ sys_lib! {
     /// # Parameters
     ///
     /// - `event_flag`: Event flag created with 
-    /// kernel::sce_kernel_create_event_flag
+    /// crate::sys::kernel::sce_kernel_create_event_flag
     ///
     /// # Return Value
     ///
@@ -816,7 +816,8 @@ sys_lib! {
     ///
     /// # Parameters
     ///
-    /// - `event_flag`: event flag created with sceKernelCreateEventFlag
+    /// - `event_flag`: event flag created with
+    /// crate::sys::kernel::sce_kernel_create_event_flag
     ///
     /// # Return Value
     ///
