@@ -35,7 +35,7 @@ sys_lib! {
         attr: EventFlagAttribute,
         bits: i32,
         opt: *mut EventFlagOptParam,
-    ) -> SceUid;
+    ) -> i32;
 
     #[psp(0x446D8DE6, i6)]
     /// Create a thread.
