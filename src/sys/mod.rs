@@ -16,6 +16,7 @@ pub mod jpeg;
 pub mod umd;
 pub mod mpeg;
 pub mod hprm;
+pub mod gum;
 
 // These fail with a bus error when being loaded (tested in user mode on a PSP-2000).
 // TODO: Investigate and fix this
