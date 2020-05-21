@@ -19,8 +19,8 @@ sys_lib! {
     ///
     /// # Parameters
     ///
-    /// - `key`: Pointer to the u32 to receive the key bitmap, should be one or
-    /// more of ::PspHprmKeys
+    /// - `key`: Pointer to the u32 to receive the key bitmap, should be an
+    /// instance of ::Key
     ///
     /// # Return Value
     ///
