@@ -46,7 +46,7 @@ You will need the [psp toolchain] installed, and the binaries in your `$PATH`.
 - [x] PSP system library support
 - [x] `alloc` support
 - [x] `panic = "unwind"` support
-- [ ] Figure out a strategy for the VFPU
+- [x] Macro-based VFPU assembler
 - [ ] Migrate to LLVM-based linker
 - [ ] Rewrite `psp-prxgen` in rust?
 
