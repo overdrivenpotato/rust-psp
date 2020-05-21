@@ -9,7 +9,7 @@ bitflags::bitflags!{
 
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
-pub struct SceKernelEventFlagOptParam {
+pub struct EventFlagOptParam {
     pub size: usize,
 }
 
@@ -34,7 +34,7 @@ sys_lib! {
         name: *const u8,
         attr: EventFlagAttribute,
         bits: i32,
-        opt: *mut SceKernelEventFlagOptParam,
+        opt: *mut EventFlagOptParam,
     ) -> SceUid;
 
     #[psp(0x446D8DE6, i6)]
