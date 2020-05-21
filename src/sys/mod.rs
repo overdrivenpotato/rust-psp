@@ -21,6 +21,7 @@ pub mod registry;
 pub mod sircs;
 pub mod video;
 pub mod hprm;
+pub mod nand;
 
 use core::ffi::c_void;
 
