@@ -15,6 +15,6 @@ sys_lib! {
     #![version = (0x00, 0x00)]
 
     #[psp(0x71EEF62D)]
-    pub unsafe fn sce_sircs_send(sd: *mut sircs_data, count: i32) -> i32;
+    pub unsafe fn sce_sircs_send(sd: *mut SircsData, count: i32) -> i32;
 }
 
