@@ -18,6 +18,7 @@ pub mod umd;
 pub mod mpeg;
 pub mod openpsid;
 pub mod registry;
+pub mod hprm;
 
 use core::ffi::c_void;
 
