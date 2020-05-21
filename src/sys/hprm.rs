@@ -36,7 +36,7 @@ sys_lib! {
     /// # Return Value
     ///
     /// < 0 on error.
-    pub unsafe fn sce_hprm_peek_latch(latch: *mut u32) -> i32;
+    pub unsafe fn sce_hprm_peek_latch(latch: *mut [u32;4]) -> i32;
 
     #[psp(0x40D2F9F0)]
     /// Read the current latch data.
@@ -48,7 +48,7 @@ sys_lib! {
     /// # Return Value
     ///
     /// < 0 on error.
-    pub unsafe fn sce_hprm_read_latch(latch: *mut u32) -> i32;
+    pub unsafe fn sce_hprm_read_latch(latch: *mut [u32;4]) -> i32;
 
     #[psp(0x7E69EDA4)]
     /// Determines whether the headphones are plugged in.
