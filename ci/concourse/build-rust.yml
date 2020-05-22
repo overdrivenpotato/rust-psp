@@ -1,0 +1,28 @@
+---
+platform: linux
+
+image_resource:
+  type: docker-image
+  source:
+    repository: rustpsp/compile-rust
+
+params:
+  RUST_TARGET_PATH: "." 
+  RUSTFLAGS: "-C link-dead-code"
+
+inputs:
+  - name: pull-request
+    path: repo/
+
+outputs:
+  - name: rust-build-dir
+    path: repo/ci/tests/psp-ci-test/target/psp/release/
+
+caches:
+  - path: repo/ci/tests/psp-ci-test/target/
+  - path: repo/target/
+  - path: /root/.xargo/
+  - path: /root/.cargo/
+  
+run:
+  path: repo/ci/concourse/build-rust.sh
