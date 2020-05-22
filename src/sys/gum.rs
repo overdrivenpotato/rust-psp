@@ -290,6 +290,7 @@ pub const VMAT4: u8 = 1<<4;
 pub const VMAT5: u8 = 1<<5;
 pub const VMAT6: u8 = 1<<6;
 pub const VMAT7: u8 = 1<<7;
+pub const GUM_EPSILON: f32 = 0.00001;
 
 pub fn psp_vfpu_use_matrices(
     c: *mut VfpuContext,
@@ -326,7 +327,7 @@ pub unsafe fn gum_scale(m: *mut FMatrix4, v: *const FVector3) {
     );
 }
 
-pub unsafe fn gum_translate(m: *mut Matrix4, v: *const Vector3) {
+pub unsafe fn gum_translate(m: *mut FMatrix4, v: *const FVector3) {
     psp_vfpu_use_matrices(
         GUM_VFPU_CONTEXT,
         0,
@@ -851,4 +852,78 @@ pub unsafe fn sce_gum_update_matrix() {
             //gum_matrix_update[i] = 0;
         //}
     }
+}
+
+pub unsafe fn gum_normalize (v: *mut FVector3) {
+    use core::intrinsics::sqrtf32;
+    let l: f32 = sqrtf32(((*v).x*(*v).x) + ((*v).y*(*v).y) + ((*v).z*(*v).z));
+    if l > GUM_EPSILON
+    {
+        let il: f32 = 1.0 / l;
+        (*v).x *= il; (*v).y *= il; (*v).z *= il;
+    }
+}
+
+pub unsafe fn gum_cross_product(
+    r: *mut FVector3,
+    a: *const FVector3,
+    b: *const FVector3
+) {
+    (*r).x = ((*a).y * (*b).z) - ((*a).z * (*b).y);
+    (*r).y = ((*a).z * (*b).x) - ((*a).x * (*b).z);
+    (*r).z = ((*a).x * (*b).y) - ((*a).y * (*b).x);
+}
+
+pub unsafe fn gum_look_at(
+    m: *mut FMatrix4,
+    eye: *mut FVector3,
+    center: *mut FVector3,
+    up: *mut FVector3
+) {
+    let mut forward: FVector3;
+    let mut side: FVector3;
+    let mut lup: FVector3;
+    let mut ieye: FVector3;
+
+    let t: FMatrix4;
+
+    forward.x = (*center).x - (*eye).x;
+    forward.y = (*center).y - (*eye).y;
+    forward.z = (*center).z - (*eye).z;
+
+    gum_normalize(&mut forward as *mut FVector3);
+
+    gum_cross_product(
+        &mut side as *mut FVector3, 
+        &mut forward as *mut FVector3,
+        up
+    );
+    gum_normalize(&mut side as *mut FVector3);
+
+
+    gum_cross_product(
+        &mut lup as *mut FVector3, 
+        &mut side as *mut FVector3,
+        &mut forward as *mut FVector3
+    );
+    gum_load_identity(&mut t as *mut FMatrix4);
+
+    t.x.x = side.x;
+    t.y.x = side.y;
+    t.z.x = side.z;
+
+    t.x.y = lup.x;
+    t.y.y = lup.y;
+    t.z.y = lup.z;
+
+    t.x.z = -forward.x;
+    t.y.z = -forward.y;
+    t.z.z = -forward.z;
+
+    ieye.x = -(*eye).x;
+    ieye.y = -(*eye).y;
+    ieye.z = -(*eye).z;
+
+    gum_mult_matrix(m, m, &mut t as *mut FMatrix4);
+    gum_translate(m, &eye as *const FVector3);
 }
