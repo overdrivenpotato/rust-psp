@@ -522,10 +522,10 @@ pub unsafe fn sce_gum_fast_inverse() {
 
     vfpu_asm!(
         vmidt_q M000;
-        //vmmov_t M000, E300;
+        vmmov_t M000, E300;
         vneg_t  C100, C330;
         vtfm3_t C030, M300, C100;
-        //vmmov_q M300, M000;
+        vmmov_q M300, M000;
     );
 
     GUM_CURRENT_MATRIX_UPDATE = 1;
@@ -706,7 +706,7 @@ pub unsafe fn sce_gum_perspective(fovy: f32, aspect: f32, near: f32, far: f32) {
         //vsub_s  S123, S123, S123[1];     // S123 = m->z.w = -1.0
 	vmmul_q M000, M300, M100;
         vmmov_q M300, M000;
-        : : "r"(fovy),"r"(aspect),"r"(near),"r"(far)
+        : : "r"(fovy), "r"(aspect), "r"(near), "r"(far)
     );
     GUM_CURRENT_MATRIX_UPDATE = 1;
 }
