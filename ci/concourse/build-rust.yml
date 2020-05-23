@@ -22,7 +22,7 @@ caches:
   - path: repo/ci/tests/psp-ci-test/target/
   - path: repo/target/
   - path: /root/.xargo/
-  - path: /root/.cargo/
+  - path: /usr/local/cargo/
   
 run:
   path: repo/ci/concourse/build-rust.sh
