@@ -3,5 +3,8 @@
 export CARGO_HOME="$(pwd)"/.cargo
 export XARGO_HOME="$(pwd)"/.xargo
 
-cd repo/ci/tests/psp-ci-test
+pushd repo/ci/tests/psp-ci-test
 make
+popd
+
+cp -r repo/ci/tests/psp-ci-test/target/psp/release/* release/

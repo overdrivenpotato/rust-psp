@@ -16,7 +16,7 @@ inputs:
 
 outputs:
   - name: rust-build-dir
-    path: repo/ci/tests/psp-ci-test/target/psp/release/
+    path: release
 
 caches:
   - path: .cargo
