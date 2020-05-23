@@ -40,9 +40,9 @@ jobs:
           path: pull-request
           status: pending
       - task: build-rust
-        file: pull-request/ci/concourse/build-rust.yml
+        file: repo/ci/concourse/build-rust.yml
       - task: run-tests
-        file: pull-request/ci/concourse/run-tests.yml
+        file: repo/ci/concourse/run-tests.yml
         on_failure:
           put: pull-request
           params:
