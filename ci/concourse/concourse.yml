@@ -21,8 +21,8 @@ jobs:
   - name: run-tests-for-master
     plan:
       - get: repo
-        params: { submodules: none }
         resource: master-branch
+        params: { submodules: none }
         trigger: true
       - task: build-rust
         file: repo/ci/concourse/build-rust.yml
@@ -31,7 +31,8 @@ jobs:
 
   - name: run-tests-for-pr
     plan:
-      - get: pull-request
+      - get: repo
+        resource: pull-request
         version: every
         trigger: true
       - put: pull-request

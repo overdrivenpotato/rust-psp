@@ -11,8 +11,7 @@ params:
   RUSTFLAGS: "-C link-dead-code"
 
 inputs:
-  - name: pull-request
-    path: repo/
+  - name: repo
 
 outputs:
   - name: rust-build-dir
