@@ -19,10 +19,10 @@ outputs:
     path: repo/ci/tests/psp-ci-test/target/psp/release/
 
 caches:
+  - path: .cargo
+  - path: .xargo
   - path: repo/ci/tests/psp-ci-test/target/
   - path: repo/target/
-  - path: /root/.xargo/
-  - path: /usr/local/cargo/
   
 run:
   path: repo/ci/concourse/build-rust.sh
