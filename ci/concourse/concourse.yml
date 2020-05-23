@@ -25,7 +25,7 @@ jobs:
         resource: master-branch
         trigger: true
       - task: build-rust
-        file: repo/ci/concouse/build-rust.yml
+        file: repo/ci/concourse/build-rust.yml
       - task: run-tests
         file: repo/ci/concourse/run-tests.yml
 
