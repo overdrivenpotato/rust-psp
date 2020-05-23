@@ -5,7 +5,7 @@
 macro_rules! vfpu_asm {
     (
         $(
-            $($opcode:ident $($arg:tt $(($base:ident))? $(, [$flag:literal])?),*)?
+            $($opcode:ident $($arg:tt $(($base:ident))?),*)?
             $(.mips $asm:literal)?
         );*;
 
@@ -32,7 +32,7 @@ macro_rules! vfpu_asm {
                 ".set noreorder\n",
                 ".align 2\n",
                 $(
-                    $($crate::instruction!($opcode $($arg $(($base))? $(, $flag)?),*))?
+                    $($crate::instruction!($opcode $($arg $(($base))?),*))?
                     $($crate::instruction!(mips $asm))?
 
                     , "\n"
@@ -113,7 +113,7 @@ macro_rules! instruction {
         )
     };
 
-    // mtv: 0100 1000 111 sssss 0000 0000 0 ddddddd
+    // mtv 0100 1000 111 sssss 0000 0000 0 ddddddd
     (mtv $s:ident, $d:ident) => {
         concat!(
             ".byte ", $crate::register_single!($d),
@@ -123,13 +123,106 @@ macro_rules! instruction {
         )
     };
 
-    // mfv: 0100 1000 011 ddddd 000000000 sssssss
+    // mfv 0100 1000 011 ddddd 000000000 sssssss
     (mfv $d:ident, $s:ident) => {
         concat!(
             ".byte ", $crate::register_single!($s),
             "\n.byte 0\n",
             ".byte 0b01100000 | ", $crate::register_mips!($d),
             "\n.byte 0b01001000\n",
+        )
+    };
+
+    (vpfxd [$($x:tt)*]) => {
+        $crate::instruction!(vpfxd [$($x)*], [])
+    };
+
+    (vpfxd [$($x:tt)*], [$($y:tt)*]) => {
+        $crate::instruction!(vpfxd [$($x)*], [$($y)*], [])
+    };
+
+    (vpfxd [$($x:tt)*], [$($y:tt)*], [$($z:tt)*]) => {
+        $crate::instruction!(vpfxd [$($x)*], [$($y)*], [$($z)*], [])
+    };
+
+    // vpfxd 1101 1110 iiiiiiii iiiiiiii iiiiiiii
+    (vpfxd [$($x:tt)*], [$($y:tt)*], [$($z:tt)*], [$($w:tt)*]) => {
+        concat!(
+            ".word (0b11011110 << 24)",
+
+            // First the lowest byte
+            "| (", $crate::instruction_prefix_d!($($x)*), " & 0x3)",
+            "| ((", $crate::instruction_prefix_d!($($y)*), " & 0x3) << 2)",
+            "| ((", $crate::instruction_prefix_d!($($z)*), " & 0x3) << 4)",
+            "| ((", $crate::instruction_prefix_d!($($w)*), " & 0x3) << 6)",
+
+            // Then the rest
+            "| (", $crate::instruction_prefix_d!($($x)*), " & 0xffff00)",
+            "| ((", $crate::instruction_prefix_d!($($y)*), " & 0xffff00) << 1)",
+            "| ((", $crate::instruction_prefix_d!($($z)*), " & 0xffff00) << 2)",
+            "| ((", $crate::instruction_prefix_d!($($w)*), " & 0xffff00) << 3)",
+        )
+    };
+
+    (vpfxs [$($x:tt)+]) => {
+        $crate::instruction!(vpfxs [$($x)+], [Y])
+    };
+
+    (vpfxs [$($x:tt)+], [$($y:tt)+]) => {
+        $crate::instruction!(vpfxs [$($x)+], [$($y)+], [Z])
+    };
+
+    (vpfxs [$($x:tt)+], [$($y:tt)+], [$($z:tt)+]) => {
+        $crate::instruction!(vpfxs [$($x)+], [$($y)+], [$($z)+], [W])
+    };
+
+    // vpfxs 1101 1100 iiiiiiii iiiiiiii iiiiiiii
+    (vpfxs [$($x:tt)+], [$($y:tt)+], [$($z:tt)+], [$($w:tt)+]) => {
+        concat!(
+            ".word (0b11011100 << 24)",
+
+            // First the lowest byte
+            "| (", $crate::instruction_prefix!($($x)+), " & 0x3)",
+            "| ((", $crate::instruction_prefix!($($y)+), " & 0x3) << 2)",
+            "| ((", $crate::instruction_prefix!($($z)+), " & 0x3) << 4)",
+            "| ((", $crate::instruction_prefix!($($w)+), " & 0x3) << 6)",
+
+            // Then the rest
+            "| (", $crate::instruction_prefix!($($x)+), " & 0xffff00)",
+            "| ((", $crate::instruction_prefix!($($y)+), " & 0xffff00) << 1)",
+            "| ((", $crate::instruction_prefix!($($z)+), " & 0xffff00) << 2)",
+            "| ((", $crate::instruction_prefix!($($w)+), " & 0xffff00) << 3)",
+        )
+    };
+
+    (vpfxt [$($x:tt)+]) => {
+        $crate::instruction!(vpfxt [$($x)+], [Y])
+    };
+
+    (vpfxt [$($x:tt)+], [$($y:tt)+]) => {
+        $crate::instruction!(vpfxt [$($x)+], [$($y)+], [Z])
+    };
+
+    (vpfxt [$($x:tt)+], [$($y:tt)+], [$($z:tt)+]) => {
+        $crate::instruction!(vpfxt [$($x)+], [$($y)+], [$($z)+], [W])
+    };
+
+    // vpfxs 1101 1101 iiiiiiii iiiiiiii iiiiiiii
+    (vpfxt [$($x:tt)+], [$($y:tt)+], [$($z:tt)+], [$($w:tt)+]) => {
+        concat!(
+            ".word (0b11011101 << 24)",
+
+            // First the lowest byte
+            "| (", $crate::instruction_prefix!($($x)+), " & 0x3)",
+            "| ((", $crate::instruction_prefix!($($y)+), " & 0x3) << 2)",
+            "| ((", $crate::instruction_prefix!($($z)+), " & 0x3) << 4)",
+            "| ((", $crate::instruction_prefix!($($w)+), " & 0x3) << 6)",
+
+            // Then the rest
+            "| (", $crate::instruction_prefix!($($x)+), " & 0xffff00)",
+            "| ((", $crate::instruction_prefix!($($y)+), " & 0xffff00) << 1)",
+            "| ((", $crate::instruction_prefix!($($z)+), " & 0xffff00) << 2)",
+            "| ((", $crate::instruction_prefix!($($w)+), " & 0xffff00) << 3)",
         )
     };
 
@@ -1778,4 +1871,39 @@ macro_rules! vfpu_const {
     (VFPU_LOG10TWO) => {"17"};
     (VFPU_LOG2TEN) => {"18"};
     (VFPU_SQRT3_2) => {"19"};
+}
+
+#[doc(hidden)]
+#[macro_export]
+macro_rules! instruction_prefix {
+    (X) => {"0"}; (Y) => {"1"}; (Z) => {"2"}; (W) => {"3"};
+
+    (|X|) => {"0x00100"};
+    (|Y|) => {"0x00101"};
+    (|Z|) => {"0x00102"};
+    (|W|) => {"0x00103"};
+
+    (0) => {"0x01000"};
+    (1) => {"0x01001"};
+    (2) => {"0x01002"};
+    (1/2) => {"0x01003"};
+    (3) => {"0x01100"};
+    (1/3) => {"0x01101"};
+    (1/4) => {"0x01102"};
+    (1/6) => {"0x01103"};
+
+    (- $($tt:tt)*) => {
+        concat!(
+            "(0x10000 | ", $crate::instruction_prefix!($($tt)*), ")",
+        )
+    };
+}
+
+#[doc(hidden)]
+#[macro_export]
+macro_rules! instruction_prefix_d {
+    () => {"0"};
+    (0) => {"1"};
+    (1) => {"3"};
+    (M) => {"0x100"};
 }
