@@ -1597,6 +1597,16 @@ macro_rules! instruction {
         )
     };
 
+    // viim.s 1101 1111 0 ddddddd iiiiiiii iiiiiiii
+    (viim_s $d:ident, $i:literal) => {
+        concat!(
+            "\n.byte ", stringify!($i), " & 0xff",
+            "\n.byte ", stringify!($i), " >> 8",
+            "\n.byte ", $crate::register_single!($d),
+            "\n.byte 0b11011111",
+        )
+    };
+
     // Raw MIPS assembly code.
     (mips $expr:expr) => {
         concat!("\n", $expr, "\n")
