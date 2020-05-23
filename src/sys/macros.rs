@@ -16,31 +16,36 @@ macro_rules! count {
 
 /// Generate a PSP function stub.
 ///
+/// This generates an assembly stub with the given section and name.
+macro_rules! stub {
+    ($name:ident, $section:expr) => {
+        global_asm!(concat!(
+            "
+                .section ", $section, "
+                .global ", stringify!($name), "
+                ", stringify!($name), ":
+                    jr $ra
+            "
+        ));
+    }
+}
+
+/// Generate a PSP function NID.
+///
 /// This macro is split from `sys_lib!` to allow for `concat!`-based generation.
-/// If you try to generate a function like so...
+/// If you try to generate a NID like so...
 ///
 /// ```ignore
 /// #[link_section = concat!(".foo", ".bar")]
-/// fn quux() {}
+/// static FOO: u32 = 123;
 /// ```
 ///
 /// ... you will receive an error. However, calling this macro in place works
 /// fine:
 ///
 /// ```ignore
-/// stub!(quux, concat!(".foo", ".bar"));
+/// nid!(FOO, concat!(".foo", ".bar"), 123);
 /// ```
-macro_rules! stub {
-    ($name:ident, $section:expr) => {
-        #[link_section = $section]
-        extern "C" fn $name() {}
-    }
-}
-
-/// Generate a PSP function NID.
-///
-/// This is a macro for the same reason as `stub!`. See documentation there for
-/// details.
 macro_rules! nid {
     ($name:ident, $section:expr, $value:expr) => {
         #[no_mangle]
@@ -75,58 +80,33 @@ pub const fn lib_name_bytes<const T: usize>(name: &str) -> [u8; T] {
     buf
 }
 
-/// A black box function opaque to the optimizer.
-pub fn black_box<T>(dummy: T) -> T {
-    unsafe {
-        let ret = core::ptr::read_volatile(&dummy);
-        core::mem::forget(dummy);
-        ret
-    }
-}
-
 /// A complex macro used to define and link a PSP system library.
-///
-/// See `src/sys.rs` usage for examples.
 macro_rules! sys_lib {
     // Generate body with default ABI
-    (__BODY $name:ident ($($arg:ident : $arg_ty:ty)*) $(-> $ret:ty)?) => {
-        {
-            use core::mem;
-
-            // Reconstruct the function signature for the stub.
-            type Target = extern "C" fn($($arg_ty),*) $(-> $ret)?;
-
-            // The black box here is necessary to make this opaque to the
-            // optimizer. If it is removed, the optimizer will be confused as
-            // it does not know that these functions are mutated at runtime.
-            //
-            // TODO: Replace this with assembly for better performance.
-            let f = mem::transmute::<_, Target>(
-                $crate::sys::macros::black_box(expr! { [< __ $name _stub >] } as usize)
+    (__BODY $name:ident ($($arg:ident : $arg_ty:ty),*) $(-> $ret:ty)?) => {
+        expr! {
+            // This avoids the overhead of a true function call.
+            llvm_asm!(
+                concat!("j ", stringify!([< __ $name _stub >]))
             );
 
-            f($($arg),*)
+            core::intrinsics::unreachable();
         }
     };
 
     // Generate body with an ABI mapper
-    (__BODY $abi:ident $name:ident ($($arg:ident : $arg_ty:ty)*) $(-> $ret:ty)?) => {{
-        #[cfg(target_os = "psp")]
-        {
-            core::mem::transmute($crate::sys::macros::black_box($abi(
+    (__BODY $abi:ident $name:ident ($($arg:ident : $arg_ty:ty),*) $(-> $ret:ty)?) => {{
+        expr! {
+            extern {
+                fn [< __ $name _stub >]($($arg : $arg_ty),*) $(-> $ret)?;
+            }
+
+            core::mem::transmute($abi(
                 $(core::mem::transmute($arg)),*,
-                $crate::sys::macros::black_box(core::mem::transmute(expr! { [< __ $name _stub >] } as usize)),
-            )))
+                core::mem::transmute([< __ $name _stub >] as usize),
+            ))
         }
 
-        #[cfg(not(target_os = "psp"))]
-        {
-            // Remove unused warnings
-            let _abi = $abi;
-            $(let _arg: $arg_ty = $arg;)*
-
-            panic!("tried to call PSP system function on non-PSP target");
-        }
     }};
 
     (
@@ -192,11 +172,21 @@ macro_rules! sys_lib {
             }
 
             $(#[$attr])*
+            #[inline(never)]
+            #[allow(unused_variables)]
             pub unsafe fn $name($($arg : $arg_ty),*) $(-> $ret)? {
-                sys_lib!(
-                    __BODY $($abi)?
-                    $name($($arg : $arg_ty)*) $(-> $ret)?
-                )
+                #[cfg(target_os = "psp")]
+                {
+                    sys_lib!(
+                        __BODY $($abi)?
+                        $name($($arg : $arg_ty),*) $(-> $ret)?
+                    )
+                }
+
+                #[cfg(not(target_os = "psp"))]
+                {
+                    panic!("tried to call PSP system function on non-PSP target");
+                }
             }
         )*
     }
