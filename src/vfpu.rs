@@ -1613,7 +1613,7 @@ macro_rules! instruction {
             "\n.byte 0x80 | ", $crate::register_pair!($d),
             "\n.byte ", $crate::register_single!($s),
             "\n.byte 0b10100000 | ", $crate::vrot_immediate_pair!($($tt)*),
-            "\n.byte 0b11110111",
+            "\n.byte 0b11110011",
         )
     };
 
@@ -1623,7 +1623,7 @@ macro_rules! instruction {
             "\n.byte ", $crate::register_triple!($d),
             "\n.byte 0x80 | ", $crate::register_single!($s),
             "\n.byte 0b10100000 | ", $crate::vrot_immediate_triple!($($tt)*),
-            "\n.byte 0b11110111",
+            "\n.byte 0b11110011",
         )
     };
 
@@ -1633,7 +1633,7 @@ macro_rules! instruction {
             "\n.byte 0x80 | ", $crate::register_quad!($d),
             "\n.byte 0x80 | ", $crate::register_single!($s),
             "\n.byte 0b10100000 | ", $crate::vrot_immediate_quad!($($tt)*),
-            "\n.byte 0b11110111",
+            "\n.byte 0b11110011",
         )
     };
 
