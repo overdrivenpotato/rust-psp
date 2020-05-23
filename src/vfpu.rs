@@ -22,6 +22,11 @@ macro_rules! vfpu_asm {
                 // Clobbers
                 $(
                     : $($clobber:literal),*
+
+                    // Options
+                    $(
+                        : $($option:literal),*
+                    )?
                 )?
             )?
         )?
@@ -48,6 +53,10 @@ macro_rules! vfpu_asm {
 
                     $(
                         : $($clobber),*
+
+                        $(
+                            : $($option),*
+                        )?
                     )?
                 )?
             )?
