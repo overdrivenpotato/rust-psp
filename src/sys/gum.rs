@@ -105,7 +105,7 @@ pub struct L64Vector3 {
     pub z: u64,
 }
 
-#[repr(C)]
+#[repr(C, align(4))]
 #[derive(Debug, Copy, Clone)]
 pub struct FVector3 {
     pub x: f32,
@@ -249,8 +249,7 @@ pub struct IMatrix4Unaligned {
     pub w: IVector4,
 }
 
-#[repr(C)]
-#[repr(align(16))]
+#[repr(C, align(16))]
 #[derive(Debug, Copy, Clone)]
 pub struct FMatrix4 {
     pub x: FVector4,
@@ -259,8 +258,7 @@ pub struct FMatrix4 {
     pub w: FVector4,
 }
 
-#[repr(C)]
-#[repr(align(16))]
+#[repr(C, align(16))]
 #[derive(Debug, Copy, Clone)]
 pub struct FMatrix4Unaligned {
     pub x: FVector4,
@@ -306,24 +304,25 @@ pub fn gum_aligned_matrix() -> *mut FMatrix4 {
 
 pub unsafe fn gum_scale(m: *mut FMatrix4, v: *const FVector3) {
     psp_vfpu_use_matrices(GUM_VFPU_CONTEXT, 0, VMAT0 | VMAT1);
-    vfpu_asm!(
-        .mips "nop";
-        //ulv_q C100,  0;
-        //ulv_q C110, 16;
-        //ulv_q C120, 32;
-        //ulv_q C130, 48;
 
-        //ulv_q C000, %1;
+    vfpu_asm!(
+        lv_q C100,  0(a0);
+        lv_q C110, 16(a0);
+        lv_q C120, 32(a0);
+        lv_q C130, 48(a0);
+
+        lv_q C000, a1;
 
         vscl_t C100, C100, S000;
         vscl_t C110, C110, S001;
         vscl_t C120, C120, S002;
 
-        //usv_q C100,  0;
-        //usv_q C110, 16;
-        //usv_q C120, 32;
-        //usv_q C130, 48;
-        //: "+m"(*m) : "m"(*v)
+        sv_q C100,  0(a0);
+        sv_q C110, 16(a0);
+        sv_q C120, 32(a0);
+        sv_q C130, 48(a0);
+
+        : : "{a0}"(m), "{a1}"(v)
     );
 }
 
@@ -335,21 +334,22 @@ pub unsafe fn gum_translate(m: *mut FMatrix4, v: *const FVector3) {
     );
     
     vfpu_asm!(
-        //ulv_q C100,  0;
-        //ulv_q C110, 16;
-        //ulv_q C120, 32;
-        //ulv_q C130, 48;
+        lv_q C100,  0(a0);
+        lv_q C110, 16(a0);
+        lv_q C120, 32(a0);
+        lv_q C130, 48(a0);
 
         vmidt_q M000;
-        //ulv_q   C200, 1;
-        //vmov_t  C030, C200;
+        lv_q    C200, a1;
+        vmov_t  C030, C200;
         vmmul_q M200, M100, M000;
 
-        //usv_q C200,  0;
-        //usv_q C210, 16;
-        //usv_q C220, 32;
-        //usv_q C230, 48;
-        : "+m"(*m) : "m"(*v)
+        sv_q C200,  0(a0);
+        sv_q C210, 16(a0);
+        sv_q C220, 32(a0);
+        sv_q C230, 48(a0);
+
+        : : "{a0}"(m), "{a1}"(v)
     );
 }
 
@@ -361,24 +361,25 @@ pub unsafe fn gum_rotate_x(m: *mut FMatrix4, angle: f32) {
     );
     
     vfpu_asm!(
-        //ulv_q C200,  0;
-        //ulv_q C210, 1;
-        //ulv_q C220, 32;
-        //ulv_q C230, 48;
+        lv_q C200,  0(a0);
+        lv_q C210, 16(a0);
+        lv_q C220, 32(a0);
+        lv_q C230, 48(a0);
 
         vmidt_q M000;
-        mtv t1, S100; // the t1 formerly known as %1
+        mtv a1, S100; // the t1 formerly known as %1
         vcst_s S101, VFPU_2_PI;
         vmul_s S100, S101, S100;
-        //vrot_q C010, S100, [ 0, c, s, 0];
-        //vrot_q C020, S100, [ 0,-s, c, 0];
+        vrot_q C010, S100, [0, C, S, 0];
+        vrot_q C020, S100, [0,-S, C, 0];
         vmmul_q M100, M200, M000;
 
-        //"usv.q C100,  0 + %0;
-        //"usv.q C110, 16 + %0;
-        //"usv.q C120, 32 + %0;
-        //"usv.q C130, 48 + %0;
-        : "+m"(*m) : "r"(angle)
+        sv_q C100,  0(a1);
+        sv_q C110, 16(a1);
+        sv_q C120, 32(a1);
+        sv_q C130, 48(a1);
+
+        : : "{a0}"(m), "{a1}"(angle)
     );
 }
 
@@ -390,24 +391,25 @@ pub unsafe fn gum_rotate_y(m: *mut FMatrix4, angle: f32) {
     );
     
     vfpu_asm!(
-        //ulv_q C200,  0;
-        //ulv_q C210, 16;
-        //ulv_q C220, 32;
-        //ulv_q C230, 48;
+        lv_q C200,  0(a0);
+        lv_q C210, 16(a0);
+        lv_q C220, 32(a0);
+        lv_q C230, 48(a0);
 
         vmidt_q M000;
-        mtv  t1, S100; // the t1 formerly knows as %1
-        vcst_s S101, VFPU_2_PI;
-        vmul_s S100, S101, S100;
-        //vrot_q C000, S100, [ c, 0,-s, 0];
-        //vrot_q C020, S100, [ s, 0, c, 0];
+        mtv     a1, S100;
+        vcst_s  S101, VFPU_2_PI;
+        vmul_s  S100, S101, S100;
+        vrot_q  C000, S100, [C, 0,-S, 0];
+        vrot_q  C020, S100, [S, 0, C, 0];
         vmmul_q M100, M200, M000;
 
-        //usv_q C100,  0;
-        //usv_q C110, 16;
-        //usv_q C120, 32;
-        //usv_q C130, 48;
-        : "+m"(*m) : "r"(angle)
+        sv_q C100,  0(a0);
+        sv_q C110, 16(a0);
+        sv_q C120, 32(a0);
+        sv_q C130, 48(a0);
+
+        : : "{a0}"(m), "{a1}"(angle)
     );
 }
 
@@ -419,43 +421,43 @@ pub unsafe fn gum_rotate_z(m: *mut FMatrix4, angle: f32) {
     );
 
     vfpu_asm!(
-        //ulv_q C200,  0;
-        //ulv_q C210, 16;
-        //ulv_q C220, 32;
-        //ulv_q C230, 48;
+        lv_q C200,  0(a0);
+        lv_q C210, 16(a0);
+        lv_q C220, 32(a0);
+        lv_q C230, 48(a0);
 
         vmidt_q M000;
-        mtv  t1, S100; // the t1 formerly known as %1
-        vcst_s S101, VFPU_2_PI;
-        vmul_s S100, S101, S100;
-        //vrot_q C000, S100, [ c, s, 0, 0];
-        //vrot_q C010, S100, [-s, c, 0, 0];
+        mtv     a1, S100;
+        vcst_s  S101, VFPU_2_PI;
+        vmul_s  S100, S101, S100;
+        vrot_q  C000, S100, [ C, S, 0, 0];
+        vrot_q  C010, S100, [-S, C, 0, 0];
         vmmul_q M100, M200, M000;
 
-        //usv_q C100,  0;
-        //usv_q C110, 16;
-        //usv_q C120, 32;
-        //usv_q C130, 48;
-	: "+m"(*m) : "r"(angle)
+        sv_q C100,  0(a0);
+        sv_q C110, 16(a0);
+        sv_q C120, 32(a0);
+        sv_q C130, 48(a0);
+
+	: : "{a0}"(m), "{a1}"(angle)
     );
 }
  
-pub unsafe fn gum_load_identity(m: *mut FMatrix4)
-{
+pub unsafe fn gum_load_identity(m: *mut FMatrix4) {
     psp_vfpu_use_matrices(GUM_VFPU_CONTEXT, 0, VMAT0);
 
     vfpu_asm!(
         vmidt_q M000;
-        //usv_q C000,  0;
-        //usv_q C010, 16;
-        //usv_q C020, 32;
-        //usv_q C030, 48;
-        : "=m"(*m) : : "memory" 
+        sv_q C000,  0(a0);
+        sv_q C010, 16(a0);
+        sv_q C020, 32(a0);
+        sv_q C030, 48(a0);
+
+        : : "{a0}"(m) : "memory" 
     );
 }
 
-pub unsafe fn gum_fast_inverse(m: *mut FMatrix4, a: *const FMatrix4)
-{
+pub unsafe fn gum_fast_inverse(m: *mut FMatrix4, a: *const FMatrix4) {
     psp_vfpu_use_matrices(
         GUM_VFPU_CONTEXT,
         0,
@@ -463,21 +465,22 @@ pub unsafe fn gum_fast_inverse(m: *mut FMatrix4, a: *const FMatrix4)
     );
 
     vfpu_asm!(
-        //ulv_q C200,  0 + %1;
-        //ulv_q C210, 16 + %1;
-        //ulv_q C220, 32 + %1;
-        //ulv_q C230, 48 + %1;
+        lv_q C200,  0(a1);
+        lv_q C210, 16(a1);
+        lv_q C220, 32(a1);
+        lv_q C230, 48(a1);
 
         vmidt_q M000;
-        //vmmov_t M000, E200;
+        vmmov_t M000, E200;
         vneg_t C100, C230;
         vtfm3_t C030, M200, C100;
 
-        //usv_q C000,  0;
-        //usv_q C010, 16;
-        //usv_q C020, 32;
-        //usv_q C030, 48;
-        : "=m"(*m) : "m"(*a) : "memory" 
+        sv_q C000,  0(a0);
+        sv_q C010, 16(a0);
+        sv_q C020, 32(a0);
+        sv_q C030, 48(a0);
+
+        : : "{a0}"(m), "{a1}"(a) : "memory" 
     );
 }
 
@@ -493,23 +496,24 @@ pub unsafe fn gum_mult_matrix(
     );
 
     vfpu_asm!(
-        //ulv_q C000,  0 + %1;
-        //ulv_q C010, 16 + %1;
-        //ulv_q C020, 32 + %1;
-        //ulv_q C030, 48 + %1;
+        lv_q C000,  0(t1);
+        lv_q C010, 16(t1);
+        lv_q C020, 32(t1);
+        lv_q C030, 48(t1);
 
-        //ulv_q C100,  0 + %2;
-        //ulv_q C110, 16 + %2;
-        //ulv_q C120, 32 + %2;
-        //ulv_q C130, 48 + %2;
+        lv_q C100,  0(t2);
+        lv_q C110, 16(t2);
+        lv_q C120, 32(t2);
+        lv_q C130, 48(t2);
 
         vmmul_q M200, M000, M100;
 
-        //usv_q C200,  0;
-        //usv_q C210, 16;
-        //usv_q C220, 32;
-        //usv_q C230, 48;
-        : "=m"(*result) : "m;"(*a), "m"(*b) : "memory"
+        sv_q C200,  0(t0);
+        sv_q C210, 16(t0);
+        sv_q C220, 32(t0);
+        sv_q C230, 48(t0);
+
+        : : "{t0}"(result), "{t1}"(a), "{t2}"(b) : "memory"
     );
 }
 
@@ -533,52 +537,59 @@ pub unsafe fn sce_gum_fast_inverse() {
 
 pub unsafe fn sce_gum_full_inverse() {
     let t = gum_aligned_matrix();
+
     psp_vfpu_use_matrices(GUM_VFPU_CONTEXT, VMAT3, VMAT0 | VMAT1);
     
     vfpu_asm!(
-        sv_q C300,  t0; // the t0s formerly knows as %0
-        sv_q C310, 16(t0);
-        sv_q C320, 32(t0);
-        sv_q C330, 48(t0);
-	: "=m"(*t) : : "memory"
+        sv_q C300, a0;
+        sv_q C310, 16(a0);
+        sv_q C320, 32(a0);
+        sv_q C330, 48(a0);
+
+	: : "{a0}"(t) : "memory"
     );
 
     gum_fast_inverse(t, t);
 
     vfpu_asm!(
-        lv_q C300,  t0; // the t0s formerly knows as %0
+        lv_q C300, t0;
         lv_q C310, 16(t0);
         lv_q C320, 32(t0);
-        lv_q C330, 48(t0);
-        : : "m"(*t) : "memory"
+        lv_q C330, 48(a0);
+
+        : : "{t0}"(t) : "memory"
     );
 
     GUM_CURRENT_MATRIX_UPDATE = 1;
 }
 
 pub unsafe fn sce_gum_load_identity() {
-   //if (gum_vfpucontext == NULL)
-   //    gum_vfpucontext = pspvfpu_initcontext(); 
+    //if (gum_vfpucontext == NULL)
+    //    gum_vfpucontext = pspvfpu_initcontext(); 
     psp_vfpu_use_matrices(GUM_VFPU_CONTEXT, VMAT3, 0);
+
     vfpu_asm!(
         vmidt_q M300;
     );
+
     GUM_CURRENT_MATRIX_UPDATE = 1;
 }
 
 pub unsafe fn sce_gum_load_matrix(m: *const FMatrix4) {
     //if (gum_vfpucontext == NULL)
     //    gum_vfpucontext = pspvfpu_initcontext(); 
+
     psp_vfpu_use_matrices(GUM_VFPU_CONTEXT, VMAT3, 0);
     vfpu_asm!(
-        .mips "nop";
-        //ulv_q C300.q,  0;
-        //ulv_q C310.q, 16;
-        //ulv_q C320.q, 32;
-        //ulv_q C330.q, 48;
-	: : "m"(*m) : "memory"
+        lv_q C300,  0(a0);
+        lv_q C310, 16(a0);
+        lv_q C320, 32(a0);
+        lv_q C330, 48(a0);
+
+	: : "{a0}"(m) : "memory"
     );
-   GUM_CURRENT_MATRIX_UPDATE = 1;
+
+    GUM_CURRENT_MATRIX_UPDATE = 1;
 }
 
 pub unsafe fn sce_gum_look_at(
@@ -594,13 +605,14 @@ pub unsafe fn sce_gum_look_at(
     psp_vfpu_use_matrices(GUM_VFPU_CONTEXT, VMAT3, VMAT0 | VMAT1);
 
     vfpu_asm!(
-         lv_q C000, t0; // TODO t0
+         lv_q C000, t0;
          lv_q C010, 16(t0);
          lv_q C020, 32(t0);
          lv_q C030, 48(t0);
          vmmul_q M100, M300, M000;
          vmmov_q M300, M100;
-        : : "m"(*t) 
+
+        : : "{t0}"(t)
    );
 
    GUM_CURRENT_MATRIX_UPDATE = 1;
@@ -608,12 +620,14 @@ pub unsafe fn sce_gum_look_at(
 
 pub unsafe fn sce_gum_matrix_mode(mode: i32) {
     psp_vfpu_use_matrices(GUM_VFPU_CONTEXT, VMAT3, 0);
+
     vfpu_asm!(
-        sv_q C300,  t0; // TODO t0
+        sv_q C300, t0;
         sv_q C310, 16(t0);
         sv_q C320, 32(t0);
         sv_q C330, 48(t0);
-	: "=m"(*GUM_CURRENT_MATRIX) : : "memory"
+
+	: : "{t0}"(GUM_CURRENT_MATRIX) : "memory"
     );
 
     // fuck this shit
@@ -624,25 +638,29 @@ pub unsafe fn sce_gum_matrix_mode(mode: i32) {
     //gum_current_matrix_update = gum_matrix_update[gum_current_mode];
     
     vfpu_asm!(
-        lv_q C300,  0(t0); //TODO t0
+        lv_q C300, t0;
         lv_q C310, 16(t0);
         lv_q C320, 32(t0);
         lv_q C330, 48(t0);
-	: : "m"(*GUM_CURRENT_MATRIX) : "memory"
+
+        : : "{t0}"(GUM_CURRENT_MATRIX) : "memory"
     );
 }
 
 pub unsafe fn sce_gum_mult_matrix(m: *const FMatrix4) {
     psp_vfpu_use_matrices(GUM_VFPU_CONTEXT, VMAT3, VMAT0 | VMAT1);
     vfpu_asm!(
-	//ulv_q C000,  0;
-        //ulv_q C010, 16;
-        //ulv_q C020, 32;
-        //ulv_q C030, 48;
+	lv_q C000,  0(t0);
+        lv_q C010, 16(t0);
+        lv_q C020, 32(t0);
+        lv_q C030, 48(t0);
+
         vmmul_q M100, M300, M000;
         vmmov_q M300, M100;
-	: : "m"(*m)
+
+	: : "{t0}"(m)
     );
+
     GUM_CURRENT_MATRIX_UPDATE = 1;
 }
 
@@ -657,25 +675,44 @@ pub unsafe fn sce_gum_ortho(
     psp_vfpu_use_matrices(GUM_VFPU_CONTEXT, VMAT3, VMAT0 | VMAT1);
     
     vfpu_asm!(
-        vmidt_q M100;                       // set M100 to identity
-        mtv    t1, S000;                   // C000 = [right, ?,      ?,  ]
-        mtv    t3, S001;                    // C000 = [right, top,    ?,  ]
-        mtv    t5, S002;                    // C000 = [right, top,    far ]
-        mtv    t0, S010;                    // C010 = [left,  ?,      ?,  ]
-        mtv    t2, S011;                    // C010 = [left,  bottom, ?,  ]
-        mtv    t4, S012;                    // C010 = [left,  bottom, near]
-        vsub_t  C020, C000, C010;            // C020 = [  dx,   dy,   dz]
-        vrcp_t  C020, C020;                  // C020 = [1/dx, 1/dy, 1/dz]
-        //vmul_s  S100, S100[2], S020;         // S100 = m->x.x = 2.0 / dx
-        //vmul_s  S111, S111[2], S021;         // S110 = m->y.y = 2.0 / dy
-        //vmul_s  S122, S122[2], S022[-x];     // S122 = m->z.z = -2.0 / dz
-        //vsub_t  C130, C000[-x,-y,-z], C010; // C130 = m->w[x, y, z] = [-(right+left), -(top+bottom), -(far+near)]
-                                                // we do vsub here since -(a+b) => (-1*a) + (-1*b) => -a - b
-        vmul_t  C130, C130, C020;           // C130 = [-(right+left)/dx, -(top+bottom)/dy, -(far+near)/dz]
+        .mips "mfc1 $$t0, $0";
+        .mips "mfc1 $$t1, $1";
+        .mips "mfc1 $$t2, $2";
+        .mips "mfc1 $$t3, $3";
+        .mips "mfc1 $$t4, $4";
+        .mips "mfc1 $$t5, $5";
+
+        vmidt_q M100;                         // set M100 to identity
+        mtv    t1, S000;                      // C000 = [right, ?,      ?,  ]
+        mtv    t3, S001;                      // C000 = [right, top,    ?,  ]
+        mtv    t5, S002;                      // C000 = [right, top,    far ]
+        mtv    t0, S010;                      // C010 = [left,  ?,      ?,  ]
+        mtv    t2, S011;                      // C010 = [left,  bottom, ?,  ]
+        mtv    t4, S012;                      // C010 = [left,  bottom, near]
+        vsub_t  C020, C000, C010;             // C020 = [  dx,   dy,   dz]
+        vrcp_t  C020, C020;                   // C020 = [1/dx, 1/dy, 1/dz]
+
+        vpfxs [2];                            // S100 = m->x.x = 2.0 / dx
+        vmul_s S100, S100, S020;
+
+        vpfxs [2];                            // S110 = m->y.y = 2.0 / dy
+        vmul_s  S111, S111, S021;
+
+        vpfxs [2];                            // S122 = m->z.z = -2.0 / dz
+        vpfxt [-X];
+        vmul_s  S122, S122, S022;
+
+        vpfxs [-X], [-Y], [-Z];               // C130 = m->w[x, y, z] = [-(right+left), -(top+bottom), -(far+near)]
+        vsub_t  C130, C000, C010;             // we do vsub here since -(a+b) => (-1*a) + (-1*b) => -a - b
+
+        vmul_t  C130, C130, C020;             // C130 = [-(right+left)/dx, -(top+bottom)/dy, -(far+near)/dz]
 	vmmul_q M000, M300, M100;
 	vmmov_q M300, M000;
-    : : "r"(left), "r"(right), "r"(bottom), "r"(top), "r"(near), "r"(far)
+
+        : : "r"(left), "r"(right), "r"(bottom), "r"(top), "r"(near), "r"(far)
+        : "t0", "t1", "t2", "t3", "t4", "t5"
     );
+
     GUM_CURRENT_MATRIX_UPDATE = 1;
 }
 
@@ -683,13 +720,16 @@ pub unsafe fn sce_gum_perspective(fovy: f32, aspect: f32, near: f32, far: f32) {
     psp_vfpu_use_matrices(GUM_VFPU_CONTEXT, VMAT3, VMAT0 | VMAT1);
 
     vfpu_asm!(
-        vmzero_q M100;                  // set M100 to all zeros
+        vmzero_q M100;                   // set M100 to all zeros
         mtv     t0, S000;                // S000 = fovy
-        viim_s  S001, 90;               // S002 = 90.0f
+        viim_s  S001, 90;                // S002 = 90.0f
         vrcp_s  S001, S001;              // S002 = 1/90
-        //vmul_s  S000, S000, S000[1/2];   // S000 = fovy * 0.5 = fovy/2
+
+        vpfxt [1/2];                     // S000 = fovy * 0.5 = fovy/2
+        vmul_s  S000, S000, S000;
+
         vmul_s  S000, S000, S001;        // S000 = (fovy/2)/90
-        //vrot_p  C002, S000, [c, s];      // S002 = cos(angle), S003 = sin(angle)
+        vrot_p  C002, S000, [C, S];      // S002 = cos(angle), S003 = sin(angle)
         vdiv_s  S100, S002, S003;        // S100 = m->x.x = cotangent = cos(angle)/sin(angle)
         mtv     t2, S001;                // S001 = near
         mtv     t3, S002;                // S002 = far
@@ -701,42 +741,52 @@ pub unsafe fn sce_gum_perspective(fovy: f32, aspect: f32, near: f32, far: f32) {
         vadd_s  S122, S001, S002;        // S122 = m->z.z = far + near
         vmul_s  S122, S122, S003;        // S122 = m->z.z = (far+near)/deltaz
         vmul_s  S132, S001, S002;        // S132 = m->w.z = far * near
-        //vmul_s  S132, S132, S132[2];     // S132 = m->w.z = 2 * (far*near)
+
+
+        vpfxt [2];                       // S132 = m->w.z = 2 * (far*near)
+        vmul_s  S132, S132, S132;
+
         vmul_s  S132, S132, S003;        // S132 = m->w.z = 2 * (far*near) / deltaz
-        //vsub_s  S123, S123, S123[1];     // S123 = m->z.w = -1.0
+
+        vpfxt [1];                       // S123 = m->z.w = -1.0
+        vsub_s  S123, S123, S123;
+
 	vmmul_q M000, M300, M100;
         vmmov_q M300, M000;
-        : : "r"(fovy), "r"(aspect), "r"(near), "r"(far)
+
+        : : "{t0}"(fovy), "{t1}"(aspect), "{t2}"(near), "{t3}"(far)
     );
+
     GUM_CURRENT_MATRIX_UPDATE = 1;
 }
 
 pub unsafe fn sce_gum_pop_matrix() {
     GUM_CURRENT_MATRIX = GUM_CURRENT_MATRIX.offset(-1);
-    let m = GUM_CURRENT_MATRIX;
     psp_vfpu_use_matrices(GUM_VFPU_CONTEXT, VMAT3, 0);
 
     vfpu_asm!(
-        lv_q C300,  0(t0); //TODO t0
+        lv_q C300,  0(t0);
         lv_q C310, 16(t0);
         lv_q C320, 32(t0);
         lv_q C330, 48(t0);
-	: : "m"(*m)
+
+	: : "{t0}"(GUM_CURRENT_MATRIX)
     );
+
     GUM_CURRENT_MATRIX_UPDATE = 1;
 }
 
 pub unsafe fn sce_gum_push_matrix() {
     GUM_CURRENT_MATRIX = GUM_CURRENT_MATRIX.offset(1);
-    let m = GUM_CURRENT_MATRIX;
     psp_vfpu_use_matrices(GUM_VFPU_CONTEXT, VMAT3, 0);
 
     vfpu_asm!(
-        sv_q C300,  0(t0); // TODO t0
+        sv_q C300,  0(t0);
         sv_q C310, 16(t0);
         sv_q C320, 32(t0);
         sv_q C330, 48(t0);
-	: "=m"(*m) : : "memory"
+
+	: : "{t0}"(GUM_CURRENT_MATRIX) : "memory"
     );
 }
 
@@ -745,15 +795,17 @@ pub unsafe fn sce_gum_rotate_x(angle: f32) {
 
     vfpu_asm!(
         vmidt_q M000;
-        mtv t0, S100;
+        mtv a0, S100;
         vcst_s S101, VFPU_2_PI;
         vmul_s S100, S101, S100;
-        //vrot_q C010, S100, [ 0, c, s, 0];
-        //vrot_q C020, S100, [ 0,-s, c, 0];
+        vrot_q C010, S100, [0, C, S, 0];
+        vrot_q C020, S100, [0, -S, C, 0];
         vmmul_q M100, M300, M000;
         vmmov_q M300, M100;
-	: : "r"(angle)
+
+	: : "{a0}"(angle)
     );
+
     GUM_CURRENT_MATRIX_UPDATE = 1;
 }
 
@@ -762,15 +814,17 @@ pub unsafe fn sce_gum_rotate_y(angle: f32) {
 
     vfpu_asm!(
         vmidt_q M000;
-        mtv t0, S100;
-        vcst_s S101, VFPU_2_PI;
-        vmul_s S100, S101, S100;
-        //vrot_q C000, S100, [ c, 0,-s, 0];
-        //vrot_q C020, S100, [ s, 0, c, 0];
+        mtv     a0, S100;
+        vcst_s  S101, VFPU_2_PI;
+        vmul_s  S100, S101, S100;
+        vrot_q  C000, S100, [C, 0,-S, 0];
+        vrot_q  C020, S100, [S, 0, C, 0];
         vmmul_q M100, M300, M000;
         vmmov_q M300, M100;
-	: : "r"(angle)
+
+	: : "{a0}"(angle)
     );
+
     GUM_CURRENT_MATRIX_UPDATE = 1;
 }
 
@@ -779,15 +833,17 @@ pub unsafe fn sce_gum_rotate_z(angle: f32) {
 
     vfpu_asm!(
         vmidt_q M000;
-        mtv t0, S100;
+        mtv a0, S100;
         vcst_s S101, VFPU_2_PI;
         vmul_s S100, S101, S100;
-        //vrot_q C000, S100, [ c, s, 0, 0];
-        //vrot_q C010, S100, [-s, c, 0, 0];
+        vrot_q C000, S100, [ C, S, 0, 0];
+        vrot_q C010, S100, [-S, C, 0, 0];
         vmmul_q M100, M300, M000;
         vmmov_q M300, M100;
-	: : "r"(angle)
+
+	: : "{a0}"(angle)
     );
+
     GUM_CURRENT_MATRIX_UPDATE = 1;
 }
 
@@ -795,11 +851,12 @@ pub unsafe fn sce_gum_scale(v: *const FVector3) {
     psp_vfpu_use_matrices(GUM_VFPU_CONTEXT, VMAT3, VMAT0);
 
     vfpu_asm!(
-        //ulv_q C000, t0; //TODO t0;
+        lv_q C000, a0;
         vscl_t C300, C300, S000;
         vscl_t C310, C310, S001;
         vscl_t C320, C320, S002;
-        : : "m"(*v)
+
+        : : "{a0}"(v)
     );
 }
 
@@ -807,12 +864,13 @@ pub unsafe fn sce_gum_store_matrix(m: *mut FMatrix4) {
     psp_vfpu_use_matrices(GUM_VFPU_CONTEXT, VMAT3, VMAT0);
 
     vfpu_asm!(
-        .mips "nop";
-        //usv_q C300,  0;
-        //usv_q C310, 16;
-        //usv_q C320, 32;
-        //usv_q C330, 48;
-	: "=m"(*m) : : "memory"
+        sv_q C300,  0(a0);
+        sv_q C310, 16(a0);
+        sv_q C320, 32(a0);
+        sv_q C330, 48(a0);
+
+	: : "{a0}"(m)
+        : "memory"
     );
 }
 
@@ -821,12 +879,14 @@ pub unsafe fn sce_gum_translate(v: *const FVector3) {
 
     vfpu_asm!(
         vmidt_q M000;
-        //ulv_q   C100;
+        lv_q    C100, a0;
         vmov_t  C030, C100;
         vmmul_q M100, M300, M000;
         vmmov_q M300, M100;
-	: : "m"(*v)
+
+	: : "{a0}"(v)
     );
+
     GUM_CURRENT_MATRIX_UPDATE = 1;
 }
 
@@ -835,13 +895,16 @@ pub unsafe fn sce_gum_update_matrix() {
 
     if GUM_CURRENT_MATRIX_UPDATE == 1 {
         psp_vfpu_use_matrices(GUM_VFPU_CONTEXT, VMAT3, 0);
+
         vfpu_asm!(
-            sv_q C300,  0(t0); //TODO t0
+            sv_q C300,  0(t0);
             sv_q C310, 16(t0);
             sv_q C320, 32(t0);
             sv_q C330, 48(t0);
-            : "=m"(*GUM_CURRENT_MATRIX) : : "memory"
+
+            : : "{t0}"(GUM_CURRENT_MATRIX) : "memory"
         );
+
         //gum_matrix_update[gum_current_mode] = gum_current_matrix_update;
         GUM_CURRENT_MATRIX_UPDATE = 0;
     }
@@ -880,16 +943,21 @@ pub unsafe fn gum_look_at(
     center: *mut FVector3,
     up: *mut FVector3
 ) {
-    let mut forward: FVector3;
-    let mut side: FVector3;
-    let mut lup: FVector3;
-    let mut ieye: FVector3;
+    let mut forward = FVector3 {
+        x: (*center).x - (*eye).x,
+        y: (*center).y - (*eye).y,
+        z: (*center).z - (*eye).z,
+    };
 
-    let t: FMatrix4;
+    let mut side = FVector3 { x: 0.0, y: 0.0, z: 0.0 };
+    let mut lup = FVector3 { x: 0.0, y: 0.0, z: 0.0 };
 
-    forward.x = (*center).x - (*eye).x;
-    forward.y = (*center).y - (*eye).y;
-    forward.z = (*center).z - (*eye).z;
+    let mut t = FMatrix4 {
+        x: FVector4 { x: 0.0, y: 0.0, z: 0.0, w: 0.0 },
+        y: FVector4 { x: 0.0, y: 0.0, z: 0.0, w: 0.0 },
+        z: FVector4 { x: 0.0, y: 0.0, z: 0.0, w: 0.0 },
+        w: FVector4 { x: 0.0, y: 0.0, z: 0.0, w: 0.0 },
+    };
 
     gum_normalize(&mut forward as *mut FVector3);
 
@@ -906,6 +974,7 @@ pub unsafe fn gum_look_at(
         &mut side as *mut FVector3,
         &mut forward as *mut FVector3
     );
+
     gum_load_identity(&mut t as *mut FMatrix4);
 
     t.x.x = side.x;
@@ -920,10 +989,12 @@ pub unsafe fn gum_look_at(
     t.y.z = -forward.y;
     t.z.z = -forward.z;
 
-    ieye.x = -(*eye).x;
-    ieye.y = -(*eye).y;
-    ieye.z = -(*eye).z;
+    let ieye = FVector3 {
+        x: -(*eye).x,
+        y: -(*eye).y,
+        z: -(*eye).z,
+    };
 
     gum_mult_matrix(m, m, &mut t as *mut FMatrix4);
-    gum_translate(m, &eye as *const FVector3);
+    gum_translate(m, &ieye as *const FVector3);
 }
