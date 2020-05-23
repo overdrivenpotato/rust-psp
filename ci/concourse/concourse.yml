@@ -35,20 +35,23 @@ jobs:
         resource: pull-request
         version: every
         trigger: true
-      - put: pull-request
+      - put: repo
+        resource: pull-request
         params:
-          path: pull-request
+          path: repo
           status: pending
       - task: build-rust
         file: repo/ci/concourse/build-rust.yml
       - task: run-tests
         file: repo/ci/concourse/run-tests.yml
         on_failure:
-          put: pull-request
+          put: repo
+          resource: pull-request
           params:
-            path: pull-request
+            path: repo
             status: failure
-      - put: pull-request
+      - put: repo
+        resource: pull-request
         params:
-          path: pull-request
+          path: repo
           status: success
