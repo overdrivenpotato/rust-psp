@@ -1,3 +1,4 @@
+use num_enum::TryFromPrimitive;
 use core::ffi::c_void;
 
 #[repr(u32)]
@@ -11,6 +12,7 @@ pub enum DisplayMode {
     // TODO: What are the other modes?
 }
 
+#[derive(Debug, Copy, Clone, TryFromPrimitive)]
 #[repr(u32)]
 /// Framebuffer pixel formats.
 pub enum DisplayPixelFormat {
@@ -24,6 +26,7 @@ pub enum DisplayPixelFormat {
     _8888 = 3,
 } 
 
+#[derive(Debug, Clone, Copy)]
 #[repr(u32)]
 pub enum DisplaySetBufSync {
     /// Buffer change effective immediately
