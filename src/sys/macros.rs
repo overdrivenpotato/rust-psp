@@ -82,15 +82,14 @@ pub const fn lib_name_bytes<const T: usize>(name: &str) -> [u8; T] {
 
 /// A complex macro used to define and link a PSP system library.
 macro_rules! sys_lib {
-    // Generate body with default ABI
+    // Generate body with default ABI.
     (__BODY $name:ident ($($arg:ident : $arg_ty:ty),*) $(-> $ret:ty)?) => {
         expr! {
-            // This avoids the overhead of a true function call.
-            llvm_asm!(
-                concat!("j ", stringify!([< __ $name _stub >]))
-            );
+            extern {
+                fn [< __ $name _stub >]($($arg : $arg_ty),*) $(-> $ret)?;
+            }
 
-            core::intrinsics::unreachable();
+            [< __ $name _stub >] ($($arg),*)
         }
     };
 
@@ -101,12 +100,13 @@ macro_rules! sys_lib {
                 fn [< __ $name _stub >]($($arg : $arg_ty),*) $(-> $ret)?;
             }
 
+            // The transmutes here are for newtypes that fit into a single
+            // register.
             core::mem::transmute($abi(
                 $(core::mem::transmute($arg)),*,
                 core::mem::transmute([< __ $name _stub >] as usize),
             ))
         }
-
     }};
 
     (
@@ -121,7 +121,6 @@ macro_rules! sys_lib {
             $(-> $ret:ty)?;
         )*
     ) => {
-
         item! {
             #[link_section = ".rodata.sceResident"]
             #[no_mangle]
@@ -172,8 +171,6 @@ macro_rules! sys_lib {
             }
 
             $(#[$attr])*
-            #[inline(never)]
-            #[allow(unused_variables)]
             pub unsafe fn $name($($arg : $arg_ty),*) $(-> $ret)? {
                 #[cfg(target_os = "psp")]
                 {
