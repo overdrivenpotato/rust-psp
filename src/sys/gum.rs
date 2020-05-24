@@ -23,7 +23,7 @@ static mut GUM_MATRIX_STACK: [[FMatrix4; 32]; 4] = {
         z: zero_vector,
         w: zero_vector,
     };
-    
+
     let stack = [
         zero_matrix, zero_matrix, zero_matrix, zero_matrix,
         zero_matrix, zero_matrix, zero_matrix, zero_matrix,
@@ -324,14 +324,14 @@ pub union Matrix4 {
     pub i: [[i32; 4usize]; 4usize],
 }
 
-pub const VMAT0: u8 = 1<<0;
-pub const VMAT1: u8 = 1<<1;
-pub const VMAT2: u8 = 1<<2;
-pub const VMAT3: u8 = 1<<3;
-pub const VMAT4: u8 = 1<<4;
-pub const VMAT5: u8 = 1<<5;
-pub const VMAT6: u8 = 1<<6;
-pub const VMAT7: u8 = 1<<7;
+pub const VMAT0: u8 = 1 << 0;
+pub const VMAT1: u8 = 1 << 1;
+pub const VMAT2: u8 = 1 << 2;
+pub const VMAT3: u8 = 1 << 3;
+pub const VMAT4: u8 = 1 << 4;
+pub const VMAT5: u8 = 1 << 5;
+pub const VMAT6: u8 = 1 << 6;
+pub const VMAT7: u8 = 1 << 7;
 pub const GUM_EPSILON: f32 = 0.00001;
 
 pub fn psp_vfpu_use_matrices(
@@ -342,7 +342,7 @@ pub fn psp_vfpu_use_matrices(
     unimplemented!()
 }
 
-pub unsafe fn gum_scale(m: *mut FMatrix4, v: *const FVector3) {
+pub unsafe fn gum_scale(m: &mut FMatrix4, v: &FVector3) {
     psp_vfpu_use_matrices(GUM_VFPU_CONTEXT, 0, VMAT0 | VMAT1);
 
     vfpu_asm!(
@@ -366,13 +366,9 @@ pub unsafe fn gum_scale(m: *mut FMatrix4, v: *const FVector3) {
     );
 }
 
-pub unsafe fn gum_translate(m: *mut FMatrix4, v: *const FVector3) {
-    psp_vfpu_use_matrices(
-        GUM_VFPU_CONTEXT,
-        0,
-        VMAT0 | VMAT1 | VMAT2
-    );
-    
+pub unsafe fn gum_translate(m: &mut FMatrix4, v: &FVector3) {
+    psp_vfpu_use_matrices(GUM_VFPU_CONTEXT, 0, VMAT0 | VMAT1 | VMAT2);
+
     vfpu_asm!(
         lv_q C100,  0(a0);
         lv_q C110, 16(a0);
@@ -393,13 +389,9 @@ pub unsafe fn gum_translate(m: *mut FMatrix4, v: *const FVector3) {
     );
 }
 
-pub unsafe fn gum_rotate_x(m: *mut FMatrix4, angle: f32) {
-    psp_vfpu_use_matrices(
-        GUM_VFPU_CONTEXT,
-        0,
-        VMAT0 | VMAT1 | VMAT2
-    );
-    
+pub unsafe fn gum_rotate_x(m: &mut FMatrix4, angle: f32) {
+    psp_vfpu_use_matrices(GUM_VFPU_CONTEXT, 0, VMAT0 | VMAT1 | VMAT2);
+
     vfpu_asm!(
         .mips "mfc1 $$t0, $1";
 
@@ -425,13 +417,9 @@ pub unsafe fn gum_rotate_x(m: *mut FMatrix4, angle: f32) {
     );
 }
 
-pub unsafe fn gum_rotate_y(m: *mut FMatrix4, angle: f32) {
-    psp_vfpu_use_matrices(
-        GUM_VFPU_CONTEXT,
-        0,
-        VMAT0 | VMAT1 | VMAT2
-    );
-    
+pub unsafe fn gum_rotate_y(m: &mut FMatrix4, angle: f32) {
+    psp_vfpu_use_matrices(GUM_VFPU_CONTEXT, 0, VMAT0 | VMAT1 | VMAT2);
+
     vfpu_asm!(
         .mips "mfc1 $$t0, $1";
 
@@ -458,7 +446,7 @@ pub unsafe fn gum_rotate_y(m: *mut FMatrix4, angle: f32) {
 }
 
 #[no_mangle]
-pub unsafe extern fn gum_rotate_z(m: *mut FMatrix4, angle: f32) {
+pub unsafe extern fn gum_rotate_z(m: &mut FMatrix4, angle: f32) {
     psp_vfpu_use_matrices(
         GUM_VFPU_CONTEXT,
         0,
@@ -489,7 +477,7 @@ pub unsafe extern fn gum_rotate_z(m: *mut FMatrix4, angle: f32) {
         : : "{a0}"(m), "f"(angle) : "t0", "memory" : "volatile"
     );
 }
- 
+
 pub unsafe fn gum_load_identity() -> FMatrix4 {
     psp_vfpu_use_matrices(GUM_VFPU_CONTEXT, 0, VMAT0);
 
@@ -539,16 +527,10 @@ pub unsafe fn gum_fast_inverse(a: &FMatrix4) -> FMatrix4 {
     out.assume_init()
 }
 
-pub unsafe fn gum_mult_matrix(
-    result: *mut FMatrix4,
-    a: *mut FMatrix4,
-    b: *mut FMatrix4
-) {
-    psp_vfpu_use_matrices(
-        GUM_VFPU_CONTEXT,
-        0,
-        VMAT0 | VMAT1 | VMAT2
-    );
+pub unsafe fn gum_mult_matrix(a: &FMatrix4, b: &FMatrix4) -> FMatrix4 {
+    psp_vfpu_use_matrices(GUM_VFPU_CONTEXT, 0, VMAT0 | VMAT1 | VMAT2);
+
+    let mut out = MaybeUninit::uninit();
 
     vfpu_asm!(
         lv_q C000,  0(a1);
@@ -568,16 +550,14 @@ pub unsafe fn gum_mult_matrix(
         sv_q C220, 32(a0);
         sv_q C230, 48(a0);
 
-        : : "{a0}"(result), "{a1}"(a), "{a2}"(b) : "memory" : "volatile"
+        : : "{a0}"(&mut out), "{a1}"(a), "{a2}"(b) : "memory" : "volatile"
     );
+
+    out.assume_init()
 }
 
 pub unsafe fn sce_gum_fast_inverse() {
-    psp_vfpu_use_matrices(
-        GUM_VFPU_CONTEXT,
-        VMAT3,
-        VMAT0 | VMAT1
-    );
+    psp_vfpu_use_matrices(GUM_VFPU_CONTEXT, VMAT3, VMAT0 | VMAT1);
 
     vfpu_asm!(
         vmidt_q M000;
@@ -596,7 +576,7 @@ pub unsafe fn sce_gum_full_inverse() {
     let mut t = MaybeUninit::uninit();
 
     psp_vfpu_use_matrices(GUM_VFPU_CONTEXT, VMAT3, VMAT0 | VMAT1);
-    
+
     vfpu_asm!(
         sv_q C300, a0;
         sv_q C310, 16(a0);
@@ -623,7 +603,7 @@ pub unsafe fn sce_gum_full_inverse() {
 pub unsafe fn sce_gum_load_identity() {
     if GUM_VFPU_CONTEXT.is_null() {
         // TODO
-        // gum_vfpucontext = pspvfpu_initcontext(); 
+        // gum_vfpucontext = pspvfpu_initcontext();
     }
 
     psp_vfpu_use_matrices(GUM_VFPU_CONTEXT, VMAT3, 0);
@@ -633,10 +613,10 @@ pub unsafe fn sce_gum_load_identity() {
     GUM_CURRENT_MATRIX_UPDATE = 1;
 }
 
-pub unsafe fn sce_gum_load_matrix(m: *const FMatrix4) {
+pub unsafe fn sce_gum_load_matrix(m: &FMatrix4) {
     if GUM_VFPU_CONTEXT.is_null() {
         // TODO
-        // gum_vfpucontext = pspvfpu_initcontext(); 
+        // gum_vfpucontext = pspvfpu_initcontext();
     }
 
     psp_vfpu_use_matrices(GUM_VFPU_CONTEXT, VMAT3, 0);
@@ -653,11 +633,7 @@ pub unsafe fn sce_gum_load_matrix(m: *const FMatrix4) {
     GUM_CURRENT_MATRIX_UPDATE = 1;
 }
 
-pub unsafe fn sce_gum_look_at(
-    eye: *mut FVector3,
-    center: *mut FVector3,
-    up: *mut FVector3
-) {
+pub unsafe fn sce_gum_look_at(eye: &FVector3, center: &FVector3, up: &FVector3) {
     let mut t = gum_load_identity();
     gum_look_at(&mut t, eye, center, up);
 
@@ -694,7 +670,7 @@ pub unsafe fn sce_gum_matrix_mode(mode: Mode) {
     GUM_CURRENT_MATRIX = GUM_STACK_DEPTH[mode as usize];
     GUM_CURRENT_MODE = mode;
     GUM_CURRENT_MATRIX_UPDATE = GUM_MATRIX_UPDATE[GUM_CURRENT_MODE as usize];
-    
+
     vfpu_asm!(
         lv_q C300, t0;
         lv_q C310, 16(t0);
@@ -705,8 +681,9 @@ pub unsafe fn sce_gum_matrix_mode(mode: Mode) {
     );
 }
 
-pub unsafe fn sce_gum_mult_matrix(m: *const FMatrix4) {
+pub unsafe fn sce_gum_mult_matrix(m: &FMatrix4) {
     psp_vfpu_use_matrices(GUM_VFPU_CONTEXT, VMAT3, VMAT0 | VMAT1);
+
     vfpu_asm!(
         lv_q C000,  0(t0);
         lv_q C010, 16(t0);
@@ -716,7 +693,7 @@ pub unsafe fn sce_gum_mult_matrix(m: *const FMatrix4) {
         vmmul_q M100, M300, M000;
         vmmov_q M300, M100;
 
-        : : "{t0}"(m) : : "volatile"
+        : : "{t0}"(m) : "memory" : "volatile"
     );
 
     GUM_CURRENT_MATRIX_UPDATE = 1;
@@ -731,7 +708,7 @@ pub unsafe fn sce_gum_ortho(
     far: f32
 ) {
     psp_vfpu_use_matrices(GUM_VFPU_CONTEXT, VMAT3, VMAT0 | VMAT1);
-    
+
     vfpu_asm!(
         .mips "mfc1 $$t0, $0";
         .mips "mfc1 $$t1, $1";
@@ -913,7 +890,7 @@ pub unsafe fn sce_gum_rotate_z(angle: f32) {
     GUM_CURRENT_MATRIX_UPDATE = 1;
 }
 
-pub unsafe fn sce_gum_scale(v: *const FVector3) {
+pub unsafe fn sce_gum_scale(v: &FVector3) {
     psp_vfpu_use_matrices(GUM_VFPU_CONTEXT, VMAT3, VMAT0);
 
     vfpu_asm!(
@@ -926,7 +903,7 @@ pub unsafe fn sce_gum_scale(v: *const FVector3) {
     );
 }
 
-pub unsafe fn sce_gum_store_matrix(m: *mut FMatrix4) {
+pub unsafe fn sce_gum_store_matrix(m: &FMatrix4) {
     psp_vfpu_use_matrices(GUM_VFPU_CONTEXT, VMAT3, VMAT0);
 
     vfpu_asm!(
@@ -939,7 +916,7 @@ pub unsafe fn sce_gum_store_matrix(m: *mut FMatrix4) {
     );
 }
 
-pub unsafe fn sce_gum_translate(v: *const FVector3) {
+pub unsafe fn sce_gum_translate(v: &FVector3) {
     psp_vfpu_use_matrices(GUM_VFPU_CONTEXT, VMAT3, VMAT0 | VMAT1);
 
     vfpu_asm!(
@@ -984,57 +961,47 @@ pub unsafe fn sce_gum_update_matrix() {
     }
 }
 
-pub unsafe fn gum_normalize (v: *mut FVector3) {
-    use core::intrinsics::sqrtf32;
-
-    let l: f32 = sqrtf32(((*v).x*(*v).x) + ((*v).y*(*v).y) + ((*v).z*(*v).z));
+pub fn gum_normalize(v: &mut FVector3) {
+    let l = unsafe {
+        use core::intrinsics::sqrtf32;
+        sqrtf32((v.x * v.x) + (v.y * v.y) + (v.z * v.z))
+    };
 
     if l > GUM_EPSILON {
-        let il: f32 = 1.0 / l;
-        (*v).x *= il; (*v).y *= il; (*v).z *= il;
+        let il = 1.0 / l;
+
+        v.x *= il;
+        v.y *= il;
+        v.z *= il;
     }
 }
 
-pub unsafe fn gum_cross_product(
-    r: *mut FVector3,
-    a: *const FVector3,
-    b: *const FVector3
-) {
-    (*r).x = ((*a).y * (*b).z) - ((*a).z * (*b).y);
-    (*r).y = ((*a).z * (*b).x) - ((*a).x * (*b).z);
-    (*r).z = ((*a).x * (*b).y) - ((*a).y * (*b).x);
+pub fn gum_cross_product(a: &FVector3, b: &FVector3) -> FVector3 {
+    FVector3 {
+        x: a.y * b.z - a.z * b.y,
+        y: a.z * b.x - a.x * b.z,
+        z: a.x * b.y - a.y * b.x,
+    }
 }
 
 pub unsafe fn gum_look_at(
-    m: *mut FMatrix4,
-    eye: *mut FVector3,
-    center: *mut FVector3,
-    up: *mut FVector3
+    mat: &mut FMatrix4,
+    eye: &FVector3,
+    center: &FVector3,
+    up: &FVector3,
 ) {
     let mut forward = FVector3 {
-        x: (*center).x - (*eye).x,
-        y: (*center).y - (*eye).y,
-        z: (*center).z - (*eye).z,
+        x: center.x - eye.x,
+        y: center.y - eye.y,
+        z: center.z - eye.z,
     };
 
-    let mut side = FVector3 { x: 0.0, y: 0.0, z: 0.0 };
-    let mut lup = FVector3 { x: 0.0, y: 0.0, z: 0.0 };
+    gum_normalize(&mut forward);
 
-    gum_normalize(&mut forward as *mut FVector3);
+    let mut side = gum_cross_product(&forward, &up);
+    gum_normalize(&mut side);
 
-    gum_cross_product(
-        &mut side as *mut FVector3, 
-        &mut forward as *mut FVector3,
-        up
-    );
-    gum_normalize(&mut side as *mut FVector3);
-
-
-    gum_cross_product(
-        &mut lup as *mut FVector3, 
-        &mut side as *mut FVector3,
-        &mut forward as *mut FVector3
-    );
+    let lup = gum_cross_product(&side, &forward);
 
     let mut t = gum_load_identity();
 
@@ -1051,11 +1018,11 @@ pub unsafe fn gum_look_at(
     t.z.z = -forward.z;
 
     let ieye = FVector3 {
-        x: -(*eye).x,
-        y: -(*eye).y,
-        z: -(*eye).z,
+        x: -eye.x,
+        y: -eye.y,
+        z: -eye.z,
     };
 
-    gum_mult_matrix(m, m, &mut t as *mut FMatrix4);
-    gum_translate(m, &ieye as *const FVector3);
+    let mut mat = gum_mult_matrix(mat, &t);
+    gum_translate(&mut mat, &ieye);
 }
