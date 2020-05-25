@@ -182,6 +182,9 @@ macro_rules! sys_lib {
 
                 #[cfg(not(target_os = "psp"))]
                 {
+                    // Get rid of warnings
+                    $(let _arg = $arg;)*
+
                     panic!("tried to call PSP system function on non-PSP target");
                 }
             }
