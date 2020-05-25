@@ -92,6 +92,18 @@ bitflags::bitflags!{
     }
 }
 
+bitflags::bitflags! {
+    /// Event flag wait types
+    pub struct EventFlagWaitTypes: u32 {
+        /// Wait for all bits in the pattern to be set
+        const AND = 0;
+        /// Wait for one or more bits in the pattern to be set
+        const OR  = 1;
+        /// Clear the wait pattern when it matches
+        const CLEAR = 0x20;
+    }
+}
+
 /// Structure to hold the status information for a thread
 /// @see sceKernelReferThreadStatus
 #[repr(C)]
@@ -315,7 +327,7 @@ pub enum SceKernelIdListType {
 pub struct SceKernelSystemStatus {
     /// Size of the structure (should be set prior to the call).
     pub size: usize,
-    /// The status ?
+    /// The status?
     pub status: u32,
     /// The number of cpu clocks in the idle thread
     pub idle_clocks: SceKernelSysClock,
@@ -388,8 +400,11 @@ pub struct SceKernelVTimerOptParam {
 }
 
 /// Callback function prototype
-pub type SceKernelCallbackFunction =
-    unsafe extern "C" fn(arg1: i32, arg2: i32, arg: *mut c_void) -> i32;
+pub type SceKernelCallbackFunction = unsafe extern "C" fn(
+    arg1: i32,
+    arg2: i32,
+    arg: *mut c_void,
+) -> i32;
 
 /// Structure to hold the status information for a callback
 #[repr(C)]
@@ -441,8 +456,8 @@ sys_lib! {
     /// - `entry`: The thread function to run when started.
     /// - `init_priority`: The initial priority of the thread. Less if higher priority.
     /// - `stack_size`: The size of the initial stack.
-    /// - `attributes`: The thread attributes, zero or more of `::ThreadAttributes`.
-    /// - `option`: Additional options specified by ::SceKernelThreadOptParam.
+    /// - `attr`: The thread attributes, zero or more of `ThreadAttributes`.
+    /// - `option`: Additional options specified by `SceKernelThreadOptParam`.
     ///
     /// # Return Value
     ///
@@ -452,7 +467,7 @@ sys_lib! {
         entry: SceKernelThreadEntry,
         init_priority: i32,
         stack_size: i32,
-        attributes: ThreadAttributes,
+        attr: ThreadAttributes,
         option: *mut SceKernelThreadOptParam,
     ) -> SceUid;
 
@@ -536,7 +551,7 @@ sys_lib! {
     /// # Parameters
     ///
     /// - `state`: The state of the dispatch thread
-    /// (from ::sce_kernel_suspend_dispatch_thread)
+    ///   (from `sce_kernel_suspend_dispatch_thread`)
     ///
     /// # Return Value
     ///
@@ -570,7 +585,7 @@ sys_lib! {
     pub unsafe fn sce_kernel_wakeup_thread(thid: SceUid) -> i32;
 
     #[psp(0xFCCFAD26)]
-    /// Cancel a thread that was to be woken with ::sce_kernel_wakeup_thread.
+    /// Cancel a thread that was to be woken with `sce_kernel_wakeup_thread`.
     ///
     /// # Parameters
     ///
@@ -594,7 +609,7 @@ sys_lib! {
     pub unsafe fn sce_kernel_suspend_thread(thid: SceUid) -> i32;
 
     #[psp(0x75156E8F)]
-    /// Resume a thread previously put into a suspended state with ::sce_kernel_suspend_thread.
+    /// Resume a thread previously put into a suspended state with `sce_kernel_suspend_thread`.
     ///
     /// # Parameters
     ///
@@ -680,7 +695,7 @@ sys_lib! {
     /// # Parameters
     ///
     /// - `unknown`: Set to 0.
-    /// - `attr`: The thread attributes to modify.  One of ::ThreadAttributes.
+    /// - `attr`: The thread attributes to modify.  One of `ThreadAttributes`.
     ///
     /// # Return Value
     ///
@@ -695,7 +710,7 @@ sys_lib! {
     ///
     /// # Parameters
     ///
-    /// - `thid`: The ID of the thread (from sce_kernel_create_thread or sce_kernel_get_thread_id)
+    /// - `thid`: The ID of the thread (from `sce_kernel_create_thread` or `sce_kernel_get_thread_id`)
     /// - `priority`: The new priority (the lower the number the higher the priority)
     ///
     /// # Return Value
@@ -773,8 +788,7 @@ sys_lib! {
     ///
     /// # Parameters
     ///
-    /// - `thid`: The thread ID. Seem to take current thread
-    /// if set to 0.
+    /// - `thid`: The thread ID. Seem to take current thread if set to 0.
     ///
     /// # Return Value
     ///
@@ -788,8 +802,9 @@ sys_lib! {
     ///
     /// - `thid`: Id of the thread to get status
     /// - `info`: Pointer to the info structure to receive the data.
-    /// Note: The structures size field should be set to
-    /// sizeof(SceKernelThreadInfo) before calling this function.
+    ///
+    ///   Note: The structures size field should be set to
+    ///   `sizeof(SceKernelThreadInfo)` before calling this function.
     ///
     /// # Return Value
     ///
@@ -805,7 +820,7 @@ sys_lib! {
     /// # Parameters
     ///
     /// - `thid`: UID of the thread to retrive status.
-    /// - `status`: Pointer to a ::SceKernelThreadRunStatus struct to receive the runtime status.
+    /// - `status`: Pointer to a `SceKernelThreadRunStatus` struct to receive the runtime status.
     ///
     /// # Return Value
     ///
@@ -841,25 +856,26 @@ sys_lib! {
     ///
     /// # Parameters
     ///
-    /// - `semaid`: The semaid returned from a previous create call.
+    /// - `sema_id`: The semaid returned from a previous create call.
+    ///
     /// # Return Value
     ///
-    /// Returns the value 0 if its succesful otherwise -1
-    pub unsafe fn sce_kernel_delete_sema(semaid: SceUid) -> i32;
+    /// Returns the value 0 if it's succesful otherwise -1
+    pub unsafe fn sce_kernel_delete_sema(sema_id: SceUid) -> i32;
 
     #[psp(0x3F53E640)]
     /// Send a signal to a semaphore
     ///
     /// # Parameters
     ///
-    /// - `semaid`: The sema id returned from sce_kernel_create_sema
+    /// - `sema_id`: The sema id returned from `sce_kernel_create_sema`
     /// - `signal`: The amount to signal the sema (i.e. if 2 then increment the sema by 2)
     ///
     /// # Return Value
     ///
     /// < 0 On error.
     pub unsafe fn sce_kernel_signal_sema(
-        semaid: SceUid,
+        sema_id: SceUid,
         signal: i32,
     ) -> i32;
 
@@ -868,7 +884,7 @@ sys_lib! {
     ///
     /// # Parameters
     ///
-    /// - `semaid`: The sema id returned from sce_kernel_create_sema
+    /// - `sema_id`: The sema id returned from `sce_kernel_create_sema`
     /// - `signal`: The value to wait for (i.e. if 1 then wait till reaches a signal state of 1)
     /// - `timeout`: Timeout in microseconds (assumed).
     ///
@@ -876,7 +892,7 @@ sys_lib! {
     ///
     /// < 0 on error.
     pub unsafe fn sce_kernel_wait_sema(
-        semaid: SceUid,
+        sema_id: SceUid,
         signal: i32,
         timeout: *mut u32,
     ) -> i32;
@@ -886,7 +902,7 @@ sys_lib! {
     ///
     /// # Parameters
     ///
-    /// - `semaid`: The sema id returned from sce_kernel_create_sema
+    /// - `sema_id`: The sema id returned from `sce_kernel_create_sema`
     /// - `signal`: The value to wait for (i.e. if 1 then wait till reaches a signal state of 1)
     /// - `timeout`: Timeout in microseconds (assumed).
     ///
@@ -894,7 +910,7 @@ sys_lib! {
     ///
     /// < 0 on error.
     pub unsafe fn sce_kernel_wait_sema_cb(
-        semaid: SceUid,
+        sema_id: SceUid,
         signal: i32,
         timeout: *mut u32,
     ) -> i32;
@@ -904,14 +920,14 @@ sys_lib! {
     ///
     /// # Parameters
     ///
-    /// - `semaid`: UID of the semaphore to poll.
+    /// - `sema_id`: UID of the semaphore to poll.
     /// - `signal`: The value to test for.
     ///
     /// # Return Value
     ///
     /// < 0 on error.
     pub unsafe fn sce_kernel_poll_sema(
-        semaid: SceUid,
+        sema_id: SceUid,
         signal: i32,
     ) -> i32;
 
@@ -920,14 +936,14 @@ sys_lib! {
     ///
     /// # Parameters
     ///
-    /// - `semaid`: UID of the semaphore to retrieve info for.
-    /// - `info`: Pointer to a ::SceKernelSemaInfo struct to receive the info.
+    /// - `sema_id`: UID of the semaphore to retrieve info for.
+    /// - `info`: Pointer to a `SceKernelSemaInfo` struct to receive the info.
     ///
     /// # Return Value
     ///
     /// < 0 on error.
     pub unsafe fn sce_kernel_refer_sema_status(
-        semaid: SceUid,
+        sema_id: SceUid,
         info: *mut SceKernelSemaInfo,
     ) -> i32;
 
@@ -939,7 +955,7 @@ sys_lib! {
     /// - `name`: The name of the event flag.
     /// - `attr`: Attributes from `EventFlagAttributes`.
     /// - `bits`: Initial bit pattern.
-    /// - `opt`: Options, set to NULL.
+    /// - `opt`: Options, set to null.
     ///
     /// # Return Value
     ///
@@ -956,43 +972,44 @@ sys_lib! {
     ///
     /// # Parameters
     ///
-    /// - `evid`: The event id returned by sce_kernel_create_event_flag.
+    /// - `ev_id`: The event id returned by `sce_kernel_create_event_flag`.
     /// - `bits`: The bit pattern to set.
     ///
     /// # Return Value
     ///
     /// < 0 On error
-    pub unsafe fn sce_kernel_set_event_flag(evid: SceUid, bits: u32) -> i32;
+    pub unsafe fn sce_kernel_set_event_flag(ev_id: SceUid, bits: u32) -> i32;
 
     #[psp(0x812346E4)]
     /// Clear a event flag bit pattern
     ///
     /// # Parameters
     ///
-    /// - `evid`: The event id returned by ::sce_Kernel_create_event_flag
+    /// - `ev_id`: The event id returned by `sce_Kernel_create_event_flag`
     /// - `bits`: The bits to clean
     ///
     /// # Return Value
     ///
     /// < 0 on Error
-    pub unsafe fn sce_kernel_clear_event_flag(evid: SceUid, bits: u32) -> i32;
+    pub unsafe fn sce_kernel_clear_event_flag(ev_id: SceUid, bits: u32) -> i32;
 
     #[psp(0x30FD48F0)]
     /// Poll an event flag for a given bit pattern.
     ///
     /// # Parameters
     ///
-    /// - `evid`: The event id returned by sce_kernel_create_event_flag.
+    /// - `ev_id`: The event id returned by `sce_kernel_create_event_flag`.
     /// - `bits`: The bit pattern to poll for.
-    /// - `wait`: Wait type, one or more of ::PspEventFlagWaitTypes or'ed together
+    /// - `wait`: Wait type, one or more of `EventFlagWaitTypes` or'ed together
     /// - `out_bits`: The bit pattern that was matched.
+    ///
     /// # Return Value
     ///
     /// < 0 On error
     pub unsafe fn sce_kernel_poll_event_flag(
-        evid: i32,
+        ev_id: SceUid,
         bits: u32,
-        wait: u32,
+        wait: EventFlagWaitTypes,
         out_bits: *mut u32,
     ) -> i32;
 
@@ -1001,18 +1018,19 @@ sys_lib! {
     ///
     /// # Parameters
     ///
-    /// - `evid`: The event id returned by sce_kernel_create_event_flag.
+    /// - `ev_id`: The event id returned by sce_kernel_create_event_flag.
     /// - `bits`: The bit pattern to poll for.
-    /// - `wait`: Wait type, one or more of ::PspEventFlagWaitTypes or'ed together
+    /// - `wait`: Wait type, one or more of `EventFlagWaitTypes` or'ed together
     /// - `out_bits`: The bit pattern that was matched.
     /// - `timeout`: Timeout in microseconds
+    ///
     /// # Return Value
     ///
     /// < 0 On error
     pub unsafe fn sce_kernel_wait_event_flag(
-        evid: i32,
+        ev_id: SceUid,
         bits: u32,
-        wait: u32,
+        wait: EventFlagWaitTypes,
         out_bits: *mut u32,
         timeout: *mut u32,
     ) -> i32;
@@ -1022,18 +1040,18 @@ sys_lib! {
     ///
     /// # Parameters
     ///
-    /// - `evid`: The event id returned by sce_kernel_create_event_flag.
+    /// - `ev_id`: The event id returned by `sce_kernel_create_event_flag`.
     /// - `bits`: The bit pattern to poll for.
-    /// - `wait`: Wait type, one or more of ::PspEventFlagWaitTypes or'ed together
+    /// - `wait`: Wait type, one or more of `EventFlagWaitTypes` or'ed together
     /// - `out_bits`: The bit pattern that was matched.
     /// - `timeout`: Timeout in microseconds
     /// # Return Value
     ///
     /// < 0 On error
     pub unsafe fn sce_kernel_wait_event_flag_cb(
-        evid: i32,
+        ev_id: SceUid,
         bits: u32,
-        wait: u32,
+        wait: EventFlagWaitTypes,
         out_bits: *mut u32,
         timeout: *mut u32,
     ) -> i32;
@@ -1043,12 +1061,12 @@ sys_lib! {
     ///
     /// # Parameters
     ///
-    /// - `evid`: The event id returned by sce_kernel_create_event_flag.
+    /// - `ev_id`: The event id returned by `sce_kernel_create_event_flag`.
     ///
     /// # Return Value
     ///
     /// < 0 On error
-    pub unsafe fn sce_kernel_delete_event_flag(evid: i32) -> i32;
+    pub unsafe fn sce_kernel_delete_event_flag(ev_id: SceUid) -> i32;
 
     #[psp(0xA66B0120)]
     /// Get the status of an event flag.
@@ -1056,7 +1074,7 @@ sys_lib! {
     /// # Parameters
     ///
     /// - `event`: The UID of the event.
-    /// - `status`: A pointer to a ::SceKernelEventFlagInfo structure.
+    /// - `status`: A pointer to a `SceKernelEventFlagInfo` structure.
     ///
     /// # Return Value
     ///
@@ -1073,7 +1091,8 @@ sys_lib! {
     ///
     /// - `name`: Specifies the name of the mbx
     /// - `attr`: Mbx attribute flags (normally set to 0)
-    /// - `option`: Mbx options (normally set to NULL)
+    /// - `option`: Mbx options (normally set to null)
+    ///
     /// # Return Value
     ///
     /// A messagebox id
@@ -1088,27 +1107,29 @@ sys_lib! {
     ///
     /// # Parameters
     ///
-    /// - `mbxid`: The mbxid returned from a previous create call.
+    /// - `mbx_id`: The mbxid returned from a previous create call.
+    ///
     /// # Return Value
     ///
     /// Returns the value 0 if its succesful otherwise an error code
-    pub unsafe fn sce_kernel_delete_mbx(mbxid: SceUid) -> i32;
+    pub unsafe fn sce_kernel_delete_mbx(mbx_id: SceUid) -> i32;
 
     #[psp(0xE9B3061E)]
     /// Send a message to a messagebox
     ///
     /// # Parameters
     ///
-    /// - `mbxid`: The mbx id returned from sce_kernel_create_mbx
+    /// - `mbx_id`: The mbx id returned from `sce_kernel_create_mbx`
     /// - `message`: A message to be forwarded to the receiver.
-    ///    The start of the message should be the
-    ///    ::SceKernelMsgPacket structure, the rest
+    ///
+    ///    Note: The start of the message should be the `SceKernelMsgPacket` structure, the rest
+    ///    (???) *This documentation appears to have been unfinished*.
     ///
     /// # Return Value
     ///
     /// < 0 On error.
     pub unsafe fn sce_kernel_send_mbx(
-        mbxid: SceUid,
+        mbx_id: SceUid,
         message: *mut c_void,
     ) -> i32;
 
@@ -1117,19 +1138,16 @@ sys_lib! {
     ///
     /// # Parameters
     ///
-    /// - `mbxid`: The mbx id returned from sce_kernel_create_mbx
-    /// - `pmessage`: A pointer to where a pointer to the
-    ///                   received message should be stored
-    /// # Parameters
-    ///
+    /// - `mbx_id`: The mbx id returned from `sce_kernel_create_mbx`
+    /// - `message`: A pointer to where a pointer to the received message should be stored
     /// - `timeout`: Timeout in microseconds
     ///
     /// # Return Value
     ///
     /// < 0 on error.
     pub unsafe fn sce_kernel_receive_mbx(
-        mbxid: SceUid,
-        pmessage: *mut *mut c_void,
+        mbx_id: SceUid,
+        message: *mut *mut c_void,
         timeout: *mut u32,
     ) -> i32;
 
@@ -1138,19 +1156,16 @@ sys_lib! {
     ///
     /// # Parameters
     ///
-    /// - `mbxid`: The mbx id returned from sce_kernel_create_mbx
-    /// - `pmessage`: A pointer to where a pointer to the
-    ///                   received message should be stored
-    /// # Parameters
-    ///
+    /// - `mbx_id`: The mbx id returned from `sce_kernel_create_mbx`
+    /// - `message`: A pointer to where a pointer to the received message should be stored
     /// - `timeout`: Timeout in microseconds
     ///
     /// # Return Value
     ///
     /// < 0 on error.
     pub unsafe fn sce_kernel_receive_mbx_cb(
-        mbxid: SceUid,
-        pmessage: *mut *mut c_void,
+        mbx_id: SceUid,
+        message: *mut *mut c_void,
         timeout: *mut u32,
     ) -> i32;
 
@@ -1159,15 +1174,14 @@ sys_lib! {
     ///
     /// # Parameters
     ///
-    /// - `mbxid`: The mbx id returned from sce_kernel_create_mbx
-    /// - `pmessage`: A pointer to where a pointer to the
-    ///                   received message should be stored
+    /// - `mbx_id`: The mbx id returned from `sce_kernel_create_mbx`
+    /// - `message`: A pointer to where a pointer to the received message should be stored
     ///
     /// # Return Value
     ///
-    /// < 0 on error (SCE_KERNEL_ERROR_MBOX_NOMSG if the mbx is empty).
+    /// < 0 on error (`SCE_KERNEL_ERROR_MBOX_NOMSG` if the mbx is empty).
     pub unsafe fn sce_kernel_poll_mbx(
-        mbxid: SceUid,
+        mbx_id: SceUid,
         pmessage: *mut *mut c_void,
     ) -> i32;
 
@@ -1176,17 +1190,16 @@ sys_lib! {
     ///
     /// # Parameters
     ///
-    /// - `mbxid`: The mbx id returned from sce_kernel_create_mbx
-    /// - `pnum`: A pointer to where the number of threads which
-    ///                were waiting on the mbx should be stored (NULL
-    ///                if you don't care)
+    /// - `mbx_id`: The mbx id returned from `sce_kernel_create_mbx`
+    /// - `num`: A pointer to where the number of threads which were waiting on
+    ///    the mbx should be stored (null if you don't care)
     ///
     /// # Return Value
     ///
     /// < 0 on error
     pub unsafe fn sce_kernel_cancel_receive_mbx(
-        mbxid: SceUid,
-        pnum: *mut i32,
+        mbx_id: SceUid,
+        num: *mut i32,
     ) -> i32;
 
     #[psp(0xA8E8C846)]
@@ -1194,23 +1207,24 @@ sys_lib! {
     ///
     /// # Parameters
     ///
-    /// - `mbxid`: UID of the messagebox to retrieve info for.
-    /// - `info`: Pointer to a ::SceKernelMbxInfo struct to receive the info.
+    /// - `mbx_id`: UID of the messagebox to retrieve info for.
+    /// - `info`: Pointer to a `SceKernelMbxInfo` struct to receive the info.
     ///
     /// # Return Value
     ///
     /// < 0 on error.
     pub unsafe fn sce_kernel_refer_mbx_status(
-        mbxid: SceUid,
+        mbx_id: SceUid,
         info: *mut SceKernelMbxInfo,
     ) -> i32;
 
     #[psp(0x6652B8CA)]
     /// Set an alarm.
+    ///
     /// # Parameters
     ///
     /// - `clock`: The number of micro seconds till the alarm occurrs.
-    /// - `handler`: Pointer to a ::SceKernelAlarmHandler
+    /// - `handler`: Pointer to a `SceKernelAlarmHandler`
     /// - `common`: Common pointer for the alarm handler
     ///
     /// # Return Value
@@ -1223,12 +1237,12 @@ sys_lib! {
     ) -> SceUid;
 
     #[psp(0xB2C25152)]
-    /// Set an alarm using a ::SceKernelSysClock structure for the time
+    /// Set an alarm using a `SceKernelSysClock` structure for the time
     ///
     /// # Parameters
     ///
-    /// - `clock`: Pointer to a ::SceKernelSysClock structure
-    /// - `handler`: Pointer to a ::SceKernelAlarmHandler
+    /// - `clock`: Pointer to a `SceKernelSysClock` structure
+    /// - `handler`: Pointer to a `SceKernelAlarmHandler`
     /// - `common`: Common pointer for the alarm handler.
     ///
     /// # Return Value
@@ -1245,26 +1259,26 @@ sys_lib! {
     ///
     /// # Parameters
     ///
-    /// - `alarmid`: UID of the alarm to cancel.
+    /// - `alarm_id`: UID of the alarm to cancel.
     ///
     /// # Return Value
     ///
     /// 0 on success, < 0 on error.
-    pub unsafe fn sce_kernel_cancel_alarm(alarmid: SceUid) -> i32;
+    pub unsafe fn sce_kernel_cancel_alarm(alarm_id: SceUid) -> i32;
 
     #[psp(0xDAA3F564)]
     /// Refer the status of a created alarm.
     ///
     /// # Parameters
     ///
-    /// - `alarmid`: UID of the alarm to get the info of
-    /// - `info`: Pointer to a ::SceKernelAlarmInfo structure
+    /// - `alarm_id`: UID of the alarm to get the info of
+    /// - `info`: Pointer to a `SceKernelAlarmInfo` structure
     ///
     /// # Return Value
     ///
     /// 0 on success, < 0 on error.
     pub unsafe fn sce_kernel_refer_alarm_status(
-        alarmid: SceUid,
+        alarm_id: SceUid,
         info: *mut SceKernelAlarmInfo,
     ) -> i32;
 
@@ -1284,7 +1298,7 @@ sys_lib! {
         name: *const u8,
         func: SceKernelCallbackFunction,
         arg: *mut c_void,
-    ) -> i32;
+    ) -> SceUid;
 
     #[psp(0x730ED8BC)]
     /// Gets the status of a specified callback.
@@ -1293,7 +1307,7 @@ sys_lib! {
     ///
     /// - `cb`: The UID of the callback to refer.
     /// - `status`: Pointer to a status structure. The size parameter should be
-    /// initialised before calling.
+    ///   initialised before calling.
     ///
     /// # Return Value
     ///
@@ -1332,7 +1346,7 @@ sys_lib! {
     ) -> i32;
 
     #[psp(0xBA4051D6)]
-    /// Cancel a callback ?
+    /// Cancel a callback?
     ///
     /// # Parameters
     ///
@@ -1340,7 +1354,7 @@ sys_lib! {
     ///
     /// # Return Value
     ///
-    /// 0 on succes, < 0 on error
+    /// 0 on success, < 0 on error
     pub unsafe fn sce_kernel_cancel_callback(cb: SceUid) -> i32;
 
     #[psp(0x2A3D44FF)]
@@ -1356,32 +1370,32 @@ sys_lib! {
     pub unsafe fn sce_kernel_get_callback_count(cb: SceUid) -> i32;
 
     #[psp(0x349D6D6C)]
-    /// Check callback ?
+    /// Check callback?
     ///
     /// # Return Value
     ///
-    /// Something or another
+    /// TODO: Something or another
     pub unsafe fn sce_kernel_check_callback() -> i32;
 
     #[psp(0x94416130)]
-    /// Get a list of UIDs from threadman. Allows you to enumerate
-    /// resources such as threads or semaphores.
+    /// Get a list of UIDs from threadman. Allows you to enumerate resources
+    /// such as threads or semaphores.
     ///
     /// # Parameters
     ///
-    /// - `type`: The type of resource to list, one of ::SceKernelIdListType.
-    /// - `readbuf`: A pointer to a buffer to store the list.
-    /// - `readbufsize`: The size of the buffer in SceUid units.
-    /// - `idcount`: Pointer to an integer in which to return the number of ids in the list.
+    /// - `type`: The type of resource to list, one of `SceKernelIdListType`.
+    /// - `read_buf`: A pointer to a buffer to store the list.
+    /// - `read_buf_size`: The size of the buffer in `SceUid` units.
+    /// - `id_count`: Pointer to an integer in which to return the number of IDs in the list.
     ///
     /// # Return Value
     ///
     /// < 0 on error. Either 0 or the same as idcount on success.
     pub unsafe fn sce_kernel_get_threadman_id_list(
         type_: SceKernelIdListType,
-        readbuf: *mut SceUid,
-        readbufsize: i32,
-        idcount: *mut i32,
+        read_buf: *mut SceUid,
+        read_buf_size: i32,
+        id_count: *mut i32,
     ) -> i32;
 
     #[psp(0x627E6F3A)]
@@ -1389,7 +1403,7 @@ sys_lib! {
     ///
     /// # Parameters
     ///
-    /// - `status`: Pointer to a ::SceKernelSystemStatus structure.
+    /// - `status`: Pointer to a `SceKernelSystemStatus` structure.
     ///
     /// # Return Value
     ///
@@ -1405,7 +1419,7 @@ sys_lib! {
     /// - `part`: ID of the memory partition
     /// - `attr`: Set to 0?
     /// - `unk1`: Unknown
-    /// - `opt`: Message pipe options (set to NULL)
+    /// - `opt`: Message pipe options (set to null)
     ///
     /// # Return Value
     ///
@@ -1576,16 +1590,16 @@ sys_lib! {
     /// # Parameters
     ///
     /// - `uid`: UID of the pipe to cancel
-    /// - `psend`: Receive number of sending threads?
-    /// - `precv`: Receive number of receiving threads?
+    /// - `send`: Receive number of sending threads?
+    /// - `recv`: Receive number of receiving threads?
     ///
     /// # Return Value
     ///
     /// 0 on success, < 0 on error
     pub unsafe fn sce_kernel_cancel_msg_pipe(
         uid: SceUid,
-        psend: *mut i32,
-        precv: *mut i32,
+        send: *mut i32,
+        recv: *mut i32,
     ) -> i32;
 
     #[psp(0x33BE4024)]
@@ -1594,7 +1608,7 @@ sys_lib! {
     /// # Parameters
     ///
     /// - `uid`: The uid of the Message Pipe
-    /// - `info`: Pointer to a ::SceKernelMppInfo structure
+    /// - `info`: Pointer to a `SceKernelMppInfo` structure
     ///
     /// # Return Value
     ///
@@ -1613,7 +1627,7 @@ sys_lib! {
     /// - `part`: The memory partition ID
     /// - `attr`: Attributes
     /// - `size`: Size of pool
-    /// - `opt`: Options (set to NULL)
+    /// - `opt`: Options (can be set to null)
     ///
     /// # Return Value
     ///
@@ -1718,14 +1732,14 @@ sys_lib! {
     /// # Parameters
     ///
     /// - `uid`: The UID of the pool
-    /// - `pnum`: Receives the number of waiting threads
+    /// - `num`: Receives the number of waiting threads
     ///
     /// # Return Value
     ///
     /// 0 on success, < 0 on error
     pub unsafe fn sce_kernel_cancel_vpl(
         uid: SceUid,
-        pnum: *mut i32,
+        num: *mut i32,
     ) -> i32;
 
     #[psp(0x39810265)]
@@ -1734,7 +1748,7 @@ sys_lib! {
     /// # Parameters
     ///
     /// - `uid`: The uid of the VPL
-    /// - `info`: Pointer to a ::SceKernelVplInfo structure
+    /// - `info`: Pointer to a `SceKernelVplInfo` structure
     ///
     /// # Return Value
     ///
@@ -1754,7 +1768,7 @@ sys_lib! {
     /// - `attr`: Attributes
     /// - `size`: Size of pool block
     /// - `blocks`: Number of blocks to allocate
-    /// - `opt`: Options (set to NULL)
+    /// - `opt`: Options (can be set to null)
     ///
     /// # Return Value
     ///
@@ -1870,7 +1884,7 @@ sys_lib! {
     /// # Parameters
     ///
     /// - `uid`: The uid of the FPL
-    /// - `info`: Pointer to a ::SceKernelFplInfo structure
+    /// - `info`: Pointer to a `SceKernelFplInfo` structure
     ///
     /// # Return Value
     ///
@@ -1881,12 +1895,12 @@ sys_lib! {
     ) -> i32;
 
     #[psp(0x110DEC9A)]
-    /// Convert a number of microseconds to a ::SceKernelSysClock structure
+    /// Convert a number of microseconds to a `SceKernelSysClock` structure
     ///
     /// # Parameters
     ///
     /// - `usec`: Number of microseconds
-    /// - `clock`: Pointer to a ::SceKernelSysClock structure
+    /// - `clock`: Pointer to a `SceKernelSysClock` structure
     ///
     /// # Return Value
     ///
@@ -1906,21 +1920,21 @@ sys_lib! {
     /// # Return Value
     ///
     /// The time
-    pub unsafe fn sce_kernel_usec2_sys_clock_wide(usec: u32) -> i64;
+    pub unsafe fn sce_kernel_usec_2_sys_clock_wide(usec: u32) -> i64;
 
     #[psp(0xBA6B92E2)]
-    /// Convert a ::SceKernelSysClock structure to microseconds
+    /// Convert a `SceKernelSysClock` structure to microseconds
     ///
     /// # Parameters
     ///
-    /// - `clock`: Pointer to a ::SceKernelSysClock structure
+    /// - `clock`: Pointer to a `SceKernelSysClock` structure
     /// - `low`: Pointer to the low part of the time
     /// - `high`: Pointer to the high part of the time
     ///
     /// # Return Value
     ///
     /// 0 on success, < 0 on error
-    pub unsafe fn sce_kernel_sys_clock2_usec(
+    pub unsafe fn sce_kernel_sys_clock_2_usec(
         clock: *mut SceKernelSysClock,
         low: *mut u32,
         high: *mut u32,
@@ -1938,7 +1952,7 @@ sys_lib! {
     /// # Return Value
     ///
     /// 0 on success, < 0 on error
-    pub unsafe fn sce_kernel_sys_clock2_usec_wide(
+    pub unsafe fn sce_kernel_sys_clock_2_usec_wide(
         clock: i64,
         low: *mut u32,
         high: *mut u32,
@@ -1949,7 +1963,7 @@ sys_lib! {
     ///
     /// # Parameters
     ///
-    /// - `time`: Pointer to a ::SceKernelSysClock structure
+    /// - `time`: Pointer to a `SceKernelSysClock` structure
     ///
     /// # Return Value
     ///
@@ -1978,7 +1992,7 @@ sys_lib! {
     /// # Parameters
     ///
     /// - `name`: Name for the timer.
-    /// - `opt`: Pointer to an ::SceKernelVTimerOptParam (pass NULL)
+    /// - `opt`: Pointer to an `SceKernelVTimerOptParam` (can be set to null)
     ///
     /// # Return Value
     ///
@@ -2006,7 +2020,7 @@ sys_lib! {
     /// # Parameters
     ///
     /// - `uid`: UID of the vtimer
-    /// - `base`: Pointer to a ::SceKernelSysClock structure
+    /// - `base`: Pointer to a `SceKernelSysClock` structure
     ///
     /// # Return Value
     ///
@@ -2034,7 +2048,7 @@ sys_lib! {
     /// # Parameters
     ///
     /// - `uid`: UID of the vtimer
-    /// - `time`: Pointer to a ::SceKernelSysClock structure
+    /// - `time`: Pointer to a `SceKernelSysClock` structure
     ///
     /// # Return Value
     ///
@@ -2062,7 +2076,7 @@ sys_lib! {
     /// # Parameters
     ///
     /// - `uid`: UID of the vtimer
-    /// - `time`: Pointer to a ::SceKernelSysClock structure
+    /// - `time`: Pointer to a `SceKernelSysClock` structure
     ///
     /// # Return Value
     ///
@@ -2078,7 +2092,7 @@ sys_lib! {
     /// # Parameters
     ///
     /// - `uid`: UID of the vtimer
-    /// - `time`: Pointer to a ::SceKernelSysClock structure
+    /// - `time`: Pointer to a `SceKernelSysClock` structure
     ///
     /// # Return Value
     ///
@@ -2167,7 +2181,7 @@ sys_lib! {
     /// # Parameters
     ///
     /// - `uid`: The uid of the VTimer
-    /// - `info`: Pointer to a ::SceKernelVTimerInfo structure
+    /// - `info`: Pointer to a `SceKernelVTimerInfo` structure
     ///
     /// # Return Value
     ///
@@ -2185,7 +2199,7 @@ sys_lib! {
     /// - `name`: Name for the thread event handler
     /// - `thread_id`: Thread ID to monitor
     /// - `mask`: Bit mask for what events to handle (only lowest 4 bits valid)
-    /// - `handler`: Pointer to a ::SceKernelThreadEventHandler function
+    /// - `handler`: Pointer to a `SceKernelThreadEventHandler` function
     /// - `common`: Common pointer
     ///
     /// # Return Value
@@ -2217,7 +2231,7 @@ sys_lib! {
     /// # Parameters
     ///
     /// - `uid`: The UID of the event handler
-    /// - `info`: Pointer to a ::SceKernelThreadEventHandlerInfo structure
+    /// - `info`: Pointer to a `SceKernelThreadEventHandlerInfo` structure
     ///
     /// # Return Value
     ///
@@ -2232,7 +2246,7 @@ sys_lib! {
     ///
     /// # Return Value
     ///
-    /// Pointer to the registers, NULL on error
+    /// Pointer to the registers, null on error
     pub unsafe fn sce_kernel_refer_thread_profiler() -> *mut DebugProfilerRegs;
 
     #[psp(0x8218B4DD)]
@@ -2240,6 +2254,6 @@ sys_lib! {
     ///
     /// # Return Value
     ///
-    /// Pointer to the registers, NULL on error
+    /// Pointer to the registers, null on error
     pub unsafe fn sce_kernel_refer_global_profiler() -> *mut DebugProfilerRegs;
 }
