@@ -265,30 +265,31 @@ pub enum TestFunction {
     Gequal = 7,
 }
 
-/// Clear Buffer Mask
-#[repr(u32)]
-pub enum ClearBuffer {
-    ColorBufferBit = 1,
-    StencilBufferBit = 2,
-    DepthBufferBit = 4,
-    FastClearBit = 16,
+bitflags::bitflags!{
+    /// Clear Buffer Mask
+    pub struct ClearBuffer: u32 {
+        const ColorBufferBit = 1;
+        const StencilBufferBit = 2;
+        const DepthBufferBit = 4;
+        const FastClearBit = 16;
+    }
 }
 
 /// Texture Effect
 #[repr(u32)]
 pub enum TextureEffect {
-    TfxModulate = 0,
-    TfxDecal = 1,
-    TfxBlend = 2,
-    TfxReplace = 3,
-    TfxAdd = 4,
+    Modulate = 0,
+    Decal = 1,
+    Blend = 2,
+    Replace = 3,
+    Add = 4,
 }
 
 /// Texture Color Component
 #[repr(u32)]
 pub enum TextureColorComponent {
-    TccRgb = 0,
-    TccRgba = 1,
+    Rgb = 0,
+    Rgba = 1,
 }
 
 /// Blending Op
@@ -337,8 +338,6 @@ bitflags::bitflags!(
         const Ambient = 1;
         const Diffuse = 2;
         const Specular = 4;
-        const AmbientAndDiffuse = 3;
-        const DiffuseAndSpecular = 6;
         const UnknownLightComponent = 8;
     }
 );
@@ -1444,7 +1443,7 @@ pub unsafe fn sce_gu_sync(mode: SyncMode, what: SyncBehaviorWhat) -> i32 {
 /// - `indices`: Optional pointer to an index-list
 /// - `vertices`: Pointer to a vertex-list
 pub unsafe fn sce_gu_draw_array(
-    prim: i32,
+    prim: Primitive,
     vtype: i32,
     count: i32,
     indices: *const c_void,
@@ -1592,7 +1591,48 @@ pub unsafe fn sce_gu_get_all_status() -> i32 {
 ///
 /// - `state`: Which state to enable, one of State
 pub unsafe fn sce_gu_enable(state: State) {
-    unimplemented!()
+    match state {
+        State::AlphaTest => send_command_i(34, 1),
+        State::DepthTest => send_command_i(35, 1),
+        State::ScissorTest => {
+            let context = &mut gu_contexts[gu_curr_context as usize];
+            context.scissor_enable = 1;
+            send_command_i(
+                212, 
+                (context.scissor_start[1]<<10) | context.scissor_start[0]
+            );
+            send_command_i(
+                213,
+                (context.scissor_end[1]<<10) | context.scissor_end[0]
+            );
+        },
+        State::StencilTest => send_command_i(36, 1),
+        State::Blend => send_command_i(33, 1),
+        State::CullFace => send_command_i(29, 1),
+        State::Dither => send_command_i(32, 1),
+        State::Fog => send_command_i(31, 1),
+        State::ClipPlanes => send_command_i(28, 1),
+        State::Texture2D => send_command_i(30, 1),
+        State::Lighting => send_command_i(23, 1),
+        State::Light0 => send_command_i(24, 1),
+        State::Light1 => send_command_i(25, 1),
+        State::Light2 => send_command_i(26, 1),
+        State::Light3 => send_command_i(27, 1),
+        State::LineSmooth => send_command_i(37, 1),
+        State::PatchCullFace => send_command_i(38, 1),
+        State::ColorTest => send_command_i(39, 1),
+        State::ColorLogicOp => send_command_i(40, 1),
+        State::FaceNormalReverse => send_command_i(81, 1),
+        State::PatchFace => send_command_i(56, 1),
+        State::Fragment2X => {
+            let context = &mut gu_contexts[gu_curr_context as usize];
+            context.fragment_2x = 0x10000;
+            send_command_i(201, 0x10000 | context.texture_function);
+        }
+    }
+    if (state as u32) < 22 {
+        gu_states |= 1 << state as u32
+    }
 }
 
 /// Disable GE state
@@ -1603,29 +1643,75 @@ pub unsafe fn sce_gu_enable(state: State) {
 ///
 /// - `state`: Which state to disable
 pub unsafe fn sce_gu_disable(state: State) {
-    unimplemented!()
+    match state {
+        State::AlphaTest => send_command_i(34, 0),
+        State::DepthTest => send_command_i(35, 0),
+        State::ScissorTest => {
+            let context = &mut gu_contexts[gu_curr_context as usize];
+            context.scissor_enable = 0;
+            send_command_i(212, 0);
+            send_command_i(
+                213,
+                ((gu_draw_buffer.height-1) << 10) | gu_draw_buffer.width-1); 
+        },
+        State::StencilTest => send_command_i(36, 0),
+        State::Blend => send_command_i(33, 0),
+        State::CullFace => send_command_i(29, 0),
+        State::Dither => send_command_i(32, 0),
+        State::Fog => send_command_i(31, 0),
+        State::ClipPlanes => send_command_i(28, 0),
+        State::Texture2D => send_command_i(30, 0),
+        State::Lighting => send_command_i(23, 0),
+        State::Light0 => send_command_i(24, 0),
+        State::Light1 => send_command_i(25, 0),
+        State::Light2 => send_command_i(26, 0),
+        State::Light3 => send_command_i(27, 0),
+        State::LineSmooth => send_command_i(37, 0),
+        State::PatchCullFace => send_command_i(38, 0),
+        State::ColorTest => send_command_i(39, 0),
+        State::ColorLogicOp => send_command_i(40, 0),
+        State::FaceNormalReverse => send_command_i(81, 0),
+        State::PatchFace => send_command_i(56, 0),
+        State::Fragment2X => {
+            let context = &mut gu_contexts[gu_curr_context as usize];
+            context.fragment_2x = 0;
+            send_command_i(201, context.texture_function);
+        }
+    }
+    if (state as u32) < 22 {
+        gu_states |= !(1 << state as u32)
+    }
 }
 
 /// Set light parameters
 ///
-/// Available light types are:
-///   - GU_DIRECTIONAL - Directional light
-///   - GU_POINTLIGHT - Single point of light
-///   - GU_SPOTLIGHT - Point-light with a cone
-///
-/// Available light components are:
-///   - GU_AMBIENT_AND_DIFFUSE
-///   - GU_DIFFUSE_AND_SPECULAR
-///   - GU_UNKNOWN_LIGHT_COMPONENT
-///
 /// # Parameters
 ///
 /// - `light`: Light index
-/// - `type`: Light type
-/// - `components`: Light components
-/// - `position`: Light position
-pub unsafe fn sce_gu_light(light: i32, type_: i32, components: i32, position: *const FVector3) {
-    unimplemented!()
+/// - `type`: Light type, one of LightType
+/// - `components`: Light components, one of LightComponent
+/// - `position`: Light position - FVector3
+pub unsafe fn sce_gu_light(light: i32, type_: LightType, components: LightComponent, position: &FVector3) {
+    let settings = &mut light_settings[light as usize];
+
+    send_command_f(settings.xpos as i32, position.x);
+    send_command_f(settings.ypos as i32, position.y);
+    send_command_f(settings.zpos as i32, position.z);
+
+    let mut kind: i32 = 2;
+    if components.bits()  != 8 {
+        kind = 
+            if ((components.bits()) ^ 6) < 1 {
+                1
+            } else {
+                0
+            };
+    }
+
+    send_command_i(
+        settings.type_ as i32,
+        ((type_ as u32 & 0x03 << 8) | kind as u32) as i32
+    );
 }
 
 /// Set light attenuation
@@ -1637,25 +1723,36 @@ pub unsafe fn sce_gu_light(light: i32, type_: i32, components: i32, position: *c
 /// - `atten1`: Linear attenuation factor
 /// - `atten2`: Quadratic attenuation factor
 pub unsafe fn sce_gu_light_att(light: i32, atten0: f32, atten1: f32, atten2: f32) {
-    unimplemented!()
+    let settings = &mut light_settings[light as usize];
+    send_command_f(settings.constant as i32, atten0);
+    send_command_f(settings.linear as i32, atten1);
+    send_command_f(settings.quadratic as i32, atten2);
 }
 
 /// Set light color
 ///
 /// Available light components are:
-///   - GU_AMBIENT
-///   - GU_DIFFUSE
-///   - GU_SPECULAR
-///   - GU_AMBIENT_AND_DIFFUSE
-///   - GU_DIFFUSE_AND_SPECULAR
+///   - LightComponent::Ambient
+///   - LightComponent::Diffuse
+///   - LightComponent::Specular
+/// and they may be logically OR'ed together
 ///
 /// # Parameters
 ///
 /// - `light`: Light index
 /// - `component`: Which component to set
 /// - `color`: Which color to use
-pub unsafe fn sce_gu_light_color(light: i32, component: i32, color: u32) {
-    unimplemented!()
+pub unsafe fn sce_gu_light_color(light: i32, component: LightComponent, color: u32) {
+    let settings = &mut light_settings[light as usize];
+    if component.intersects(LightComponent::Ambient) {
+        send_command_i(settings.ambient as i32, (color & 0xffffff) as i32);
+    }
+    if component.intersects(LightComponent::Diffuse) {
+        send_command_i(settings.diffuse as i32, (color & 0xffffff) as i32);
+    }
+    if component.intersects(LightComponent::Specular) {
+        send_command_i(settings.specular as i32, (color & 0xffffff) as i32);
+    }
 }
 
 /// Set light mode
@@ -1671,7 +1768,7 @@ pub unsafe fn sce_gu_light_color(light: i32, component: i32, color: u32) {
 ///
 /// - `mode`: Light mode to use
 pub unsafe fn sce_gu_light_mode(mode: i32) {
-    unimplemented!()
+    send_command_i(94, mode);
 }
 
 /// Set spotlight parameters
@@ -1684,10 +1781,18 @@ pub unsafe fn sce_gu_light_mode(mode: i32) {
 /// - `cutoff`: Spotlight cutoff angle (in radians)
 pub unsafe fn sce_gu_light_spot(
     light: i32,
-    direction: *const FVector3,
+    direction: &FVector3,
     exponent: f32,
     cutoff: f32,
 ) {
+    let settings = &mut light_settings[light as usize];
+
+    send_command_f(settings.exponent as i32, exponent);
+    send_command_f(settings.cutoff as i32, cutoff);
+
+    send_command_f(settings.xdir as i32, direction.x);
+    send_command_f(settings.ydir as i32, direction.y);
+    send_command_f(settings.zdir as i32, direction.z);
 }
 
 /// Clear current drawbuffer
@@ -1700,8 +1805,85 @@ pub unsafe fn sce_gu_light_spot(
 /// # Parameters
 ///
 /// - `flags`: Which part of the buffer to clear
-pub unsafe fn sce_gu_clear(flags: i32) {
-    unimplemented!()
+pub unsafe fn sce_gu_clear(flags: ClearBuffer) {
+    let context = &mut gu_contexts[gu_curr_context as usize];
+    let filter: u32;
+    struct Vertex {
+        color: u32,
+        x: u16,
+        y: u16,
+        z: u16,
+        _pad: u16
+    }
+
+    match gu_draw_buffer.pixel_size {
+        PixelFormat::Psm5650 => filter = context.clear_color & 0xffffff,
+        PixelFormat::Psm5551 => {
+            filter = (context.clear_color & 0xffffff) | (context.clear_stencil << 31);
+        },
+        PixelFormat::Psm4444 => {
+            filter = (context.clear_color & 0xffffff) | (context.clear_stencil << 28);
+        },
+        PixelFormat::Psm8888 => {
+            filter = (context.clear_color & 0xffffff) | (context.clear_stencil << 24);
+        },
+        _ => {filter = 0;}
+    }
+
+    let vertices: *mut Vertex;
+    let count: i32;
+
+    if !flags.intersects(ClearBuffer::FastClearBit) {
+        vertices = sce_gu_get_memory(
+            2 * core::mem::size_of::<Vertex>() as i32
+        ) as *mut Vertex;
+        count = 2;
+
+        (*vertices.offset(0)).color = 0;
+        (*vertices.offset(0)).x = 0;
+        (*vertices.offset(0)).y = 0;
+        (*vertices.offset(0)).z = context.clear_depth as u16;
+
+        (*vertices.offset(1)).color = filter;
+        (*vertices.offset(1)).x = gu_draw_buffer.width as u16;
+        (*vertices.offset(1)).y = gu_draw_buffer.height as u16;
+        (*vertices.offset(1)).z = context.clear_depth as u16;
+    } else {
+        let mut curr: *mut Vertex;
+        count = ((gu_draw_buffer.width + 63)/64)*2;
+        vertices = sce_gu_get_memory(
+            count * core::mem::size_of::<Vertex>() as i32
+        ) as *mut Vertex;
+        curr = vertices;
+
+        for i in 0..count {
+            curr = curr.add(1);
+            let j: u32 = i as u32 >> 1;
+            let k: u32 = i as u32 & 1;
+
+            (*curr).color = filter;
+            (*curr).x = (j+k) as u16 * 64;
+            (*curr).y = ((k as u32) * (gu_draw_buffer.height as u32)) as u16;
+            (*curr).z = context.clear_depth as u16;
+        }
+    }
+
+    send_command_i(211, 
+        ((flags & 
+        ClearBuffer::ColorBufferBit |
+        ClearBuffer::StencilBufferBit |
+        ClearBuffer::DepthBufferBit).bits() << 8 | 0x01) as i32);
+
+    sce_gu_draw_array(
+        Primitive::Sprites,
+        Color::Color8888  as i32 |
+        self::Vertex::Vertex16bit as i32 |
+        Transform::Transform2D as i32,
+        count,
+        null_mut(),
+        vertices as *const c_void
+    );
+    send_command_i(211, 0);
 }
 
 /// Set the current clear-color
@@ -1710,7 +1892,8 @@ pub unsafe fn sce_gu_clear(flags: i32) {
 ///
 /// - `color`: Color to clear with
 pub unsafe fn sce_gu_clear_color(color: u32) {
-    unimplemented!()
+    let context = &mut gu_contexts[gu_curr_context as usize];
+    context.clear_color = color;
 }
 
 /// Set the current clear-depth
@@ -1719,7 +1902,8 @@ pub unsafe fn sce_gu_clear_color(color: u32) {
 ///
 /// - `depth`: Set which depth to clear with (0x0000-0xffff)
 pub unsafe fn sce_gu_clear_depth(depth: u32) {
-    unimplemented!()
+    let context = &mut gu_contexts[gu_curr_context as usize];
+    context.clear_depth = depth;
 }
 
 /// Set the current stencil clear value
@@ -1728,7 +1912,8 @@ pub unsafe fn sce_gu_clear_depth(depth: u32) {
 ///
 /// - `stencil`: Set which stencil value to clear with (0-255)
 pub unsafe fn sce_gu_clear_stencil(stencil: u32) {
-    unimplemented!()
+    let context = &mut gu_contexts[gu_curr_context as usize];
+    context.clear_stencil = stencil;
 }
 
 /// Set mask for which bits of the pixels to write
@@ -1737,7 +1922,8 @@ pub unsafe fn sce_gu_clear_stencil(stencil: u32) {
 ///
 /// - `mask`: Which bits to filter against writes
 pub unsafe fn sce_gu_pixel_mask(mask: u32) {
-    unimplemented!()
+    send_command_i(232, (mask & 0xffffff) as i32);
+    send_command_i(233, (mask >> 24) as i32);
 }
 
 /// Set current primitive color
@@ -1746,7 +1932,7 @@ pub unsafe fn sce_gu_pixel_mask(mask: u32) {
 ///
 /// - `color`: Which color to use (overriden by vertex-colors)
 pub unsafe fn sce_gu_color(color: u32) {
-    unimplemented!()
+    sce_gu_material(7, color as i32);
 }
 
 /// Set the color test function
@@ -1754,23 +1940,20 @@ pub unsafe fn sce_gu_color(color: u32) {
 /// The color test is only performed while GU_COLOR_TEST is enabled.
 ///
 /// Available functions are:
-///   - GU_NEVER
-///   - GU_ALWAYS
-///   - GU_EQUAL
-///   - GU_NOTEQUAL
-///
-/// @par Example: Reject any pixel that does not have 0 as the blue channel
-/// @code
-/// sceGuColorFunc(GU_EQUAL,0,0xff0000) {
-/// @endcode
+///   - TestFunction::Never
+///   - TestFunction::Always
+///   - TestFunction::Equal
+///   - TestFunction::NotEqual
 ///
 /// # Parameters
 ///
 /// - `func`: Color test function
 /// - `color`: Color to test against
 /// - `mask`: Mask ANDed against both source and destination when testing
-pub unsafe fn sce_gu_color_func(func: i32, color: u32, mask: u32) {
-    unimplemented!()
+pub unsafe fn sce_gu_color_func(func: TestFunction, color: u32, mask: u32) {
+    send_command_i(216, (func as u32 & 0x03) as i32);
+    send_command_i(217, (color & 0xffffff) as i32);
+    send_command_i(218, mask as i32);
 }
 
 /// Set which color components that the material will receive
@@ -1784,36 +1967,42 @@ pub unsafe fn sce_gu_color_func(func: i32, color: u32, mask: u32) {
 ///
 /// - `components`: Which components to receive
 pub unsafe fn sce_gu_color_material(components: LightComponent) {
-    unimplemented!()
+    send_command_i(83, components.bits() as i32);
 }
 
 /// Set the alpha test parameters
 ///
 /// Available comparison functions are:
-///   - GU_NEVER
-///   - GU_ALWAYS
-///   - GU_EQUAL
-///   - GU_NOTEQUAL
-///   - GU_LESS
-///   - GU_LEQUAL
-///   - GU_GREATER
-///   - GU_GEQUAL
+///   - TestFunction::Never
+///   - TestFunction::Always
+///   - TestFunction::Equal
+///   - TestFunction::NotEqual
+///   - TestFunction::Less
+///   - TestFunction::Lequal
+///   - TestFunction::Greater
+///   - TestFunction::Gequal
 ///
 /// # Parameters
 ///
 /// - `func`: Specifies the alpha comparison function.
 /// - `value`: Specifies the reference value that incoming alpha values are compared to.
 /// - `mask`: Specifies the mask that both values are ANDed with before comparison.
-pub unsafe fn sce_gu_alpha_func(func: i32, value: i32, mask: i32) {
-    unimplemented!()
+pub unsafe fn sce_gu_alpha_func(func: TestFunction, value: i32, mask: i32) {
+    let arg = (func as u32 |
+        ((value as u32 & 0xff) << 8) |
+        ((mask as u32 & 0xff) << 16)
+    )  as i32;
+    send_command_i(219, arg);
 }
 
 pub unsafe fn sce_gu_ambient(color: u32) {
-    unimplemented!()
+    send_command_i(92, (color & 0xffffff) as i32);
+    send_command_i(93, (color >> 24) as i32);
 }
 
 pub unsafe fn sce_gu_ambient_color(color: u32) {
-    unimplemented!()
+    send_command_i(85, (color & 0xffffff) as i32);
+    send_command_i(88, (color >> 24) as i32);
 }
 
 /// Set the blending-mode
@@ -1824,25 +2013,6 @@ pub unsafe fn sce_gu_ambient_color(color: u32) {
 ///   - Bs - Blend function for source fragment
 ///   - Bd - Blend function for destination fragment
 ///
-/// Available blending-operations are:
-///   - GU_ADD - (Cs*Bs) + (Cd*Bd)
-///   - GU_SUBTRACT - (Cs*Bs) - (Cd*Bd)
-///   - GU_REVERSE_SUBTRACT - (Cd*Bd) - (Cs*Bs)
-///   - GU_MIN - Cs < Cd ? Cs : Cd
-///   - GU_MAX - Cs < Cd ? Cd : Cs
-///   - GU_ABS - |Cs-Cd|
-///
-/// Available blending-functions are:
-///   - GU_SRC_COLOR
-///   - GU_ONE_MINUS_SRC_COLOR
-///   - GU_SRC_ALPHA
-///   - GU_ONE_MINUS_SRC_ALPHA
-///   - GU_DST_ALPHA
-///   - GU_ONE_MINUS_DST_ALPHA
-///   - GU_DST_COLOR
-///   - GU_ONE_MINUS_DST_COLOR
-///   - GU_FIX
-///
 /// # Parameters
 ///
 /// - `op`: Blending Operation
@@ -1850,48 +2020,76 @@ pub unsafe fn sce_gu_ambient_color(color: u32) {
 /// - `dest`: Blending function for dest operand
 /// - `srcfix`: Fix value for GU_FIX (source operand)
 /// - `destfix`: Fix value for GU_FIX (dest operand)
-pub unsafe fn sce_gu_blend_func(op: i32, src: i32, dest: i32, srcfix: u32, destfix: u32) {
-    unimplemented!()
+pub unsafe fn sce_gu_blend_func(
+    op: BlendingOperation,
+    src: BlendingFactorSrc,
+    dest: BlendingFactorDst,
+    srcfix: u32,
+    destfix: u32
+) {
+    send_command_i(
+        223,
+        (src as u32 | ((dest as u32) << 4) | ((op as u32) << 8)) as i32
+    );
+    send_command_i(224, (srcfix & 0xffffff) as i32);
+    send_command_i(225, (destfix & 0xffffff) as i32);
 }
 
+// maybe convert mode to bitflags but idk what the options mean
 pub unsafe fn sce_gu_material(mode: i32, color: i32) {
-    unimplemented!()
+    if (mode & 0x01) != 0 {
+        send_command_i(85, (color as u32 & 0xffffff) as i32);
+        send_command_i(88, (color as u32 >> 24) as i32);
+    }
+
+    if (mode & 0x02) != 0 {
+        send_command_i(86, (color as u32 & 0xffffff) as i32);
+    }
+
+    if (mode & 0x04) != 0 {
+        send_command_i(87, (color as u32 & 0xffffff) as i32);
+    }
 }
 
-pub unsafe fn sce_gu_model_color(emissive: u32, ambient: u32, diffuse: u32, specular: u32) {
-    unimplemented!()
+pub unsafe fn sce_gu_model_color(
+    emissive: u32,
+    ambient: u32,
+    diffuse: u32,
+    specular: u32
+) {
+    send_command_i(84, (emissive & 0xffffff) as i32);
+    send_command_i(85, (ambient & 0xffffff) as i32);
+    send_command_i(86, (diffuse & 0xffffff) as i32);
+    send_command_i(87, (specular & 0xffffff) as i32);
 }
 
 /// Set stencil function and reference value for stencil testing
 ///
 /// Available functions are:
-///   - GU_NEVER
-///   - GU_ALWAYS
-///   - GU_EQUAL
-///   - GU_NOTEQUAL
-///   - GU_LESS
-///   - GU_LEQUAL
-///   - GU_GREATER
-///   - GU_GEQUAL
+///   - TestFunction::Never
+///   - TestFunction::Always
+///   - TestFunction::Equal
+///   - TestFunction::NotEqual
+///   - TestFunction::Less
+///   - TestFunction::Lequal
+///   - TestFunction::Greater
+///   - TestFunction::Gequal
 ///
 /// # Parameters
 ///
 /// - `func`: Test function
 /// - `ref`: The reference value for the stencil test
 /// - `mask`: Mask that is ANDed with both the reference value and stored stencil value when the test is done
-pub unsafe fn sce_gu_stencil_func(func: i32, ref_: i32, mask: i32) {
-    unimplemented!()
+pub unsafe fn sce_gu_stencil_func(func: TestFunction, ref_: i32, mask: i32) {
+    send_command_i(
+        220,
+        (func as u32 |
+        ((ref_ as u32) << 8) |
+        ((mask as u32 & 0xff) << 16)) as i32
+    );
 }
 
 /// Set the stencil test actions
-///
-/// Available actions are:
-///   - GU_KEEP - Keeps the current value
-///   - GU_ZERO - Sets the stencil buffer value to zero
-///   - GU_REPLACE - Sets the stencil buffer value to ref, as specified by sceGuStencilFunc()
-///   - GU_INCR - Increments the current stencil buffer value
-///   - GU_DECR - Decrease the current stencil buffer value
-///   - GU_INVERT - Bitwise invert the current stencil buffer value
 ///
 /// As stencil buffer shares memory with framebuffer alpha, resolution of the buffer
 /// is directly in relation.
@@ -1901,8 +2099,15 @@ pub unsafe fn sce_gu_stencil_func(func: i32, ref_: i32, mask: i32) {
 /// - `fail`: The action to take when the stencil test fails
 /// - `zfail`: The action to take when stencil test passes, but the depth test fails
 /// - `zpass`: The action to take when both stencil test and depth test passes
-pub unsafe fn sce_gu_stencil_op(fail: i32, zfail: i32, zpass: i32) {
-    unimplemented!()
+pub unsafe fn sce_gu_stencil_op(
+    fail: StencilOperation,
+    zfail: StencilOperation,
+    zpass: StencilOperation
+) {
+    send_command_i(
+        221, 
+        (fail as u32 | ((zfail as u32) << 8) | ((zpass as u32) << 16)) as i32
+    );
 }
 
 /// Set the specular power for the material
@@ -1911,22 +2116,23 @@ pub unsafe fn sce_gu_stencil_op(fail: i32, zfail: i32, zpass: i32) {
 ///
 /// - `power`: Specular power
 pub unsafe fn sce_gu_specular(power: f32) {
-    unimplemented!()
+    send_command_f(91, power);
 }
 
 /// Set the current face-order (for culling)
 ///
 /// This only has effect when culling is enabled (GU_CULL_FACE)
 ///
-/// Culling order can be:
-///   - GU_CW - Clockwise primitives are not culled
-///   - GU_CCW - Counter-clockwise are not culled
+/// Culling order is one of FrontFaceDirection
 ///
 /// # Parameters
 ///
 /// - `order`: Which order to use
-pub unsafe fn sce_gu_front_face(order: i32) {
-    unimplemented!()
+pub unsafe fn sce_gu_front_face(order: FrontFaceDirection) {
+    match order {
+        FrontFaceDirection::CCW => send_command_i(155, 0),
+        FrontFaceDirection::CW => send_command_i(155,1),
+    }
 }
 
 /// Set color logical operation
@@ -1954,8 +2160,8 @@ pub unsafe fn sce_gu_front_face(order: i32) {
 /// # Parameters
 ///
 /// - `op`: Operation to execute
-pub unsafe fn sce_gu_logical_op(op: i32) {
-    unimplemented!()
+pub unsafe fn sce_gu_logical_op(op: LogicalOperation) {
+    send_command_i(230, ((op as u32) & 0x0f) as i32);
 }
 
 /// Set ordered pixel dither matrix
@@ -1965,33 +2171,54 @@ pub unsafe fn sce_gu_logical_op(op: i32) {
 /// # Parameters
 ///
 /// - `matrix`: Dither matrix
-pub unsafe fn sce_gu_set_dither(matrix: *const IMatrix4) {
-    unimplemented!()
+pub unsafe fn sce_gu_set_dither(matrix: &IMatrix4) {
+    send_command_i(226, (
+        (matrix.x.x & 0x0f) |
+        ((matrix.x.y & 0x0f) << 4) |
+        ((matrix.x.z & 0x0f) << 8) |
+        ((matrix.x.w & 0x0f) << 12)
+    ) as i32);
+
+    send_command_i(227, (
+        (matrix.y.x & 0x0f) |
+        ((matrix.y.y & 0x0f) << 4) |
+        ((matrix.y.z & 0x0f) << 8) |
+        ((matrix.y.w & 0x0f) << 12)
+    ) as i32);
+
+    send_command_i(228, (
+        (matrix.z.x & 0x0f) |
+        ((matrix.z.y & 0x0f) << 4) |
+        ((matrix.z.z & 0x0f) << 8) |
+        ((matrix.z.w & 0x0f) << 12)
+    ) as i32);
+
+    send_command_i(229, (
+        (matrix.w.x & 0x0f) |
+        ((matrix.w.y & 0x0f) << 4) |
+        ((matrix.w.z & 0x0f) << 8) |
+        ((matrix.w.w & 0x0f) << 12)
+    ) as i32);
+
 }
 
 /// Set how primitives are shaded
 ///
-/// The available shading-methods are:
-///   - GU_FLAT - Primitives are flatshaded, the last vertex-color takes effet
-///   - GU_SMOOTH - Primtives are gouraud-shaded, all vertex-colors take effect
-///
 /// # Parameters
 ///
-/// - `mode`: Which mode to use
-pub unsafe fn sce_gu_shade_model(mode: i32) {
-    unimplemented!()
+/// - `mode`: Which mode to use, one of ShadingModel
+pub unsafe fn sce_gu_shade_model(mode: ShadingModel) {
+    match mode {
+       ShadingModel::Flat => send_command_i(80, 0),
+       ShadingModel::Smooth => send_command_i(80, 1),
+    }
 }
 
 /// Image transfer using the GE
 ///
 /// @note Data must be aligned to 1 quad word (16 bytes)
 ///
-/// @par Example: Copy a fullscreen 32-bit image from RAM to VRAM
-/// @code
-/// sceGuCopyImage(GU_PSM_8888,0,0,480,272,512,pixels,0,0,512,(void*)(((unsigned int)framebuffer)+0x4000000)) {
-/// @endcode
-///
-/// # Parameters
+/// /// # Parameters
 ///
 /// - `psm`: Pixel format for buffer
 /// - `sx`: Source X
@@ -2005,7 +2232,7 @@ pub unsafe fn sce_gu_shade_model(mode: i32) {
 /// - `destw`: Destination buffer width (block aligned)
 /// - `dest`: Destination pointer
 pub unsafe fn sce_gu_copy_image(
-    psm: i32,
+    psm: PixelFormat,
     sx: i32,
     sy: i32,
     width: i32,
@@ -2017,7 +2244,14 @@ pub unsafe fn sce_gu_copy_image(
     destw: i32,
     dest: *mut c_void,
 ) {
-    unimplemented!()
+    send_command_i(178, ((src as u32) & 0xffffff) as i32);
+    send_command_i(179, ((((src as u32) & 0xff000000) >> 8) | (srcw as u32)) as i32);
+    send_command_i(235, (((sy as u32) << 10) | ((sx as u32))) as i32);
+    send_command_i(180, ((dest as u32) & 0xffffff) as i32);
+    send_command_i(181, ((((dest as u32) & 0xff000000) >> 8) | (destw as u32)) as i32);
+    send_command_i(236, (((dy as u32) << 10) | ((dx as u32))) as i32);
+    send_command_i(238, ((((height as u32)-1) << 10) | ((width as u32) -1)) as i32);
+    send_command_i(234, (!(psm as u32 ^ 0x03)) as i32);
 }
 
 /// Specify the texture environment color
@@ -2030,7 +2264,7 @@ pub unsafe fn sce_gu_copy_image(
 ///
 /// - `color`: Constant color (0x00BBGGRR)
 pub unsafe fn sce_gu_tex_env_color(color: u32) {
-    unimplemented!()
+    send_command_i(202, (color & 0xffffff) as i32);
 }
 
 /// Set how the texture is filtered
@@ -2047,15 +2281,15 @@ pub unsafe fn sce_gu_tex_env_color(color: u32) {
 ///
 /// - `min`: Minimizing filter
 /// - `mag`: Magnifying filter
-pub unsafe fn sce_gu_tex_filter(min: i32, mag: i32) {
-    unimplemented!()
+pub unsafe fn sce_gu_tex_filter(min: TextureFilter, mag: TextureFilter) {
+    send_command_i(198, (((mag as u32) << 8) | (min as u32)) as i32);
 }
 
 /// Flush texture page-cache
 ///
 /// Do this if you have copied/rendered into an area currently in the texture-cache
 pub unsafe fn sce_gu_tex_flush() {
-    unimplemented!()
+    send_command_f(203, 0.0);
 }
 
 /// Set how textures are applied
@@ -2088,8 +2322,16 @@ pub unsafe fn sce_gu_tex_flush() {
 ///
 /// - `tfx`: Which apply-mode to use
 /// - `tcc`: Which component-mode to use
-pub unsafe fn sce_gu_tex_func(tfx: i32, tcc: i32) {
-    unimplemented!()
+pub unsafe fn sce_gu_tex_func(tfx: TextureEffect, tcc: TextureColorComponent) {
+    let context = &mut gu_contexts[gu_curr_context as usize];
+    context.texture_function = (((tcc as u32) << 8) | (tfx as u32)) as i32;
+    send_command_i(201, (
+        (
+            (tcc as u32) << 8) |
+            (tfx as u32) |
+            context.fragment_2x as u32
+        ) as i32
+    );
 }
 
 /// Set current texturemap
@@ -2097,7 +2339,9 @@ pub unsafe fn sce_gu_tex_func(tfx: i32, tcc: i32) {
 /// Textures may reside in main RAM, but it has a huge speed-penalty. Swizzle textures
 /// to get maximum speed.
 ///
-/// @note Data must be aligned to 1 quad word (16 bytes)
+/// # Note
+///
+/// Data must be aligned to 1 quad word (16 bytes)
 ///
 /// # Parameters
 ///
@@ -2107,38 +2351,58 @@ pub unsafe fn sce_gu_tex_func(tfx: i32, tcc: i32) {
 /// - `tbw`: Texture Buffer Width (block-aligned)
 /// - `tbp`: Texture buffer pointer (16 byte aligned)
 pub unsafe fn sce_gu_tex_image(mipmap: i32, width: i32, height: i32, tbw: i32, tbp: *const c_void) {
-    unimplemented!()
+    use core::intrinsics::ctlz;
+
+    static tbpcmd_tbl: [i32; 8] = [0xa0, 0xa1, 0xa2, 0xa3, 0xa4, 0xa5, 0xa6, 0xa7];
+    static tbwcmd_tbl: [i32; 8] = [0xa8, 0xa9, 0xaa, 0xab, 0xac, 0xad, 0xae, 0xaf];
+    static tsizecmd_tbl: [i32; 8] = [0xb8, 0xb9, 0xba, 0xbb, 0xbc, 0xbd, 0xbe, 0xbf];
+
+    send_command_i(tbpcmd_tbl[mipmap as usize], ((tbp as u32) & 0xffffff) as i32);
+    send_command_i(
+        tbwcmd_tbl[mipmap as usize],
+        ((((tbp as u32) >> 8) & 0x0f0000) | 
+        tbw as u32) as i32
+    );
+    send_command_i(
+        tsizecmd_tbl[mipmap as usize],
+        (31 - ctlz(height & 0x3ff) << 8) |
+        (31 - ctlz(width & 0x3ff))
+    );
+    sce_gu_tex_flush();
 }
 
 /// Set texture-level mode (mipmapping)
 ///
-/// Available modes are:
-///   - GU_TEXTURE_AUTO
-///   - GU_TEXTURE_CONST
-///   - GU_TEXTURE_SLOPE
-///
 /// # Parameters
 ///
-/// - `mode`: Which mode to use
+/// - `mode`: Which mode to use, one of TextureLevelMode
 /// - `bias`: Which mipmap bias to use
-pub unsafe fn sce_gu_tex_level_mode(mode: u32, bias: f32) {
-    unimplemented!()
+pub unsafe fn sce_gu_tex_level_mode(mode: TextureLevelMode, bias: f32) {
+    let offset = core::intrinsics::truncf32(bias * 16.0) as i32;
+
+    if offset >= 128 {
+        offset = 128
+    } else if offset < -128 {
+        offset = -128;
+    }
+    send_command_i(200, (((offset as u32) << 16) | mode as u32) as i32);
 }
 
 /// Set the texture-mapping mode
-///
-/// Available modes are:
-///   - GU_TEXTURE_COORDS
-///   - GU_TEXTURE_MATRIX
-///   - GU_ENVIRONMENT_MAP
 ///
 /// # Parameters
 ///
 /// - `mode`: Which mode to use
 /// - `a1`: Unknown
 /// - `a2`: Unknown
-pub unsafe fn sce_gu_tex_map_mode(mode: i32, a1: u32, a2: u32) {
-    unimplemented!()
+pub unsafe fn sce_gu_tex_map_mode(mode: TextureMapMode, a1: u32, a2: u32) {
+    let context = &mut gu_contexts[gu_curr_context as usize];
+    context.texture_map_mode = ((mode as u32) & 0x03) as i32;
+    send_command_i(
+        192,
+        (context.texture_proj_map_mode as u32 | ((mode as u32) & 0x03)) as i32
+    );
+    send_command_i(193, ((a2 << 8) | (a1 & 0x03)) as i32);
 }
 
 /// Set texture-mode parameters
@@ -2157,8 +2421,13 @@ pub unsafe fn sce_gu_tex_map_mode(mode: i32, a1: u32, a2: u32) {
 /// - `maxmips`: Number of mipmaps to use (0-8)
 /// - `a2`: Unknown, set to 0
 /// - `swizzle`: GU_TRUE(1) to swizzle texture-reads
-pub unsafe fn sce_gu_tex_mode(tpsm: i32, maxmips: i32, a2: i32, swizzle: i32) {
-    unimplemented!()
+pub unsafe fn sce_gu_tex_mode(tpsm: PixelFormat, maxmips: i32, a2: i32, swizzle: bool) {
+    let context = &mut gu_contexts[gu_curr_context as usize];
+    context.texture_mode = tpsm as i32;
+
+    send_command_i(194, (maxmips << 16) | (a2 << 8) | (if swizzle { 1 } else { 0 }));
+    send_command_i(195, tpsm as i32);
+    sce_gu_tex_flush();
 }
 
 /// Set texture offset
@@ -2171,22 +2440,23 @@ pub unsafe fn sce_gu_tex_mode(tpsm: i32, maxmips: i32, a2: i32, swizzle: i32) {
 /// - `u`: Offset to add to the U coordinate
 /// - `v`: Offset to add to the V coordinate
 pub unsafe fn sce_gu_tex_offset(u: f32, v: f32) {
-    unimplemented!()
+    send_command_f(74, u);
+    send_command_f(75, v);
 }
 
 /// Set texture projection-map mode
 ///
-/// Available modes are:
-///   - GU_POSITION
-///   - GU_UV
-///   - GU_NORMALIZED_NORMAL
-///   - GU_NORMAL
-///
 /// # Parameters
 ///
 /// - `mode`: Which mode to use
-pub unsafe fn sce_gu_tex_proj_map_mode(mode: i32) {
-    unimplemented!()
+pub unsafe fn sce_gu_tex_proj_map_mode(mode: TextureProjectionMapMode) {
+    let context = &mut gu_contexts[gu_curr_context as usize];
+    context.texture_proj_map_mode = (((mode as u32) & 0x03) << 8) as i32;
+    send_command_i(
+        192,
+        ((((mode as u32) & 0x03) << 8) |
+        context.texture_map_mode as u32) as i32
+    );
 }
 
 /// Set texture scale
@@ -2199,11 +2469,12 @@ pub unsafe fn sce_gu_tex_proj_map_mode(mode: i32) {
 /// - `u`: Scalar to multiply U coordinate with
 /// - `v`: Scalar to multiply V coordinate with
 pub unsafe fn sce_gu_tex_scale(u: f32, v: f32) {
-    unimplemented!()
+    send_command_f(72, u);
+    send_command_f(73, v);
 }
 
 pub unsafe fn sce_gu_tex_slope(slope: f32) {
-    unimplemented!()
+    send_command_f(208, slope);
 }
 
 /// Synchronize rendering pipeline with image upload.
@@ -2211,7 +2482,7 @@ pub unsafe fn sce_gu_tex_slope(slope: f32) {
 /// This will stall the rendering pipeline until the current image upload initiated by
 /// sceGuCopyImage() has completed.
 pub unsafe fn sce_gu_tex_sync() {
-    unimplemented!()
+    send_command_i(204, 0);
 }
 
 /// Set if the texture should repeat or clamp
@@ -2224,8 +2495,8 @@ pub unsafe fn sce_gu_tex_sync() {
 ///
 /// - `u`: Wrap-mode for the U direction
 /// - `v`: Wrap-mode for the V direction
-pub unsafe fn sce_gu_tex_wrap(u: i32, v: i32) {
-    unimplemented!()
+pub unsafe fn sce_gu_tex_wrap(u: WrapMode, v: WrapMode) {
+    send_command_i(199, (((v as u32) << 8) | (u as u32)) as i32);
 }
 
 /// Upload CLUT (Color Lookup Table)
@@ -2237,7 +2508,9 @@ pub unsafe fn sce_gu_tex_wrap(u: i32, v: i32) {
 /// - `num_blocks`: How many blocks of 8 entries to upload (32*8 is 256 colors)
 /// - `cbp`: Pointer to palette (16 byte aligned)
 pub unsafe fn sce_gu_clut_load(num_blocks: i32, cbp: *const c_void) {
-    unimplemented!()
+    send_command_i(176, ((cbp as u32) & 0xffffff) as i32);
+    send_command_i(177, (((cbp as u32) >> 8) & 0xf0000) as i32);
+    send_command_i(196, num_blocks);
 }
 
 /// Set current CLUT mode
@@ -2254,8 +2527,9 @@ pub unsafe fn sce_gu_clut_load(num_blocks: i32, cbp: *const c_void) {
 /// - `shift`: Shifts color index by that many bits to the right
 /// - `mask`: Masks the color index with this bitmask after the shift (0-0xFF)
 /// - `a3`: Unknown, set to 0
-pub unsafe fn sce_gu_clut_mode(cpsm: u32, shift: u32, mask: u32, a3: u32) {
-    unimplemented!()
+pub unsafe fn sce_gu_clut_mode(cpsm: PixelFormat, shift: u32, mask: u32, a3: u32) {
+    let arg = ((cpsm as u32) | (shift << 2) | (mask << 8) | (a3 << 16)) as i32;
+    send_command_i(197, arg);
 }
 
 /// Set virtual coordinate offset
@@ -2272,7 +2546,8 @@ pub unsafe fn sce_gu_clut_mode(cpsm: u32, shift: u32, mask: u32, a3: u32) {
 /// - `x`: Offset (0-4095)
 /// - `y`: Offset (0-4095)
 pub unsafe fn sce_gu_offset(x: u32, y: u32) {
-    unimplemented!()
+    send_command_i(76, (x << 4) as i32);
+    send_command_i(77, (y << 4) as i32);
 }
 
 /// Set what to scissor within the current viewport
@@ -2286,7 +2561,25 @@ pub unsafe fn sce_gu_offset(x: u32, y: u32) {
 /// - `w`: Width of scissor region
 /// - `h`: Height of scissor region
 pub unsafe fn sce_gu_scissor(x: i32, y: i32, w: i32, h: i32) {
-    unimplemented!()
+    let context = &mut gu_contexts[gu_curr_context as usize];
+
+    context.scissor_start[0] = x;
+    context.scissor_start[1] = y;
+    context.scissor_end[0] = w-1;
+    context.scissor_end[1] = h-1;
+
+    if context.scissor_enable != 0 {
+        send_command_i(
+            212,
+            (context.scissor_start[1] << 10) |
+            context.scissor_start[0]
+        );
+        send_command_i(
+            213,
+            (context.scissor_end[1] << 10) |
+            context.scissor_end[0]
+        );
+    }
 }
 
 /// Set current viewport
@@ -2303,7 +2596,10 @@ pub unsafe fn sce_gu_scissor(x: i32, y: i32, w: i32, h: i32) {
 /// - `width`: Width of viewport
 /// - `height`: Height of viewport
 pub unsafe fn sce_gu_viewport(cx: i32, cy: i32, width: i32, height: i32) {
-    unimplemented!()
+    send_command_f(66, (width >> 1) as f32);
+    send_command_f(67, (-height >> 1) as f32);
+    send_command_f(69, cx as f32);
+    send_command_f(70, cy as f32);
 }
 
 /// Draw bezier surface
@@ -2322,7 +2618,21 @@ pub unsafe fn sce_gu_draw_bezier(
     indices: *const c_void,
     vertices: *const c_void,
 ) {
-    unimplemented!()
+    if vtype != 0 {
+        send_command_i(18, vtype);
+    }
+    
+    if !indices.is_null() {
+        send_command_i(16, (((indices as u32) >> 8) & 0xf0000) as i32);
+        send_command_i(2, ((indices as u32) & 0xffffff) as i32);
+    }
+
+    if !vertices.is_null() {
+        send_command_i(16, (((vertices as u32) >> 8) & 0xf0000) as i32);
+        send_command_i(1, ((vertices as u32) & 0xffffff) as i32);
+    }
+
+    send_command_i(5, (((vcount as u32) << 8) | (ucount as u32)) as i32);
 }
 
 /// Set dividing for patches (beziers and splines)
@@ -2332,11 +2642,12 @@ pub unsafe fn sce_gu_draw_bezier(
 /// - `ulevel`: Number of division on u direction
 /// - `vlevel`: Number of division on v direction
 pub unsafe fn sce_gu_patch_divide(ulevel: u32, vlevel: u32) {
-    unimplemented!()
+    send_command_i(54, ((vlevel << 8) | ulevel) as i32);
 }
 
+
 pub unsafe fn sce_gu_patch_front_face(a0: u32) {
-    unimplemented!()
+    send_command_i(56, a0 as i32);
 }
 
 /// Set primitive for patches (beziers and splines)
@@ -2344,8 +2655,13 @@ pub unsafe fn sce_gu_patch_front_face(a0: u32) {
 /// # Parameters
 ///
 /// - `prim`: Desired primitive type (GU_POINTS | GU_LINE_STRIP | GU_TRIANGLE_STRIP)
-pub unsafe fn sce_gu_patch_prim(prim: i32) {
-    unimplemented!()
+pub unsafe fn sce_gu_patch_prim(prim: Primitive) {
+    match prim {
+        Primitive::Points => send_command_i(55, 2),
+        Primitive::LineStrip => send_command_i(55,1),
+        Primitive::TriangleStrip => send_command_i(55, 0),
+        _ => ()
+    }
 }
 
 pub unsafe fn sce_gu_draw_spline(
@@ -2357,23 +2673,73 @@ pub unsafe fn sce_gu_draw_spline(
     indices: *const c_void,
     vertices: *const c_void,
 ) {
-    unimplemented!()
+    if vtype != 0 {
+        send_command_i(18, vtype);
+    }
+    
+    if !indices.is_null() {
+        send_command_i(16, (((indices as u32) >> 8) & 0xf0000) as i32);
+        send_command_i(2, ((indices as u32) & 0xffffff) as i32);
+    }
+
+    if !vertices.is_null() {
+        send_command_i(16, (((vertices as u32) >> 8) & 0xf0000) as i32);
+        send_command_i(1, ((vertices as u32) & 0xffffff) as i32);
+    }
+
+    send_command_i(
+        6,
+        (
+            ((vedge as u32) << 18) |
+            ((uedge as u32) << 16) |
+            ((vcount as u32) << 8) |
+            (ucount as u32)
+        ) as i32
+    );
+
 }
 
 /// Set transform matrices
-///
-/// Available matrices are:
-///   - GU_PROJECTION - View->Projection matrix
-///   - GU_VIEW - World->View matrix
-///   - GU_MODEL - Model->World matrix
-///   - GU_TEXTURE - Texture matrix
 ///
 /// # Parameters
 ///
 /// - `type`: Which matrix-type to set
 /// - `matrix`: Matrix to load
-pub unsafe fn sce_gu_set_matrix(type_: i32, matrix: *const FMatrix4) {
-    unimplemented!()
+pub unsafe fn sce_gu_set_matrix(type_: MatrixMode, matrix: &FMatrix4) {
+    let fmatrix = matrix as *const _ as *const f32;
+
+    match type_ {
+        MatrixMode::Projection => {
+            send_command_f(62, 0.0);
+            for i in 0..16 {
+                send_command_f(63, *fmatrix.offset(i));
+            }
+        },
+        MatrixMode::View => {
+            send_command_f(60, 0.0);
+            for i in 0..4 {
+                for j in 0..3 {
+                    send_command_f(61, *fmatrix.offset(j+i*4));
+                }
+            }
+        },
+        MatrixMode::Model => {
+            send_command_f(58, 0.0);
+            for i in 0..4 {
+                for j in 0..3 {
+                    send_command_f(59, *fmatrix.offset(j+i*4));
+                }
+            }
+        },
+        MatrixMode::Texture => {
+            send_command_f(64, 0.0);
+            for i in 0..4 {
+                for j in 0..3 {
+                    send_command_f(65, *fmatrix.offset(j+i*4));
+                }
+            }
+        }
+    }
 }
 
 /// Specify skinning matrix entry
@@ -2390,7 +2756,15 @@ pub unsafe fn sce_gu_set_matrix(type_: i32, matrix: *const FMatrix4) {
 /// - `index`: Skinning matrix index (0-7)
 /// - `matrix`: Matrix to set
 pub unsafe fn sce_gu_bone_matrix(index: u32, matrix: *const FMatrix4) {
-    unimplemented!()
+    let offset = ((index << 1) + index) << 2;
+    let fmatrix = matrix as *const _ as *const f32;
+
+    send_command_i(42, offset as i32);
+    for i in 0..4 {
+        for j in 0..3 {
+            send_command_f(43, *fmatrix.offset(j+(i << 2)));
+        }
+    }
 }
 
 /// Specify morph weight entry
@@ -2407,16 +2781,35 @@ pub unsafe fn sce_gu_bone_matrix(index: u32, matrix: *const FMatrix4) {
 /// - `index`: Morph weight index (0-7)
 /// - `weight`: Weight to set
 pub unsafe fn sce_gu_morph_weight(index: i32, weight: f32) {
-    unimplemented!()
+    send_command_f(44 + index, weight);
 }
 
 pub unsafe fn sce_gu_draw_array_n(
     primitive_type: i32,
-    vertex_type: i32,
+    vtype: i32,
     count: i32,
     a3: i32,
     indices: *const c_void,
     vertices: *const c_void,
 ) {
-    unimplemented!()
+    if vtype != 0 {
+        send_command_i(18, vtype);
+    }
+    
+    if !indices.is_null() {
+        send_command_i(16, (((indices as u32) >> 8) & 0xf0000) as i32);
+        send_command_i(2, ((indices as u32) & 0xffffff) as i32);
+    }
+
+    if !vertices.is_null() {
+        send_command_i(16, (((vertices as u32) >> 8) & 0xf0000) as i32);
+        send_command_i(1, ((vertices as u32) & 0xffffff) as i32);
+    }
+    
+    if a3 > 0 {
+        for i in (0..(a3-1)).rev() {
+            send_command_i(4, (primitive_type << 16) | count);
+        }
+        send_command_i_stall(4, (primitive_type << 16) | count);
+    }
 }
