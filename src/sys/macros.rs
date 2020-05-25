@@ -85,7 +85,12 @@ macro_rules! sys_lib {
     // Generate body with default ABI.
     (__BODY $name:ident ($($arg:ident : $arg_ty:ty),*) $(-> $ret:ty)?) => {
         expr! {
-            extern {
+            // For some reason, the default "C" ABI does not work with the
+            // function stub. It works *most* of the time but certain functions
+            // end up taking an extra argument before the first, seemingly the
+            // stack pointer. Interpreting it as a "Rust" function seems to work
+            // for now, though ideally we could just write "o32".
+            extern "Rust" {
                 fn [< __ $name _stub >]($($arg : $arg_ty),*) $(-> $ret)?;
             }
 
@@ -182,6 +187,9 @@ macro_rules! sys_lib {
 
                 #[cfg(not(target_os = "psp"))]
                 {
+                    // Get rid of warnings
+                    $(let _arg = $arg;)*
+
                     panic!("tried to call PSP system function on non-PSP target");
                 }
             }

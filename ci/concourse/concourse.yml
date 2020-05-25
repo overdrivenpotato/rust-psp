@@ -1,0 +1,59 @@
+---
+resource_types:
+  - name: pull-request
+    type: docker-image
+    source:
+      repository: teliaoss/github-pr-resource
+
+resources:
+  - name: master-branch
+    type: git
+    source: 
+      uri: https://github.com/overdrivenpotato/rust-psp
+      branch: master
+  - name: pull-request
+    type: pull-request
+    source:
+      repository: overdrivenpotato/rust-psp
+      access_token: ((gh-access-token))
+
+jobs:
+  - name: run-tests-for-master
+    public: true
+    plan:
+      - get: repo
+        resource: master-branch
+        params: { submodules: none }
+        trigger: true
+      - task: build-rust
+        file: repo/ci/concourse/build-rust.yml
+      - task: run-tests
+        file: repo/ci/concourse/run-tests.yml
+
+  - name: run-tests-for-pr
+    public: true
+    plan:
+      - get: repo
+        resource: pull-request
+        version: every
+        trigger: true
+      - put: repo
+        resource: pull-request
+        params:
+          path: repo
+          status: pending
+      - task: build-rust
+        file: repo/ci/concourse/build-rust.yml
+      - task: run-tests
+        file: repo/ci/concourse/run-tests.yml
+        on_failure:
+          put: repo
+          resource: pull-request
+          params:
+            path: repo
+            status: failure
+      - put: repo
+        resource: pull-request
+        params:
+          path: repo
+          status: success
