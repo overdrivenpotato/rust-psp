@@ -1,96 +1,8 @@
-use crate::eabi::{i5, i6};
+use crate::eabi::i5;
 use core::ffi::c_void;
 
-bitflags::bitflags!{
-    pub struct EventFlagAttribute: u32 {
-        const WAIT_MULTIPLE = 0x200;
-    }
-}
-
-#[repr(C)]
-#[derive(Debug, Copy, Clone)]
-pub struct EventFlagOptParam {
-    pub size: usize,
-}
-
-sys_lib! {
-    #![name = "ThreadManForUser"]
-    #![flags = 0x4001]
-    #![version = (0, 0)]
-
-    #[psp(0x55C20A00)]
-    /// Create an event flag.
-    ///
-    /// # Parameters
-    ///
-    /// - `name`: The name of the event flag.
-    /// - `attr`: Attributes from EventFlagAttribute
-    /// - `bits`: Initial bit pattern.
-    /// - `opt`: Options, set to NULL
-    /// # Return Value
-    ///
-    /// < 0 on error. >= 0 event flag id.
-    pub unsafe fn sce_kernel_create_event_flag(
-        name: *const u8,
-        attr: EventFlagAttribute,
-        bits: i32,
-        opt: *mut EventFlagOptParam,
-    ) -> i32;
-
-    #[psp(0x446D8DE6, i6)]
-    /// Create a thread.
-    ///
-    /// This function does not directly run a thread, it simply returns a thread
-    /// ID which can be used as a handle to start the thread later.
-    pub unsafe fn sce_kernel_create_thread(
-        name: *const u8,
-        entry: fn(argc: u32, argp: *const *const u8) -> u32,
-        priority: u32,
-        stack_size: u32,
-        attributes: u32,
-
-        // TODO
-        options: *const u8,
-    ) -> u32;
-
-    #[psp(0xF475845D)]
-    /// Start a created thread.
-    ///
-    /// id - Thread ID from `sce_kernel_create_thread`
-    /// arglen - Length of the data pointed to by argp
-    /// argp - Pointer to the arguments
-    pub unsafe fn sce_kernel_start_thread(id: u32, arglen: u32, argp: *const u8) -> u32;
-
-    #[psp(0xE81CAF8F)]
-    /// Create callback.
-    ///
-    /// `name` - A textual name for the callback.
-    /// `func` - A pointer to a function that will be called as the callback.
-    /// `arg` - Argument for the callback?
-    ///
-    /// # Return value
-    ///
-    /// >= 0 A callback id which can be used in subsequent functions, < 0 an error.
-    pub unsafe fn sce_kernel_create_callback(
-        name: *const u8,
-        cb: fn(arg1: u32, arg2: u32, arg: *const u8) -> u32,
-        arg: *const u8,
-    ) -> u32;
-
-    #[psp(0x82826F70)]
-    /// Sleep thread but service any callbacks as necessary.
-    ///
-    /// Once all callbacks have been setup call this function.
-    pub unsafe fn sce_kernel_sleep_thread_cb() -> u32;
-
-    #[psp(0x809CE29B)]
-    /// Exit a thread and delete itself.
-    ///
-    /// # Parameters
-    ///
-    /// `status` - Exit status
-    pub unsafe fn sce_kernel_exit_delete_thread(status: i32) -> i32;
-}
+mod thread;
+pub use thread::*;
 
 sys_lib! {
     #![name = "LoadExecForUser"]
@@ -108,16 +20,18 @@ sys_lib! {
     /// that the PSP will just crash.
     ///
     /// # Parameters
+    ///
     /// `cbid` - Callback id
     ///
     /// # Return value
+    ///
     /// < 0 on error
-    pub unsafe fn sce_kernel_register_exit_callback(id: u32) -> u32;
+    pub unsafe fn sce_kernel_register_exit_callback(id: i32) -> i32;
 }
 
-
+/// UIDs are used to describe many different kernel objects.
 #[repr(C)]
-#[derive(Copy, Clone)]
+#[derive(Debug, Copy, Clone)]
 pub struct SceUid(pub i32);
 
 // https://github.com/uofw/uofw/blob/f099b78dc0937df4e7346e2e417b63f471f8a3af/include/sysmem_user.h#L12
@@ -186,11 +100,11 @@ sys_lib! {
 
     #[psp(0x9D9A5BA1)]
     /// Get the address of a memory block.
-    /// 
+    ///
     /// # Parameters
     ///
     /// `blockid` - UID of the memory block.
-    /// 
+    ///
     /// # Return value
     ///
     /// The lowest address belonging to the memory block.
