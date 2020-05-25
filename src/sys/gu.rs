@@ -214,6 +214,7 @@ pub enum TextureFilter {
 }
 
 /// Texture Map Mode
+#[derive(Debug, Clone, Copy)]
 #[repr(u32)]
 pub enum TextureMapMode {
     TextureCoords = 0,
@@ -230,6 +231,7 @@ pub enum TextureLevelMode {
 }
 
 /// Texture Projection Map Mode
+#[derive(Debug, Clone, Copy)]
 #[repr(u32)]
 pub enum TextureProjectionMapMode {
     Position = 0,
@@ -276,6 +278,7 @@ bitflags::bitflags! {
 }
 
 /// Texture Effect
+#[derive(Debug, Clone, Copy)]
 #[repr(u32)]
 pub enum TextureEffect {
     Modulate = 0,
@@ -286,6 +289,7 @@ pub enum TextureEffect {
 }
 
 /// Texture Color Component
+#[derive(Debug, Clone, Copy)]
 #[repr(u32)]
 pub enum TextureColorComponent {
     Rgb = 0,
@@ -1144,7 +1148,7 @@ pub unsafe fn sce_gu_start(cid: i32, list: *mut c_void) {
             },
         };
 
-        sce_gu_set_dither(&mut dither_matrix as *mut IMatrix4);
+        sce_gu_set_dither(&mut dither_matrix);
         sce_gu_patch_divide(16, 16);
         sce_gu_color_material(
             LightComponent::Ambient | LightComponent::Diffuse | LightComponent::Specular,
@@ -2359,7 +2363,7 @@ pub unsafe fn sce_gu_tex_image(mipmap: i32, width: i32, height: i32, tbw: i32, t
 /// - `mode`: Which mode to use, one of TextureLevelMode
 /// - `bias`: Which mipmap bias to use
 pub unsafe fn sce_gu_tex_level_mode(mode: TextureLevelMode, bias: f32) {
-    let offset = core::intrinsics::truncf32(bias * 16.0) as i32;
+    let mut offset = core::intrinsics::truncf32(bias * 16.0) as i32;
 
     if offset >= 128 {
         offset = 128
