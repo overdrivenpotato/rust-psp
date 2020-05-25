@@ -435,19 +435,13 @@ sys_lib! {
     /// ID which can be used as a handle to start the thread later. See
     /// `sce_kernel_start_thread`.
     ///
-    /// @par Example:
-    /// @code
-    /// SceUid thid;
-    /// thid = sceKernelCreateThread("my_thread", threadFunc, 0x18, 0x10000, 0, NULL);
-    /// @endcode
-    ///
     /// # Parameters
     ///
     /// - `name`: An arbitrary thread name.
     /// - `entry`: The thread function to run when started.
     /// - `init_priority`: The initial priority of the thread. Less if higher priority.
     /// - `stack_size`: The size of the initial stack.
-    /// - `attributes`: The thread attributes, zero or more of `ThreadAttributes`.
+    /// - `attributes`: The thread attributes, zero or more of `::ThreadAttributes`.
     /// - `option`: Additional options specified by ::SceKernelThreadOptParam.
     ///
     /// # Return Value
@@ -479,7 +473,7 @@ sys_lib! {
     ///
     /// # Parameters
     ///
-    /// - `id`: Thread id from sceKernelCreateThread
+    /// - `id`: Thread id from sce_kernel_create_thread
     /// - `arg_len`: Length of the data pointed to by argp, in bytes
     /// - `argp`: Pointer to the arguments.
     pub unsafe fn sce_kernel_start_thread(
@@ -542,7 +536,7 @@ sys_lib! {
     /// # Parameters
     ///
     /// - `state`: The state of the dispatch thread
-    /// (from ::sceKernelSuspendDispatchThread)
+    /// (from ::sce_kernel_suspend_dispatch_thread)
     ///
     /// # Return Value
     ///
@@ -576,7 +570,7 @@ sys_lib! {
     pub unsafe fn sce_kernel_wakeup_thread(thid: SceUid) -> i32;
 
     #[psp(0xFCCFAD26)]
-    /// Cancel a thread that was to be woken with ::sceKernelWakeupThread.
+    /// Cancel a thread that was to be woken with ::sce_kernel_wakeup_thread.
     ///
     /// # Parameters
     ///
@@ -600,7 +594,7 @@ sys_lib! {
     pub unsafe fn sce_kernel_suspend_thread(thid: SceUid) -> i32;
 
     #[psp(0x75156E8F)]
-    /// Resume a thread previously put into a suspended state with ::sceKernelSuspendThread.
+    /// Resume a thread previously put into a suspended state with ::sce_kernel_suspend_thread.
     ///
     /// # Parameters
     ///
@@ -644,10 +638,6 @@ sys_lib! {
     ///
     /// - `delay`: Delay in microseconds.
     ///
-    /// @par Example:
-    /// @code
-    /// sceKernelDelayThread(1000000); // Delay for a second
-    /// @endcode
     pub unsafe fn sce_kernel_delay_thread(delay: u32) -> i32;
 
     #[psp(0x68DA9E36)]
@@ -657,10 +647,6 @@ sys_lib! {
     ///
     /// - `delay`: Delay in microseconds.
     ///
-    /// @par Example:
-    /// @code
-    /// sceKernelDelayThread(1000000); // Delay for a second
-    /// @endcode
     pub unsafe fn sce_kernel_delay_thread_cb(delay: u32) -> i32;
 
     #[psp(0xBD123D9E)]
@@ -694,14 +680,14 @@ sys_lib! {
     /// # Parameters
     ///
     /// - `unknown`: Set to 0.
-    /// - `attr`: The thread attributes to modify.  One of ::PspThreadAttributes.
+    /// - `attr`: The thread attributes to modify.  One of ::ThreadAttributes.
     ///
     /// # Return Value
     ///
     /// < 0 on error.
     pub unsafe fn sce_kernel_change_current_thread_attr(
         unknown: i32,
-        attr: u32,
+        attr: ThreadAttributes,
     ) -> i32;
 
     #[psp(0x71BC9871)]
@@ -709,15 +695,8 @@ sys_lib! {
     ///
     /// # Parameters
     ///
-    /// - `thid`: The ID of the thread (from sceKernelCreateThread or sceKernelGetThreadId)
+    /// - `thid`: The ID of the thread (from sce_kernel_create_thread or sce_kernel_get_thread_id)
     /// - `priority`: The new priority (the lower the number the higher the priority)
-    ///
-    /// @par Example:
-    /// @code
-    /// int thid = sceKernelGetThreadId();
-    /// // Change priority of current thread to 16
-    /// sceKernelChangeThreadPriority(thid, 16);
-    /// @endcode
     ///
     /// # Return Value
     ///
@@ -812,13 +791,6 @@ sys_lib! {
     /// Note: The structures size field should be set to
     /// sizeof(SceKernelThreadInfo) before calling this function.
     ///
-    /// @par Example:
-    /// @code
-    /// SceKernelThreadInfo status;
-    /// status.size = sizeof(SceKernelThreadInfo);
-    /// if(sceKernelReferThreadStatus(thid, &status) == 0)
-    /// { Do something... }
-    /// @endcode
     /// # Return Value
     ///
     /// 0 if successful, otherwise the error code.
@@ -845,12 +817,6 @@ sys_lib! {
 
     #[psp(0xD6DA4BA1)]
     /// Creates a new semaphore
-    ///
-    /// @par Example:
-    /// @code
-    /// int semaid;
-    /// semaid = sceKernelCreateSema("MyMutex", 0, 1, 1, 0);
-    /// @endcode
     ///
     /// # Parameters
     ///
@@ -884,15 +850,9 @@ sys_lib! {
     #[psp(0x3F53E640)]
     /// Send a signal to a semaphore
     ///
-    /// @par Example:
-    /// @code
-    /// // Signal the sema
-    /// sceKernelSignalSema(semaid, 1);
-    /// @endcode
-    ///
     /// # Parameters
     ///
-    /// - `semaid`: The sema id returned from sceKernelCreateSema
+    /// - `semaid`: The sema id returned from sce_kernel_create_sema
     /// - `signal`: The amount to signal the sema (i.e. if 2 then increment the sema by 2)
     ///
     /// # Return Value
@@ -906,14 +866,9 @@ sys_lib! {
     #[psp(0x4E3A1105)]
     /// Lock a semaphore
     ///
-    /// @par Example:
-    /// @code
-    /// sceKernelWaitSema(semaid, 1, 0);
-    /// @endcode
-    ///
     /// # Parameters
     ///
-    /// - `semaid`: The sema id returned from sceKernelCreateSema
+    /// - `semaid`: The sema id returned from sce_kernel_create_sema
     /// - `signal`: The value to wait for (i.e. if 1 then wait till reaches a signal state of 1)
     /// - `timeout`: Timeout in microseconds (assumed).
     ///
@@ -929,14 +884,9 @@ sys_lib! {
     #[psp(0x6D212BAC)]
     /// Lock a semaphore a handle callbacks if necessary.
     ///
-    /// @par Example:
-    /// @code
-    /// sceKernelWaitSemaCB(semaid, 1, 0);
-    /// @endcode
-    ///
     /// # Parameters
     ///
-    /// - `semaid`: The sema id returned from sceKernelCreateSema
+    /// - `semaid`: The sema id returned from sce_kernel_create_sema
     /// - `signal`: The value to wait for (i.e. if 1 then wait till reaches a signal state of 1)
     /// - `timeout`: Timeout in microseconds (assumed).
     ///
@@ -1006,7 +956,7 @@ sys_lib! {
     ///
     /// # Parameters
     ///
-    /// - `evid`: The event id returned by sceKernelCreateEventFlag.
+    /// - `evid`: The event id returned by sce_kernel_create_event_flag.
     /// - `bits`: The bit pattern to set.
     ///
     /// # Return Value
@@ -1019,7 +969,7 @@ sys_lib! {
     ///
     /// # Parameters
     ///
-    /// - `evid`: The event id returned by ::sceKernelCreateEventFlag
+    /// - `evid`: The event id returned by ::sce_Kernel_create_event_flag
     /// - `bits`: The bits to clean
     ///
     /// # Return Value
@@ -1032,7 +982,7 @@ sys_lib! {
     ///
     /// # Parameters
     ///
-    /// - `evid`: The event id returned by sceKernelCreateEventFlag.
+    /// - `evid`: The event id returned by sce_kernel_create_event_flag.
     /// - `bits`: The bit pattern to poll for.
     /// - `wait`: Wait type, one or more of ::PspEventFlagWaitTypes or'ed together
     /// - `out_bits`: The bit pattern that was matched.
@@ -1051,7 +1001,7 @@ sys_lib! {
     ///
     /// # Parameters
     ///
-    /// - `evid`: The event id returned by sceKernelCreateEventFlag.
+    /// - `evid`: The event id returned by sce_kernel_create_event_flag.
     /// - `bits`: The bit pattern to poll for.
     /// - `wait`: Wait type, one or more of ::PspEventFlagWaitTypes or'ed together
     /// - `out_bits`: The bit pattern that was matched.
@@ -1072,7 +1022,7 @@ sys_lib! {
     ///
     /// # Parameters
     ///
-    /// - `evid`: The event id returned by sceKernelCreateEventFlag.
+    /// - `evid`: The event id returned by sce_kernel_create_event_flag.
     /// - `bits`: The bit pattern to poll for.
     /// - `wait`: Wait type, one or more of ::PspEventFlagWaitTypes or'ed together
     /// - `out_bits`: The bit pattern that was matched.
@@ -1093,7 +1043,7 @@ sys_lib! {
     ///
     /// # Parameters
     ///
-    /// - `evid`: The event id returned by sceKernelCreateEventFlag.
+    /// - `evid`: The event id returned by sce_kernel_create_event_flag.
     ///
     /// # Return Value
     ///
@@ -1118,12 +1068,6 @@ sys_lib! {
 
     #[psp(0x8125221D)]
     /// Creates a new messagebox
-    ///
-    /// @par Example:
-    /// @code
-    /// int mbxid;
-    /// mbxid = sceKernelCreateMbx("MyMessagebox", 0, NULL);
-    /// @endcode
     ///
     /// # Parameters
     ///
@@ -1153,21 +1097,9 @@ sys_lib! {
     #[psp(0xE9B3061E)]
     /// Send a message to a messagebox
     ///
-    /// @par Example:
-    /// @code
-    /// struct MyMessage {
-    ///     SceKernelMsgPacket header;
-    ///     char text[8];
-    /// };
-    ///
-    /// struct MyMessage msg = { {0}, "Hello" };
-    /// // Send the message
-    /// sceKernelSendMbx(mbxid, (void*) &msg);
-    /// @endcode
-    ///
     /// # Parameters
     ///
-    /// - `mbxid`: The mbx id returned from sceKernelCreateMbx
+    /// - `mbxid`: The mbx id returned from sce_kernel_create_mbx
     /// - `message`: A message to be forwarded to the receiver.
     ///    The start of the message should be the
     ///    ::SceKernelMsgPacket structure, the rest
@@ -1183,15 +1115,9 @@ sys_lib! {
     #[psp(0x18260574)]
     /// Wait for a message to arrive in a messagebox
     ///
-    /// @par Example:
-    /// @code
-    /// void *msg;
-    /// sceKernelReceiveMbx(mbxid, &msg, NULL);
-    /// @endcode
-    ///
     /// # Parameters
     ///
-    /// - `mbxid`: The mbx id returned from sceKernelCreateMbx
+    /// - `mbxid`: The mbx id returned from sce_kernel_create_mbx
     /// - `pmessage`: A pointer to where a pointer to the
     ///                   received message should be stored
     /// # Parameters
@@ -1210,15 +1136,9 @@ sys_lib! {
     #[psp(0xF3986382)]
     /// Wait for a message to arrive in a messagebox and handle callbacks if necessary.
     ///
-    /// @par Example:
-    /// @code
-    /// void *msg;
-    /// sceKernelReceiveMbxCB(mbxid, &msg, NULL);
-    /// @endcode
-    ///
     /// # Parameters
     ///
-    /// - `mbxid`: The mbx id returned from sceKernelCreateMbx
+    /// - `mbxid`: The mbx id returned from sce_kernel_create_mbx
     /// - `pmessage`: A pointer to where a pointer to the
     ///                   received message should be stored
     /// # Parameters
@@ -1237,15 +1157,9 @@ sys_lib! {
     #[psp(0x0D81716A)]
     /// Check if a message has arrived in a messagebox
     ///
-    /// @par Example:
-    /// @code
-    /// void *msg;
-    /// sceKernelPollMbx(mbxid, &msg);
-    /// @endcode
-    ///
     /// # Parameters
     ///
-    /// - `mbxid`: The mbx id returned from sceKernelCreateMbx
+    /// - `mbxid`: The mbx id returned from sce_kernel_create_mbx
     /// - `pmessage`: A pointer to where a pointer to the
     ///                   received message should be stored
     ///
@@ -1260,14 +1174,9 @@ sys_lib! {
     #[psp(0x87D4DD36)]
     /// Abort all wait operations on a messagebox
     ///
-    /// @par Example:
-    /// @code
-    /// sceKernelCancelReceiveMbx(mbxid, NULL);
-    /// @endcode
-    ///
     /// # Parameters
     ///
-    /// - `mbxid`: The mbx id returned from sceKernelCreateMbx
+    /// - `mbxid`: The mbx id returned from sce_kernel_create_mbx
     /// - `pnum`: A pointer to where the number of threads which
     ///                were waiting on the mbx should be stored (NULL
     ///                if you don't care)
@@ -1327,7 +1236,7 @@ sys_lib! {
     /// A UID representing the created alarm, < 0 on error.
     pub unsafe fn sce_kernel_set_sys_clock_alarm(
         clock: *mut SceKernelSysClock,
-        handler: SceKernelAlarmHandler,
+        handler: *mut SceKernelAlarmHandler,
         common: *mut c_void,
     ) -> SceUid;
 
