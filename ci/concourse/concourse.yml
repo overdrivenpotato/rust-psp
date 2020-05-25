@@ -19,6 +19,7 @@ resources:
 
 jobs:
   - name: run-tests-for-master
+    public: true
     plan:
       - get: repo
         resource: master-branch
@@ -30,6 +31,7 @@ jobs:
         file: repo/ci/concourse/run-tests.yml
 
   - name: run-tests-for-pr
+    public: true
     plan:
       - get: repo
         resource: pull-request
