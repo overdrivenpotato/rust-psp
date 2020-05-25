@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -e
+
 export CARGO_HOME="$(pwd)"/.cargo
 export XARGO_HOME="$(pwd)"/.xargo
 
