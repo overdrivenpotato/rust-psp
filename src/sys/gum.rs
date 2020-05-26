@@ -12,8 +12,7 @@ pub enum Mode {
     Texture = 3,
 }
 
-static mut GUM_VFPU_CONTEXT: Option<Context> = None;
-static mut GUM_MATRIX_STACK: [[FMatrix4; 32]; 4] = {
+static mut MATRIX_STACK: [[FMatrix4; 32]; 4] = {
     let zero_vector = FVector4 { x: 0.0, y: 0.0, z: 0.0, w: 0.0 };
     let zero_matrix = FMatrix4 {
         x: zero_vector,
@@ -37,21 +36,22 @@ static mut GUM_MATRIX_STACK: [[FMatrix4; 32]; 4] = {
     [stack, stack, stack, stack]
 };
 
-static mut GUM_MATRIX_UPDATE: [i32; 4] = [0, 0, 0, 0];
-static mut GUM_CURRENT_MATRIX_UPDATE: i32 = 0;
-static mut GUM_CURRENT_MATRIX: *mut FMatrix4 = ptr::null_mut();
-static mut GUM_CURRENT_MODE: Mode = Mode::Projection;
-static mut GUM_STACK_DEPTH: [*mut FMatrix4; 4] = unsafe {
+static mut MATRIX_UPDATE: [i32; 4] = [0, 0, 0, 0];
+static mut CURRENT_MATRIX_UPDATE: i32 = 0;
+static mut CURRENT_MATRIX: *mut FMatrix4 = ptr::null_mut();
+static mut CURRENT_MODE: Mode = Mode::Projection;
+static mut STACK_DEPTH: [*mut FMatrix4; 4] = unsafe {
     [
-        &mut GUM_MATRIX_STACK[Mode::Projection as usize][0],
-        &mut GUM_MATRIX_STACK[Mode::View as usize][0],
-        &mut GUM_MATRIX_STACK[Mode::Model as usize][0],
-        &mut GUM_MATRIX_STACK[Mode::Texture as usize][0],
+        &mut MATRIX_STACK[Mode::Projection as usize][0],
+        &mut MATRIX_STACK[Mode::View as usize][0],
+        &mut MATRIX_STACK[Mode::Model as usize][0],
+        &mut MATRIX_STACK[Mode::Texture as usize][0],
     ]
 };
 
+static mut VFPU_CONTEXT: Option<Context> = None;
 unsafe fn get_context_unchecked() -> &'static mut Context {
-    match GUM_VFPU_CONTEXT.as_mut() {
+    match VFPU_CONTEXT.as_mut() {
         Some(r) => r,
         None => core::intrinsics::unreachable(),
     }
@@ -329,7 +329,7 @@ pub union Matrix4 {
     pub i: [[i32; 4usize]; 4usize],
 }
 
-pub const GUM_EPSILON: f32 = 0.00001;
+pub const EPSILON: f32 = 0.00001;
 
 pub unsafe fn gum_scale(m: &mut FMatrix4, v: &FVector3) {
     get_context_unchecked().prepare(MatrixSet::empty(), MatrixSet::VMAT0 | MatrixSet::VMAT1);
@@ -568,7 +568,7 @@ pub unsafe fn sce_gum_fast_inverse() {
         : : : : "volatile"
     );
 
-    GUM_CURRENT_MATRIX_UPDATE = 1;
+    CURRENT_MATRIX_UPDATE = 1;
 }
 
 pub unsafe fn sce_gum_full_inverse() {
@@ -596,21 +596,21 @@ pub unsafe fn sce_gum_full_inverse() {
         : : "{t0}"(&t) : "memory" : "volatile"
     );
 
-    GUM_CURRENT_MATRIX_UPDATE = 1;
+    CURRENT_MATRIX_UPDATE = 1;
 }
 
 pub unsafe fn sce_gum_load_identity() {
-    GUM_VFPU_CONTEXT
+    VFPU_CONTEXT
         .get_or_insert_with(Context::new)
         .prepare(MatrixSet::VMAT3, MatrixSet::empty());
 
     vfpu_asm!(vmidt_q M300; : : : : "volatile");
 
-    GUM_CURRENT_MATRIX_UPDATE = 1;
+    CURRENT_MATRIX_UPDATE = 1;
 }
 
 pub unsafe fn sce_gum_load_matrix(m: &FMatrix4) {
-    GUM_VFPU_CONTEXT
+    VFPU_CONTEXT
         .get_or_insert_with(Context::new)
         .prepare(MatrixSet::VMAT3, MatrixSet::empty());
 
@@ -623,7 +623,7 @@ pub unsafe fn sce_gum_load_matrix(m: &FMatrix4) {
         : : "{a0}"(m) : "memory" : "volatile"
     );
 
-    GUM_CURRENT_MATRIX_UPDATE = 1;
+    CURRENT_MATRIX_UPDATE = 1;
 }
 
 pub unsafe fn sce_gum_look_at(eye: &FVector3, center: &FVector3, up: &FVector3) {
@@ -643,7 +643,7 @@ pub unsafe fn sce_gum_look_at(eye: &FVector3, center: &FVector3, up: &FVector3) 
         : : "{t0}"(&t) : : "volatile"
     );
 
-    GUM_CURRENT_MATRIX_UPDATE = 1;
+    CURRENT_MATRIX_UPDATE = 1;
 }
 
 pub unsafe fn sce_gum_matrix_mode(mode: Mode) {
@@ -655,14 +655,14 @@ pub unsafe fn sce_gum_matrix_mode(mode: Mode) {
         sv_q C320, 32(t0);
         sv_q C330, 48(t0);
 
-        : : "{t0}"(GUM_CURRENT_MATRIX) : "memory" : "volatile"
+        : : "{t0}"(CURRENT_MATRIX) : "memory" : "volatile"
     );
 
-    GUM_MATRIX_UPDATE[GUM_CURRENT_MODE as usize] = GUM_CURRENT_MATRIX_UPDATE;
-    GUM_STACK_DEPTH[GUM_CURRENT_MODE as usize] = GUM_CURRENT_MATRIX;
-    GUM_CURRENT_MATRIX = GUM_STACK_DEPTH[mode as usize];
-    GUM_CURRENT_MODE = mode;
-    GUM_CURRENT_MATRIX_UPDATE = GUM_MATRIX_UPDATE[GUM_CURRENT_MODE as usize];
+    MATRIX_UPDATE[CURRENT_MODE as usize] = CURRENT_MATRIX_UPDATE;
+    STACK_DEPTH[CURRENT_MODE as usize] = CURRENT_MATRIX;
+    CURRENT_MATRIX = STACK_DEPTH[mode as usize];
+    CURRENT_MODE = mode;
+    CURRENT_MATRIX_UPDATE = MATRIX_UPDATE[CURRENT_MODE as usize];
 
     vfpu_asm!(
         lv_q C300, t0;
@@ -670,7 +670,7 @@ pub unsafe fn sce_gum_matrix_mode(mode: Mode) {
         lv_q C320, 32(t0);
         lv_q C330, 48(t0);
 
-        : : "{t0}"(GUM_CURRENT_MATRIX) : "memory" : "volatile"
+        : : "{t0}"(CURRENT_MATRIX) : "memory" : "volatile"
     );
 }
 
@@ -689,7 +689,7 @@ pub unsafe fn sce_gum_mult_matrix(m: &FMatrix4) {
         : : "{t0}"(m) : "memory" : "volatile"
     );
 
-    GUM_CURRENT_MATRIX_UPDATE = 1;
+    CURRENT_MATRIX_UPDATE = 1;
 }
 
 pub unsafe fn sce_gum_ortho(
@@ -741,7 +741,7 @@ pub unsafe fn sce_gum_ortho(
         : "t0", "t1", "t2", "t3", "t4", "t5" : "volatile"
     );
 
-    GUM_CURRENT_MATRIX_UPDATE = 1;
+    CURRENT_MATRIX_UPDATE = 1;
 }
 
 pub unsafe fn sce_gum_perspective(fovy: f32, aspect: f32, near: f32, far: f32) {
@@ -790,11 +790,11 @@ pub unsafe fn sce_gum_perspective(fovy: f32, aspect: f32, near: f32, far: f32) {
         : "t0", "t1", "t2", "t3" : "volatile"
     );
 
-    GUM_CURRENT_MATRIX_UPDATE = 1;
+    CURRENT_MATRIX_UPDATE = 1;
 }
 
 pub unsafe fn sce_gum_pop_matrix() {
-    GUM_CURRENT_MATRIX = GUM_CURRENT_MATRIX.offset(-1);
+    CURRENT_MATRIX = CURRENT_MATRIX.offset(-1);
     get_context_unchecked().prepare(MatrixSet::VMAT3, MatrixSet::empty());
 
     vfpu_asm!(
@@ -803,14 +803,14 @@ pub unsafe fn sce_gum_pop_matrix() {
         lv_q C320, 32(t0);
         lv_q C330, 48(t0);
 
-        : : "{t0}"(GUM_CURRENT_MATRIX) : : "volatile"
+        : : "{t0}"(CURRENT_MATRIX) : : "volatile"
     );
 
-    GUM_CURRENT_MATRIX_UPDATE = 1;
+    CURRENT_MATRIX_UPDATE = 1;
 }
 
 pub unsafe fn sce_gum_push_matrix() {
-    GUM_CURRENT_MATRIX = GUM_CURRENT_MATRIX.offset(1);
+    CURRENT_MATRIX = CURRENT_MATRIX.offset(1);
     get_context_unchecked().prepare(MatrixSet::VMAT3, MatrixSet::empty());
 
     vfpu_asm!(
@@ -819,7 +819,7 @@ pub unsafe fn sce_gum_push_matrix() {
         sv_q C320, 32(t0);
         sv_q C330, 48(t0);
 
-        : : "{t0}"(GUM_CURRENT_MATRIX) : "memory" : "volatile"
+        : : "{t0}"(CURRENT_MATRIX) : "memory" : "volatile"
     );
 }
 
@@ -840,7 +840,7 @@ pub unsafe fn sce_gum_rotate_x(angle: f32) {
         : : "f"(angle) : "t0" : "volatile"
     );
 
-    GUM_CURRENT_MATRIX_UPDATE = 1;
+    CURRENT_MATRIX_UPDATE = 1;
 }
 
 pub unsafe fn sce_gum_rotate_y(angle: f32) {
@@ -860,7 +860,7 @@ pub unsafe fn sce_gum_rotate_y(angle: f32) {
         : : "f"(angle) : "t0" : "volatile"
     );
 
-    GUM_CURRENT_MATRIX_UPDATE = 1;
+    CURRENT_MATRIX_UPDATE = 1;
 }
 
 pub unsafe fn sce_gum_rotate_z(angle: f32) {
@@ -880,7 +880,7 @@ pub unsafe fn sce_gum_rotate_z(angle: f32) {
         : : "f"(angle) : "t0" : "volatile"
     );
 
-    GUM_CURRENT_MATRIX_UPDATE = 1;
+    CURRENT_MATRIX_UPDATE = 1;
 }
 
 pub unsafe fn sce_gum_scale(v: &FVector3) {
@@ -922,13 +922,13 @@ pub unsafe fn sce_gum_translate(v: &FVector3) {
         : : "{a0}"(v) : : "volatile"
     );
 
-    GUM_CURRENT_MATRIX_UPDATE = 1;
+    CURRENT_MATRIX_UPDATE = 1;
 }
 
 pub unsafe fn sce_gum_update_matrix() {
-    GUM_STACK_DEPTH[GUM_CURRENT_MODE as usize] = GUM_CURRENT_MATRIX;
+    STACK_DEPTH[CURRENT_MODE as usize] = CURRENT_MATRIX;
 
-    if GUM_CURRENT_MATRIX_UPDATE == 1 {
+    if CURRENT_MATRIX_UPDATE == 1 {
         get_context_unchecked().prepare(MatrixSet::VMAT3, MatrixSet::empty());
 
         vfpu_asm!(
@@ -937,19 +937,19 @@ pub unsafe fn sce_gum_update_matrix() {
             sv_q C320, 32(t0);
             sv_q C330, 48(t0);
 
-            : : "{t0}"(GUM_CURRENT_MATRIX) : "memory" : "volatile"
+            : : "{t0}"(CURRENT_MATRIX) : "memory" : "volatile"
         );
 
-        GUM_MATRIX_UPDATE[GUM_CURRENT_MODE as usize] = GUM_CURRENT_MATRIX_UPDATE;
-        GUM_CURRENT_MATRIX_UPDATE = 0;
+        MATRIX_UPDATE[CURRENT_MODE as usize] = CURRENT_MATRIX_UPDATE;
+        CURRENT_MATRIX_UPDATE = 0;
     }
 
     for i in 0..4 {
-        if GUM_MATRIX_UPDATE[i] != 0 {
+        if MATRIX_UPDATE[i] != 0 {
             // TODO: Add this.
-            //sce_gu_set_matrix(i, GUM_STACK_DEPTH[i]);
+            //sce_gu_set_matrix(i, STACK_DEPTH[i]);
 
-            GUM_MATRIX_UPDATE[i] = 0;
+            MATRIX_UPDATE[i] = 0;
         }
     }
 }
@@ -960,7 +960,7 @@ pub fn gum_normalize(v: &mut FVector3) {
         sqrtf32((v.x * v.x) + (v.y * v.y) + (v.z * v.z))
     };
 
-    if l > GUM_EPSILON {
+    if l > EPSILON {
         let il = 1.0 / l;
 
         v.x *= il;

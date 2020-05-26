@@ -8,13 +8,10 @@
     const_in_array_repeat_expressions,
     const_loop,
     const_if_match,
+    const_mut_refs,
     const_generics,
     c_variadic,
     start,
-
-    // TODO: Remove before PR is merged. This is necessary for the naive GUM
-    // translation.
-    const_mut_refs,
 )]
 
 // For unwinding support
