@@ -2,6 +2,8 @@
 //!
 //! This is similar (but not identical) to the pspvfpu library from PSPSDK.
 
+use crate::sys::gum::{FMatrix4, FVector4};
+
 const NUM_MATRICES: usize = 8;
 
 bitflags::bitflags! {
@@ -17,18 +19,10 @@ bitflags::bitflags! {
     }
 }
 
-// TODO: Use type definition from `gum` or `gu` when added.
-#[derive(Clone, Copy)]
-#[repr(C, align(4))]
-struct Matrix4 {
-    // Read indirectly via assembly.
-    _fp_registers: [f32; 16],
-}
-
 #[repr(C, align(16))]
 pub struct Context {
-    matrices: [Matrix4; NUM_MATRICES],
-    pub saved: MatrixSet,
+    matrices: [FMatrix4; NUM_MATRICES],
+    saved: MatrixSet,
 }
 
 impl Context {
@@ -40,13 +34,12 @@ impl Context {
             kernel::sce_kernel_change_current_thread_attr(0, ThreadAttributes::VFPU);
         }
 
-        let zero_matrix = Matrix4 {
-            _fp_registers: [
-                0.0, 0.0, 0.0, 0.0,
-                0.0, 0.0, 0.0, 0.0,
-                0.0, 0.0, 0.0, 0.0,
-                0.0, 0.0, 0.0, 0.0,
-            ],
+        let zero_vector = FVector4 { x: 0.0, y: 0.0, z: 0.0, w: 0.0 };
+        let zero_matrix = FMatrix4 {
+            x: zero_vector,
+            y: zero_vector,
+            z: zero_vector,
+            w: zero_vector,
         };
 
         let matrices = [
