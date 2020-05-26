@@ -26,11 +26,11 @@ extern crate alloc;
 extern crate panic_unwind;
 
 #[macro_use] pub mod debug;
+#[macro_use] pub mod vfpu;
 mod eabi;
 mod alloc_impl;
 pub mod panic;
 pub mod sys;
-pub mod vfpu;
 
 #[cfg(feature="emb-gfx")]
 pub mod framebuf_gfx;
