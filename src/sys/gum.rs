@@ -1,6 +1,6 @@
 use crate::vfpu_asm;
 use crate::sys::vfpu_context::{Context, MatrixSet};
-use core::{ptr, mem::MaybeUninit};
+use core::{ptr, mem::MaybeUninit, ffi::c_void};
 
 // TODO: Replace this with the definiton in `gu` once merged.
 #[repr(i32)]
@@ -883,6 +883,18 @@ pub unsafe fn sce_gum_rotate_z(angle: f32) {
     CURRENT_MATRIX_UPDATE = 1;
 }
 
+pub unsafe fn sce_gum_rotate_xyz(v: &FVector3) {
+    sce_gum_rotate_x(v.x);
+    sce_gum_rotate_y(v.y);
+    sce_gum_rotate_z(v.z);
+}
+
+pub unsafe fn sce_gum_rotate_zyx(v: &FVector3) {
+    sce_gum_rotate_z(v.z);
+    sce_gum_rotate_y(v.y);
+    sce_gum_rotate_x(v.x);
+}
+
 pub unsafe fn sce_gum_scale(v: &FVector3) {
     get_context_unchecked().prepare(MatrixSet::VMAT3, MatrixSet::VMAT0);
 
@@ -923,6 +935,61 @@ pub unsafe fn sce_gum_translate(v: &FVector3) {
     );
 
     CURRENT_MATRIX_UPDATE = 1;
+}
+
+pub unsafe fn sce_gum_draw_array(
+    _prim: i32,
+    _v_type: i32,
+    _count: i32,
+    _indices: *const c_void,
+    _vertices: *const c_void,
+) {
+  sce_gum_update_matrix();
+
+  // sceGuDrawArray(prim,v_type,count,indices,vertices);
+  todo!()
+}
+
+pub unsafe fn sce_gum_draw_array_n(
+    _prim: i32,
+    _v_type: i32,
+    _count: i32,
+    _a3: i32,
+    _indices: *const c_void,
+    _vertices: *const c_void,
+) {
+  sce_gum_update_matrix();
+
+  // sceGuDrawArrayN(prim,vtype,count,a3,indices,vertices);
+  todo!()
+}
+
+pub unsafe fn sce_gum_draw_bezier(
+    _v_type: i32,
+    _u_count: i32,
+    _v_count: i32,
+    _indices: *const c_void,
+    _vertices: *const c_void,
+) {
+  sce_gum_update_matrix();
+
+  // sceGuDrawBezier(vtype,ucount,vcount,indices,vertices);
+  todo!()
+}
+
+pub unsafe fn sce_gum_draw_spline(
+    _v_type: i32,
+    _u_count: i32,
+    _v_count: i32,
+    _u_edge: i32,
+    _v_edge: i32,
+    _indices: *const c_void,
+    _vertices: *const c_void,
+) {
+  sce_gum_update_matrix();
+
+  // sceGuDrawSpline(vtype,ucount,vcount,uedge,vedge,indices,vertices);
+  todo!()
 }
 
 pub unsafe fn sce_gum_update_matrix() {
