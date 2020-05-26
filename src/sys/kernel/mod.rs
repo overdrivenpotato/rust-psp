@@ -21,12 +21,12 @@ sys_lib! {
     ///
     /// # Parameters
     ///
-    /// `cbid` - Callback id
+    /// `id` - Callback id
     ///
     /// # Return value
     ///
     /// < 0 on error
-    pub unsafe fn sce_kernel_register_exit_callback(id: i32) -> i32;
+    pub unsafe fn sce_kernel_register_exit_callback(id: SceUid) -> i32;
 }
 
 /// UIDs are used to describe many different kernel objects.
