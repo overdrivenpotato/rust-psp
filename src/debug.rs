@@ -114,7 +114,6 @@ unsafe fn init() {
 }
 
 #[doc(hidden)]
-#[no_mangle]
 pub fn print_args(arguments: core::fmt::Arguments<'_>) {
     use fmt::Write;
 

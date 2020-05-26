@@ -1,8 +1,6 @@
 use crate::vfpu_asm;
+use crate::sys::vfpu_context::{Context, MatrixSet};
 use core::{ptr, mem::MaybeUninit};
-
-type VfpuMatrixSet = u8;
-pub struct VfpuContext {}
 
 // TODO: Replace this with the definiton in `gu` once merged.
 #[repr(i32)]
@@ -14,7 +12,7 @@ pub enum Mode {
     Texture = 3,
 }
 
-static mut GUM_VFPU_CONTEXT: *mut VfpuContext = ptr::null_mut();
+static mut GUM_VFPU_CONTEXT: Option<Context> = None;
 static mut GUM_MATRIX_STACK: [[FMatrix4; 32]; 4] = {
     let zero_vector = FVector4 { x: 0.0, y: 0.0, z: 0.0, w: 0.0 };
     let zero_matrix = FMatrix4 {
@@ -51,6 +49,13 @@ static mut GUM_STACK_DEPTH: [*mut FMatrix4; 4] = unsafe {
         &mut GUM_MATRIX_STACK[Mode::Texture as usize][0],
     ]
 };
+
+unsafe fn get_context_unchecked() -> &'static mut Context {
+    match GUM_VFPU_CONTEXT.as_mut() {
+        Some(r) => r,
+        None => core::intrinsics::unreachable(),
+    }
+}
 
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
@@ -193,7 +198,7 @@ pub struct L64Vector4 {
     pub w: u64,
 }
 
-#[repr(C)]
+#[repr(C, align(4))]
 #[derive(Debug, Copy, Clone)]
 pub struct FVector4 {
     pub x: f32,
@@ -324,26 +329,10 @@ pub union Matrix4 {
     pub i: [[i32; 4usize]; 4usize],
 }
 
-pub const VMAT0: u8 = 1 << 0;
-pub const VMAT1: u8 = 1 << 1;
-pub const VMAT2: u8 = 1 << 2;
-pub const VMAT3: u8 = 1 << 3;
-pub const VMAT4: u8 = 1 << 4;
-pub const VMAT5: u8 = 1 << 5;
-pub const VMAT6: u8 = 1 << 6;
-pub const VMAT7: u8 = 1 << 7;
 pub const GUM_EPSILON: f32 = 0.00001;
 
-pub fn psp_vfpu_use_matrices(
-    c: *mut VfpuContext,
-    keep_set: VfpuMatrixSet,
-    temp_set: VfpuMatrixSet,
-) {
-    unimplemented!()
-}
-
 pub unsafe fn gum_scale(m: &mut FMatrix4, v: &FVector3) {
-    psp_vfpu_use_matrices(GUM_VFPU_CONTEXT, 0, VMAT0 | VMAT1);
+    get_context_unchecked().prepare(MatrixSet::empty(), MatrixSet::VMAT0 | MatrixSet::VMAT1);
 
     vfpu_asm!(
         lv_q C100,  0(a0);
@@ -367,7 +356,10 @@ pub unsafe fn gum_scale(m: &mut FMatrix4, v: &FVector3) {
 }
 
 pub unsafe fn gum_translate(m: &mut FMatrix4, v: &FVector3) {
-    psp_vfpu_use_matrices(GUM_VFPU_CONTEXT, 0, VMAT0 | VMAT1 | VMAT2);
+    get_context_unchecked().prepare(
+        MatrixSet::empty(),
+        MatrixSet::VMAT0 | MatrixSet::VMAT1 | MatrixSet::VMAT2,
+    );
 
     vfpu_asm!(
         lv_q C100,  0(a0);
@@ -390,7 +382,10 @@ pub unsafe fn gum_translate(m: &mut FMatrix4, v: &FVector3) {
 }
 
 pub unsafe fn gum_rotate_x(m: &mut FMatrix4, angle: f32) {
-    psp_vfpu_use_matrices(GUM_VFPU_CONTEXT, 0, VMAT0 | VMAT1 | VMAT2);
+    get_context_unchecked().prepare(
+        MatrixSet::empty(),
+        MatrixSet::VMAT0 | MatrixSet::VMAT1 | MatrixSet::VMAT2,
+    );
 
     vfpu_asm!(
         .mips "mfc1 $$t0, $1";
@@ -418,7 +413,10 @@ pub unsafe fn gum_rotate_x(m: &mut FMatrix4, angle: f32) {
 }
 
 pub unsafe fn gum_rotate_y(m: &mut FMatrix4, angle: f32) {
-    psp_vfpu_use_matrices(GUM_VFPU_CONTEXT, 0, VMAT0 | VMAT1 | VMAT2);
+    get_context_unchecked().prepare(
+        MatrixSet::empty(),
+        MatrixSet::VMAT0 | MatrixSet::VMAT1 | MatrixSet::VMAT2
+    );
 
     vfpu_asm!(
         .mips "mfc1 $$t0, $1";
@@ -447,10 +445,9 @@ pub unsafe fn gum_rotate_y(m: &mut FMatrix4, angle: f32) {
 
 #[no_mangle]
 pub unsafe extern fn gum_rotate_z(m: &mut FMatrix4, angle: f32) {
-    psp_vfpu_use_matrices(
-        GUM_VFPU_CONTEXT,
-        0,
-        VMAT0 | VMAT1 | VMAT2
+    get_context_unchecked().prepare(
+        MatrixSet::empty(),
+        MatrixSet::VMAT0 | MatrixSet::VMAT1 | MatrixSet::VMAT2
     );
 
     vfpu_asm!(
@@ -479,7 +476,7 @@ pub unsafe extern fn gum_rotate_z(m: &mut FMatrix4, angle: f32) {
 }
 
 pub unsafe fn gum_load_identity() -> FMatrix4 {
-    psp_vfpu_use_matrices(GUM_VFPU_CONTEXT, 0, VMAT0);
+    get_context_unchecked().prepare(MatrixSet::empty(), MatrixSet::VMAT0);
 
     let mut out = MaybeUninit::uninit();
 
@@ -497,10 +494,9 @@ pub unsafe fn gum_load_identity() -> FMatrix4 {
 }
 
 pub unsafe fn gum_fast_inverse(a: &FMatrix4) -> FMatrix4 {
-    psp_vfpu_use_matrices(
-        GUM_VFPU_CONTEXT,
-        0,
-        VMAT0 | VMAT1 | VMAT2
+    get_context_unchecked().prepare(
+        MatrixSet::empty(),
+        MatrixSet::VMAT0 | MatrixSet::VMAT1 | MatrixSet::VMAT2,
     );
 
     let mut out = MaybeUninit::uninit();
@@ -528,7 +524,10 @@ pub unsafe fn gum_fast_inverse(a: &FMatrix4) -> FMatrix4 {
 }
 
 pub unsafe fn gum_mult_matrix(a: &FMatrix4, b: &FMatrix4) -> FMatrix4 {
-    psp_vfpu_use_matrices(GUM_VFPU_CONTEXT, 0, VMAT0 | VMAT1 | VMAT2);
+    get_context_unchecked().prepare(
+        MatrixSet::empty(),
+        MatrixSet::VMAT0 | MatrixSet::VMAT1 | MatrixSet::VMAT2,
+    );
 
     let mut out = MaybeUninit::uninit();
 
@@ -557,7 +556,7 @@ pub unsafe fn gum_mult_matrix(a: &FMatrix4, b: &FMatrix4) -> FMatrix4 {
 }
 
 pub unsafe fn sce_gum_fast_inverse() {
-    psp_vfpu_use_matrices(GUM_VFPU_CONTEXT, VMAT3, VMAT0 | VMAT1);
+    get_context_unchecked().prepare(MatrixSet::VMAT3, MatrixSet::VMAT0 | MatrixSet::VMAT1);
 
     vfpu_asm!(
         vmidt_q M000;
@@ -575,7 +574,7 @@ pub unsafe fn sce_gum_fast_inverse() {
 pub unsafe fn sce_gum_full_inverse() {
     let mut t = MaybeUninit::uninit();
 
-    psp_vfpu_use_matrices(GUM_VFPU_CONTEXT, VMAT3, VMAT0 | VMAT1);
+    get_context_unchecked().prepare(MatrixSet::VMAT3, MatrixSet::VMAT0 | MatrixSet::VMAT1);
 
     vfpu_asm!(
         sv_q C300, a0;
@@ -601,12 +600,9 @@ pub unsafe fn sce_gum_full_inverse() {
 }
 
 pub unsafe fn sce_gum_load_identity() {
-    if GUM_VFPU_CONTEXT.is_null() {
-        // TODO
-        // gum_vfpucontext = pspvfpu_initcontext();
-    }
-
-    psp_vfpu_use_matrices(GUM_VFPU_CONTEXT, VMAT3, 0);
+    GUM_VFPU_CONTEXT
+        .get_or_insert_with(Context::new)
+        .prepare(MatrixSet::VMAT3, MatrixSet::empty());
 
     vfpu_asm!(vmidt_q M300; : : : : "volatile");
 
@@ -614,12 +610,9 @@ pub unsafe fn sce_gum_load_identity() {
 }
 
 pub unsafe fn sce_gum_load_matrix(m: &FMatrix4) {
-    if GUM_VFPU_CONTEXT.is_null() {
-        // TODO
-        // gum_vfpucontext = pspvfpu_initcontext();
-    }
-
-    psp_vfpu_use_matrices(GUM_VFPU_CONTEXT, VMAT3, 0);
+    GUM_VFPU_CONTEXT
+        .get_or_insert_with(Context::new)
+        .prepare(MatrixSet::VMAT3, MatrixSet::empty());
 
     vfpu_asm!(
         lv_q C300,  0(a0);
@@ -637,7 +630,7 @@ pub unsafe fn sce_gum_look_at(eye: &FVector3, center: &FVector3, up: &FVector3) 
     let mut t = gum_load_identity();
     gum_look_at(&mut t, eye, center, up);
 
-    psp_vfpu_use_matrices(GUM_VFPU_CONTEXT, VMAT3, VMAT0 | VMAT1);
+    get_context_unchecked().prepare(MatrixSet::VMAT3, MatrixSet::VMAT0 | MatrixSet::VMAT1);
 
     vfpu_asm!(
         lv_q C000, t0;
@@ -654,7 +647,7 @@ pub unsafe fn sce_gum_look_at(eye: &FVector3, center: &FVector3, up: &FVector3) 
 }
 
 pub unsafe fn sce_gum_matrix_mode(mode: Mode) {
-    psp_vfpu_use_matrices(GUM_VFPU_CONTEXT, VMAT3, 0);
+    get_context_unchecked().prepare(MatrixSet::VMAT3, MatrixSet::empty());
 
     vfpu_asm!(
         sv_q C300, t0;
@@ -682,7 +675,7 @@ pub unsafe fn sce_gum_matrix_mode(mode: Mode) {
 }
 
 pub unsafe fn sce_gum_mult_matrix(m: &FMatrix4) {
-    psp_vfpu_use_matrices(GUM_VFPU_CONTEXT, VMAT3, VMAT0 | VMAT1);
+    get_context_unchecked().prepare(MatrixSet::VMAT3, MatrixSet::VMAT0 | MatrixSet::VMAT1);
 
     vfpu_asm!(
         lv_q C000,  0(t0);
@@ -707,7 +700,7 @@ pub unsafe fn sce_gum_ortho(
     near: f32,
     far: f32
 ) {
-    psp_vfpu_use_matrices(GUM_VFPU_CONTEXT, VMAT3, VMAT0 | VMAT1);
+    get_context_unchecked().prepare(MatrixSet::VMAT3, MatrixSet::VMAT0 | MatrixSet::VMAT1);
 
     vfpu_asm!(
         .mips "mfc1 $$t0, $0";
@@ -752,7 +745,7 @@ pub unsafe fn sce_gum_ortho(
 }
 
 pub unsafe fn sce_gum_perspective(fovy: f32, aspect: f32, near: f32, far: f32) {
-    psp_vfpu_use_matrices(GUM_VFPU_CONTEXT, VMAT3, VMAT0 | VMAT1);
+    get_context_unchecked().prepare(MatrixSet::VMAT3, MatrixSet::VMAT0 | MatrixSet::VMAT1);
 
     vfpu_asm!(
         .mips "mfc1 $$t0, $0";
@@ -802,7 +795,7 @@ pub unsafe fn sce_gum_perspective(fovy: f32, aspect: f32, near: f32, far: f32) {
 
 pub unsafe fn sce_gum_pop_matrix() {
     GUM_CURRENT_MATRIX = GUM_CURRENT_MATRIX.offset(-1);
-    psp_vfpu_use_matrices(GUM_VFPU_CONTEXT, VMAT3, 0);
+    get_context_unchecked().prepare(MatrixSet::VMAT3, MatrixSet::empty());
 
     vfpu_asm!(
         lv_q C300,  0(t0);
@@ -818,7 +811,7 @@ pub unsafe fn sce_gum_pop_matrix() {
 
 pub unsafe fn sce_gum_push_matrix() {
     GUM_CURRENT_MATRIX = GUM_CURRENT_MATRIX.offset(1);
-    psp_vfpu_use_matrices(GUM_VFPU_CONTEXT, VMAT3, 0);
+    get_context_unchecked().prepare(MatrixSet::VMAT3, MatrixSet::empty());
 
     vfpu_asm!(
         sv_q C300,  0(t0);
@@ -831,7 +824,7 @@ pub unsafe fn sce_gum_push_matrix() {
 }
 
 pub unsafe fn sce_gum_rotate_x(angle: f32) {
-    psp_vfpu_use_matrices(GUM_VFPU_CONTEXT, VMAT3, VMAT0 | VMAT1);
+    get_context_unchecked().prepare(MatrixSet::VMAT3, MatrixSet::VMAT0 | MatrixSet::VMAT1);
 
     vfpu_asm!(
         .mips "mfc1 $$t0, $0";
@@ -851,7 +844,7 @@ pub unsafe fn sce_gum_rotate_x(angle: f32) {
 }
 
 pub unsafe fn sce_gum_rotate_y(angle: f32) {
-    psp_vfpu_use_matrices(GUM_VFPU_CONTEXT, VMAT3, VMAT0 | VMAT1);
+    get_context_unchecked().prepare(MatrixSet::VMAT3, MatrixSet::VMAT0 | MatrixSet::VMAT1);
 
     vfpu_asm!(
         .mips "mfc1 $$t0, $0";
@@ -871,7 +864,7 @@ pub unsafe fn sce_gum_rotate_y(angle: f32) {
 }
 
 pub unsafe fn sce_gum_rotate_z(angle: f32) {
-    psp_vfpu_use_matrices(GUM_VFPU_CONTEXT, VMAT3, VMAT0 | VMAT1);
+    get_context_unchecked().prepare(MatrixSet::VMAT3, MatrixSet::VMAT0 | MatrixSet::VMAT1);
 
     vfpu_asm!(
         .mips "mfc1 $$t0, $0";
@@ -891,7 +884,7 @@ pub unsafe fn sce_gum_rotate_z(angle: f32) {
 }
 
 pub unsafe fn sce_gum_scale(v: &FVector3) {
-    psp_vfpu_use_matrices(GUM_VFPU_CONTEXT, VMAT3, VMAT0);
+    get_context_unchecked().prepare(MatrixSet::VMAT3, MatrixSet::VMAT0);
 
     vfpu_asm!(
         lv_q C000, a0;
@@ -904,7 +897,7 @@ pub unsafe fn sce_gum_scale(v: &FVector3) {
 }
 
 pub unsafe fn sce_gum_store_matrix(m: &FMatrix4) {
-    psp_vfpu_use_matrices(GUM_VFPU_CONTEXT, VMAT3, VMAT0);
+    get_context_unchecked().prepare(MatrixSet::VMAT3, MatrixSet::VMAT0);
 
     vfpu_asm!(
         sv_q C300,  0(a0);
@@ -917,7 +910,7 @@ pub unsafe fn sce_gum_store_matrix(m: &FMatrix4) {
 }
 
 pub unsafe fn sce_gum_translate(v: &FVector3) {
-    psp_vfpu_use_matrices(GUM_VFPU_CONTEXT, VMAT3, VMAT0 | VMAT1);
+    get_context_unchecked().prepare(MatrixSet::VMAT3, MatrixSet::VMAT0 | MatrixSet::VMAT1);
 
     vfpu_asm!(
         vmidt_q M000;
@@ -936,7 +929,7 @@ pub unsafe fn sce_gum_update_matrix() {
     GUM_STACK_DEPTH[GUM_CURRENT_MODE as usize] = GUM_CURRENT_MATRIX;
 
     if GUM_CURRENT_MATRIX_UPDATE == 1 {
-        psp_vfpu_use_matrices(GUM_VFPU_CONTEXT, VMAT3, 0);
+        get_context_unchecked().prepare(MatrixSet::VMAT3, MatrixSet::empty());
 
         vfpu_asm!(
             sv_q C300,  0(t0);
