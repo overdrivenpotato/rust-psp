@@ -939,30 +939,6 @@ unsafe fn gum_look_at(
     gum_translate(&mut mat, &ieye);
 }
 
-unsafe fn gum_scale(m: &mut FMatrix4, v: &FVector3) {
-    get_context_unchecked().prepare(MatrixSet::empty(), MatrixSet::VMAT0 | MatrixSet::VMAT1);
-
-    vfpu_asm!(
-        lv_q C100,  0(a0);
-        lv_q C110, 16(a0);
-        lv_q C120, 32(a0);
-        lv_q C130, 48(a0);
-
-        lv_q C000, a1;
-
-        vscl_t C100, C100, S000;
-        vscl_t C110, C110, S001;
-        vscl_t C120, C120, S002;
-
-        sv_q C100,  0(a0);
-        sv_q C110, 16(a0);
-        sv_q C120, 32(a0);
-        sv_q C130, 48(a0);
-
-        : : "{a0}"(m), "{a1}"(v) : "memory" : "volatile"
-    );
-}
-
 unsafe fn gum_translate(m: &mut FMatrix4, v: &FVector3) {
     get_context_unchecked().prepare(
         MatrixSet::empty(),
@@ -986,99 +962,6 @@ unsafe fn gum_translate(m: &mut FMatrix4, v: &FVector3) {
         sv_q C230, 48(a0);
 
         : : "{a0}"(m), "{a1}"(v) : "memory" : "volatile"
-    );
-}
-
-unsafe fn gum_rotate_x(m: &mut FMatrix4, angle: f32) {
-    get_context_unchecked().prepare(
-        MatrixSet::empty(),
-        MatrixSet::VMAT0 | MatrixSet::VMAT1 | MatrixSet::VMAT2,
-    );
-
-    vfpu_asm!(
-        .mips "mfc1 $$t0, $1";
-
-        lv_q C200,  0(a0);
-        lv_q C210, 16(a0);
-        lv_q C220, 32(a0);
-        lv_q C230, 48(a0);
-
-        vmidt_q M000;
-        mtv t0, S100;
-        vcst_s S101, VFPU_2_PI;
-        vmul_s S100, S101, S100;
-        vrot_q C010, S100, [0, C, S, 0];
-        vrot_q C020, S100, [0,-S, C, 0];
-        vmmul_q M100, M200, M000;
-
-        sv_q C100,  0(a1);
-        sv_q C110, 16(a1);
-        sv_q C120, 32(a1);
-        sv_q C130, 48(a1);
-
-        : : "{a0}"(m), "f"(angle) : "t0", "memory" : "volatile"
-    );
-}
-
-unsafe fn gum_rotate_y(m: &mut FMatrix4, angle: f32) {
-    get_context_unchecked().prepare(
-        MatrixSet::empty(),
-        MatrixSet::VMAT0 | MatrixSet::VMAT1 | MatrixSet::VMAT2
-    );
-
-    vfpu_asm!(
-        .mips "mfc1 $$t0, $1";
-
-        lv_q C200,  0(a0);
-        lv_q C210, 16(a0);
-        lv_q C220, 32(a0);
-        lv_q C230, 48(a0);
-
-        vmidt_q M000;
-        mtv     t0, S100;
-        vcst_s  S101, VFPU_2_PI;
-        vmul_s  S100, S101, S100;
-        vrot_q  C000, S100, [C, 0,-S, 0];
-        vrot_q  C020, S100, [S, 0, C, 0];
-        vmmul_q M100, M200, M000;
-
-        sv_q C100,  0(a0);
-        sv_q C110, 16(a0);
-        sv_q C120, 32(a0);
-        sv_q C130, 48(a0);
-
-        : : "{a0}"(m), "f"(angle) : "t0", "memory" : "volatile"
-    );
-}
-
-unsafe fn gum_rotate_z(m: &mut FMatrix4, angle: f32) {
-    get_context_unchecked().prepare(
-        MatrixSet::empty(),
-        MatrixSet::VMAT0 | MatrixSet::VMAT1 | MatrixSet::VMAT2
-    );
-
-    vfpu_asm!(
-        .mips "mfc1 $$t0, $1";
-
-        lv_q C200,  0(a0);
-        lv_q C210, 16(a0);
-        lv_q C220, 32(a0);
-        lv_q C230, 48(a0);
-
-        vmidt_q M000;
-        mtv     t0, S100;
-        vcst_s  S101, VFPU_2_PI;
-        vmul_s  S100, S101, S100;
-        vrot_q  C000, S100, [ C, S, 0, 0];
-        vrot_q  C010, S100, [-S, C, 0, 0];
-        vmmul_q M100, M200, M000;
-
-        sv_q C100,  0(a0);
-        sv_q C110, 16(a0);
-        sv_q C120, 32(a0);
-        sv_q C130, 48(a0);
-
-        : : "{a0}"(m), "f"(angle) : "t0", "memory" : "volatile"
     );
 }
 
