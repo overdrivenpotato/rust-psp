@@ -30,11 +30,11 @@ extern crate alloc;
 extern crate panic_unwind;
 
 #[macro_use] pub mod debug;
+#[macro_use] pub mod vfpu;
 mod eabi;
 mod alloc_impl;
 pub mod panic;
 pub mod sys;
-pub mod vfpu;
 
 #[cfg(feature="emb-gfx")]
 pub mod framebuf_gfx;
@@ -187,32 +187,31 @@ macro_rules! module {
 
             #[no_mangle]
             extern "C" fn module_start(_argc: isize, _argv: *const *const u8) -> isize {
+                use $crate::sys::kernel::ThreadAttributes;
+                use core::ffi::c_void;
+
                 unsafe {
+                    extern fn main_thread(_argc: usize, _argv: *mut c_void) -> i32 {
+                        // TODO: Maybe print any error to debug screen?
+                        let _ = $crate::panic::catch_unwind(|| {
+                            super::psp_main();
+                        });
+
+                        0
+                    }
+
                     let id = $crate::sys::kernel::sce_kernel_create_thread(
                         &b"main_thread\0"[0],
-                        |_argc, _argv| {
-                            // TODO: Maybe print any error to debug screen?
-                            let _ = $crate::panic::catch_unwind(|| {
-                                super::psp_main();
-                            });
-
-                            0
-                        },
-
+                        main_thread,
                         // default priority of 32.
                         32,
-
                         // 256kb stack
                         256 * 1024,
-
-                        // PSP_THREAD_ATTR_USER
-                        0x8000_0000,
-
-                        // options?
-                        core::ptr::null(),
+                        ThreadAttributes::USER,
+                        core::ptr::null_mut(),
                     );
 
-                    $crate::sys::kernel::sce_kernel_start_thread(id, 0, core::ptr::null());
+                    $crate::sys::kernel::sce_kernel_start_thread(id, 0, core::ptr::null_mut());
                 }
 
                 0
@@ -226,33 +225,38 @@ macro_rules! module {
 /// This API does not have destructor support yet. You can manually setup an
 /// exit callback if you need this, see the source code of this function.
 pub fn enable_home_button() {
-    use core::ptr;
+    use core::{ptr, ffi::c_void};
+    use sys::kernel::ThreadAttributes;
 
     unsafe {
+        unsafe extern fn exit_thread(_args: usize, _argp: *mut c_void) -> i32 {
+            unsafe extern fn exit_callback(_arg1: i32, _arg2: i32, _arg: *mut c_void) -> i32 {
+                sys::kernel::sce_kernel_exit_game();
+                0
+            }
+
+            let id = sys::kernel::sce_kernel_create_callback(
+                &b"exit_callback\0"[0],
+                exit_callback,
+                ptr::null_mut(),
+            );
+
+            sys::kernel::sce_kernel_register_exit_callback(id);
+            sys::kernel::sce_kernel_sleep_thread_cb();
+
+            0
+        }
+
         // Enable the home button.
         let id = sys::kernel::sce_kernel_create_thread(
             &b"exit_thread\0"[0],
-            |_, _| {
-                let id = sys::kernel::sce_kernel_create_callback(
-                    &b"exit_callback"[0],
-                    |_, _, _| {
-                        sys::kernel::sce_kernel_exit_game();
-                        0
-                    },
-                    ptr::null(),
-                );
-
-                sys::kernel::sce_kernel_register_exit_callback(id);
-                sys::kernel::sce_kernel_sleep_thread_cb();
-
-                0
-            },
+            exit_thread,
             32,
             0x1000,
-            0,
-            ptr::null(),
+            ThreadAttributes::empty(),
+            ptr::null_mut(),
         );
 
-        sys::kernel::sce_kernel_start_thread(id, 0, ptr::null());
+        sys::kernel::sce_kernel_start_thread(id, 0, ptr::null_mut());
     }
 }

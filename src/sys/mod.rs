@@ -30,6 +30,8 @@ pub mod gum;
 // pub mod video;
 // pub mod nand;
 
+pub mod vfpu_context;
+
 use core::ffi::c_void;
 
 // http://uofw.github.io/uofw/structSceStubLibraryEntryTable.html

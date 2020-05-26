@@ -189,6 +189,7 @@ macro_rules! sys_lib {
                 {
                     // Get rid of warnings
                     $(let _arg = $arg;)*
+                    $(let _abi = $abi;)?
 
                     panic!("tried to call PSP system function on non-PSP target");
                 }
