@@ -25,6 +25,7 @@
 //!     - `sceMp3`: MP3 decoder API
 //!     - `sceRegistry`: PSP OS Registry API
 //!     - `sceOpenPSID`: Console identification API (unique to every console)
+//!     - `sceUtility`: Various utilities such as msg dialogs and savedata 
 
 #[macro_use]
 mod macros;
@@ -91,6 +92,9 @@ pub use registry::*;
 
 mod openpsid;
 pub use openpsid::*;
+
+mod utility;
+pub use utility::*;
 
 // These are not found (likely because this was tested in user mode on a PSP-2000).
 // pub mod sircs;
