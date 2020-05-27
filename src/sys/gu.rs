@@ -4,7 +4,10 @@ use core::ptr::null_mut;
 
 use num_enum::TryFromPrimitive;
 
-use crate::sys::ge::{GeBreakParam, GeCallbackData, GeContext, GeListArgs, GeStack, Command};
+use crate::sys::{
+    ge::{GeBreakParam, GeCallbackData, GeContext, GeListArgs, GeStack, Command},
+    kernel::SceUid,
+};
 use crate::sys::types::{FMatrix4, FVector3, IMatrix4, IVector4};
 
 pub const PI: f32 = 3.141593;
@@ -450,16 +453,16 @@ pub unsafe fn color(r: f32, g: f32, b: f32, a: f32) -> u32 {
     )
 }
 
-pub type GuCallback = Option<fn(id: i32, arg: *mut c_void)>;
-pub type GuSwapBuffersCallback = Option<fn(display: *mut *mut c_void, render: *mut *mut c_void)>;
+pub type GuCallback = Option<extern fn(id: i32, arg: *mut c_void)>;
+pub type GuSwapBuffersCallback = Option<extern fn(display: *mut *mut c_void, render: *mut *mut c_void)>;
 
 struct Settings {
     sig: GuCallback,
     fin: GuCallback,
     signal_history: [i16; 16],
     signal_offset: u32,
-    kernel_event_flag: u32,
-    ge_callback_id: u32,
+    kernel_event_flag: SceUid,
+    ge_callback_id: i32,
     swap_buffers_callback: GuSwapBuffersCallback,
     swap_buffers_behaviour: crate::sys::display::DisplaySetBufSync,
 }
@@ -612,7 +615,10 @@ static mut SETTINGS: Settings = Settings {
     fin: None,
     signal_history: [0; 16],
     signal_offset: 0,
-    kernel_event_flag: 0,
+
+    // Invalid UID until initialized.
+    kernel_event_flag: SceUid(-1),
+
     ge_callback_id: 0,
     swap_buffers_behaviour: crate::sys::display::DisplaySetBufSync::Immediate,
     swap_buffers_callback: None,
@@ -1218,7 +1224,7 @@ pub unsafe fn sce_gu_init() {
         Command::Nop,
     ];
 
-    static INIT_LIST: crate::Align16<[u32; 223]> = crate::Align16({
+    static mut INIT_LIST: crate::Align16<[u32; 223]> = crate::Align16({
         let mut out = [0; 223];
 
         let mut i = 0;
@@ -1230,14 +1236,14 @@ pub unsafe fn sce_gu_init() {
         out
     });
 
-    let callback = crate::sys::ge::GeCallbackData {
+    let mut callback = crate::sys::ge::GeCallbackData {
         signal_func: SETTINGS.sig,
         signal_arg: &mut SETTINGS as *mut _ as *mut c_void,
         finish_func: SETTINGS.fin,
         finish_arg: &mut SETTINGS as *mut _ as *mut c_void,
     };
-    SETTINGS.ge_callback_id = crate::sys::ge::sce_ge_set_callback(&mut callback) as u32;
 
+    SETTINGS.ge_callback_id = crate::sys::ge::sce_ge_set_callback(&mut callback);
     SETTINGS.swap_buffers_callback = None;
     SETTINGS.swap_buffers_behaviour = super::display::DisplaySetBufSync::Immediate;
 
@@ -1259,7 +1265,7 @@ pub unsafe fn sce_gu_init() {
         super::kernel::EventFlagAttributes::WAIT_MULTIPLE,
         3,
         null_mut()
-    ).0 as u32;
+    );
 
     super::ge::sce_ge_list_sync(GE_LIST_EXECUTED[0], 0);
 }
@@ -1268,7 +1274,10 @@ pub unsafe fn sce_gu_init() {
 ///
 /// Called when GU is no longer needed
 pub unsafe fn sce_gu_term() {
-    unimplemented!()
+    use crate::sys::{ge, kernel};
+
+    kernel::sce_kernel_delete_event_flag(SETTINGS.kernel_event_flag);
+    ge::sce_ge_unset_callback(SETTINGS.ge_callback_id);
 }
 
 pub unsafe fn sce_gu_break(_a0: i32) {
@@ -1296,8 +1305,8 @@ pub unsafe fn sce_gu_continue() {
 /// The old callback handler
 pub unsafe fn sce_gu_set_callback(
     signal: CallbackId,
-    callback: Option<fn(arg1: i32)>,
-) -> Option<fn(arg1: i32)> {
+    callback: GuCallback,
+) -> GuCallback {
     let old_callback: GuCallback;
 
     match signal {

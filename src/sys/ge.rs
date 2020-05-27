@@ -15,9 +15,9 @@ pub struct GeStack {
 #[repr(C)]
 /// Structure to hold the callback data
 pub struct GeCallbackData {
-    pub signal_func: Option<fn(id: i32, arg: *mut c_void)>,
+    pub signal_func: Option<extern fn(id: i32, arg: *mut c_void)>,
     pub signal_arg: *mut c_void,
-    pub finish_func: Option<fn(id: i32, arg: *mut c_void)>,
+    pub finish_func: Option<extern fn(id: i32, arg: *mut c_void)>,
     pub finish_arg: *mut c_void,
 }
 
