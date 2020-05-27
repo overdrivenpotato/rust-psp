@@ -2719,7 +2719,7 @@ pub unsafe fn sce_gu_tex_image(mipmap: i32, width: i32, height: i32, tbw: i32, t
 pub unsafe fn sce_gu_tex_level_mode(mode: TextureLevelMode, bias: f32) {
     // Linker error if this is not here.
     #[no_mangle]
-    unsafe extern fn trunc(mut x: f32) -> f32 {
+    unsafe extern fn truncf(mut x: f32) -> f32 {
         llvm_asm!("cvt.w.s $0, $0" : "+f"(x));
         x
     }
