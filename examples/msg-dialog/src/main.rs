@@ -14,6 +14,7 @@ use core::ffi::c_void;
 
 psp::module!("sample_module", 1, 1);
 
+
 unsafe extern "C" fn exit_callback(_arg1: i32, _arg2: i32, _common: *mut c_void) -> i32 {
     kernel::sce_kernel_exit_game();
     0
@@ -33,7 +34,7 @@ unsafe extern "C" fn update_callback(_argc: usize, _argv: *mut c_void) -> i32 {
 }
 
 fn psp_main() {
-    //psp::enable_home_button();
+    psp::dprintln!("test");
 
     let thid: SceUid;
     let callback_name: &[u8; 14] = b"update_thread\0";
@@ -66,7 +67,7 @@ fn psp_main() {
     };
     
     let mut msg: [u8; 512] = [0u8; 512];
-    msg.copy_from_slice(b"Hello from a Rust-created PSP Msg Dialog");
+    msg[..40].copy_from_slice(b"Hello from a Rust-created PSP Msg Dialog");
 
     let mut msg_dialog = MsgDialogParams {
         base,
