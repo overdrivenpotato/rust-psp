@@ -450,7 +450,7 @@ pub unsafe fn color(r: f32, g: f32, b: f32, a: f32) -> u32 {
     )
 }
 
-pub type GuCallback = Option<fn(arg: i32)>;
+pub type GuCallback = Option<fn(id: i32, arg: *mut c_void)>;
 pub type GuSwapBuffersCallback = Option<fn(display: *mut *mut c_void, render: *mut *mut c_void)>;
 
 struct Settings {
@@ -735,6 +735,51 @@ pub unsafe fn send_command_i_stall(cmd: Command, argument: i32) {
 pub unsafe fn draw_region(x: i32, y: i32, width: i32, height: i32) {
     send_command_i(Command::Region1, (y << 10) | x);
     send_command_i(Command::Region2, (((y + height) - 1) << 10) | ((x + width) - 1));
+}
+
+pub unsafe fn reset_values() {
+    INIT = 0;
+    STATES = 0;
+    CURRENT_FRAME = 0;
+    OBJECT_STACK_DEPTH = 0;
+    DISPLAY_ON = false;
+    CALL_MODE = 0;
+    DRAW_BUFFER.pixel_size = PixelFormat::Psm5551;
+    DRAW_BUFFER.frame_width = 0;
+    DRAW_BUFFER.frame_buffer = null_mut();
+    DRAW_BUFFER.disp_buffer = null_mut();
+    DRAW_BUFFER.depth_buffer = null_mut();
+    DRAW_BUFFER.depth_width = 0;
+    DRAW_BUFFER.width = 480;
+    DRAW_BUFFER.height = 272;
+
+    for i in 0..3 {
+        let context = &mut CONTEXTS[i];
+        context.scissor_enable = 0;
+        context.scissor_start[0] = 0;
+        context.scissor_start[1] = 0;
+        context.scissor_end[0] = 0;
+        context.scissor_end[1] = 0;
+
+        context.near_plane = 0;
+        context.far_plane = 1;
+
+        context.depth_offset = 0;
+        context.fragment_2x = 0;
+        context.texture_function = 0;
+        context.texture_proj_map_mode = 0;
+        context.texture_map_mode = 0;
+        context.sprite_mode[0] = 0;
+        context.sprite_mode[1] = 0;
+        context.sprite_mode[2] = 0;
+        context.sprite_mode[3] = 0;
+        context.clear_color = 0;
+        context.clear_stencil = 0;
+        context.clear_depth = 0xffff;
+        context.texture_mode = 0;
+    }
+    SETTINGS.sig = None;
+    SETTINGS.fin = None;
 }
 
 /// Set depth buffer parameters
@@ -1185,7 +1230,38 @@ pub unsafe fn sce_gu_init() {
         out
     });
 
-    unimplemented!()
+    let callback = crate::sys::ge::GeCallbackData {
+        signal_func: SETTINGS.sig,
+        signal_arg: &mut SETTINGS as *mut _ as *mut c_void,
+        finish_func: SETTINGS.fin,
+        finish_arg: &mut SETTINGS as *mut _ as *mut c_void,
+    };
+    SETTINGS.ge_callback_id = crate::sys::ge::sce_ge_set_callback(&mut callback) as u32;
+
+    SETTINGS.swap_buffers_callback = None;
+    SETTINGS.swap_buffers_behaviour = super::display::DisplaySetBufSync::Immediate;
+
+    GE_EDRAM_ADDRESS = super::ge::sce_ge_edram_get_addr() as *mut c_void;
+
+    GE_LIST_EXECUTED[0] = super::ge::sce_ge_list_enqueue(
+        (
+            &mut INIT_LIST as *mut crate::Align16<[u32;223]> as u32 & 0x1fffffff
+        ) as *mut c_void,
+        core::ptr::null_mut(),
+        SETTINGS.ge_callback_id as i32,
+        core::ptr::null_mut()
+    );
+
+    reset_values();
+
+    SETTINGS.kernel_event_flag = super::kernel::sce_kernel_create_event_flag(
+        b"SceGuSignal\0" as *const u8,
+        super::kernel::EventFlagAttributes::WAIT_MULTIPLE,
+        3,
+        null_mut()
+    ).0 as u32;
+
+    super::ge::sce_ge_list_sync(GE_LIST_EXECUTED[0], 0);
 }
 
 /// Shutdown the GU system
