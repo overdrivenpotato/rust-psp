@@ -2717,6 +2717,13 @@ pub unsafe fn sce_gu_tex_image(mipmap: i32, width: i32, height: i32, tbw: i32, t
 /// - `mode`: Which mode to use, one of TextureLevelMode
 /// - `bias`: Which mipmap bias to use
 pub unsafe fn sce_gu_tex_level_mode(mode: TextureLevelMode, bias: f32) {
+    // Linker error if this is not here.
+    #[no_mangle]
+    unsafe extern fn trunc(mut x: f32) -> f32 {
+        llvm_asm!("cvt.w.s $0, $0" : "+f"(x));
+        x
+    }
+
     let mut offset = core::intrinsics::truncf32(bias * 16.0) as i32;
 
     if offset >= 128 {
@@ -2724,6 +2731,7 @@ pub unsafe fn sce_gu_tex_level_mode(mode: TextureLevelMode, bias: f32) {
     } else if offset < -128 {
         offset = -128;
     }
+
     send_command_i(Command::TexLevel, (((offset as u32) << 16) | mode as u32) as i32);
 }
 
