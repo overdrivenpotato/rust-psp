@@ -17,6 +17,7 @@ pub mod umd;
 pub mod mpeg;
 pub mod hprm;
 pub mod gu;
+pub mod gum;
 pub mod types;
 
 // These fail with a bus error when being loaded (tested in user mode on a PSP-2000).
@@ -30,6 +31,8 @@ pub mod types;
 // pub mod sircs;
 // pub mod video;
 // pub mod nand;
+
+pub mod vfpu_context;
 
 use core::ffi::c_void;
 
