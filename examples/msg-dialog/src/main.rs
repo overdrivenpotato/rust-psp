@@ -86,12 +86,14 @@ fn psp_main() {
     }
 
     loop {
+        let status = unsafe {utility::sce_utility_msg_dialog_get_status()};
+        psp::dprintln!("{}", status);
         // TODO figure out these values
-        match unsafe {utility::sce_utility_msg_dialog_get_status()} {
+        match status {
             2 => unsafe{utility::sce_utility_msg_dialog_update(1)},
             3 => unsafe{utility::sce_utility_msg_dialog_shutdown_start()},
             0 => break,
-            _ => (),
+            _ => {},
         }
         unsafe {display::sce_display_wait_vblank_start();}
     }
