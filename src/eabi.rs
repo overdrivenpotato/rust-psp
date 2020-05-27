@@ -2,17 +2,17 @@ extern {
     /// Call a function accepting 5 32-bit integer arguments via the MIPS-EABI ABI.
     ///
     /// This is not safe to call with a function that expects any other ABI.
-    pub fn i5(a: u32, b: u32, c: u32, d: u32, e: u32, ptr: fn(u32, u32, u32, u32, u32) -> u32) -> u32;
+    pub fn i5(a: u32, b: u32, c: u32, d: u32, e: u32, ptr: extern fn(u32, u32, u32, u32, u32) -> u32) -> u32;
 
     /// Call a function accepting 6 32-bit integer arguments via the MIPS-EABI ABI.
     ///
     /// This is not safe to call with a function that expects any other ABI.
-    pub fn i6(a: u32, b: u32, c: u32, d: u32, e: u32, f: u32, ptr: fn(u32, u32, u32, u32, u32, u32) -> u32) -> u32;
+    pub fn i6(a: u32, b: u32, c: u32, d: u32, e: u32, f: u32, ptr: extern fn(u32, u32, u32, u32, u32, u32) -> u32) -> u32;
 
     /// Call a function accepting 7 32-bit integer arguments via the MIPS-EABI ABI.
     ///
     /// This is not safe to call with a function that expects any other ABI.
-    pub fn i7(a: u32, b: u32, c: u32, d: u32, e: u32, f: u32, g: u32, ptr: fn(u32, u32, u32, u32, u32, u32, u32) -> u32) -> u32;
+    pub fn i7(a: u32, b: u32, c: u32, d: u32, e: u32, f: u32, g: u32, ptr: extern fn(u32, u32, u32, u32, u32, u32, u32) -> u32) -> u32;
 }
 
 // Potential resource:
