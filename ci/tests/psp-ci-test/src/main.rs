@@ -10,6 +10,8 @@ fn psp_main() {
     psp::enable_home_button();
     let fd = init_tests();
     test_hello(&fd);
+    psp::dprintln!("hello");
+    test_screenshot();
     test_panic(&fd);
     end_tests(fd);
 }
@@ -18,7 +20,8 @@ fn init_tests() -> SceUid {
     let buf = b"host0:/psp-ci-test.test\0";
     unsafe {
         let fd = psp::sys::io::sce_io_open(
-            buf as *const u8, psp::sys::io::OpenFlags::CREAT |
+            buf as *const u8,
+            psp::sys::io::OpenFlags::CREAT |
             psp::sys::io::OpenFlags::RD_WR, 0o777
         );
         return fd
@@ -46,5 +49,22 @@ fn test_panic(fd: &SceUid) {
                 b"Panics work\n" as *const u8 as *const c_void, 12
             );
         }
+    }
+}
+
+fn test_screenshot() {
+    let screenshot = psp::screenshot();
+    unsafe {
+        let fd = psp::sys::io::sce_io_open(
+            b"host0:/psp-ci-test.bmp\0" as *const u8,
+            psp::sys::io::OpenFlags::CREAT |
+            psp::sys::io::OpenFlags::RD_WR, 0o777
+        );
+        psp::sys::io::sce_io_write(
+            fd,
+            &screenshot as *const _ as *const c_void,
+            557110
+        );
+        psp::sys::io::sce_io_close(fd);
     }
 }

@@ -32,6 +32,8 @@ mod eabi;
 mod alloc_impl;
 pub mod panic;
 pub mod sys;
+mod screenshot;
+pub use screenshot::*;
 
 #[cfg(feature="emb-gfx")]
 pub mod framebuf_gfx;
