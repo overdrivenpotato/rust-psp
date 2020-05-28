@@ -7,16 +7,23 @@ pub struct BmpHeader {
     pub reserved_1: u16,
     pub reserved_2: u16,
     pub image_data_start: u32,
+    pub dib_header_size: u32,
     pub image_width: u32,
     pub image_height: u32,
+    pub color_planes: u16,
     pub bpp: u16,
+    pub compression: u32,
     pub image_data_len: u32,
+    pub print_resolution_x: u32,
+    pub print_resolution_y: u32, 
+    pub palette_color_count: u32,
+    pub important_colors: u32,
 }
 
 impl BmpHeader {
-    fn to_bytes(self) -> [u8; 28] {
+    fn to_bytes(self) -> [u8; 54] {
         unsafe {
-            core::mem::transmute::<BmpHeader, [u8;28]>(self)
+            core::mem::transmute::<BmpHeader, [u8;54]>(self)
         }
     }
 }
@@ -92,14 +99,21 @@ pub fn raw_screenshot() -> [u8; 512*272*4] {
 pub fn screenshot() -> [u8; 54+512*272*4] {
     let bmp_header = BmpHeader {
         file_type: *b"BM",
-        file_size: 557110,
+        file_size: 54+512*272*4,
         reserved_1: 0,
         reserved_2: 0,
         image_data_start: 54,
+        dib_header_size: 40,
         image_width: 512,
         image_height: 272,
+        color_planes: 1,
         bpp: 32,
-        image_data_len: 512*272*4 
+        compression: 0,
+        image_data_len: 512*272*4,
+        print_resolution_x: 2835, // 72 DPI,
+        print_resolution_y: 2835, // 72 DPI,
+        palette_color_count: 0,
+        important_colors: 0
     };
 
     let mut screenshot_buffer = [0u8; 54+512*272*4];
