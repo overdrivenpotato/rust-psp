@@ -1,12 +1,25 @@
 use core::ffi::c_void;
 
-static BMP_HEADER: [u8;54] = [
-    0x42, 0x4D, 0x36, 0x80, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x36, 0x00,
-    0x00, 0x00, 0x28, 0x00, 0x00, 0x00, 0x00, 0x02, 0x00, 0x00, 0x10, 0x01,
-    0x00, 0x00, 0x01, 0x00, 0x20, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0x80,
-    0x08, 0x00, 0x12, 0x0B, 0x00, 0x00, 0x12, 0x0B, 0x00, 0x00, 0x00, 0x00,
-    0x00, 0x00, 0x00, 0x00, 0x00, 0x00
-];
+#[repr(C, packed)]
+pub struct BmpHeader {
+    pub file_type: [u8; 2],
+    pub file_size: u32,
+    pub reserved_1: u16,
+    pub reserved_2: u16,
+    pub image_data_start: u32,
+    pub image_width: u32,
+    pub image_height: u32,
+    pub bpp: u16,
+    pub image_data_len: u32,
+}
+
+impl BmpHeader {
+    fn to_bytes(self) -> [u8; 28] {
+        unsafe {
+            core::mem::transmute::<BmpHeader, [u8;28]>(self)
+        }
+    }
+}
 
 #[inline]
 fn extract_bits(value: u32, offset: u32, size: usize) -> u32 {
@@ -77,8 +90,20 @@ pub fn raw_screenshot() -> [u8; 512*272*4] {
 }
 
 pub fn screenshot() -> [u8; 54+512*272*4] {
+    let bmp_header = BmpHeader {
+        file_type: *b"BM",
+        file_size: 557110,
+        reserved_1: 0,
+        reserved_2: 0,
+        image_data_start: 54,
+        image_width: 512,
+        image_height: 272,
+        bpp: 32,
+        image_data_len: 512*272*4 
+    };
+
     let mut screenshot_buffer = [0u8; 54+512*272*4];
-    screenshot_buffer[0..54].copy_from_slice(&BMP_HEADER);
+    screenshot_buffer[0..54].copy_from_slice(&bmp_header.to_bytes());
     screenshot_buffer[54..].copy_from_slice(&raw_screenshot());
     screenshot_buffer
 }
