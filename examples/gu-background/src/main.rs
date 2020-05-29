@@ -2,60 +2,60 @@
 #![no_main]
 
 use core::ffi::c_void;
-use psp::sys::gu::PixelFormat;
-use psp::sys::ge;
+use gu::PixelFormat;
+use psp::sys::{ge, gu};
 
 psp::module!("gu_background", 1, 1);
 
-static mut list: psp::Align16<[u32; 262144]> = psp::Align16([0;262144]);
+static mut LIST: psp::Align16<[u32; 262144]> = psp::Align16([0;262144]);
 
 fn psp_main() {
     psp::enable_home_button();
 
     unsafe {
-        let fbp0 = get_static_vram_buffer(512, 272, psp::sys::gu::PixelFormat::Psm8888);
-        let fbp1 = get_static_vram_buffer(512, 272, psp::sys::gu::PixelFormat::Psm8888);
-        let zbp = get_static_vram_buffer(512, 272, psp::sys::gu::PixelFormat::Psm4444);
+        let fbp0 = get_static_vram_buffer(512, 272, gu::PixelFormat::Psm8888);
+        let fbp1 = get_static_vram_buffer(512, 272, gu::PixelFormat::Psm8888);
+        let zbp = get_static_vram_buffer(512, 272, gu::PixelFormat::Psm4444);
 
-        psp::sys::gu::sce_gu_init();
-        psp::sys::gu::sce_gu_start(
-            psp::sys::gu::Context::Direct as i32,
-            &mut list as *mut _ as *mut c_void
+        gu::sce_gu_init();
+        gu::sce_gu_start(
+            gu::Context::Direct,
+            &mut LIST as *mut _ as *mut c_void
         );
-        psp::sys::gu::sce_gu_draw_buffer(psp::sys::gu::PixelFormat::Psm8888, fbp0, 512);
-        psp::sys::gu::sce_gu_disp_buffer(480, 272, fbp1, 512);
-        psp::sys::gu::sce_gu_depth_buffer(zbp, 512);
-        psp::sys::gu::sce_gu_offset(2048 - (480/2), 2048 - (272/2));
-        psp::sys::gu::sce_gu_viewport(2048, 2048, 480, 272);
-        psp::sys::gu::sce_gu_depth_range(65535, 0);
-        psp::sys::gu::sce_gu_scissor(0, 0, 480, 272);
-        psp::sys::gu::sce_gu_enable(psp::sys::gu::State::ScissorTest);
-        psp::sys::gu::sce_gu_finish();
-        psp::sys::gu::sce_gu_sync(
-            psp::sys::gu::SyncMode::SyncFinish,
-            psp::sys::gu::SyncBehaviorWhat::SyncWhatDone
+        gu::sce_gu_draw_buffer(gu::PixelFormat::Psm8888, fbp0, 512);
+        gu::sce_gu_disp_buffer(480, 272, fbp1, 512);
+        gu::sce_gu_depth_buffer(zbp, 512);
+        gu::sce_gu_offset(2048 - (480/2), 2048 - (272/2));
+        gu::sce_gu_viewport(2048, 2048, 480, 272);
+        gu::sce_gu_depth_range(65535, 0);
+        gu::sce_gu_scissor(0, 0, 480, 272);
+        gu::sce_gu_enable(gu::State::ScissorTest);
+        gu::sce_gu_finish();
+        gu::sce_gu_sync(
+            gu::SyncMode::SyncFinish,
+            gu::SyncBehaviorWhat::SyncWhatDone
         );
         psp::sys::display::sce_display_wait_vblank_start();
-        psp::sys::gu::sce_gu_display(true);
+        gu::sce_gu_display(true);
 
         loop {
-            psp::sys::gu::sce_gu_start(
-                psp::sys::gu::Context::Direct as i32,
-                &mut list as *mut _ as *mut c_void
+            gu::sce_gu_start(
+                gu::Context::Direct,
+                &mut LIST as *mut _ as *mut c_void
             );
-            psp::sys::gu::sce_gu_clear_color(0xff554433);
-            psp::sys::gu::sce_gu_clear_depth(0);
-            psp::sys::gu::sce_gu_clear(
-                psp::sys::gu::ClearBuffer::COLOR_BUFFER_BIT |
-                psp::sys::gu::ClearBuffer::DEPTH_BUFFER_BIT
+            gu::sce_gu_clear_color(0xff554433);
+            gu::sce_gu_clear_depth(0);
+            gu::sce_gu_clear(
+                gu::ClearBuffer::COLOR_BUFFER_BIT |
+                gu::ClearBuffer::DEPTH_BUFFER_BIT
             );
-            psp::sys::gu::sce_gu_finish();
-            psp::sys::gu::sce_gu_sync(
-                psp::sys::gu::SyncMode::SyncFinish,
-                psp::sys::gu::SyncBehaviorWhat::SyncWhatDone
+            gu::sce_gu_finish();
+            gu::sce_gu_sync(
+                gu::SyncMode::SyncFinish,
+                gu::SyncBehaviorWhat::SyncWhatDone
             );
             psp::sys::display::sce_display_wait_vblank_start();
-            psp::sys::gu::sce_gu_swap_buffers();
+            gu::sce_gu_swap_buffers();
         }
     }
 }
