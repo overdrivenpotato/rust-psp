@@ -14,6 +14,7 @@ pub const PI: f32 = 3.141593;
 
 /// Primitive types
 #[repr(u32)]
+#[derive(Copy, Clone, Debug)]
 pub enum Primitive {
     Points = 0,
     Lines = 1,
@@ -2980,14 +2981,14 @@ pub unsafe fn sce_gu_viewport(cx: i32, cy: i32, width: i32, height: i32) {
 /// - `indices`: Pointer to index buffer
 /// - `vertices`: Pointer to vertex buffer
 pub unsafe fn sce_gu_draw_bezier(
-    vtype: i32,
-    ucount: i32,
-    vcount: i32,
+    v_type: VertexType,
+    u_count: i32,
+    v_count: i32,
     indices: *const c_void,
     vertices: *const c_void,
 ) {
-    if vtype != 0 {
-        send_command_i(Command::VertexType, vtype);
+    if !v_type.is_empty() {
+        send_command_i(Command::VertexType, v_type.bits());
     }
 
     if !indices.is_null() {
@@ -3000,7 +3001,7 @@ pub unsafe fn sce_gu_draw_bezier(
         send_command_i(Command::Vaddr, ((vertices as u32) & 0xffffff) as i32);
     }
 
-    send_command_i(Command::Bezier, (((vcount as u32) << 8) | (ucount as u32)) as i32);
+    send_command_i(Command::Bezier, (((v_count as u32) << 8) | (u_count as u32)) as i32);
 }
 
 /// Set dividing for patches (beziers and splines)
@@ -3032,16 +3033,16 @@ pub unsafe fn sce_gu_patch_prim(prim: Primitive) {
 }
 
 pub unsafe fn sce_gu_draw_spline(
-    vtype: i32,
-    ucount: i32,
-    vcount: i32,
-    uedge: i32,
-    vedge: i32,
+    v_type: VertexType,
+    u_count: i32,
+    v_count: i32,
+    u_edge: i32,
+    v_edge: i32,
     indices: *const c_void,
     vertices: *const c_void,
 ) {
-    if vtype != 0 {
-        send_command_i(Command::VertexType, vtype);
+    if !v_type.is_empty() {
+        send_command_i(Command::VertexType, v_type.bits());
     }
 
     if !indices.is_null() {
@@ -3056,7 +3057,7 @@ pub unsafe fn sce_gu_draw_spline(
 
     send_command_i(
         Command::Spline,
-        (((vedge as u32) << 18) | ((uedge as u32) << 16) | ((vcount as u32) << 8) | (ucount as u32))
+        (((v_edge as u32) << 18) | ((u_edge as u32) << 16) | ((v_count as u32) << 8) | (u_count as u32))
             as i32,
     );
 }
@@ -3159,7 +3160,7 @@ pub unsafe fn sce_gu_morph_weight(index: i32, weight: f32) {
 }
 
 pub unsafe fn sce_gu_draw_array_n(
-    primitive_type: i32,
+    primitive_type: Primitive,
     v_type: VertexType,
     count: i32,
     a3: i32,
@@ -3182,9 +3183,9 @@ pub unsafe fn sce_gu_draw_array_n(
 
     if a3 > 0 {
         for _ in 1..a3 {
-            send_command_i(Command::Prim, (primitive_type << 16) | count);
+            send_command_i(Command::Prim, ((primitive_type as i32) << 16) | count);
         }
 
-        send_command_i_stall(Command::Prim, (primitive_type << 16) | count);
+        send_command_i_stall(Command::Prim, ((primitive_type as i32) << 16) | count);
     }
 }

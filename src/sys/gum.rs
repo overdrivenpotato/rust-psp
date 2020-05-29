@@ -1,5 +1,5 @@
 use crate::vfpu_asm;
-use crate::sys::vfpu_context::{Context, MatrixSet};
+use crate::sys::{gu, vfpu_context::{Context, MatrixSet}};
 use core::{ptr, mem::MaybeUninit, ffi::c_void};
 
 // TODO: Replace this with the definiton in `gu` once merged.
@@ -332,59 +332,51 @@ pub union Matrix4 {
 pub const EPSILON: f32 = 0.00001;
 
 pub unsafe fn sce_gum_draw_array(
-    _prim: i32,
-    _v_type: i32,
-    _count: i32,
-    _indices: *const c_void,
-    _vertices: *const c_void,
+    prim: gu::Primitive,
+    v_type: gu::VertexType,
+    count: i32,
+    indices: *const c_void,
+    vertices: *const c_void,
 ) {
-  sce_gum_update_matrix();
-
-  // sceGuDrawArray(prim,v_type,count,indices,vertices);
-  todo!()
+    sce_gum_update_matrix();
+    gu::sce_gu_draw_array(prim, v_type, count, indices, vertices);
 }
 
 pub unsafe fn sce_gum_draw_array_n(
-    _prim: i32,
-    _v_type: i32,
-    _count: i32,
-    _a3: i32,
-    _indices: *const c_void,
-    _vertices: *const c_void,
+    prim: gu::Primitive,
+    v_type: gu::VertexType,
+    count: i32,
+    a3: i32,
+    indices: *const c_void,
+    vertices: *const c_void,
 ) {
-  sce_gum_update_matrix();
-
-  // sceGuDrawArrayN(prim,vtype,count,a3,indices,vertices);
-  todo!()
+    sce_gum_update_matrix();
+    gu::sce_gu_draw_array_n(prim, v_type, count, a3, indices, vertices);
 }
 
 pub unsafe fn sce_gum_draw_bezier(
-    _v_type: i32,
-    _u_count: i32,
-    _v_count: i32,
-    _indices: *const c_void,
-    _vertices: *const c_void,
+    v_type: gu::VertexType,
+    u_count: i32,
+    v_count: i32,
+    indices: *const c_void,
+    vertices: *const c_void,
 ) {
-  sce_gum_update_matrix();
-
-  // sceGuDrawBezier(vtype,ucount,vcount,indices,vertices);
-  todo!()
+    sce_gum_update_matrix();
+    gu::sce_gu_draw_bezier(v_type, u_count, v_count, indices, vertices);
 }
 
 pub unsafe fn sce_gum_draw_spline(
-    _v_type: i32,
-    _u_count: i32,
-    _v_count: i32,
-    _u_edge: i32,
-    _v_edge: i32,
-    _indices: *const c_void,
-    _vertices: *const c_void,
+    v_type: gu::VertexType,
+    u_count: i32,
+    v_count: i32,
+    u_edge: i32,
+    v_edge: i32,
+    indices: *const c_void,
+    vertices: *const c_void,
 ) {
-  sce_gum_update_matrix();
-
-  // sceGuDrawSpline(vtype,ucount,vcount,uedge,vedge,indices,vertices);
-  todo!()
-}
+    sce_gum_update_matrix();
+    gu::sce_gu_draw_spline(v_type, u_count, v_count, u_edge, v_edge, indices, vertices);
+}  
 
 pub unsafe fn sce_gum_fast_inverse() {
     get_context_unchecked().prepare(MatrixSet::VMAT3, MatrixSet::VMAT0 | MatrixSet::VMAT1);
