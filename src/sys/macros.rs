@@ -21,7 +21,7 @@ macro_rules! stub {
     ($name:ident, $section:expr) => {
         global_asm!(concat!(
             "
-                .section ", $section, "
+                .section ", $section, ", \"ax\", @progbits
                 .global ", stringify!($name), "
                 ", stringify!($name), ":
                     jr $ra
@@ -135,7 +135,7 @@ macro_rules! sys_lib {
             #[no_mangle]
             static [< __ $lib_name _STUB >] : $crate::sys::SceStubLibraryEntry = $crate::sys::SceStubLibraryEntry {
                 name: expr! { & [< __ $lib_name _RESIDENT >] [0] },
-                version: [$lib_major_version, $lib_minor_version],
+                version: [$lib_minor_version, $lib_major_version],
                 flags: $lib_flags,
                 len: 5,
                 v_stub_count: 0,
