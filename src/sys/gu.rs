@@ -129,9 +129,9 @@ bitflags::bitflags! {
         const VERTICES8 = Self::num_vertices(8);
 
         /// Coordinate is passed directly to the rasterizer
-        const TRANSFORM_2D = 0;
+        const TRANSFORM_2D = 1 << 23;
         /// Coordinate is transformed before passed to rasterizer
-        const TRANSFORM_3D = 1 << 23;
+        const TRANSFORM_3D = 0;
     }
 }
 
@@ -2455,8 +2455,8 @@ pub unsafe fn sce_gu_specular(power: f32) {
 /// - `order`: Which order to use
 pub unsafe fn sce_gu_front_face(order: FrontFaceDirection) {
     match order {
-        FrontFaceDirection::Clockwise => send_command_i(Command::Cull, 0),
-        FrontFaceDirection::CounterClockwise => send_command_i(Command::Cull, 1),
+        FrontFaceDirection::CounterClockwise => send_command_i(Command::Cull, 0),
+        FrontFaceDirection::Clockwise => send_command_i(Command::Cull, 1),
     }
 }
 
