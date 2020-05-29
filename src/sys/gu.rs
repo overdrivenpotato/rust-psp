@@ -61,95 +61,88 @@ pub enum MatrixMode {
     Texture = 3,
 }
 
-// Vertex Declarations Begin
-const fn texture_shift(n: u32) -> u32 {
-    n << 0
+bitflags::bitflags! {
+    /// The vertex type decides how the vertices align and what kind of
+    /// information they contain.
+    pub struct VertexType: i32 {
+        /// 8-bit texture coordinates
+        const TEXTURE_8BIT = 1;
+        /// 16-bit texture coordinates
+        const TEXTURE_16BIT = 2;
+        /// 32-bit texture coordinates (float)
+        const TEXTURE_32BITF = 3;
+
+        /// 16-bit color (R5G6B5A0)
+        const COLOR_5650 = 4 << 2;
+        /// 16-bit color (R5G5B5A1)
+        const COLOR_5551 = 5 << 2;
+        /// 16-bit color (R4G4B4A4)
+        const COLOR_4444 = 6 << 2;
+        /// 32-bit color (R8G8B8A8)
+        const COLOR_8888 = 7 << 2;
+
+        /// 8-bit normals
+        const NORMAL_8BIT = 1 << 5;
+        /// 16-bit normals
+        const NORMAL_16BIT = 2 << 5;
+        /// 32-bit normals (float)
+        const NORMAL_32BITF = 3 << 5;
+
+        /// 8-bit vertex position
+        const VERTEX_8BIT = 1 << 7;
+        /// 16-bit vertex position
+        const VERTEX_16BIT = 2 << 7;
+        /// 32-bit vertex position (float)
+        const VERTEX_32BITF = 3 << 7;
+
+        /// 8-bit weights
+        const WEIGHT_8BIT = 1 << 9;
+        /// 16-bit weights
+        const WEIGHT_16BIT = 2 << 9;
+        /// 32-bit weights (float)
+        const WEIGHT_32BITF = 3 << 9;
+
+        /// 8-bit vertex index
+        const INDEX_8BIT = 1 << 11;
+        /// 16-bit vertex index
+        const INDEX_16BIT = 2 << 11;
+
+        // Number of weights (1-8)
+        const WEIGHTS1 = Self::num_weights(1);
+        const WEIGHTS2 = Self::num_weights(2);
+        const WEIGHTS3 = Self::num_weights(3);
+        const WEIGHTS4 = Self::num_weights(4);
+        const WEIGHTS5 = Self::num_weights(5);
+        const WEIGHTS6 = Self::num_weights(6);
+        const WEIGHTS7 = Self::num_weights(7);
+        const WEIGHTS8 = Self::num_weights(8);
+
+        // Number of vertices (1-8)
+        const VERTICES1 = Self::num_vertices(1);
+        const VERTICES2 = Self::num_vertices(2);
+        const VERTICES3 = Self::num_vertices(3);
+        const VERTICES4 = Self::num_vertices(4);
+        const VERTICES5 = Self::num_vertices(5);
+        const VERTICES6 = Self::num_vertices(6);
+        const VERTICES7 = Self::num_vertices(7);
+        const VERTICES8 = Self::num_vertices(8);
+
+        /// Coordinate is passed directly to the rasterizer
+        const TRANSFORM_2D = 0;
+        /// Coordinate is transformed before passed to rasterizer
+        const TRANSFORM_3D = 1 << 23;
+    }
 }
 
-#[repr(u32)]
-pub enum Texture {
-    Texture8bit = texture_shift(1),
-    Texture16bit = texture_shift(2),
-    Texture32bitf = texture_shift(3),
+impl VertexType {
+    const fn num_weights(n: u32) -> i32 {
+        (((n - 1) & 7) << 14) as i32
+    }
+
+    const fn num_vertices(n: u32) -> i32 {
+        (((n - 1) & 7) << 14) as i32
+    }
 }
-
-const fn color_shift(n: u32) -> u32 {
-    n << 2
-}
-
-#[repr(u32)]
-pub enum Color {
-    Color5650 = color_shift(4),
-    Color5551 = color_shift(5),
-    Color4444 = color_shift(6),
-    Color8888 = color_shift(7),
-}
-
-const fn normal_shift(n: u32) -> u32 {
-    n << 5
-}
-
-#[repr(u32)]
-pub enum Normal {
-    Normal8bit = normal_shift(1),
-    Normal16bit = normal_shift(2),
-    Normal32bitf = normal_shift(3),
-}
-
-const fn vertex_shift(n: u32) -> u32 {
-    n << 7
-}
-
-#[repr(u32)]
-pub enum Vertex {
-    Vertex8bit = vertex_shift(1),
-    Vertex16bit = vertex_shift(2),
-    Vertex32bitf = vertex_shift(3),
-}
-
-const fn weight_shift(n: u32) -> u32 {
-    n << 9
-}
-
-#[repr(u32)]
-pub enum Weight {
-    Weight8bit = weight_shift(1),
-    Weight16bit = weight_shift(2),
-    Weight32bitf = weight_shift(3),
-}
-
-const fn index_shift(n: u32) -> u32 {
-    n << 11
-}
-
-#[repr(u32)]
-pub enum Index {
-    Index8bit = index_shift(1),
-    Index16bit = index_shift(2),
-}
-
-const fn weights(n: u32) -> u32 {
-    (((n) - 1) & 7) << 14
-}
-
-const fn vertices(n: u32) -> u32 {
-    (((n) - 1) & 7) << 18
-}
-
-pub const WEIGHTS_BITS: u32 = weights(8);
-pub const VERTICES_BITS: u32 = vertices(8);
-
-const fn transform_shift(n: u32) -> u32 {
-    n << 23
-}
-
-#[repr(u32)]
-pub enum Transform {
-    Transform3D = transform_shift(0),
-    Transform2D = transform_shift(1),
-}
-
-// Vertex Declarations End
 
 /// Pixel Formats
 #[derive(Debug, Clone, Copy)]
@@ -168,6 +161,28 @@ pub enum PixelFormat {
     PsmDxt5 = 10,
 }
 
+/// Test function for depth test
+#[derive(Copy, Clone, Debug)]
+#[repr(u32)]
+pub enum DepthFunc {
+    /// No pixels pass the depth-test
+    Never = 0,
+    /// All pixels pass the depth-test
+    Always,
+    /// Pixels that match the depth-test pass
+    Equal,
+    /// Pixels that doesn't match the depth-test pass
+    NotEqual,
+    /// Pixels that are less in depth passes
+    Less,
+    /// Pixels that are less or equal in depth passes
+    LessOrEqual,
+    /// Pixels that are greater in depth passes
+    Greater,
+    /// Pixels that are greater or equal passes
+    GreaterOrEqual,
+}
+
 /// Spline Mode
 #[repr(u32)]
 pub enum SplineMode {
@@ -179,6 +194,7 @@ pub enum SplineMode {
 
 /// Shading Model
 #[repr(u32)]
+// TODO: Should this be `ShadeMode` (no L)?
 pub enum ShadingModel {
     Flat = 0,
     Smooth = 1,
@@ -253,8 +269,8 @@ pub enum WrapMode {
 /// Front Face Direction
 #[repr(u32)]
 pub enum FrontFaceDirection {
-    CW = 0,
-    CCW = 1,
+    Clockwise = 0,
+    CounterClockwise = 1,
 }
 
 /// Test Function
@@ -368,7 +384,7 @@ pub enum LightType {
 
 /// Contexts
 #[repr(u32)]
-#[derive(TryFromPrimitive)]
+#[derive(Copy, Clone, Debug)]
 pub enum Context {
     Direct = 0,
     Call = 1,
@@ -470,7 +486,7 @@ struct Settings {
 struct GuDisplayList {
     start: *mut u32,
     current: *mut u32,
-    parent_context: i32,
+    parent_context: Context,
 }
 
 struct GuContext {
@@ -489,7 +505,7 @@ struct GuContext {
     clear_color: u32,
     clear_stencil: u32,
     clear_depth: u32,
-    texture_mode: i32,
+    texture_mode: PixelFormat,
 }
 
 struct GuDrawBuffer {
@@ -543,7 +559,7 @@ static mut CONTEXTS: [GuContext; 3] = [
         list: GuDisplayList {
             start: null_mut(),
             current: null_mut(),
-            parent_context: 0,
+            parent_context: Context::Direct,
         },
         scissor_enable: 0,
         scissor_start: [0, 0],
@@ -559,13 +575,13 @@ static mut CONTEXTS: [GuContext; 3] = [
         clear_color: 0,
         clear_stencil: 0,
         clear_depth: 0,
-        texture_mode: 0,
+        texture_mode: PixelFormat::Psm5650,
     },
     GuContext {
         list: GuDisplayList {
             start: null_mut(),
             current: null_mut(),
-            parent_context: 0,
+            parent_context: Context::Direct,
         },
         scissor_enable: 0,
         scissor_start: [0, 0],
@@ -581,13 +597,13 @@ static mut CONTEXTS: [GuContext; 3] = [
         clear_color: 0,
         clear_stencil: 0,
         clear_depth: 0,
-        texture_mode: 0,
+        texture_mode: PixelFormat::Psm5650,
     },
     GuContext {
         list: GuDisplayList {
             start: null_mut(),
             current: null_mut(),
-            parent_context: 0,
+            parent_context: Context::Direct,
         },
         scissor_enable: 0,
         scissor_start: [0, 0],
@@ -603,7 +619,7 @@ static mut CONTEXTS: [GuContext; 3] = [
         clear_color: 0,
         clear_stencil: 0,
         clear_depth: 0,
-        texture_mode: 0,
+        texture_mode: PixelFormat::Psm5650,
     },
 ];
 
@@ -625,7 +641,7 @@ static mut SETTINGS: Settings = Settings {
 };
 
 static mut LIST: *mut GuDisplayList = null_mut();
-static mut CURR_CONTEXT: i32 = 0;
+static mut CURR_CONTEXT: Context = Context::Direct;
 static mut INIT: i32 = 0;
 static mut DISPLAY_ON: bool = false;
 static mut CALL_MODE: i32 = 0;
@@ -730,7 +746,7 @@ pub unsafe fn send_command_f(cmd: Command, argument: f32) {
 #[inline]
 pub unsafe fn send_command_i_stall(cmd: Command, argument: i32) {
     send_command_i(cmd, argument);
-    if OBJECT_STACK_DEPTH == 0 && CURR_CONTEXT == 0 {
+    if let (Context::Direct, 0) = (CURR_CONTEXT, OBJECT_STACK_DEPTH) {
         crate::sys::ge::sce_ge_list_update_stall_addr(
             GE_LIST_EXECUTED[0],
             (*LIST).current as *mut c_void,
@@ -782,8 +798,9 @@ pub unsafe fn reset_values() {
         context.clear_color = 0;
         context.clear_stencil = 0;
         context.clear_depth = 0xffff;
-        context.texture_mode = 0;
+        context.texture_mode = PixelFormat::Psm5650;
     }
+
     SETTINGS.sig = None;
     SETTINGS.fin = None;
 }
@@ -891,6 +908,7 @@ pub unsafe fn sce_gu_draw_buffer_list(psm: PixelFormat, fbp: *mut c_void, fbw: i
 /// # Parameters
 ///
 /// - `state`: Turn display on or off
+///
 /// # Return Value
 ///
 /// State of the display prior to this call
@@ -930,8 +948,8 @@ pub unsafe fn sce_gu_display(state: bool) -> bool {
 /// # Parameters
 ///
 /// - `function`: Depth test function to use
-pub unsafe fn sce_gu_depth_func(function: i32) {
-    send_command_i(Command::ZTest, function);
+pub unsafe fn sce_gu_depth_func(function: DepthFunc) {
+    send_command_i(Command::ZTest, function as i32);
 }
 
 /// Mask depth buffer writes
@@ -1398,7 +1416,7 @@ pub unsafe fn sce_gu_get_memory(mut size: i32) -> *mut c_void {
 
     (*LIST).current = new_ptr;
 
-    if CURR_CONTEXT == 0 {
+    if let Context::Direct = CURR_CONTEXT {
         crate::sys::ge::sce_ge_list_update_stall_addr(GE_LIST_EXECUTED[0], new_ptr as *mut c_void);
     }
 
@@ -1408,6 +1426,7 @@ pub unsafe fn sce_gu_get_memory(mut size: i32) -> *mut c_void {
 /// Start filling a new display-context
 ///
 /// Contexts available are:
+///
 ///   - GU_DIRECT - Rendering is performed as list is filled
 ///   - GU_CALL - List is setup to be called from the main list
 ///   - GU_SEND - List is buffered for a later call to sceGuSendList()
@@ -1418,8 +1437,8 @@ pub unsafe fn sce_gu_get_memory(mut size: i32) -> *mut c_void {
 ///
 /// - `cid`: Context Type
 /// - `list`: Pointer to display-list (16 byte aligned)
-pub unsafe fn sce_gu_start(cid: i32, list: *mut c_void) {
-    let mut context: &mut GuContext = &mut CONTEXTS[cid as usize];
+pub unsafe fn sce_gu_start(context_type: Context, list: *mut c_void) {
+    let mut context: &mut GuContext = &mut CONTEXTS[context_type as usize];
     let local_list: *mut u32 = ((list as u32) | 0x40000000) as *mut u32;
 
     // setup display list
@@ -1429,9 +1448,9 @@ pub unsafe fn sce_gu_start(cid: i32, list: *mut c_void) {
     LIST = &mut context.list;
 
     // store current context
-    CURR_CONTEXT = cid;
+    CURR_CONTEXT = context_type;
 
-    if cid == 0 {
+    if let Context::Direct = context_type {
         GE_LIST_EXECUTED[0] = crate::sys::ge::sce_ge_list_enqueue(
             local_list as *mut c_void,
             local_list as *mut c_void,
@@ -1481,7 +1500,7 @@ pub unsafe fn sce_gu_start(cid: i32, list: *mut c_void) {
         INIT = 1;
     }
 
-    if CURR_CONTEXT == 0 {
+    if let Context::Direct = CURR_CONTEXT {
         if DRAW_BUFFER.frame_width != 0 {
             send_command_i(Command::FrameBufPtr, (DRAW_BUFFER.frame_buffer as u32 & 0xffffff) as i32);
             send_command_i(
@@ -1507,11 +1526,12 @@ pub unsafe fn sce_gu_start(cid: i32, list: *mut c_void) {
 ///
 /// Size of finished display list
 pub unsafe fn sce_gu_finish() -> i32 {
-    match Context::try_from(CURR_CONTEXT as u32).unwrap() {
+    match CURR_CONTEXT {
         Context::Direct | Context::Send_ => {
             send_command_i(Command::Finish, 0);
             send_command_i_stall(Command::End, 0);
         }
+
         Context::Call => {
             if CALL_MODE == 1 {
                 send_command_i(Command::Signal, 0x120000);
@@ -1545,11 +1565,12 @@ pub unsafe fn sce_gu_finish() -> i32 {
 ///
 /// Size of finished display list
 pub unsafe fn sce_gu_finish_id(id: u32) -> i32 {
-    match Context::try_from(CURR_CONTEXT as u32).unwrap() {
+    match CURR_CONTEXT {
         Context::Direct | Context::Send_ => {
             send_command_i(Command::Finish, (id & 0xffff) as i32);
             send_command_i_stall(Command::End, 0);
         }
+
         Context::Call => {
             if CALL_MODE == 1 {
                 send_command_i(Command::Signal, 0x120000);
@@ -1699,6 +1720,7 @@ pub unsafe fn sce_gu_sync(mode: SyncMode, what: SyncBehaviorWhat) -> i32 {
 /// Draw array of vertices forming primitives
 ///
 /// Available primitive-types are:
+///
 ///   - GU_POINTS - Single pixel points (1 vertex per primitive)
 ///   - GU_LINES - Single pixel lines (2 vertices per primitive)
 ///   - GU_LINE_STRIP - Single pixel line-strip (2 vertices for the first primitive, 1 for every following)
@@ -1709,6 +1731,7 @@ pub unsafe fn sce_gu_sync(mode: SyncMode, what: SyncBehaviorWhat) -> i32 {
 ///
 /// The vertex-type decides how the vertices align and what kind of information they contain.
 /// The following flags are ORed together to compose the final vertex format:
+///
 ///   - GU_TEXTURE_8BIT - 8-bit texture coordinates
 ///   - GU_TEXTURE_16BIT - 16-bit texture coordinates
 ///   - GU_TEXTURE_32BITF - 32-bit texture coordinates (float)
@@ -1759,13 +1782,13 @@ pub unsafe fn sce_gu_sync(mode: SyncMode, what: SyncBehaviorWhat) -> i32 {
 /// - `vertices`: Pointer to a vertex-list
 pub unsafe fn sce_gu_draw_array(
     prim: Primitive,
-    vtype: i32,
+    vtype: VertexType,
     count: i32,
     indices: *const c_void,
     vertices: *const c_void,
 ) {
-    if vtype != 0 {
-        send_command_i(Command::VertexType, vtype);
+    if !vtype.is_empty() {
+        send_command_i(Command::VertexType, vtype.bits());
     }
 
     if !indices.is_null() {
@@ -2108,6 +2131,7 @@ pub unsafe fn sce_gu_light_spot(light: i32, direction: &FVector3, exponent: f32,
 /// Clear current drawbuffer
 ///
 /// Available clear-flags are (OR them together to get final clear-mode):
+///
 ///   - GU_COLOR_BUFFER_BIT - Clears the color-buffer
 ///   - GU_STENCIL_BUFFER_BIT - Clears the stencil-buffer
 ///   - GU_DEPTH_BUFFER_BIT - Clears the depth-buffer
@@ -2188,7 +2212,7 @@ pub unsafe fn sce_gu_clear(flags: ClearBuffer) {
 
     sce_gu_draw_array(
         Primitive::Sprites,
-        Color::Color8888 as i32 | self::Vertex::Vertex16bit as i32 | Transform::Transform2D as i32,
+        VertexType::COLOR_8888 | VertexType::VERTEX_16BIT | VertexType::TRANSFORM_2D,
         count,
         null_mut(),
         vertices as *const c_void,
@@ -2430,8 +2454,8 @@ pub unsafe fn sce_gu_specular(power: f32) {
 /// - `order`: Which order to use
 pub unsafe fn sce_gu_front_face(order: FrontFaceDirection) {
     match order {
-        FrontFaceDirection::CCW => send_command_i(Command::Cull, 0),
-        FrontFaceDirection::CW => send_command_i(Command::Cull, 1),
+        FrontFaceDirection::Clockwise => send_command_i(Command::Cull, 0),
+        FrontFaceDirection::CounterClockwise => send_command_i(Command::Cull, 1),
     }
 }
 
@@ -2509,7 +2533,7 @@ pub unsafe fn sce_gu_set_dither(matrix: &IMatrix4) {
 ///
 /// # Parameters
 ///
-/// - `mode`: Which mode to use, one of ShadingModel
+/// - `mode`: Which mode to use, one of `ShadingModel`
 pub unsafe fn sce_gu_shade_model(mode: ShadingModel) {
     match mode {
         ShadingModel::Flat => send_command_i(Command::ShadeMode, 0),
@@ -2769,13 +2793,13 @@ pub unsafe fn sce_gu_tex_map_mode(mode: TextureMapMode, a1: u32, a2: u32) {
 /// - `a2`: Unknown, set to 0
 /// - `swizzle`: GU_TRUE(1) to swizzle texture-reads
 pub unsafe fn sce_gu_tex_mode(tpsm: PixelFormat, maxmips: i32, a2: i32, swizzle: bool) {
-    let context = &mut CONTEXTS[CURR_CONTEXT as usize];
-    context.texture_mode = tpsm as i32;
+    CONTEXTS[CURR_CONTEXT as usize].texture_mode = tpsm;
 
     send_command_i(
         Command::TexMode,
         (maxmips << 16) | (a2 << 8) | (if swizzle { 1 } else { 0 }),
     );
+
     send_command_i(Command::TexFormat, tpsm as i32);
     sce_gu_tex_flush();
 }
@@ -3136,14 +3160,14 @@ pub unsafe fn sce_gu_morph_weight(index: i32, weight: f32) {
 
 pub unsafe fn sce_gu_draw_array_n(
     primitive_type: i32,
-    vtype: i32,
+    v_type: VertexType,
     count: i32,
     a3: i32,
     indices: *const c_void,
     vertices: *const c_void,
 ) {
-    if vtype != 0 {
-        send_command_i(Command::VertexType, vtype);
+    if !v_type.is_empty() {
+        send_command_i(Command::VertexType, v_type.bits());
     }
 
     if !indices.is_null() {
