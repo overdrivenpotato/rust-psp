@@ -141,7 +141,7 @@ impl VertexType {
     }
 
     const fn num_vertices(n: u32) -> i32 {
-        (((n - 1) & 7) << 14) as i32
+        (((n - 1) & 7) << 18) as i32
     }
 }
 
