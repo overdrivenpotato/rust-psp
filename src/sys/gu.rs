@@ -810,6 +810,7 @@ extern "C" fn callback_sig(id: i32, arg: *mut c_void) {
     let settings = arg as *mut _ as *mut Settings;
     unsafe {
         (*settings).signal_history[(((*settings).signal_offset) & 15) as usize] = (id & 0xffff) as i16;
+        (*settings).signal_offset += 1;
         if (*settings).sig != None {
             core::mem::transmute::<extern "C" fn(i32, *mut c_void), extern "C" fn(i32)>
                 (
@@ -845,7 +846,6 @@ pub unsafe fn sce_gu_depth_buffer(zbp: *mut c_void, zbw: i32) {
     if DRAW_BUFFER.depth_width == 0 || DRAW_BUFFER.depth_width != zbw {
         DRAW_BUFFER.depth_width = zbw;
     }
-    // not sure if this weird conversion chain does anything but it's what C does
     send_command_i(Command::ZBufPtr, ((zbp as u32) & 0xffffff) as i32);
     send_command_i(Command::ZBufWidth, (((zbp as u32) & 0xff000000) >> 8 | zbw as u32) as i32);
 }
