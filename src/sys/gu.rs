@@ -806,6 +806,31 @@ pub unsafe fn reset_values() {
     SETTINGS.fin = None;
 }
 
+extern "C" fn callback_sig(id: i32, arg: *mut c_void) {
+    let settings = arg as *mut _ as *mut Settings;
+    unsafe {
+        (*settings).signal_history[(((*settings).signal_offset) & 15) as usize] = (id & 0xffff) as i16;
+        if (*settings).sig != None {
+            core::mem::transmute::<extern "C" fn(i32, *mut c_void), extern "C" fn(i32)>
+                (
+                    (*settings).sig.unwrap()
+                )(id &0xffff);
+        }
+        crate::sys::kernel::sce_kernel_set_event_flag((*settings).kernel_event_flag, 1);
+    }
+}
+
+extern "C" fn callback_fin(id: i32, arg: *mut c_void) {
+    let settings = arg as *mut _ as *mut Settings;
+    if (*settings).fin != None {
+        core::mem::transmute::<extern "C" fn(i32, *mut c_void), extern "C" fn(i32)>
+                (
+                    (*settings).sig.unwrap()
+                )(id & 0xfff);
+    }
+}
+
+
 /// Set depth buffer parameters
 ///
 /// # Parameters
@@ -1256,9 +1281,9 @@ pub unsafe fn sce_gu_init() {
     });
 
     let mut callback = crate::sys::ge::GeCallbackData {
-        signal_func: SETTINGS.sig,
+        signal_func: Some(callback_sig),
         signal_arg: &mut SETTINGS as *mut _ as *mut c_void,
-        finish_func: SETTINGS.fin,
+        finish_func: Some(callback_fin),
         finish_arg: &mut SETTINGS as *mut _ as *mut c_void,
     };
 
