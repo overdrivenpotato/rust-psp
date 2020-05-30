@@ -149,16 +149,29 @@ impl VertexType {
 #[derive(Debug, Clone, Copy)]
 #[repr(u32)]
 pub enum PixelFormat {
+    /// Display, Texture, Palette
     Psm5650 = 0,
+    /// Display, Texture, Palette
     Psm5551 = 1,
+    /// Display, Texture, Palette
     Psm4444 = 2,
+    /// Display, Texture, Palette
     Psm8888 = 3,
+
+
+    /// Texture
     PsmT4 = 4,
+    /// Texture
     PsmT8 = 5,
+    /// Texture
     PsmT16 = 6,
+    /// Texture
     PsmT32 = 7,
+    /// Texture
     PsmDxt1 = 8,
+    /// Texture
     PsmDxt3 = 9,
+    /// Texture
     PsmDxt5 = 10,
 }
 
@@ -741,7 +754,7 @@ pub unsafe fn send_command_i(cmd: Command, argument: i32) {
 
 #[inline]
 pub unsafe fn send_command_f(cmd: Command, argument: f32) {
-    send_command_i(cmd, core::mem::transmute::<f32, i32>(argument));
+    send_command_i(cmd, (core::mem::transmute::<_, u32>(argument) >> 8) as i32);
 }
 
 #[inline]
@@ -846,8 +859,9 @@ pub unsafe fn sce_gu_depth_buffer(zbp: *mut c_void, zbw: i32) {
     if DRAW_BUFFER.depth_width == 0 || DRAW_BUFFER.depth_width != zbw {
         DRAW_BUFFER.depth_width = zbw;
     }
-    send_command_i(Command::ZBufPtr, ((zbp as u32) & 0xffffff) as i32);
-    send_command_i(Command::ZBufWidth, (((zbp as u32) & 0xff000000) >> 8 | zbw as u32) as i32);
+
+    send_command_i(Command::ZBufPtr, (zbp as u32 & 0xffffff) as i32);
+    send_command_i(Command::ZBufWidth, (((zbp as u32 & 0xff000000) >> 8) | zbw as u32) as i32);
 }
 
 /// Set display buffer parameters
@@ -1466,13 +1480,13 @@ pub unsafe fn sce_gu_get_memory(mut size: i32) -> *mut c_void {
 /// - `cid`: Context Type
 /// - `list`: Pointer to display-list (16 byte aligned)
 pub unsafe fn sce_gu_start(context_type: Context, list: *mut c_void) {
-    let mut context: &mut GuContext = &mut CONTEXTS[context_type as usize];
-    let local_list: *mut u32 = ((list as u32) | 0x40000000) as *mut u32;
+    let mut context = &mut CONTEXTS[context_type as usize];
+    let local_list = ((list as u32) | 0x4000_0000) as *mut u32;
 
     // setup display list
-    (*context).list.start = local_list;
-    (*context).list.current = local_list;
-    (*context).list.parent_context = CURR_CONTEXT;
+    context.list.start = local_list;
+    context.list.current = local_list;
+    context.list.parent_context = CURR_CONTEXT;
     LIST = &mut context.list;
 
     // store current context
@@ -1483,8 +1497,9 @@ pub unsafe fn sce_gu_start(context_type: Context, list: *mut c_void) {
             local_list as *mut c_void,
             local_list as *mut c_void,
             SETTINGS.ge_callback_id as i32,
-            &mut crate::sys::ge::GeListArgs::default() as *mut crate::sys::ge::GeListArgs,
+            core::ptr::null_mut(),
         );
+
         SETTINGS.signal_offset = 0;
     }
 
@@ -1533,7 +1548,7 @@ pub unsafe fn sce_gu_start(context_type: Context, list: *mut c_void) {
             send_command_i(Command::FrameBufPtr, (DRAW_BUFFER.frame_buffer as u32 & 0xffffff) as i32);
             send_command_i(
                 Command::FrameBufWidth,
-                ((DRAW_BUFFER.frame_buffer as u32 & 0xff000000) >> 8
+                (((DRAW_BUFFER.frame_buffer as u32 & 0xff00_0000) >> 8)
                     | (DRAW_BUFFER.frame_width as u32)) as i32,
             );
         }
@@ -1701,8 +1716,8 @@ pub unsafe fn sce_gu_send_list(mode: ListQueue, list: *const c_void, context: *m
 pub unsafe fn sce_gu_swap_buffers() -> *mut c_void {
     if SETTINGS.swap_buffers_callback != None {
         SETTINGS.swap_buffers_callback.unwrap()(
-            DRAW_BUFFER.disp_buffer as *mut *mut c_void,
-            DRAW_BUFFER.frame_buffer as *mut *mut c_void,
+            &mut DRAW_BUFFER.disp_buffer as *mut *mut c_void,
+            &mut DRAW_BUFFER.frame_buffer as *mut *mut c_void,
         );
     } else {
         let temp: *mut c_void = DRAW_BUFFER.disp_buffer;
@@ -1992,6 +2007,7 @@ pub unsafe fn sce_gu_enable(state: State) {
             send_command_i(Command::TexFunc, 0x10000 | context.texture_function);
         }
     }
+
     if (state as u32) < 22 {
         STATES |= 1 << state as u32
     }
@@ -2170,6 +2186,7 @@ pub unsafe fn sce_gu_light_spot(light: i32, direction: &FVector3, exponent: f32,
 pub unsafe fn sce_gu_clear(flags: ClearBuffer) {
     let context = &mut CONTEXTS[CURR_CONTEXT as usize];
     let filter: u32;
+
     struct Vertex {
         color: u32,
         x: u16,
@@ -2217,34 +2234,39 @@ pub unsafe fn sce_gu_clear(flags: ClearBuffer) {
         curr = vertices;
 
         for i in 0..count {
-            curr = curr.add(1);
-            let j: u32 = i as u32 >> 1;
-            let k: u32 = i as u32 & 1;
+            let j = i >> 1;
+            let k = i & 1;
 
             (*curr).color = filter;
             (*curr).x = (j + k) as u16 * 64;
-            (*curr).y = ((k as u32) * (DRAW_BUFFER.height as u32)) as u16;
+            (*curr).y = (k * (DRAW_BUFFER.height as i32)) as u16;
             (*curr).z = context.clear_depth as u16;
+
+            curr = curr.add(1);
         }
     }
 
-    send_command_i(
-        Command::ClearMode,
-        ((flags & ClearBuffer::COLOR_BUFFER_BIT
+    {
+        let relevant_flags = flags & (
+            ClearBuffer::COLOR_BUFFER_BIT
             | ClearBuffer::STENCIL_BUFFER_BIT
-            | ClearBuffer::DEPTH_BUFFER_BIT)
-            .bits()
-            << 8
-            | 0x01) as i32,
-    );
+            | ClearBuffer::DEPTH_BUFFER_BIT
+        );
+
+        send_command_i(
+            Command::ClearMode,
+            ((relevant_flags.bits() << 8) | 0x01) as i32,
+        );
+    }
 
     sce_gu_draw_array(
         Primitive::Sprites,
         VertexType::COLOR_8888 | VertexType::VERTEX_16BIT | VertexType::TRANSFORM_2D,
         count,
         null_mut(),
-        vertices as *const c_void,
+        vertices as *mut c_void,
     );
+
     send_command_i(Command::ClearMode, 0);
 }
 
@@ -2254,8 +2276,7 @@ pub unsafe fn sce_gu_clear(flags: ClearBuffer) {
 ///
 /// - `color`: Color to clear with
 pub unsafe fn sce_gu_clear_color(color: u32) {
-    let context = &mut CONTEXTS[CURR_CONTEXT as usize];
-    context.clear_color = color;
+    CONTEXTS[CURR_CONTEXT as usize].clear_color = color;
 }
 
 /// Set the current clear-depth
@@ -2263,9 +2284,9 @@ pub unsafe fn sce_gu_clear_color(color: u32) {
 /// # Parameters
 ///
 /// - `depth`: Set which depth to clear with (0x0000-0xffff)
+// `depth` can't be u16 due to FFI compatibility.
 pub unsafe fn sce_gu_clear_depth(depth: u32) {
-    let context = &mut CONTEXTS[CURR_CONTEXT as usize];
-    context.clear_depth = depth;
+    CONTEXTS[CURR_CONTEXT as usize].clear_depth = depth;
 }
 
 /// Set the current stencil clear value
@@ -2564,8 +2585,8 @@ pub unsafe fn sce_gu_set_dither(matrix: &IMatrix4) {
 /// - `mode`: Which mode to use, one of `ShadingModel`
 pub unsafe fn sce_gu_shade_model(mode: ShadingModel) {
     match mode {
-        ShadingModel::Flat => send_command_i(Command::ShadeMode, 0),
         ShadingModel::Smooth => send_command_i(Command::ShadeMode, 1),
+        ShadingModel::Flat => send_command_i(Command::ShadeMode, 0),
     }
 }
 

@@ -2,6 +2,9 @@ use crate::vfpu_asm;
 use crate::sys::{gu, vfpu_context::{Context, MatrixSet}};
 use core::{ptr, mem::MaybeUninit, ffi::c_void};
 
+// TODO: Change all register names in `llvm_asm` to register numbers. Fixes
+// assembler bug.
+
 // TODO: Replace this with the definiton in `gu` once merged.
 #[repr(i32)]
 #[derive(Copy, Debug, Clone)]
@@ -202,7 +205,7 @@ pub struct L64Vector4 {
     pub w: u64,
 }
 
-#[repr(C, align(4))]
+#[repr(C, align(16))]
 #[derive(Debug, Copy, Clone)]
 pub struct FVector4 {
     pub x: f32,
@@ -843,7 +846,7 @@ pub unsafe fn sce_gum_translate(v: &FVector3) {
 pub unsafe fn sce_gum_update_matrix() {
     STACK_DEPTH[CURRENT_MODE as usize] = CURRENT_MATRIX;
 
-    if CURRENT_MATRIX_UPDATE == 1 {
+    if CURRENT_MATRIX_UPDATE != 0 {
         get_context_unchecked().prepare(MatrixSet::VMAT3, MatrixSet::empty());
 
         vfpu_asm!(

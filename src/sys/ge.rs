@@ -67,8 +67,9 @@ pub enum GeMatrixType {
     TexGen,
 }
 
-
 /// List status for sce_ge_list_sync() and sce_ge_draw_sync().
+// TODO: Use this as an argument in those functions
+// TODO: Merge with `gu::SyncBehaviorWhat`
 #[repr(i32)]
 pub enum GeListState {
     Done = 0,
@@ -243,7 +244,7 @@ pub enum Command {
     TexBufWidth2,
     TexBufWidth3,
     TexBufWidth4,
-    TexBufWidth5,	
+    TexBufWidth5,
     TexBufWidth6,
     TexBufWidth7,
     ClutAddr = 0xb0,
@@ -292,7 +293,7 @@ pub enum Command {
     ZTest = 0xde,
     BlendMode = 0xdf,
     BlendFixedA = 0xe0,
-    BlendFixedB = 0xe1,				
+    BlendFixedB = 0xe1,
     Dith0 = 0xe2,
     Dith1,
     Dith2,
@@ -501,7 +502,7 @@ sys_lib! {
     /// # Parameters
     ///
     /// `qid` - The queue ID of the list to sync.
-    /// `sync_type` - 0 if you want to wait for the list to be completed, or 1 if you just 
+    /// `sync_type` - 0 if you want to wait for the list to be completed, or 1 if you just
     /// want to peek the actual state.
     ///
     /// # Return value
@@ -518,7 +519,7 @@ sys_lib! {
     /// just want to peek the actual state.
     ///
     /// # Return value
-    /// 
+    ///
     /// The current queue status, one of GeListState.
     pub unsafe fn sce_ge_draw_sync(sync_type: i32) -> i32;
 
@@ -550,7 +551,7 @@ sys_lib! {
     ///
     /// `cb` - Configured callback data structure.
     ///
-    /// # Return value 
+    /// # Return value
     ///
     /// The callback ID, < 0 on error.
     pub unsafe fn sce_ge_set_callback(cb: *mut GeCallbackData) -> i32;
