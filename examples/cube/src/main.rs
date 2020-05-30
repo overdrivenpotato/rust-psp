@@ -16,7 +16,7 @@ use psp::sys::{
 psp::module!("sample_cube", 1, 1);
 
 static mut LIST: Align16<[u32; 0x40000]> = Align16([0; 0x40000]);
-static LOGO: Align16<[u8; 8192]> = Align16(*include_bytes!("../logo.raw"));
+static FERRIS: Align16<[u8; 65541]> = Align16(*include_bytes!("../ferris.raw"));
 
 #[repr(C, align(4))]
 struct Vertex {
@@ -31,53 +31,53 @@ struct Vertex {
 }
 
 static VERTICES: Align16<[Vertex; 12 * 3]> = Align16([
-    Vertex { u: 0.0, v: 0.0, color: 0xff7f0000, x: -1.0, y: -1.0, z:  1.0}, // 0
-    Vertex { u: 1.0, v: 0.0, color: 0xff7f0000, x: -1.0, y:  1.0, z:  1.0}, // 4
-    Vertex { u: 1.0, v: 1.0, color: 0xff7f0000, x:  1.0, y:  1.0, z:  1.0}, // 5
+    Vertex { u: 0.0, v: 0.0, color: 0x00000000, x: -1.0, y: -1.0, z:  1.0}, // 0
+    Vertex { u: 1.0, v: 0.0, color: 0x00000000, x: -1.0, y:  1.0, z:  1.0}, // 4
+    Vertex { u: 1.0, v: 1.0, color: 0x00000000, x:  1.0, y:  1.0, z:  1.0}, // 5
 
-    Vertex { u: 0.0, v: 0.0, color: 0xff7f0000, x: -1.0, y: -1.0, z:  1.0}, // 0
-    Vertex { u: 1.0, v: 1.0, color: 0xff7f0000, x:  1.0, y:  1.0, z:  1.0}, // 5
-    Vertex { u: 0.0, v: 1.0, color: 0xff7f0000, x:  1.0, y: -1.0, z:  1.0}, // 1
+    Vertex { u: 0.0, v: 0.0, color: 0x00000000, x: -1.0, y: -1.0, z:  1.0}, // 0
+    Vertex { u: 1.0, v: 1.0, color: 0x00000000, x:  1.0, y:  1.0, z:  1.0}, // 5
+    Vertex { u: 0.0, v: 1.0, color: 0x00000000, x:  1.0, y: -1.0, z:  1.0}, // 1
 
-    Vertex { u: 0.0, v: 0.0, color: 0xff7f0000, x: -1.0, y: -1.0, z: -1.0}, // 3
-    Vertex { u: 1.0, v: 0.0, color: 0xff7f0000, x:  1.0, y: -1.0, z: -1.0}, // 2
-    Vertex { u: 1.0, v: 1.0, color: 0xff7f0000, x:  1.0, y:  1.0, z: -1.0}, // 6
+    Vertex { u: 0.0, v: 0.0, color: 0x00000000, x: -1.0, y: -1.0, z: -1.0}, // 3
+    Vertex { u: 1.0, v: 0.0, color: 0x00000000, x:  1.0, y: -1.0, z: -1.0}, // 2
+    Vertex { u: 1.0, v: 1.0, color: 0x00000000, x:  1.0, y:  1.0, z: -1.0}, // 6
 
-    Vertex { u: 0.0, v: 0.0, color: 0xff7f0000, x: -1.0, y: -1.0, z: -1.0}, // 3
-    Vertex { u: 1.0, v: 1.0, color: 0xff7f0000, x:  1.0, y:  1.0, z: -1.0}, // 6
-    Vertex { u: 0.0, v: 1.0, color: 0xff7f0000, x: -1.0, y:  1.0, z: -1.0}, // 7
+    Vertex { u: 0.0, v: 0.0, color: 0x00000000, x: -1.0, y: -1.0, z: -1.0}, // 3
+    Vertex { u: 1.0, v: 1.0, color: 0x00000000, x:  1.0, y:  1.0, z: -1.0}, // 6
+    Vertex { u: 0.0, v: 1.0, color: 0x00000000, x: -1.0, y:  1.0, z: -1.0}, // 7
 
-    Vertex { u: 0.0, v: 0.0, color: 0xff007f00, x:  1.0, y: -1.0, z: -1.0}, // 0
-    Vertex { u: 1.0, v: 0.0, color: 0xff007f00, x:  1.0, y: -1.0, z:  1.0}, // 3
-    Vertex { u: 1.0, v: 1.0, color: 0xff007f00, x:  1.0, y:  1.0, z:  1.0}, // 7
+    Vertex { u: 0.0, v: 0.0, color: 0x00000000, x:  1.0, y: -1.0, z: -1.0}, // 0
+    Vertex { u: 1.0, v: 0.0, color: 0x00000000, x:  1.0, y: -1.0, z:  1.0}, // 3
+    Vertex { u: 1.0, v: 1.0, color: 0x00000000, x:  1.0, y:  1.0, z:  1.0}, // 7
 
-    Vertex { u: 0.0, v: 0.0, color: 0xff007f00, x:  1.0, y: -1.0, z: -1.0}, // 0
-    Vertex { u: 1.0, v: 1.0, color: 0xff007f00, x:  1.0, y:  1.0, z:  1.0}, // 7
-    Vertex { u: 0.0, v: 1.0, color: 0xff007f00, x:  1.0, y:  1.0, z: -1.0}, // 4
+    Vertex { u: 0.0, v: 0.0, color: 0x00000000, x:  1.0, y: -1.0, z: -1.0}, // 0
+    Vertex { u: 1.0, v: 1.0, color: 0x00000000, x:  1.0, y:  1.0, z:  1.0}, // 7
+    Vertex { u: 0.0, v: 1.0, color: 0x00000000, x:  1.0, y:  1.0, z: -1.0}, // 4
 
-    Vertex { u: 0.0, v: 0.0, color: 0xff007f00, x: -1.0, y: -1.0, z: -1.0}, // 0
-    Vertex { u: 1.0, v: 0.0, color: 0xff007f00, x: -1.0, y:  1.0, z: -1.0}, // 3
-    Vertex { u: 1.0, v: 1.0, color: 0xff007f00, x: -1.0, y:  1.0, z:  1.0}, // 7
+    Vertex { u: 0.0, v: 0.0, color: 0x00000000, x: -1.0, y: -1.0, z: -1.0}, // 0
+    Vertex { u: 1.0, v: 0.0, color: 0x00000000, x: -1.0, y:  1.0, z: -1.0}, // 3
+    Vertex { u: 1.0, v: 1.0, color: 0x00000000, x: -1.0, y:  1.0, z:  1.0}, // 7
 
-    Vertex { u: 0.0, v: 0.0, color: 0xff007f00, x: -1.0, y: -1.0, z: -1.0}, // 0
-    Vertex { u: 1.0, v: 1.0, color: 0xff007f00, x: -1.0, y:  1.0, z:  1.0}, // 7
-    Vertex { u: 0.0, v: 1.0, color: 0xff007f00, x: -1.0, y: -1.0, z:  1.0}, // 4
+    Vertex { u: 0.0, v: 0.0, color: 0x00000000, x: -1.0, y: -1.0, z: -1.0}, // 0
+    Vertex { u: 1.0, v: 1.0, color: 0x00000000, x: -1.0, y:  1.0, z:  1.0}, // 7
+    Vertex { u: 0.0, v: 1.0, color: 0x00000000, x: -1.0, y: -1.0, z:  1.0}, // 4
 
-    Vertex { u: 0.0, v: 0.0, color: 0xff00007f, x: -1.0, y:  1.0, z: -1.0}, // 0
-    Vertex { u: 1.0, v: 0.0, color: 0xff00007f, x:  1.0, y:  1.0, z: -1.0}, // 1
-    Vertex { u: 1.0, v: 1.0, color: 0xff00007f, x:  1.0, y:  1.0, z:  1.0}, // 2
+    Vertex { u: 0.0, v: 0.0, color: 0x00000000, x: -1.0, y:  1.0, z: -1.0}, // 0
+    Vertex { u: 1.0, v: 0.0, color: 0x00000000, x:  1.0, y:  1.0, z: -1.0}, // 1
+    Vertex { u: 1.0, v: 1.0, color: 0x00000000, x:  1.0, y:  1.0, z:  1.0}, // 2
 
-    Vertex { u: 0.0, v: 0.0, color: 0xff00007f, x: -1.0, y:  1.0, z: -1.0}, // 0
-    Vertex { u: 1.0, v: 1.0, color: 0xff00007f, x:  1.0, y:  1.0, z:  1.0}, // 2
-    Vertex { u: 0.0, v: 1.0, color: 0xff00007f, x: -1.0, y:  1.0, z:  1.0}, // 3
+    Vertex { u: 0.0, v: 0.0, color: 0x00000000, x: -1.0, y:  1.0, z: -1.0}, // 0
+    Vertex { u: 1.0, v: 1.0, color: 0x00000000, x:  1.0, y:  1.0, z:  1.0}, // 2
+    Vertex { u: 0.0, v: 1.0, color: 0x00000000, x: -1.0, y:  1.0, z:  1.0}, // 3
 
-    Vertex { u: 0.0, v: 0.0, color: 0xff00007f, x: -1.0, y: -1.0, z: -1.0}, // 4
-    Vertex { u: 1.0, v: 0.0, color: 0xff00007f, x: -1.0, y: -1.0, z:  1.0}, // 7
-    Vertex { u: 1.0, v: 1.0, color: 0xff00007f, x:  1.0, y: -1.0, z:  1.0}, // 6
+    Vertex { u: 0.0, v: 0.0, color: 0x00000000, x: -1.0, y: -1.0, z: -1.0}, // 4
+    Vertex { u: 1.0, v: 0.0, color: 0x00000000, x: -1.0, y: -1.0, z:  1.0}, // 7
+    Vertex { u: 1.0, v: 1.0, color: 0x00000000, x:  1.0, y: -1.0, z:  1.0}, // 6
 
-    Vertex { u: 0.0, v: 0.0, color: 0xff00007f, x: -1.0, y: -1.0, z: -1.0}, // 4
-    Vertex { u: 1.0, v: 1.0, color: 0xff00007f, x:  1.0, y: -1.0, z:  1.0}, // 6
-    Vertex { u: 0.0, v: 1.0, color: 0xff00007f, x:  1.0, y: -1.0, z: -1.0}, // 5
+    Vertex { u: 0.0, v: 0.0, color: 0x00000000, x: -1.0, y: -1.0, z: -1.0}, // 4
+    Vertex { u: 1.0, v: 1.0, color: 0x00000000, x:  1.0, y: -1.0, z:  1.0}, // 6
+    Vertex { u: 0.0, v: 1.0, color: 0x00000000, x:  1.0, y: -1.0, z: -1.0}, // 5
 ]);
 
 const BUF_WIDTH: i32 = 512;
@@ -199,14 +199,14 @@ unsafe fn psp_main_inner() {
 
         // setup texture
 
-        gu::sce_gu_tex_mode(PixelFormat::Psm4444, 0, 0, false);
-        gu::sce_gu_tex_image(0, 64, 64, 64, &LOGO.0 as *const [u8; 8192] as *const _);
+        gu::sce_gu_tex_mode(PixelFormat::Psm8888, 0, 0, false);
+        gu::sce_gu_tex_image(0, 128, 128, 128, &FERRIS.0 as *const [u8; 65541] as *const _);
         gu::sce_gu_tex_func(TextureEffect::Add, TextureColorComponent::Rgb);
-        gu::sce_gu_tex_env_color(0xffff00);
+        //gu::sce_gu_tex_env_color(0xffff00);
         gu::sce_gu_tex_filter(TextureFilter::Linear, TextureFilter::Linear);
         gu::sce_gu_tex_scale(1.0, 1.0);
         gu::sce_gu_tex_offset(0.0, 0.0);
-        gu::sce_gu_ambient_color(0xffffffff);
+        //gu::sce_gu_ambient_color(0xffffffff);
 
         // draw cube
 
