@@ -38,7 +38,11 @@ static mut MATRIX_STACK: [[FMatrix4; 32]; 4] = {
 
 static mut MATRIX_UPDATE: [i32; 4] = [0, 0, 0, 0];
 static mut CURRENT_MATRIX_UPDATE: i32 = 0;
-static mut CURRENT_MATRIX: *mut FMatrix4 = ptr::null_mut();
+
+static mut CURRENT_MATRIX: *mut FMatrix4 = unsafe {
+    &mut MATRIX_STACK[Mode::Projection as usize][0]
+};
+
 static mut CURRENT_MODE: Mode = Mode::Projection;
 static mut STACK_DEPTH: [*mut FMatrix4; 4] = unsafe {
     [
@@ -154,7 +158,7 @@ pub struct L64Vector3 {
     pub z: u64,
 }
 
-#[repr(C, align(4))]
+#[repr(C, align(16))]
 #[derive(Debug, Copy, Clone)]
 pub struct FVector3 {
     pub x: f32,
@@ -376,7 +380,7 @@ pub unsafe fn sce_gum_draw_spline(
 ) {
     sce_gum_update_matrix();
     gu::sce_gu_draw_spline(v_type, u_count, v_count, u_edge, v_edge, indices, vertices);
-}  
+}
 
 pub unsafe fn sce_gum_fast_inverse() {
     get_context_unchecked().prepare(MatrixSet::VMAT3, MatrixSet::VMAT0 | MatrixSet::VMAT1);
@@ -496,7 +500,7 @@ pub unsafe fn sce_gum_matrix_mode(mode: Mode) {
         sv_q C320, 32(t0);
         sv_q C330, 48(t0);
 
-        : : "{t0}"(CURRENT_MATRIX) : "memory" : "volatile"
+        : : "{8}"(CURRENT_MATRIX) : "memory" : "volatile"
     );
 
     MATRIX_UPDATE[CURRENT_MODE as usize] = CURRENT_MATRIX_UPDATE;
@@ -511,7 +515,7 @@ pub unsafe fn sce_gum_matrix_mode(mode: Mode) {
         lv_q C320, 32(t0);
         lv_q C330, 48(t0);
 
-        : : "{t0}"(CURRENT_MATRIX) : "memory" : "volatile"
+        : : "{8}"(CURRENT_MATRIX) : "memory" : "volatile"
     );
 }
 
@@ -643,7 +647,7 @@ pub unsafe fn sce_gum_perspective(fovy: f32, aspect: f32, near: f32, far: f32) {
         vmmov_q M300, M000;
 
         : : "f"(fovy), "f"(aspect), "f"(near), "f"(far)
-        : "t0", "t1", "t2", "t3" : "volatile"
+        : "8", "9", "10", "11" : "volatile"
     );
 
     CURRENT_MATRIX_UPDATE = 1;
@@ -660,7 +664,7 @@ pub unsafe fn sce_gum_pop_matrix() {
         lv_q C320, 32(t0);
         lv_q C330, 48(t0);
 
-        : : "{t0}"(CURRENT_MATRIX) : : "volatile"
+        : : "{8}"(CURRENT_MATRIX) : : "volatile"
     );
 
     CURRENT_MATRIX_UPDATE = 1;
@@ -677,7 +681,7 @@ pub unsafe fn sce_gum_push_matrix() {
         sv_q C320, 32(t0);
         sv_q C330, 48(t0);
 
-        : : "{t0}"(CURRENT_MATRIX) : "memory" : "volatile"
+        : : "{8}"(CURRENT_MATRIX) : "memory" : "volatile"
     );
 }
 
@@ -700,7 +704,7 @@ pub unsafe fn sce_gum_rotate_x(angle: f32) {
         vmmul_q M100, M300, M000;
         vmmov_q M300, M100;
 
-        : : "f"(angle) : "t0" : "volatile"
+        : : "f"(angle) : "8" : "volatile"
     );
 
     CURRENT_MATRIX_UPDATE = 1;
@@ -829,7 +833,7 @@ pub unsafe fn sce_gum_translate(v: &FVector3) {
         vmmul_q M100, M300, M000;
         vmmov_q M300, M100;
 
-        : : "{a0}"(v) : : "volatile"
+        : : "{4}"(v) : "memory" : "volatile"
     );
 
     CURRENT_MATRIX_UPDATE = 1;
@@ -848,7 +852,7 @@ pub unsafe fn sce_gum_update_matrix() {
             sv_q C320, 32(t0);
             sv_q C330, 48(t0);
 
-            : : "{t0}"(CURRENT_MATRIX) : "memory" : "volatile"
+            : : "{8}"(CURRENT_MATRIX) : "memory" : "volatile"
         );
 
         MATRIX_UPDATE[CURRENT_MODE as usize] = CURRENT_MATRIX_UPDATE;
@@ -857,8 +861,15 @@ pub unsafe fn sce_gum_update_matrix() {
 
     for i in 0..4 {
         if MATRIX_UPDATE[i] != 0 {
-            // TODO: Add this.
-            //sce_gu_set_matrix(i, STACK_DEPTH[i]);
+            let mode = match i {
+                0 => gu::MatrixMode::Projection,
+                1 => gu::MatrixMode::View,
+                2 => gu::MatrixMode::Model,
+                3 => gu::MatrixMode::Texture,
+                _ => core::intrinsics::unreachable(),
+            };
+
+            gu::sce_gu_set_matrix(mode, &*STACK_DEPTH[i]);
 
             MATRIX_UPDATE[i] = 0;
         }

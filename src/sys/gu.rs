@@ -3068,7 +3068,7 @@ pub unsafe fn sce_gu_draw_spline(
 ///
 /// - `type`: Which matrix-type to set
 /// - `matrix`: Matrix to load
-pub unsafe fn sce_gu_set_matrix(type_: MatrixMode, matrix: &FMatrix4) {
+pub unsafe fn sce_gu_set_matrix(type_: MatrixMode, matrix: &crate::sys::gum::FMatrix4) {
     let fmatrix = matrix as *const _ as *const f32;
 
     match type_ {
@@ -3078,6 +3078,7 @@ pub unsafe fn sce_gu_set_matrix(type_: MatrixMode, matrix: &FMatrix4) {
                 send_command_f(Command::ProjMatrixData, *fmatrix.offset(i));
             }
         }
+
         MatrixMode::View => {
             send_command_f(Command::ViewMatrixNumber, 0.0);
             for i in 0..4 {
@@ -3086,6 +3087,7 @@ pub unsafe fn sce_gu_set_matrix(type_: MatrixMode, matrix: &FMatrix4) {
                 }
             }
         }
+
         MatrixMode::Model => {
             send_command_f(Command::WorldMatrixNumber, 0.0);
             for i in 0..4 {
@@ -3094,6 +3096,7 @@ pub unsafe fn sce_gu_set_matrix(type_: MatrixMode, matrix: &FMatrix4) {
                 }
             }
         }
+
         MatrixMode::Texture => {
             send_command_f(Command::TGenMatrixNumber, 0.0);
             for i in 0..4 {
