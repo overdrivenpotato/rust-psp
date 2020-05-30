@@ -16,10 +16,9 @@ use psp::sys::{
 psp::module!("sample_cube", 1, 1);
 
 static mut LIST: Align16<[u32; 0x40000]> = Align16([0; 0x40000]);
+static LOGO: Align16<[u8; 8192]> = Align16(*include_bytes!("../logo.raw"));
 
-static LOGO: &[u8] = include_bytes!("../logo.raw");
-
-#[repr(C, packed)]
+#[repr(C, align(4))]
 struct Vertex {
     u: f32,
     v: f32,
@@ -201,7 +200,7 @@ unsafe fn psp_main_inner() {
         // setup texture
 
         gu::sce_gu_tex_mode(PixelFormat::Psm4444, 0, 0, false);
-        gu::sce_gu_tex_image(0, 64, 64, 64, &LOGO as *const &[u8] as *const _);
+        gu::sce_gu_tex_image(0, 64, 64, 64, &LOGO.0 as *const [u8; 8192] as *const _);
         gu::sce_gu_tex_func(TextureEffect::Add, TextureColorComponent::Rgb);
         gu::sce_gu_tex_env_color(0xffff00);
         gu::sce_gu_tex_filter(TextureFilter::Linear, TextureFilter::Linear);
