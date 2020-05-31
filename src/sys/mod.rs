@@ -17,17 +17,14 @@ pub mod umd;
 pub mod mpeg;
 pub mod hprm;
 pub mod gum;
+pub mod mp3;
+pub mod registry;
+pub mod openpsid;
 
-// These fail with a bus error when being loaded (tested in user mode on a PSP-2000).
-// TODO: Investigate and fix this
-// pub mod mp3;
-// pub mod registry;
-
-// These are not found (likely because this was tested in user mode).
-// TODO: Add kernel module support to this crate.
-// pub mod openpsid;
+// These are not found (likely because this was tested in user mode on a PSP-2000).
 // pub mod sircs;
 // pub mod video;
+// TODO: Add kernel module support to this crate.
 // pub mod nand;
 
 pub mod vfpu_context;
