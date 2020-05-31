@@ -6,7 +6,7 @@ use psp::sys::{
         DialogCommon, MsgDialogParams, MsgDialogMode, MsgDialogPressed,
         self,
     },
-    kernel::{self, SceUid},
+    kernel,
     display,
 };
 
@@ -15,24 +15,7 @@ use core::ffi::c_void;
 psp::module!("sample_module", 1, 1);
 
 fn psp_main() {
-    let thid: SceUid;
-    let callback_name: &[u8; 14] = b"update_thread\0";
-    unsafe {
-        thid = kernel::sce_kernel_create_thread(
-            callback_name as *const u8,
-            update_callback,
-            0x11,
-            0xFA0,
-            kernel::ThreadAttributes::from_bits(0).unwrap(),
-            core::ptr::null_mut()
-        );
-
-        if thid.0 >= 0 {
-            kernel::sce_kernel_start_thread(thid, 0, core::ptr::null_mut() as *mut c_void);
-        }
-    }
-
-    let base_size = core::mem::size_of::<DialogCommon>();
+    psp::enable_home_button();
     static mut list: psp::Align16<[u32; 262144]> = psp::Align16([0;262144]);
 
     unsafe {
@@ -45,8 +28,7 @@ fn psp_main() {
         gu::sce_gu_display(true);
     }
 
-    let dialog_size = core::mem::size_of::<MsgDialogParams>();
->>>>>>> 95e55b6... fix msgdialog sample
+    let dialog_size = core::mem::size_of::<Dialogcommon>();
     let base = DialogCommon {
         size: dialog_size as u32,
         language: 1, // english, TODO add this as an enum later
@@ -80,12 +62,11 @@ fn psp_main() {
 
     loop {
         let status = unsafe {utility::sce_utility_msg_dialog_get_status()};
-        // TODO figure out these values
         match status {
             2 => unsafe{utility::sce_utility_msg_dialog_update(1)},
             3 => unsafe{utility::sce_utility_msg_dialog_shutdown_start()},
             0 => {break},
-            _ => {},
+            _ => (),
         }
         unsafe {display::sce_display_wait_vblank_start();}
     }
