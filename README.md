@@ -30,7 +30,7 @@ rustup default nightly
 ```
 It also requires `xargo` to build libcore, liballoc, and libc.
 ```sh
-rustup install xargo
+cargo install xargo
 ```
 
 ## Other Dependencies
