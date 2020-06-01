@@ -1,4 +1,4 @@
-/// Executes a `FnOnce` `iterations` times and returns average duration per iteration
+/// Executes `f` `iterations` times and returns average duration per iteration
 pub fn benchmark<F: FnMut()>(mut f: F, iterations: usize) -> core::time::Duration {
     let mut loop_start: u64 = 0;
     let mut loop_end: u64 = 0;
