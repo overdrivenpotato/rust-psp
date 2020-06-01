@@ -1,24 +1,25 @@
 use core::ffi::c_void;
+use num_enum::TryFromPrimitive;
 
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct DialogCommon {
-    pub size: u32,
     /// Size of the structure
-    pub language: i32,
+    pub size: u32,
     /// Language
-    pub button_swap: i32,
-    /// Set to 1 for X/O button swap
-    pub graphics_thread: i32,
+    pub language: SysParamLanguage,
+    /// Which button accepts the dialog
+    pub button_accept: DialogButtonAccept,
     /// Graphics thread priority
-    pub access_thread: i32,
+    pub graphics_thread: i32,
     /// Access/fileio thread priority (SceJobThread)
-    pub font_thread: i32,
+    pub access_thread: i32,
     /// Font thread priority (ScePafThread)
-    pub sound_thread: i32,
+    pub font_thread: i32,
     /// Sound thread priority
-    pub result: i32,
+    pub sound_thread: i32,
     /// Result
+    pub result: i32,
     pub reserved: [i32; 4usize],
 }
 
@@ -38,8 +39,199 @@ pub enum MsgDialogPressed {
     Back,
 }
 
+#[repr(u32)]
+#[derive(Debug, Clone, Copy)]
+pub enum DialogButtonAccept {
+    Circle,
+    Cross
+}
+
+#[repr(u32)]
+#[derive(Debug, Clone, Copy)]
+pub enum OskInputLanguage {
+    Default_,
+    Japanese,
+    English,
+    French,
+    Spanish,
+    German,
+    Italian,
+    Dutch,
+    Portugese,
+    Russian,
+    Korean,
+    ChineseTraditional,
+    ChineseSimplified
+}
+
+#[repr(u32)]
+#[derive(Debug, Clone, Copy, TryFromPrimitive)]
+pub enum SysParamLanguage {
+    Japanese,
+    English,
+    French,
+    Spanish,
+    German,
+    Italian,
+    Dutch,
+    Portugese,
+    Russian,
+    Korean,
+    ChineseTraditional,
+    ChineseSimplified
+}
+
+#[repr(u32)]
+#[derive(Debug, Clone, Copy)]
+pub enum SystemParamId {
+    StringNickname = 1,
+    AdhocChannel,
+    WlanPowerSave,
+    DateFormat,
+    TimeFormat,
+    Timezone,
+    DaylightSavings,
+    Language,
+}
+
+#[repr(u32)]
+#[derive(Debug, Clone, Copy, TryFromPrimitive)]
+pub enum AdhocChannel {
+    ChannelAutomatic = 0,
+    Channel1 = 1,
+    Channel6 = 6,
+    Channel11 = 11
+}
+
+#[repr(u32)] 
+#[derive(Debug, Clone, Copy, TryFromPrimitive)]
+pub enum WlanPowerSaveState {
+    Off,
+    On,
+}
+
+#[repr(u32)]
+#[derive(Debug, Clone, Copy, TryFromPrimitive)]
+pub enum DateFormat {
+    YYYYMMDD,
+    MMDDYYYY,
+    DDMMYYY,
+}
+
+#[repr(u32)]
+#[derive(Debug, Clone, Copy, TryFromPrimitive)] 
+pub enum TimeFormat {
+    Hour24,
+    Hour12,
+}
+
+#[repr(u32)]
+#[derive(Debug, Clone, Copy, TryFromPrimitive)]
+pub enum DaylightSavings {
+    Std,
+    Dst,
+}
+
+#[repr(u32)]
+#[derive(Debug, Clone, Copy)]
+pub enum AvModule {
+    AvCodec,
+    SasCore,
+    Atrac3Plus,
+    MpegBase,
+    Mp3,
+    Vaudio,
+    Aac,
+    G729
+}
+
+#[repr(u32)]
+#[derive(Debug, Clone, Copy)]
+pub enum Module {
+    NetCommon = 0x100,
+    NetAdhoc,
+    NetInet,
+    NetParseUri,
+    NetHttp,
+    NetSsl,
+
+    UsbPspCm = 0x200,
+    UsbMic,
+    UsbCam,
+    UsbGps,
+
+    AvCodec = 0x300,
+    AvSascore,
+    AvAtrac3Plus,
+    AvMpegBase,
+    AvMp3,
+    AvVaudio,
+    AvAac,
+    AvG729,
+
+    NpCommon = 0x400,
+    NpService,
+    NpMatching2,
+    NpDrm = 0x500,
+
+    Irda = 0x600
+}
+
+#[repr(u32)]
+#[derive(Debug, Clone, Copy)]
+pub enum NetModule {
+    NetCommon = 1,
+    NetAdhoc,
+    NetInet,
+    NetParseUri,
+    NetHttp,
+    NetSsl,
+}
+
+#[repr(u32)]
+#[derive(Debug, Clone, Copy)]
+pub enum UsbModule {
+    UsbPspCm = 1,
+    UsbMic,
+    UsbCam,
+    UsbGps,
+}
+
+#[repr(u32)]
+#[derive(Debug, Clone, Copy)]
+pub enum NetParam {
+    Name,
+    Ssid,
+    Secure,
+    WepKey,
+    IsStaticIp,
+    Ip,
+    NetMask,
+    Route,
+    ManualDns,
+    PrimaryDns,
+    SecondaryDns,
+    ProxyUser,
+    ProxyPass,
+    UseProxy,
+    ProxyServer,
+    ProxyPort,
+    Unknown1,
+    Unknown2,
+}
+
+bitflags::bitflags! {
+    pub struct MsgDialogOption: i32 {
+        const ERROR = 0;
+        const TEXT = 1;
+        const YES_NO_BUTTONS = 0x10;
+        const DEFAULT_NO = 0x100;
+    }
+}
+
 /// Structure to hold the parameters for a message dialog
 #[repr(C)]
+#[derive(Copy, Clone)]
 pub struct MsgDialogParams {
     pub base: DialogCommon,
     pub unknown: i32,
@@ -47,7 +239,7 @@ pub struct MsgDialogParams {
     pub error_value: u32,
     /// The message to display (may contain embedded linefeeds)
     pub message: [u8; 512usize],
-    pub options: i32,
+    pub options: MsgDialogOption,
     pub button_pressed: MsgDialogPressed,
 }
 
@@ -263,7 +455,7 @@ pub struct OskData {
     /// Unknown. Pass 0.
     pub unk_04: i32,
     /// One of ::OskInputLanguage
-    pub language: i32,
+    pub language: OskInputLanguage,
     /// Unknown. Pass 0.
     pub unk_12: i32,
     /// One or more of ::OskInputType (types that are selectable by pressing SELECT)
@@ -414,7 +606,7 @@ sys_lib! {
     /// 0 on success,
     pub unsafe fn sce_utility_get_net_param(
         conf: i32,
-        param: i32,
+        param: NetParam,
         data: *mut NetData,
     ) -> i32;
 
@@ -544,9 +736,9 @@ sys_lib! {
     /// - `value`: integer value to set
     /// # Return Value
     ///
-    /// 0 on success, PSP_SYSTEMPARAM_RETVAL_FAIL on failure
+    /// 0 on success, 0x80110103 on failure
     pub unsafe fn sce_utility_set_system_param_int(
-        id: i32,
+        id: SystemParamId,
         value: i32,
     ) -> i32;
 
@@ -559,9 +751,9 @@ sys_lib! {
     /// - `str`: char * value to set
     /// # Return Value
     ///
-    /// 0 on success, PSP_SYSTEMPARAM_RETVAL_FAIL on failure
+    /// 0 on success, 0x80110103 on failure
     pub unsafe fn sce_utility_set_system_param_string(
-        id: i32,
+        id: SystemParamId,
         str: *const u8,
     ) -> i32;
 
@@ -574,9 +766,9 @@ sys_lib! {
     /// - `value`: pointer to integer value to place result in
     /// # Return Value
     ///
-    /// 0 on success, PSP_SYSTEMPARAM_RETVAL_FAIL on failure
+    /// 0 on success, 0x80110103 on failure
     pub unsafe fn sce_utility_get_system_param_int(
-        id: i32,
+        id: SystemParamId,
         value: *mut i32,
     ) -> i32;
 
@@ -590,9 +782,9 @@ sys_lib! {
     /// - `len`: length of str buffer
     /// # Return Value
     ///
-    /// 0 on success, PSP_SYSTEMPARAM_RETVAL_FAIL on failure
+    /// 0 on success, 0x80110103 on failure
     pub unsafe fn sce_utility_get_system_param_string(
-        id: i32,
+        id: SystemParamId,
         str: *mut u8,
         len: i32,
     ) -> i32;
@@ -651,7 +843,7 @@ sys_lib! {
     /// # Return Value
     ///
     /// 0 on success, < 0 on error
-    pub unsafe fn sce_utility_load_net_module(module: i32) -> i32;
+    pub unsafe fn sce_utility_load_net_module(module: NetModule) -> i32;
 
     #[psp(0x64d50c56)]
     /// Unload a network module (PRX) from user mode.
@@ -663,7 +855,7 @@ sys_lib! {
     /// # Return Value
     ///
     /// 0 on success, < 0 on error
-    pub unsafe fn sce_utility_unload_net_module(module: i32) -> i32;
+    pub unsafe fn sce_utility_unload_net_module(module: NetModule) -> i32;
 
     #[psp(0xC629AF26)]
     /// Load an audio/video module (PRX) from user mode.
@@ -676,7 +868,7 @@ sys_lib! {
     /// # Return Value
     ///
     /// 0 on success, < 0 on error
-    pub unsafe fn sce_utility_load_av_module(module: i32) -> i32;
+    pub unsafe fn sce_utility_load_av_module(module: AvModule) -> i32;
 
     #[psp(0xF7D8D092)]
     /// Unload an audio/video module (PRX) from user mode.
@@ -688,7 +880,7 @@ sys_lib! {
     /// # Return Value
     ///
     /// 0 on success, < 0 on error
-    pub unsafe fn sce_utility_unload_av_module(module: i32) -> i32;
+    pub unsafe fn sce_utility_unload_av_module(module: AvModule) -> i32;
 
     #[psp(0x0D5BC6D2)]
     /// Load a usb module (PRX) from user mode.
@@ -700,7 +892,7 @@ sys_lib! {
     /// # Return Value
     ///
     /// 0 on success, < 0 on error
-    pub unsafe fn sce_utility_load_usb_module(module: i32) -> i32;
+    pub unsafe fn sce_utility_load_usb_module(module: UsbModule) -> i32;
 
     #[psp(0xF64910F0)]
     /// Unload a usb module (PRX) from user mode.
@@ -712,7 +904,7 @@ sys_lib! {
     /// # Return Value
     ///
     /// 0 on success, < 0 on error
-    pub unsafe fn sce_utility_unload_usb_module(module: i32) -> i32;
+    pub unsafe fn sce_utility_unload_usb_module(module: UsbModule) -> i32;
 
     #[psp(0x2A2B3DE0)]
     /// Load a module (PRX) from user mode.
@@ -724,7 +916,7 @@ sys_lib! {
     /// # Return Value
     ///
     /// 0 on success, < 0 on error
-    pub unsafe fn sce_utility_load_module(module: i32) -> i32;
+    pub unsafe fn sce_utility_load_module(module: Module) -> i32;
 
     #[psp(0xE49BFE92)]
     /// Unload a module (PRX) from user mode.
@@ -736,7 +928,7 @@ sys_lib! {
     /// # Return Value
     ///
     /// 0 on success, < 0 on error
-    pub unsafe fn sce_utility_unload_module(module: i32) -> i32;
+    pub unsafe fn sce_utility_unload_module(module: Module) -> i32;
 
 }
 
@@ -775,7 +967,7 @@ sys_lib! {
     ///
     /// 0 on success
     pub unsafe fn sce_utility_set_net_param(
-        param: i32,
+        param: NetParam,
         val: *const c_void,
     ) -> i32;
 

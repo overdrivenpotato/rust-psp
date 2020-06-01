@@ -4,7 +4,7 @@
 use psp::sys::{
     utility::{
         DialogCommon, MsgDialogParams, MsgDialogMode, MsgDialogPressed,
-        self,
+        SysParamLanguage, DialogButtonAccept, MsgDialogOption, self,
     },
     kernel,
     display,
@@ -16,11 +16,11 @@ psp::module!("sample_module", 1, 1);
 
 fn psp_main() {
     psp::enable_home_button();
-    static mut list: psp::Align16<[u32; 262144]> = psp::Align16([0;262144]);
+    static mut LIST: psp::Align16<[u32; 262144]> = psp::Align16([0;262144]);
 
     unsafe {
         gu::sce_gu_init(); 
-        gu::sce_gu_start(gu::Context::Direct, &mut list as *mut _ as *mut c_void);
+        gu::sce_gu_start(gu::Context::Direct, &mut LIST as *mut _ as *mut c_void);
         gu::sce_gu_draw_buffer(gu::PixelFormat::Psm8888, core::ptr::null_mut(), 512);
         gu::sce_gu_finish();
         gu::sce_gu_sync(gu::SyncMode::SyncFinish, gu::SyncBehaviorWhat::SyncWhatDone);
@@ -31,8 +31,8 @@ fn psp_main() {
     let dialog_size = core::mem::size_of::<Dialogcommon>();
     let base = DialogCommon {
         size: dialog_size as u32,
-        language: 1, // english, TODO add this as an enum later
-        button_swap: 1, // X to accept 
+        language: SysParamLanguage::English, 
+        button_accept: DialogButtonAccept::Cross, // X to accept 
         graphics_thread: 0x11, // magic number stolen from pspsdk example
         access_thread: 0x13,
         font_thread: 0x12,
@@ -50,7 +50,7 @@ fn psp_main() {
         mode: MsgDialogMode::Text,
         error_value: 0,
         message: msg,
-        options: 1, // Text, TODO add this as an enum later
+        options: MsgDialogOption::TEXT,
         button_pressed: MsgDialogPressed::Unknown1,
     };
 
