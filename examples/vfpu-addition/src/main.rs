@@ -2,6 +2,8 @@
 #![no_main]
 #![feature(llvm_asm)]
 
+use psp::sys::kernel::{self, ThreadAttributes};
+
 psp::module!("vfpu_test", 1, 1);
 
 fn vfpu_add(a: i32, b: i32) -> i32 {
@@ -25,5 +27,8 @@ fn vfpu_add(a: i32, b: i32) -> i32 {
 fn psp_main() {
     psp::enable_home_button();
     psp::dprintln!("Testing VFPU...");
+    unsafe {
+        kernel::sce_kernel_change_current_thread_attr(0, ThreadAttributes::VFPU);
+    }
     psp::dprintln!("VFPU 123 + 4 = {}", vfpu_add(123, 4));
 }

@@ -18,27 +18,68 @@ fn psp_main() {
 
 See `examples` directory for sample programs.
 
-## Installation / Usage
+## Rust dependencies 
 
-Currently, this crate depends on a patched `libcore`. This means it is not
-easy to build or use. The patch is available [here], if you wish to apply it
-yourself. This patch has already been merged upstream into `stdarch`, however it
-has not been merged into the rust compiler as of when this README was written.
+Currently, this crate depends on the `mipsel-sony-psp` target that was recently
+added in Rust nightly. 
 
-Work is underway in order to add the PSP as a first class Rust target here:
+```sh
+rustup update nightly
+rustup default nightly
 
-https://github.com/rust-lang/rust/pull/72062
+```
+It also requires `xargo` to build libcore, liballoc, and libc.
+```sh
+rustup install xargo
+```
 
-Once this PR lands in rust nightly, it should be very easy to build the
-examples, and instructions will be posted.
-
-[here]: https://github.com/rust-lang/stdarch/pull/854/files
-
-## Dependencies
+## Other Dependencies
 
 You will need the [psp toolchain] installed, and the binaries in your `$PATH`.
 
 [psp toolchain]: https://github.com/pspdev/psptoolchain
+
+Work is underway to remove this dependency.
+
+## Usage
+
+Enter one of the example directories, `examples/hello-world` for instance,
+and type `make`. 
+
+This will create an `EBOOT.PBP` under `target/mipsel-sony-psp/release`
+
+Assuming you have a PSP with custom firmware
+installed, you can simply copy this file into a new directory under `PSP/GAME`
+and it will show up in your XMB menu. 
+
+You can also use `psplink` and `pspsh`
+to run the `.prx` under `target/mipsel-sony-psp/release` if you prefer.
+Refer to the installation and usage guides for those programs.
+
+`psp-gdb` is currently too old to support printing rust types.
+
+To use the `psp` crate in your own rust programs, add it to `Cargo.toml`
+as a git dependency:
+
+```toml
+[dependencies]
+psp = { git = "https://github.com/overdrivenpotato/rust-psp" }
+```
+
+You will also need to copy `Xargo.toml`. Now you can run 
+
+```sh
+xargo build --target=mipsel-sony-psp
+```
+to build an `elf`.
+
+Unfortunately, the PSP doesn't run unmodified
+elfs, so you should copy and adapt our `Makefile` from one of the examples.
+This Makefile will eventually be replaced by a cargo subcommand, at which point
+this README will be updated.
+
+Optionally, you can copy .cargo/config to avoid typing `--target=mipsel-sony-psp`
+every time you build.
 
 ## Features / Roadmap
 
@@ -53,7 +94,17 @@ You will need the [psp toolchain] installed, and the binaries in your `$PATH`.
 ## Known Bugs
 
 This crate **breaks** on debug builds. Likely due to the ABI mapper
-implementation. This should be fixable. For now build with `--release`.
+implementation. 
+
+This can be worked around by adding
+
+```toml
+[profile.dev]
+opt-level="z"
+```
+This enables optimization for debug builds.
+
+to Cargo.toml, or simply building with --release.
 
 ## `error[E0460]: found possibly newer version of crate ...`
 

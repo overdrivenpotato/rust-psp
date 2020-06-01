@@ -7,15 +7,15 @@ TARGET_NAME = psp-rainbow
 .PHONY: release
 release:
 	@RUST_TARGET_PATH="$(CWD)" RUSTFLAGS="-C link-dead-code" \
-		xargo build --target psp --release
+		xargo build --target mipsel-sony-psp --release
 
 	@psp-prxgen \
-		"$(CARGO_TARGET_DIR)"/psp/release/$(TARGET_NAME) \
-		"$(CARGO_TARGET_DIR)"/psp/release/$(TARGET_NAME).prx
+		"$(CARGO_TARGET_DIR)"/mipsel-sony-psp/release/$(TARGET_NAME) \
+		"$(CARGO_TARGET_DIR)"/mipsel-sony-psp/release/$(TARGET_NAME).prx
 
-	@mksfo "Rust Rainbow" "$(CARGO_TARGET_DIR)"/psp/release/PARAM.SFO
-	@pack-pbp "$(CARGO_TARGET_DIR)"/psp/release/EBOOT.PBP \
-		"$(CARGO_TARGET_DIR)"/psp/release/PARAM.SFO NULL NULL NULL NULL NULL \
-		"$(CARGO_TARGET_DIR)"/psp/release/$(TARGET_NAME).prx NULL
+	@mksfo "Rust Rainbow" "$(CARGO_TARGET_DIR)"/mipsel-sony-psp/release/PARAM.SFO
+	@pack-pbp "$(CARGO_TARGET_DIR)"/mipsel-sony-psp/release/EBOOT.PBP \
+		"$(CARGO_TARGET_DIR)"/mipsel-sony-psp/release/PARAM.SFO NULL NULL NULL NULL NULL \
+		"$(CARGO_TARGET_DIR)"/mipsel-sony-psp/release/$(TARGET_NAME).prx NULL
 
-	@echo Saved to "$(CARGO_TARGET_DIR)"/psp/release/EBOOT.PBP
+	@echo Saved to "$(CARGO_TARGET_DIR)"/mipsel-sony-psp/release/EBOOT.PBP

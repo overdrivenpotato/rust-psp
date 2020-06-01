@@ -1,0 +1,2 @@
+[build]
+target = "mipsel-sony-psp"
