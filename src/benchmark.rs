@@ -1,5 +1,5 @@
 /// Executes a `FnOnce` `iterations` times and returns average duration per iteration
-pub fn benchmark<F: FnOnce()+Copy>(f: F, iterations: i32) -> core::time::Duration {
+pub fn benchmark<F: FnOnce()+Copy>(f: F, iterations: usize) -> core::time::Duration {
     let mut loop_start: u64 = 0;
     let mut loop_end: u64 = 0;
     let avg_micros: u64;
