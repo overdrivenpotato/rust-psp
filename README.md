@@ -104,7 +104,7 @@ opt-level="z"
 ```
 This enables optimization for debug builds.
 
-to Cargo.toml, or simply building with --release.
+to Cargo.toml, or simply building with `--release`.
 
 ## `error[E0460]: found possibly newer version of crate ...`
 
