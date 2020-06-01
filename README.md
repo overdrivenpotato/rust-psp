@@ -78,7 +78,7 @@ elfs, so you should copy and adapt our `Makefile` from one of the examples.
 This Makefile will eventually be replaced by a cargo subcommand, at which point
 this README will be updated.
 
-Optionally, you can copy .cargo/config to avoid typing `--target=mipsel-sony-psp`
+Optionally, you can copy `.cargo/config` to avoid typing `--target=mipsel-sony-psp`
 every time you build.
 
 ## Features / Roadmap
