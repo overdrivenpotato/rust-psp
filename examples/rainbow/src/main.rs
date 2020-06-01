@@ -30,7 +30,6 @@ fn psp_main() {
         }, 10);
         psp::dprintln!("{:?}", time);
     }
-    loop {}
 }
 
 fn wheel(mut pos: u8) -> u32 {
