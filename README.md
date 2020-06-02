@@ -69,7 +69,7 @@ psp = { git = "https://github.com/overdrivenpotato/rust-psp" }
 You will also need to copy `Xargo.toml`. Now you can run 
 
 ```sh
-xargo build --target=mipsel-sony-psp
+xargo build --target=mipsel-sony-psp --release
 ```
 to build an `elf`.
 
