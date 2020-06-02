@@ -1,7 +1,7 @@
 use core::ffi::c_void;
 
 #[repr(C, packed)]
-pub struct BmpHeader {
+struct BmpHeader {
     pub file_type: [u8; 2],
     pub file_size: u32,
     pub reserved_1: u16,
