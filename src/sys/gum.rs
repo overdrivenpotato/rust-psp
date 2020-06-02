@@ -1,6 +1,10 @@
-use crate::vfpu_asm;
-use crate::sys::{gu, vfpu_context::{Context, MatrixSet}};
 use core::{mem::MaybeUninit, ffi::c_void};
+use crate::vfpu_asm;
+use crate::sys::{
+    gu,
+    types::{ScePspFMatrix4, ScePspFVector3, ScePspFVector4},
+    vfpu_context::{Context, MatrixSet},
+};
 
 // TODO: Change all register names in `llvm_asm` to register numbers. Fixes
 // assembler bug.
@@ -15,9 +19,9 @@ pub enum Mode {
     Texture = 3,
 }
 
-static mut MATRIX_STACK: [[FMatrix4; 32]; 4] = {
-    let zero_vector = FVector4 { x: 0.0, y: 0.0, z: 0.0, w: 0.0 };
-    let zero_matrix = FMatrix4 {
+static mut MATRIX_STACK: [[ScePspFMatrix4; 32]; 4] = {
+    let zero_vector = ScePspFVector4 { x: 0.0, y: 0.0, z: 0.0, w: 0.0 };
+    let zero_matrix = ScePspFMatrix4 {
         x: zero_vector,
         y: zero_vector,
         z: zero_vector,
@@ -42,12 +46,12 @@ static mut MATRIX_STACK: [[FMatrix4; 32]; 4] = {
 static mut MATRIX_UPDATE: [i32; 4] = [0, 0, 0, 0];
 static mut CURRENT_MATRIX_UPDATE: i32 = 0;
 
-static mut CURRENT_MATRIX: *mut FMatrix4 = unsafe {
+static mut CURRENT_MATRIX: *mut ScePspFMatrix4 = unsafe {
     &mut MATRIX_STACK[Mode::Projection as usize][0]
 };
 
 static mut CURRENT_MODE: Mode = Mode::Projection;
-static mut STACK_DEPTH: [*mut FMatrix4; 4] = unsafe {
+static mut STACK_DEPTH: [*mut ScePspFMatrix4; 4] = unsafe {
     [
         &mut MATRIX_STACK[Mode::Projection as usize][0],
         &mut MATRIX_STACK[Mode::View as usize][0],
@@ -62,278 +66,6 @@ unsafe fn get_context_unchecked() -> &'static mut Context {
         Some(r) => r,
         None => core::intrinsics::unreachable(),
     }
-}
-
-#[repr(C)]
-#[derive(Debug, Copy, Clone)]
-pub struct SRect {
-    pub x: i16,
-    pub y: i16,
-    pub w: i16,
-    pub h: i16,
-}
-
-#[repr(C)]
-#[derive(Debug, Copy, Clone)]
-pub struct IRect {
-    pub x: i32,
-    pub y: i32,
-    pub w: i32,
-    pub h: i32,
-}
-
-#[repr(C)]
-#[derive(Debug, Copy, Clone)]
-pub struct L64Rect {
-    pub x: u64,
-    pub y: u64,
-    pub w: u64,
-    pub h: u64,
-}
-
-#[repr(C)]
-#[derive(Debug, Copy, Clone)]
-pub struct FRect {
-    pub x: f32,
-    pub y: f32,
-    pub w: f32,
-    pub h: f32,
-}
-
-#[repr(C)]
-#[derive(Debug, Copy, Clone)]
-pub struct SVector2 {
-    pub x: i16,
-    pub y: i16,
-}
-
-#[repr(C)]
-#[derive(Debug, Copy, Clone)]
-pub struct IVector2 {
-    pub x: i32,
-    pub y: i32,
-}
-
-#[repr(C)]
-#[derive(Debug, Copy, Clone)]
-pub struct L64Vector2 {
-    pub x: u64,
-    pub y: u64,
-}
-
-#[repr(C)]
-#[derive(Debug, Copy, Clone)]
-pub struct FVector2 {
-    pub x: f32,
-    pub y: f32,
-}
-
-#[repr(C)]
-#[derive(Copy, Clone)]
-pub union Vector2 {
-    pub fv: FVector2,
-    pub iv: IVector2,
-    pub f: [f32; 2usize],
-    pub i: [i32; 2usize],
-}
-
-#[repr(C)]
-#[derive(Debug, Copy, Clone)]
-pub struct SVector3 {
-    pub x: i16,
-    pub y: i16,
-    pub z: i16,
-}
-
-#[repr(C)]
-#[derive(Debug, Copy, Clone)]
-pub struct IVector3 {
-    pub x: i32,
-    pub y: i32,
-    pub z: i32,
-}
-
-#[repr(C)]
-#[derive(Debug, Copy, Clone)]
-pub struct L64Vector3 {
-    pub x: u64,
-    pub y: u64,
-    pub z: u64,
-}
-
-#[repr(C, align(16))]
-#[derive(Debug, Copy, Clone)]
-pub struct FVector3 {
-    pub x: f32,
-    pub y: f32,
-    pub z: f32,
-}
-
-#[repr(C)]
-#[derive(Copy, Clone)]
-pub union Vector3 {
-    pub fv: FVector3,
-    pub iv: IVector3,
-    pub f: [f32; 3usize],
-    pub i: [i32; 3usize],
-}
-
-#[repr(C)]
-#[derive(Debug, Copy, Clone)]
-pub struct SVector4 {
-    pub x: i16,
-    pub y: i16,
-    pub z: i16,
-    pub w: i16,
-}
-
-#[repr(C)]
-#[derive(Debug, Copy, Clone)]
-pub struct IVector4 {
-    pub x: i32,
-    pub y: i32,
-    pub z: i32,
-    pub w: i32,
-}
-
-#[repr(C)]
-#[derive(Debug, Copy, Clone)]
-pub struct L64Vector4 {
-    pub x: u64,
-    pub y: u64,
-    pub z: u64,
-    pub w: u64,
-}
-
-#[repr(C, align(16))]
-#[derive(Debug, Copy, Clone)]
-pub struct FVector4 {
-    pub x: f32,
-    pub y: f32,
-    pub z: f32,
-    pub w: f32,
-}
-
-#[repr(C)]
-#[derive(Debug, Copy, Clone)]
-pub struct FVector4Unaligned {
-    pub x: f32,
-    pub y: f32,
-    pub z: f32,
-    pub w: f32,
-}
-
-#[repr(C)]
-#[repr(align(16))]
-#[derive(Copy, Clone)]
-pub union Vector4 {
-    pub fv: FVector4,
-    pub iv: IVector4,
-    pub f: [f32; 4usize],
-    pub i: [i32; 4usize],
-}
-
-#[repr(C)]
-#[derive(Debug, Copy, Clone)]
-pub struct IMatrix2 {
-    pub x: IVector2,
-    pub y: IVector2,
-}
-
-#[repr(C)]
-#[derive(Debug, Copy, Clone)]
-pub struct FMatrix2 {
-    pub x: FVector2,
-    pub y: FVector2,
-}
-
-#[repr(C)]
-#[derive(Copy, Clone)]
-pub union Matrix2 {
-    pub fm: FMatrix2,
-    pub im: IMatrix2,
-    pub fv: [FVector2; 2usize],
-    pub iv: [IVector2; 2usize],
-    pub v: [Vector2; 2usize],
-    pub f: [[f32; 2usize]; 2usize],
-    pub i: [[i32; 2usize]; 2usize],
-}
-
-#[repr(C)]
-#[derive(Debug, Copy, Clone)]
-pub struct IMatrix3 {
-    pub x: IVector3,
-    pub y: IVector3,
-    pub z: IVector3,
-}
-
-#[repr(C)]
-#[derive(Debug, Copy, Clone)]
-pub struct FMatrix3 {
-    pub x: FVector3,
-    pub y: FVector3,
-    pub z: FVector3,
-}
-
-#[repr(C)]
-#[derive(Copy, Clone)]
-pub union Matrix3 {
-    pub fm: FMatrix3,
-    pub im: IMatrix3,
-    pub fv: [FVector3; 3usize],
-    pub iv: [IVector3; 3usize],
-    pub v: [Vector3; 3usize],
-    pub f: [[f32; 3usize]; 3usize],
-    pub i: [[i32; 3usize]; 3usize],
-}
-
-#[repr(C)]
-#[derive(Debug, Copy, Clone)]
-pub struct IMatrix4 {
-    pub x: IVector4,
-    pub y: IVector4,
-    pub z: IVector4,
-    pub w: IVector4,
-}
-
-#[repr(C)]
-#[derive(Debug, Copy, Clone)]
-pub struct IMatrix4Unaligned {
-    pub x: IVector4,
-    pub y: IVector4,
-    pub z: IVector4,
-    pub w: IVector4,
-}
-
-#[repr(C, align(16))]
-#[derive(Debug, Copy, Clone)]
-pub struct FMatrix4 {
-    pub x: FVector4,
-    pub y: FVector4,
-    pub z: FVector4,
-    pub w: FVector4,
-}
-
-#[repr(C, align(16))]
-#[derive(Debug, Copy, Clone)]
-pub struct FMatrix4Unaligned {
-    pub x: FVector4,
-    pub y: FVector4,
-    pub z: FVector4,
-    pub w: FVector4,
-}
-
-#[repr(C)]
-#[repr(align(16))]
-#[derive(Copy, Clone)]
-pub union Matrix4 {
-    pub fm: FMatrix4,
-    pub im: IMatrix4,
-    pub fv: [FVector4; 4usize],
-    pub iv: [IVector4; 4usize],
-    pub v: [Vector4; 4usize],
-    pub f: [[f32; 4usize]; 4usize],
-    pub i: [[i32; 4usize]; 4usize],
 }
 
 pub const EPSILON: f32 = 0.00001;
@@ -452,7 +184,7 @@ pub unsafe fn sce_gum_load_identity() {
 /// # Parameters
 ///
 /// - `m`: Matrix to load into stack
-pub unsafe fn sce_gum_load_matrix(m: &FMatrix4) {
+pub unsafe fn sce_gum_load_matrix(m: &ScePspFMatrix4) {
     VFPU_CONTEXT
         .get_or_insert_with(Context::new)
         .prepare(MatrixSet::VMAT3, MatrixSet::empty());
@@ -469,7 +201,7 @@ pub unsafe fn sce_gum_load_matrix(m: &FMatrix4) {
     CURRENT_MATRIX_UPDATE = 1;
 }
 
-pub unsafe fn sce_gum_look_at(eye: &FVector3, center: &FVector3, up: &FVector3) {
+pub unsafe fn sce_gum_look_at(eye: &ScePspFVector3, center: &ScePspFVector3, up: &ScePspFVector3) {
     let mut t = gum_load_identity();
     gum_look_at(&mut t, eye, center, up);
 
@@ -527,7 +259,7 @@ pub unsafe fn sce_gum_matrix_mode(mode: Mode) {
 /// # Parameters
 ///
 /// - `m`: Matrix to multiply stack with
-pub unsafe fn sce_gum_mult_matrix(m: &FMatrix4) {
+pub unsafe fn sce_gum_mult_matrix(m: &ScePspFMatrix4) {
     get_context_unchecked().prepare(MatrixSet::VMAT3, MatrixSet::VMAT0 | MatrixSet::VMAT1);
 
     vfpu_asm!(
@@ -768,7 +500,7 @@ pub unsafe fn sce_gum_rotate_z(angle: f32) {
 /// # Parameters
 ///
 /// - `v`: Pointer to vector containing angles
-pub unsafe fn sce_gum_rotate_xyz(v: &FVector3) {
+pub unsafe fn sce_gum_rotate_xyz(v: &ScePspFVector3) {
     sce_gum_rotate_x(v.x);
     sce_gum_rotate_y(v.y);
     sce_gum_rotate_z(v.z);
@@ -779,7 +511,7 @@ pub unsafe fn sce_gum_rotate_xyz(v: &FVector3) {
 /// # Parameters
 ///
 /// - `v`: Pointer to vector containing angles
-pub unsafe fn sce_gum_rotate_zyx(v: &FVector3) {
+pub unsafe fn sce_gum_rotate_zyx(v: &ScePspFVector3) {
     sce_gum_rotate_z(v.z);
     sce_gum_rotate_y(v.y);
     sce_gum_rotate_x(v.x);
@@ -790,7 +522,7 @@ pub unsafe fn sce_gum_rotate_zyx(v: &FVector3) {
 /// # Note
 ///
 /// The matrix loses its orthonogal status after executing this function.
-pub unsafe fn sce_gum_scale(v: &FVector3) {
+pub unsafe fn sce_gum_scale(v: &ScePspFVector3) {
     get_context_unchecked().prepare(MatrixSet::VMAT3, MatrixSet::VMAT0);
 
     vfpu_asm!(
@@ -808,7 +540,7 @@ pub unsafe fn sce_gum_scale(v: &FVector3) {
 /// # Parameters
 ///
 /// - `m`: Matrix to write result to
-pub unsafe fn sce_gum_store_matrix(m: &mut FMatrix4) {
+pub unsafe fn sce_gum_store_matrix(m: &mut ScePspFMatrix4) {
     get_context_unchecked().prepare(MatrixSet::VMAT3, MatrixSet::VMAT0);
 
     vfpu_asm!(
@@ -826,7 +558,7 @@ pub unsafe fn sce_gum_store_matrix(m: &mut FMatrix4) {
 /// # Parameters
 ///
 /// - `v`: Translation coordinates
-pub unsafe fn sce_gum_translate(v: &FVector3) {
+pub unsafe fn sce_gum_translate(v: &ScePspFVector3) {
     get_context_unchecked().prepare(MatrixSet::VMAT3, MatrixSet::VMAT0 | MatrixSet::VMAT1);
 
     vfpu_asm!(
@@ -879,7 +611,7 @@ pub unsafe fn sce_gum_update_matrix() {
     }
 }
 
-fn gum_normalize(v: &mut FVector3) {
+fn gum_normalize(v: &mut ScePspFVector3) {
     let l = unsafe {
         use core::intrinsics::sqrtf32;
         sqrtf32((v.x * v.x) + (v.y * v.y) + (v.z * v.z))
@@ -894,8 +626,8 @@ fn gum_normalize(v: &mut FVector3) {
     }
 }
 
-fn gum_cross_product(a: &FVector3, b: &FVector3) -> FVector3 {
-    FVector3 {
+fn gum_cross_product(a: &ScePspFVector3, b: &ScePspFVector3) -> ScePspFVector3 {
+    ScePspFVector3 {
         x: a.y * b.z - a.z * b.y,
         y: a.z * b.x - a.x * b.z,
         z: a.x * b.y - a.y * b.x,
@@ -903,12 +635,12 @@ fn gum_cross_product(a: &FVector3, b: &FVector3) -> FVector3 {
 }
 
 unsafe fn gum_look_at(
-    mat: &mut FMatrix4,
-    eye: &FVector3,
-    center: &FVector3,
-    up: &FVector3,
+    mat: &mut ScePspFMatrix4,
+    eye: &ScePspFVector3,
+    center: &ScePspFVector3,
+    up: &ScePspFVector3,
 ) {
-    let mut forward = FVector3 {
+    let mut forward = ScePspFVector3 {
         x: center.x - eye.x,
         y: center.y - eye.y,
         z: center.z - eye.z,
@@ -935,7 +667,7 @@ unsafe fn gum_look_at(
     t.y.z = -forward.y;
     t.z.z = -forward.z;
 
-    let ieye = FVector3 {
+    let ieye = ScePspFVector3 {
         x: -eye.x,
         y: -eye.y,
         z: -eye.z,
@@ -945,7 +677,7 @@ unsafe fn gum_look_at(
     gum_translate(&mut mat, &ieye);
 }
 
-unsafe fn gum_translate(m: &mut FMatrix4, v: &FVector3) {
+unsafe fn gum_translate(m: &mut ScePspFMatrix4, v: &ScePspFVector3) {
     get_context_unchecked().prepare(
         MatrixSet::empty(),
         MatrixSet::VMAT0 | MatrixSet::VMAT1 | MatrixSet::VMAT2,
@@ -971,7 +703,7 @@ unsafe fn gum_translate(m: &mut FMatrix4, v: &FVector3) {
     );
 }
 
-unsafe fn gum_load_identity() -> FMatrix4 {
+unsafe fn gum_load_identity() -> ScePspFMatrix4 {
     get_context_unchecked().prepare(MatrixSet::empty(), MatrixSet::VMAT0);
 
     let mut out = MaybeUninit::uninit();
@@ -989,7 +721,7 @@ unsafe fn gum_load_identity() -> FMatrix4 {
     out.assume_init()
 }
 
-unsafe fn gum_fast_inverse(a: &FMatrix4) -> FMatrix4 {
+unsafe fn gum_fast_inverse(a: &ScePspFMatrix4) -> ScePspFMatrix4 {
     get_context_unchecked().prepare(
         MatrixSet::empty(),
         MatrixSet::VMAT0 | MatrixSet::VMAT1 | MatrixSet::VMAT2,
@@ -1019,7 +751,7 @@ unsafe fn gum_fast_inverse(a: &FMatrix4) -> FMatrix4 {
     out.assume_init()
 }
 
-unsafe fn gum_mult_matrix(a: &FMatrix4, b: &FMatrix4) -> FMatrix4 {
+unsafe fn gum_mult_matrix(a: &ScePspFMatrix4, b: &ScePspFMatrix4) -> ScePspFMatrix4 {
     get_context_unchecked().prepare(
         MatrixSet::empty(),
         MatrixSet::VMAT0 | MatrixSet::VMAT1 | MatrixSet::VMAT2,

@@ -4,7 +4,8 @@
 use psp::Align16;
 use core::{ptr, ffi::c_void};
 use psp::sys::{
-    gum::{self, FVector3},
+    gum,
+    types::ScePspFVector3,
     display::DisplayPixelFormat,
     gu::{
         self, Context, SyncMode, SyncBehavior, Primitive, TextureFilter,
@@ -179,8 +180,8 @@ unsafe fn psp_main_inner() {
         gum::sce_gum_load_identity();
 
         {
-            let pos = FVector3 { x: 0.0, y: 0.0, z: -2.5 };
-            let rot = FVector3 {
+            let pos = ScePspFVector3 { x: 0.0, y: 0.0, z: -2.5 };
+            let rot = ScePspFVector3 {
                 x: val * 0.79 * (gu::PI / 180.0),
                 y: val * 0.98 * (gu::PI / 180.0),
                 z: val * 1.32 * (gu::PI / 180.0),

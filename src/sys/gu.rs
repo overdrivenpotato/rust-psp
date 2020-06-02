@@ -1,13 +1,11 @@
 use core::{mem, ffi::c_void, ptr::null_mut};
-
 use num_enum::TryFromPrimitive;
-
 use crate::sys::{
     ge::{self, GeContext, GeListArgs, Command, GeListState, GeBreakParam},
     kernel::SceUid,
     display::DisplayPixelFormat,
+    types::{ScePspFMatrix4, ScePspFVector3, ScePspIMatrix4, ScePspIVector4},
 };
-use crate::sys::types::{FMatrix4, FVector3, IMatrix4, IVector4};
 
 pub const PI: f32 = 3.141593;
 
@@ -1631,11 +1629,11 @@ pub unsafe fn sce_gu_start(context_type: Context, list: *mut c_void) {
     }
 
     if INIT == 0 {
-        static DITHER_MATRIX: IMatrix4 = IMatrix4 {
-            x: IVector4 { x: -4, y:  0, z: -3, w:  1, },
-            y: IVector4 { x:  2, y: -2, z:  3, w: -1, },
-            z: IVector4 { x: -3, y:  1, z: -4, w:  0, },
-            w: IVector4 { x:  3, y: -1, z:  2, w: -2, },
+        static DITHER_MATRIX: ScePspIMatrix4 = ScePspIMatrix4 {
+            x: ScePspIVector4 { x: -4, y:  0, z: -3, w:  1, },
+            y: ScePspIVector4 { x:  2, y: -2, z:  3, w: -1, },
+            z: ScePspIVector4 { x: -3, y:  1, z: -4, w:  0, },
+            w: ScePspIVector4 { x:  3, y: -1, z:  2, w: -2, },
         };
 
         sce_gu_set_dither(&DITHER_MATRIX);
@@ -2134,7 +2132,7 @@ pub unsafe fn sce_gu_light(
     light: i32,
     type_: LightType,
     components: LightComponent,
-    position: &FVector3,
+    position: &ScePspFVector3,
 ) {
     let settings = &LIGHT_COMMANDS[light as usize];
 
@@ -2213,7 +2211,7 @@ pub unsafe fn sce_gu_light_mode(mode: LightMode) {
 /// - `direction`: Spotlight direction
 /// - `exponent`: Spotlight exponent
 /// - `cutoff`: Spotlight cutoff angle (in radians)
-pub unsafe fn sce_gu_light_spot(light: i32, direction: &FVector3, exponent: f32, cutoff: f32) {
+pub unsafe fn sce_gu_light_spot(light: i32, direction: &ScePspFVector3, exponent: f32, cutoff: f32) {
     let settings = &LIGHT_COMMANDS[light as usize];
 
     send_command_f(settings.exponent, exponent);
@@ -2546,7 +2544,7 @@ pub unsafe fn sce_gu_logical_op(op: LogicalOperation) {
 /// # Parameters
 ///
 /// - `matrix`: Dither matrix
-pub unsafe fn sce_gu_set_dither(matrix: &IMatrix4) {
+pub unsafe fn sce_gu_set_dither(matrix: &ScePspIMatrix4) {
     send_command_i(
         Command::Dith0,
         (matrix.x.x & 0x0f)
@@ -3136,7 +3134,7 @@ pub unsafe fn sce_gu_draw_spline(
 ///
 /// - `type`: Which matrix-type to set
 /// - `matrix`: Matrix to load
-pub unsafe fn sce_gu_set_matrix(type_: MatrixMode, matrix: &crate::sys::gum::FMatrix4) {
+pub unsafe fn sce_gu_set_matrix(type_: MatrixMode, matrix: &ScePspFMatrix4) {
     let fmatrix = matrix as *const _ as *const f32;
 
     match type_ {
@@ -3190,16 +3188,24 @@ pub unsafe fn sce_gu_set_matrix(type_: MatrixMode, matrix: &crate::sys::gum::FMa
 ///
 /// - `index`: Skinning matrix index (0-7)
 /// - `matrix`: Matrix to set
-pub unsafe fn sce_gu_bone_matrix(index: u32, matrix: *const FMatrix4) {
-    let offset = ((index << 1) + index) << 2; // 3 * 4 matrix
-    let fmatrix = matrix as *const f32;
+pub unsafe fn sce_gu_bone_matrix(index: u32, matrix: &ScePspFMatrix4) {
+    send_command_i(Command::BoneMatrixNumber, index as i32 * 12); // 3 * 4 matrix
 
-    send_command_i(Command::BoneMatrixNumber, offset as i32);
-    for i in 0..4 {
-        for j in 0..3 {
-            send_command_f(Command::BoneMatrixData, *fmatrix.offset(j + (i << 2)));
-        }
-    }
+    send_command_f(Command::BoneMatrixData, matrix.x.x);
+    send_command_f(Command::BoneMatrixData, matrix.x.y);
+    send_command_f(Command::BoneMatrixData, matrix.x.z);
+
+    send_command_f(Command::BoneMatrixData, matrix.y.x);
+    send_command_f(Command::BoneMatrixData, matrix.y.y);
+    send_command_f(Command::BoneMatrixData, matrix.y.z);
+
+    send_command_f(Command::BoneMatrixData, matrix.z.x);
+    send_command_f(Command::BoneMatrixData, matrix.z.y);
+    send_command_f(Command::BoneMatrixData, matrix.z.z);
+
+    send_command_f(Command::BoneMatrixData, matrix.w.x);
+    send_command_f(Command::BoneMatrixData, matrix.w.y);
+    send_command_f(Command::BoneMatrixData, matrix.w.z);
 }
 
 /// Specify morph weight entry
