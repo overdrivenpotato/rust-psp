@@ -110,7 +110,12 @@ unsafe fn init() {
 
     // TODO: Change sys types to usize.
     sys::display::sce_display_set_mode(sys::display::DisplayMode::Lcd, DISPLAY_WIDTH, DISPLAY_HEIGHT);
-    sys::display::sce_display_set_frame_buf(VRAM_BASE as *const u8, BUFFER_WIDTH, sys::display::DisplayPixelFormat::_8888, sys::display::DisplaySetBufSync::NextFrame);
+    sys::display::sce_display_set_frame_buf(
+        VRAM_BASE as *const u8,
+        BUFFER_WIDTH,
+        sys::display::DisplayPixelFormat::Psm8888,
+        sys::display::DisplaySetBufSync::NextFrame,
+    );
 }
 
 #[doc(hidden)]
