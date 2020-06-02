@@ -1,6 +1,6 @@
 use crate::vfpu_asm;
 use crate::sys::{gu, vfpu_context::{Context, MatrixSet}};
-use core::{ptr, mem::MaybeUninit, ffi::c_void};
+use core::{mem::MaybeUninit, ffi::c_void};
 
 // TODO: Change all register names in `llvm_asm` to register numbers. Fixes
 // assembler bug.

@@ -17,13 +17,13 @@ pub enum DisplayMode {
 /// Framebuffer pixel formats.
 pub enum DisplayPixelFormat {
     /// 16-bit RGB 5:6:5
-    _565 = 0,
+    Psm5650 = 0,
     /// 16-bit RGBA 5:5:5:1
-    _5551 = 1,
+    Psm5551 = 1,
     /// 16-bit RGBA 4:4:4:4
-    _4444 = 2,
+    Psm4444 = 2,
     /// 32-bit RGBA 8:8:8:8
-    _8888 = 3,
+    Psm8888 = 3,
 } 
 
 #[derive(Debug, Clone, Copy)]

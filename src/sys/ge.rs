@@ -30,6 +30,7 @@ pub struct GeListArgs {
 }
 
 impl Default for GeListArgs {
+   #[inline(always)]
     fn default() -> Self {
         Self {
             size: 0,
@@ -67,9 +68,7 @@ pub enum GeMatrixType {
     TexGen,
 }
 
-/// List status for sce_ge_list_sync() and sce_ge_draw_sync().
-// TODO: Use this as an argument in those functions
-// TODO: Merge with `gu::SyncBehaviorWhat`
+/// List status for `sce_ge_list_sync` and `sce_ge_draw_sync`.
 #[repr(i32)]
 pub enum GeListState {
     Done = 0,
@@ -453,7 +452,12 @@ sys_lib! {
     /// # Return value
     ///
     /// ID of the queue, < 0 on error.
-    pub unsafe fn sce_ge_list_enqueue(list: *const c_void, stall: *mut c_void, cbid: i32, arg: *mut GeListArgs) -> i32;
+    pub unsafe fn sce_ge_list_enqueue(
+       list: *const c_void,
+       stall: *mut c_void,
+       cbid: i32,
+       arg: *mut GeListArgs,
+    ) -> i32;
 
     #[psp(0x1C0D95A6)]
     /// Enqueue a display list at the head of the GE display list queue.
@@ -507,21 +511,21 @@ sys_lib! {
     ///
     /// # Return value
     ///
-    /// The specified queue status, one of GeListState.
-    pub unsafe fn sce_ge_list_sync(qid: i32, sync_type: i32) -> i32;
+    /// The specified queue status, one of `GeListState`.
+    pub unsafe fn sce_ge_list_sync(qid: i32, sync_type: i32) -> GeListState;
 
     #[psp(0xB287BD61)]
     /// Wait for drawing to complete.
     ///
     /// # Parameters
     ///
-    /// `syncType` - 0 if you want to wait for the drawing to be completed, or 1 if you
+    /// - `sync_type`: 0 if you want to wait for the drawing to be completed, or 1 if you
     /// just want to peek the actual state.
     ///
     /// # Return value
     ///
     /// The current queue status, one of GeListState.
-    pub unsafe fn sce_ge_draw_sync(sync_type: i32) -> i32;
+    pub unsafe fn sce_ge_draw_sync(sync_type: i32) -> GeListState;
 
     #[psp(0xB448EC0D)]
     /// Interrupt drawing queue.
