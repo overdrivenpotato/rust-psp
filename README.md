@@ -88,7 +88,7 @@ every time you build.
 - [x] `alloc` support
 - [x] `panic = "unwind"` support
 - [x] Macro-based VFPU assembler
-- [ ] Migrate to LLVM-based linker
+- [x] Migrate to LLVM-based linker
 - [ ] Rewrite `psp-prxgen` in rust?
 
 ## Known Bugs
