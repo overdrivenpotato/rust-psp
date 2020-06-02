@@ -1411,7 +1411,7 @@ pub unsafe fn sce_gu_init() {
         Command::Nop,
     ];
 
-    static mut INIT_LIST: crate::Align16<[u32; 223]> = crate::Align16({
+    static INIT_LIST: crate::Align16<[u32; 223]> = crate::Align16({
         let mut out = [0; 223];
 
         let mut i = 0;
@@ -1437,9 +1437,7 @@ pub unsafe fn sce_gu_init() {
     GE_EDRAM_ADDRESS = super::ge::sce_ge_edram_get_addr() as *mut c_void;
 
     GE_LIST_EXECUTED[0] = super::ge::sce_ge_list_enqueue(
-        (
-            &mut INIT_LIST as *mut crate::Align16<[u32;223]> as u32 & 0x1fffffff
-        ) as *mut c_void,
+        (&INIT_LIST as *const _ as u32 & 0x1fffffff) as *const _,
         core::ptr::null_mut(),
         SETTINGS.ge_callback_id as i32,
         core::ptr::null_mut()
