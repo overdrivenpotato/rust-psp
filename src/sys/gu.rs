@@ -3,7 +3,7 @@ use core::{mem, ffi::c_void, ptr::null_mut};
 use num_enum::TryFromPrimitive;
 
 use crate::sys::{
-    ge::{GeContext, GeListArgs, Command, GeListState},
+    ge::{self, GeContext, GeListArgs, Command, GeListState, GeBreakParam},
     kernel::SceUid,
     display::DisplayPixelFormat,
 };
@@ -1463,26 +1463,26 @@ pub unsafe fn sce_gu_init() {
 ///
 /// Called when GU is no longer needed
 pub unsafe fn sce_gu_term() {
-    use crate::sys::{ge, kernel};
+    use crate::sys::kernel;
 
     kernel::sce_kernel_delete_event_flag(SETTINGS.kernel_event_flag);
     ge::sce_ge_unset_callback(SETTINGS.ge_callback_id);
 }
 
-pub unsafe fn sce_gu_break(_a0: i32) {
-    // This is actually unimplemented in PSPSDK
+/// # Parameters
+///
+/// - `mode`: If set to 1, reset all the queues.
+pub unsafe fn sce_gu_break(mode: i32) {
+    static mut UNUSED_BREAK: GeBreakParam = GeBreakParam {
+        buf: [0; 4],
+    };
 
-    // FIXME
-    //sceGeBreak(a0,0x527a68);
-    unimplemented!()
+    ge::sce_ge_break(mode, &mut UNUSED_BREAK);
 }
 
 pub unsafe fn sce_gu_continue() {
-    // This is actually unimplemented in PSPSDK
-
-    // FIXME
-    //sceGeContinue();
-    unimplemented!()
+    // Return this?
+    ge::sce_ge_continue();
 }
 
 // FIXME: This documentation is confusing.
