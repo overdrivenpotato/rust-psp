@@ -7,7 +7,7 @@ TARGET_NAME = psp-vfpu-test
 .PHONY: release
 release:
 	@RUST_TARGET_PATH="$(CWD)" RUSTFLAGS="-C link-dead-code" \
-		xargo rustc --target psp --release -- -Z macro-backtrace
+		xargo build --target psp --release
 
 	@psp-prxgen \
 		"$(CARGO_TARGET_DIR)"/psp/release/$(TARGET_NAME) \
