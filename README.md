@@ -96,15 +96,14 @@ every time you build.
 This crate **breaks** on debug builds. Likely due to the ABI mapper
 implementation. 
 
-This can be worked around by adding
+This can be worked around by enabling optimization for debug builds
 
 ```toml
 [profile.dev]
 opt-level="z"
 ```
-This enables optimization for debug builds.
+or simply building with `--release`.
 
-to Cargo.toml, or simply building with `--release`.
 
 ## `error[E0460]: found possibly newer version of crate ...`
 
