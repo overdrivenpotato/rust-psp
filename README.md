@@ -18,45 +18,77 @@ fn psp_main() {
 
 See `examples` directory for sample programs.
 
-## Rust dependencies 
+## Features / Roadmap
 
-Currently, this crate depends on the `mipsel-sony-psp` target that was recently
-added in Rust nightly. 
+- [x] `core` support
+- [x] PSP system library support
+- [x] `alloc` support
+- [x] `panic = "unwind"` support
+- [x] Macro-based VFPU assembler
+- [x] Full 3D graphics support
+- [x] Migrate to LLVM-based linker
+- [ ] Remove PSP toolchain dependency: rewrite `psp-prxgen`, `pack-pbp`, and
+      `PRXEncrypter`
+
+## Rust Dependencies
+
+To compile for the PSP, you will need a rust **nightly** version equal to or
+later than `2020-05-30`.
 
 ```sh
-rustup update nightly
-rustup default nightly
-
+rustup toolchain add nightly
 ```
-It also requires `xargo` to build libcore, liballoc, and libc.
+
+You also need `xargo` installed (for compilation of rust-internal crates).
+
 ```sh
 cargo install xargo
 ```
 
-## Other Dependencies
+## PSP Toolchain
 
-You will need the [psp toolchain] installed, and the binaries in your `$PATH`.
+You need the [psp toolchain] installed, and the binaries in your `$PATH`.
+
+NB: The main binary we need is `psp-prxgen`, ideally this will eventually be
+ported to rust.
 
 [psp toolchain]: https://github.com/pspdev/psptoolchain
 
-Work is underway to remove this dependency.
+## Running Examples
 
-## Usage
+Enter one of the example directories, `examples/hello-world` for instance, and
+type `make`.
 
-Enter one of the example directories, `examples/hello-world` for instance,
-and type `make`. 
+This will create an `EBOOT.PBP` under `target/mipsel-sony-psp/release/`
 
-This will create an `EBOOT.PBP` under `target/mipsel-sony-psp/release`
+Assuming you have a PSP with custom firmware installed, you can simply copy this
+file into a new directory under `PSP/GAME` in your memory stick, and it will
+show up in your XMB menu.
 
-Assuming you have a PSP with custom firmware
-installed, you can simply copy this file into a new directory under `PSP/GAME`
-and it will show up in your XMB menu. 
+```
+.
+└── PSP
+    └── GAME
+        └── hello-world
+            └── EBOOT.PBP
+```
 
-You can also use `psplink` and `pspsh`
-to run the `.prx` under `target/mipsel-sony-psp/release` if you prefer.
-Refer to the installation and usage guides for those programs.
+### Advanced usage: `PRXEncrypter`
+
+If you don't have a PSP with CFW installed, you can manually sign the PRX using
+`PRXEncrypter`, and then re-package it using `pack-pbp`.
+
+### Advanced usage: PSPLink
+
+You can also use `psplink` and `pspsh` to run the `.prx` under
+`target/mipsel-sony-psp/release` if you prefer. Refer to the installation and
+usage guides for those programs.
+
+### Debugging
 
 `psp-gdb` is currently too old to support printing rust types.
+
+## Usage
 
 To use the `psp` crate in your own rust programs, add it to `Cargo.toml`
 as a git dependency:
@@ -66,35 +98,50 @@ as a git dependency:
 psp = { git = "https://github.com/overdrivenpotato/rust-psp" }
 ```
 
-You will also need to copy `Xargo.toml`. Now you can run 
+You will also need a `Xargo.toml` file in the root of your project like so:
 
-```sh
-xargo build --target=mipsel-sony-psp --release
+```toml
+[target.mipsel-sony-psp.dependencies.core]
+[target.mipsel-sony-psp.dependencies.alloc]
+[target.mipsel-sony-psp.dependencies.panic_unwind]
+stage = 1
 ```
-to build an `elf`.
 
-Unfortunately, the PSP doesn't run unmodified
-elfs, so you should copy and adapt our `Makefile` from one of the examples.
-This Makefile will eventually be replaced by a cargo subcommand, at which point
+And a `Makefile` file in the root as well, like the following (you will have to
+modify `TARGET_NAME`):
+
+```make
+# Change this to the cargo package name
+TARGET_NAME = package-name
+
+.PHONY: release
+release:
+	@RUSTFLAGS="-C link-dead-code" \
+		xargo build --target mipsel-sony-psp --release
+
+	@psp-prxgen \
+		"$(CARGO_TARGET_DIR)"/mipsel-sony-psp/release/$(TARGET_NAME) \
+		"$(CARGO_TARGET_DIR)"/mipsel-sony-psp/release/$(TARGET_NAME).prx
+
+	@mksfo "PSP Rust Cube" "$(CARGO_TARGET_DIR)"/mipsel-sony-psp/release/PARAM.SFO
+	@pack-pbp "$(CARGO_TARGET_DIR)"/mipsel-sony-psp/release/EBOOT.PBP \
+		"$(CARGO_TARGET_DIR)"/mipsel-sony-psp/release/PARAM.SFO NULL NULL NULL NULL NULL \
+		"$(CARGO_TARGET_DIR)"/mipsel-sony-psp/release/$(TARGET_NAME).prx NULL
+
+	@echo Saved to "$(CARGO_TARGET_DIR)"/mipsel-sony-psp/release/EBOOT.PBP
+```
+
+Now you can simply run `make` to build your `EBOOT.PBP` file. The executable
+**must** be built with `--release` due to a bug in this crate, or it will not
+work as expected.
+
+The Makefile will eventually be replaced by a cargo subcommand, at which point
 this README will be updated.
-
-Optionally, you can copy `.cargo/config` to avoid typing `--target=mipsel-sony-psp`
-every time you build.
-
-## Features / Roadmap
-
-- [x] `core` support
-- [x] PSP system library support
-- [x] `alloc` support
-- [x] `panic = "unwind"` support
-- [x] Macro-based VFPU assembler
-- [x] Migrate to LLVM-based linker
-- [ ] Rewrite `psp-prxgen` in rust?
 
 ## Known Bugs
 
 This crate **breaks** on debug builds. Likely due to the ABI mapper
-implementation. 
+implementation.
 
 This can be worked around by enabling optimization for debug builds
 
@@ -103,7 +150,6 @@ This can be worked around by enabling optimization for debug builds
 opt-level="z"
 ```
 or simply building with `--release`.
-
 
 ## `error[E0460]: found possibly newer version of crate ...`
 
