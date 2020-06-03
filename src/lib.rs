@@ -32,6 +32,10 @@ mod eabi;
 mod alloc_impl;
 pub mod panic;
 pub mod sys;
+
+mod screenshot;
+pub use screenshot::*;
+
 mod benchmark;
 pub use benchmark::*;
 
