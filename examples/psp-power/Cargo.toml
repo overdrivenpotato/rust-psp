@@ -6,6 +6,3 @@ edition = "2018"
 
 [dependencies]
 psp = { path = "../.." }
-
-[profile.dev]
-opt-level="z"

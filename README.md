@@ -149,7 +149,7 @@ This can be worked around by enabling optimization for debug builds
 [profile.dev]
 opt-level="z"
 ```
-or simply building with `--release`.
+or simply building with `--release`, like the examples.
 
 ## `error[E0460]: found possibly newer version of crate ...`
 
