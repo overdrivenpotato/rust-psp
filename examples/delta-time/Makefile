@@ -2,21 +2,21 @@ CWD = $(shell pwd)
 CARGO_TARGET_DIR ?= ./target
 
 # Change this to the cargo package name
-TARGET_NAME = delta-time
+TARGET_NAME = psp-delta-time-example
 
 # The name displayed on the PSP Menu
-DISPLAY_NAME = "Delta Time"
+DISPLAY_NAME = "Rust Delta Time Example"
 
 .PHONY: release
 release:
-	@RUST_TARGET_PATH="$(CWD)" RUSTFLAGS="-C link-dead-code" \
+	@RUSTFLAGS="-C link-dead-code" \
 		xargo build --target mipsel-sony-psp --release
 
 	@psp-prxgen \
 		"$(CARGO_TARGET_DIR)"/mipsel-sony-psp/release/$(TARGET_NAME) \
 		"$(CARGO_TARGET_DIR)"/mipsel-sony-psp/release/$(TARGET_NAME).prx
 
-	@mksfo $(DISPLAY_NAME) "$(CARGO_TARGET_DIR)"/mipsel-sony-psp/release/PARAM.SFO
+	@mksfo "$(DISPLAY_NAME)" "$(CARGO_TARGET_DIR)"/mipsel-sony-psp/release/PARAM.SFO
 	@pack-pbp "$(CARGO_TARGET_DIR)"/mipsel-sony-psp/release/EBOOT.PBP \
 		"$(CARGO_TARGET_DIR)"/mipsel-sony-psp/release/PARAM.SFO NULL NULL NULL NULL NULL \
 		"$(CARGO_TARGET_DIR)"/mipsel-sony-psp/release/$(TARGET_NAME).prx NULL

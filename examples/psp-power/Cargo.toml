@@ -1,5 +1,5 @@
 [package]
-name = "psp-power"
+name = "psp-power-example"
 version = "0.1.0"
 authors = ["Nathan Bourgeois <iridescentrosesfall@gmail.com>"]
 edition = "2018"

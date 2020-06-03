@@ -1,5 +1,5 @@
 [package]
-name = "delta-time"
+name = "psp-delta-time-example"
 version = "0.1.0"
 authors = ["Nathan Bourgeois <iridescentrosesfall@gmail.com>"]
 edition = "2018"

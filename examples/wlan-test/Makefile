@@ -2,14 +2,14 @@ CWD = $(shell pwd)
 CARGO_TARGET_DIR ?= ./target
 
 # Change this to the cargo package name
-TARGET_NAME = wlan-test
+TARGET_NAME = psp-wlan-test-example
 
 # The name displayed on the PSP Menu
-DISPLAY_NAME = Rust Wlan Test
+DISPLAY_NAME = "Rust WLAN Test Example"
 
 .PHONY: release
 release:
-	@RUST_TARGET_PATH="$(CWD)" RUSTFLAGS="-C link-dead-code" \
+	@RUSTFLAGS="-C link-dead-code" \
 		xargo build --target mipsel-sony-psp --release
 
 	@psp-prxgen \
