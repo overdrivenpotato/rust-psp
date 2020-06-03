@@ -10,12 +10,12 @@ release:
 		xargo build --target psp --release
 
 	@psp-prxgen \
-		"$(CARGO_TARGET_DIR)"/psp/release/$(TARGET_NAME) \
-		"$(CARGO_TARGET_DIR)"/psp/release/$(TARGET_NAME).prx
+		"$(CARGO_TARGET_DIR)"/mipsel-sony-psp/release/$(TARGET_NAME) \
+		"$(CARGO_TARGET_DIR)"/mipsel-sony-psp/release/$(TARGET_NAME).prx
 
-	@mksfo "GU Background" "$(CARGO_TARGET_DIR)"/psp/release/PARAM.SFO
-	@pack-pbp "$(CARGO_TARGET_DIR)"/psp/release/EBOOT.PBP \
-		"$(CARGO_TARGET_DIR)"/psp/release/PARAM.SFO NULL NULL NULL NULL NULL \
-		"$(CARGO_TARGET_DIR)"/psp/release/$(TARGET_NAME).prx NULL
+	@mksfo "GU Background" "$(CARGO_TARGET_DIR)"/mipsel-sony-psp/release/PARAM.SFO
+	@pack-pbp "$(CARGO_TARGET_DIR)"/mipsel-sony-psp/release/EBOOT.PBP \
+		"$(CARGO_TARGET_DIR)"/mipsel-sony-psp/release/PARAM.SFO NULL NULL NULL NULL NULL \
+		"$(CARGO_TARGET_DIR)"/mipsel-sony-psp/release/$(TARGET_NAME).prx NULL
 
-	@echo Saved to "$(CARGO_TARGET_DIR)"/psp/release/EBOOT.PBP
+	@echo Saved to "$(CARGO_TARGET_DIR)"/mipsel-sony-psp/release/EBOOT.PBP
