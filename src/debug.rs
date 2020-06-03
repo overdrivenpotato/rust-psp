@@ -252,4 +252,4 @@ impl<'a> Iterator for LineIter<'a> {
 /// Raw MSX font.
 ///
 /// This is an 8bit x 256 black and white image.
-const MSX_FONT: [u8; 2048] = *include_bytes!("font.bin");
+const MSX_FONT: [u8; 2048] = *include_bytes!("msxfont.bin");
