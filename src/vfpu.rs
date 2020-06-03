@@ -275,43 +275,43 @@ macro_rules! instruction {
         )
     };
 
-    // vsub.s 0110 1000 0 ttttttt 0 sssssss 0 ddddddd
+    // vsub.s 0110 0000 1 ttttttt 0 sssssss 0 ddddddd
     (vsub_s $d:ident, $s:ident, $t:ident) => {
         concat!(
             "\n.byte ", $crate::register_single!($d),
             "\n.byte ", $crate::register_single!($s),
-            "\n.byte ", $crate::register_single!($t),
-            "\n.byte 0b01101000",
+            "\n.byte 0x80 | ", $crate::register_single!($t),
+            "\n.byte 0b01100000",
         )
     };
 
-    // vsub.p 0110 1000 0 ttttttt 0 sssssss 1 ddddddd
+    // vsub.p 0110 0000 1 ttttttt 0 sssssss 1 ddddddd
     (vsub_p $d:ident, $s:ident, $t:ident) => {
         concat!(
             "\n.byte 0x80 | ", $crate::register_pair!($d),
             "\n.byte ", $crate::register_pair!($s),
-            "\n.byte ", $crate::register_pair!($t),
-            "\n.byte 0b01101000",
+            "\n.byte 0x80 | ", $crate::register_pair!($t),
+            "\n.byte 0b01100000",
         )
     };
 
-    // vsub.t 0110 1000 0 ttttttt 1 sssssss 0 ddddddd
+    // vsub.t 0110 0000 1 ttttttt 1 sssssss 0 ddddddd
     (vsub_t $d:ident, $s:ident, $t:ident) => {
         concat!(
             "\n.byte ", $crate::register_triple!($d),
             "\n.byte 0x80 | ", $crate::register_triple!($s),
-            "\n.byte ", $crate::register_triple!($t),
-            "\n.byte 0b01101000",
+            "\n.byte 0x80 | ", $crate::register_triple!($t),
+            "\n.byte 0b01100000",
         )
     };
 
-    // vsub.q 0110 1000 0 ttttttt 1 sssssss 1 ddddddd
+    // vsub.q 0110 0000 1 ttttttt 1 sssssss 1 ddddddd
     (vsub_q $d:ident, $s:ident, $t:ident) => {
         concat!(
             "\n.byte 0x80 | ", $crate::register_quad!($d),
             "\n.byte 0x80 | ", $crate::register_quad!($s),
-            "\n.byte ", $crate::register_quad!($t),
-            "\n.byte 0b01101000",
+            "\n.byte 0x80 | ", $crate::register_quad!($t),
+            "\n.byte 0b01100000",
         )
     };
 

@@ -2,7 +2,7 @@ use num_enum::TryFromPrimitive;
 
 ///PSP Time Structure
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, Default)]
 pub struct Time{
     pub year:           u16,
     pub month:          u16,
