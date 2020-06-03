@@ -8,6 +8,7 @@ use psp::sys::{
     },
     kernel,
     display,
+    gu,
 };
 
 use core::ffi::c_void;
@@ -21,14 +22,14 @@ fn psp_main() {
     unsafe {
         gu::sce_gu_init(); 
         gu::sce_gu_start(gu::Context::Direct, &mut LIST as *mut _ as *mut c_void);
-        gu::sce_gu_draw_buffer(gu::PixelFormat::Psm8888, core::ptr::null_mut(), 512);
+        gu::sce_gu_draw_buffer(display::DisplayPixelFormat::Psm8888, core::ptr::null_mut(), 512);
         gu::sce_gu_finish();
-        gu::sce_gu_sync(gu::SyncMode::SyncFinish, gu::SyncBehaviorWhat::SyncWhatDone);
+        gu::sce_gu_sync(gu::SyncMode::Finish, gu::SyncBehavior::Wait);
         display::sce_display_wait_vblank_start();
         gu::sce_gu_display(true);
     }
 
-    let dialog_size = core::mem::size_of::<Dialogcommon>();
+    let dialog_size = core::mem::size_of::<MsgDialogParams>();
     let base = DialogCommon {
         size: dialog_size as u32,
         language: SysParamLanguage::English, 
