@@ -1,4 +1,12 @@
-use core::ffi::c_void;
+use core::{ptr, ffi::c_void};
+use crate::sys::display::{self, DisplayPixelFormat};
+
+const SCREEN_WIDTH: usize = 480;
+const SCREEN_HEIGHT: usize = 272;
+// RGBA
+const BYTES_PER_PIXEL: usize = 4;
+
+const NUM_PIXELS: usize = SCREEN_WIDTH * SCREEN_HEIGHT;
 
 #[repr(C, packed)]
 struct BmpHeader {
@@ -15,91 +23,78 @@ struct BmpHeader {
     pub compression: u32,
     pub image_data_len: u32,
     pub print_resolution_x: u32,
-    pub print_resolution_y: u32, 
+    pub print_resolution_y: u32,
     pub palette_color_count: u32,
     pub important_colors: u32,
 }
 
 impl BmpHeader {
-    fn to_bytes(self) -> [u8; 54] {
+    const BYTES: usize = core::mem::size_of::<Self>();
+
+    fn to_bytes(self) -> [u8; Self::BYTES] {
         unsafe {
-            core::mem::transmute::<BmpHeader, [u8;54]>(self)
+            core::mem::transmute(self)
         }
     }
 }
 
-#[inline]
-fn extract_bits(value: u32, offset: u32, size: usize) -> u32 {
-    (value >> offset) & ((1 << size) - 1)
-}
-
-
-fn rgab8888_to_bgra8888(dst: *mut u32, src: *const u32, num: usize) {
-    for i in 0..num as isize {
-        unsafe {
-            let c = *src.offset(i);
-            let r = extract_bits(c,  0, 8);
-            let g = extract_bits(c,  8, 8);
-            let b = extract_bits(c, 16, 8);
-            let a = extract_bits(c, 24, 8);
-            *dst.offset(i) = (b << 0) | (g << 8) | (r << 16) | (a << 24);
-        }
-    }
-}
-
-pub fn raw_screenshot() -> [u8; 512*272*4] {
-    let mut screenshot_buffer = [0u8; 512*272*4];
+/// Take a screenshot, returning a raw RGBA array.
+pub fn screenshot() -> [u32; NUM_PIXELS] {
+    let mut screenshot_buffer = [0; NUM_PIXELS];
     let mut buffer_width: usize = 0;
-    let mut pixel_format = crate::sys::display::DisplayPixelFormat::_565;
-    let mut top_addr: u32 = 0;
-
+    let mut pixel_format = DisplayPixelFormat::_565;
+    let mut top_addr: *mut c_void = ptr::null_mut();
 
     unsafe {
-        crate::sys::display::sce_display_get_frame_buf(
-            &mut top_addr as *mut _ as *mut *mut c_void,  
-            &mut buffer_width as *mut usize,
-            &mut pixel_format as *mut crate::sys::display::DisplayPixelFormat,
-            crate::sys::display::DisplaySetBufSync::Immediate
+        display::sce_display_get_frame_buf(
+            &mut top_addr,
+            &mut buffer_width,
+            &mut pixel_format,
+            display::DisplaySetBufSync::Immediate,
         );
     }
 
-    if top_addr & 0x80000000 != 0 {
-        top_addr |= 0xA0000000;
+    // http://uofw.github.io/upspd/docs/hardware/PSPTEK.htm#memmap
+
+    // If this is a kernel address...
+    if top_addr as u32 & 0x80000000 != 0 {
+        // Set the kernel cache-through bit.
+        top_addr = (top_addr as u32 | 0xA0000000) as _;
     } else {
-        top_addr |= 0x40000000;
+        // Else set the regular cache-through bit.
+        top_addr = (top_addr as u32 | 0x40000000) as _;
     }
 
-    let mut vram_row: *mut u32;
-    let mut row_buf = [0u32; 512*4];
-    let row_bytes: u32 = match pixel_format {
-        crate::sys::display::DisplayPixelFormat::_8888 => (4 * buffer_width) as u32,
-        _ => (2 * buffer_width) as u32,
-    };
-    
+    for x in 0..SCREEN_WIDTH {
+        for y in 0..SCREEN_HEIGHT {
+            match pixel_format {
+                display::DisplayPixelFormat::_8888 => {
+                    let rgba = unsafe {
+                        *(top_addr as *mut u32).add(x + y * buffer_width)
+                    };
 
-    for y in 0..272 {
-        vram_row = (top_addr + row_bytes * (271-y)) as *mut u32;
-        match pixel_format {
-            crate::sys::display::DisplayPixelFormat::_8888 => {
-                rgab8888_to_bgra8888(&mut row_buf as *mut _ as *mut u32, vram_row, 512);
-            },
-            _ => {todo!("Support more pixel formats");}
-        }
-        unsafe {
-            core::ptr::copy(
-                core::mem::transmute::<*mut u32, *mut u8>(vram_row),
-                (&mut screenshot_buffer as *mut _ as  *mut u8).offset(y as isize*512*4),
-                512*4
-                );
+                    // Reversed for little-endian based copying.
+                    let abgr = (rgba >> 24)
+                        | ((rgba >> 16) & 0xff)
+                        | ((rgba >> 8) & 0xff)
+                        | ((rgba >> 0) & 0xff);
+
+                    screenshot_buffer[x + y * SCREEN_HEIGHT] = abgr;
+                }
+
+                _ => unimplemented!("unimplemented pixel format"),
+            }
         }
     }
+
     screenshot_buffer
 }
 
-pub fn screenshot() -> [u8; 54+512*272*4] {
+/// Take a screenshot, returning a valid bitmap file.
+pub fn screenshot_bmp() -> [u8; BmpHeader::BYTES + NUM_PIXELS * BYTES_PER_PIXEL] {
     let bmp_header = BmpHeader {
         file_type: *b"BM",
-        file_size: 54+512*272*4,
+        file_size: 54 + 512 * 272 * 4,
         reserved_1: 0,
         reserved_2: 0,
         image_data_start: 54,
@@ -116,8 +111,18 @@ pub fn screenshot() -> [u8; 54+512*272*4] {
         important_colors: 0
     };
 
-    let mut screenshot_buffer = [0u8; 54+512*272*4];
+    let mut screenshot_buffer = [0; BmpHeader::BYTES + NUM_PIXELS * BYTES_PER_PIXEL];
     screenshot_buffer[0..54].copy_from_slice(&bmp_header.to_bytes());
-    screenshot_buffer[54..].copy_from_slice(&raw_screenshot());
+
+    let payload = screenshot();
+
+    unsafe {
+        core::ptr::copy_nonoverlapping(
+            &payload[0] as *const _ as _,
+            &mut screenshot_buffer[54] as *mut u8,
+            NUM_PIXELS * BYTES_PER_PIXEL,
+        );
+    }
+
     screenshot_buffer
 }

@@ -50,7 +50,7 @@ bitflags::bitflags! {
         const ISVTX = 0x0200;
         /// Read user permission
         const IRUSR = 0x0100;
-        /// Write user permission 
+        /// Write user permission
         const IWUSR = 0x0080;
         /// Execute user permission
         const IXUSR = 0x0040;
@@ -179,8 +179,8 @@ sys_lib! {
 
     #[psp(0x6A638D83)]
     /// Read input
-    /// 
-    /// # Parameters 
+    ///
+    /// # Parameters
     ///
     /// `fd` - Opened file descriptor to read from
     /// `data` - Pointer to the buffer where the read data will be placed
@@ -220,8 +220,7 @@ sys_lib! {
     /// # Return value
     ///
     /// The number of bytes written
-    pub unsafe fn sce_io_write(fd: SceUid, data: *const c_void, size: u32)
-     -> i32;
+    pub unsafe fn sce_io_write(fd: SceUid, data: *const c_void, size: usize) -> i32;
 
     #[psp(0x0FACAB19)]
     /// Write output (asynchronous)
@@ -305,7 +304,7 @@ sys_lib! {
     /// Remove directory entry
     ///
     /// # Parameters
-    /// 
+    ///
     /// `file` - Path to the file to remove
     ///
     /// # Return value
@@ -644,7 +643,7 @@ sys_lib! {
     #[psp(0xA12A0514)]
     /// Sets a callback for the asynchronous action.
     ///
-    /// # Parameters 
+    /// # Parameters
     ///
     /// `fd` - The filedescriptor currently performing an asynchronous action.
     /// `cb` - The UID of the callback created with ::sceKernelCreateCallback

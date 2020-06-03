@@ -22,7 +22,7 @@ pub enum DisplayPixelFormat {
     _4444 = 2,
     /// 32-bit RGBA 8:8:8:8
     _8888 = 3,
-} 
+}
 
 #[repr(u32)]
 pub enum DisplaySetBufSync {
@@ -54,7 +54,7 @@ sys_lib! {
     #[psp(0xDEA197D4)]
     /// Get display mode
     ///
-    /// # Parameters 
+    /// # Parameters
     ///
     /// `pmode` - Pointer to an integer to receive the current mode.
     /// `pwidth` - Pointer to an integer to receive the current width.
@@ -68,7 +68,7 @@ sys_lib! {
     #[psp(0x289D82FE)]
     /// Display set framebuffer
     ///
-    /// # Parameters 
+    /// # Parameters
     ///
     /// `top_addr` - Address of start of framebuffer
     /// `buffer_width` - Buffer width (must be power of 2)
@@ -89,12 +89,17 @@ sys_lib! {
     /// Get display framebuffer information
     ///
     /// # Parameters
-    /// 
-    /// `top_addr` - Pointer to void* to receive address of start of framebuffer
-    /// `buffer_width` - Pointer to usize to receive buffer width (must be power of 2)
-    /// `pixelformat` - Pointer to receive DisplayPixelFormat.
-    /// `sync` - One of DisplaySetBufSync
-    pub unsafe fn sce_display_get_frame_buf(top_addr: *mut *mut c_void, buffer_width: *mut usize, pixel_format: *mut DisplayPixelFormat, sync: DisplaySetBufSync) -> i32;
+    ///
+    /// - `top_addr`: Pointer to void* to receive address of start of framebuffer
+    /// - `buffer_width`: Pointer to usize to receive buffer width (must be power of 2)
+    /// - `pixelformat`: Pointer to receive DisplayPixelFormat.
+    /// - `sync`: One of `DisplaySetBufSync`
+    pub unsafe fn sce_display_get_frame_buf(
+        top_addr: *mut *mut c_void,
+        buffer_width: *mut usize,
+        pixel_format: *mut DisplayPixelFormat,
+        sync: DisplaySetBufSync,
+    ) -> i32;
 
     #[psp(0x9C6EAAD7)]
     /// Number of vertical blank pulses up to now
@@ -102,7 +107,7 @@ sys_lib! {
 
     #[psp(0x984C27E7)]
     /// Wait for vertical blank start
-    pub unsafe fn sce_display_wait_vblank_start() -> i32; 
+    pub unsafe fn sce_display_wait_vblank_start() -> i32;
 
     #[psp(0x46F186C3)]
     /// Wait for vertical blank start with callback

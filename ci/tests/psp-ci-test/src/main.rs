@@ -45,7 +45,7 @@ fn test_panic(fd: &SceUid) {
     if result.is_err() {
         unsafe {
             psp::sys::io::sce_io_write(
-                *fd, 
+                *fd,
                 b"Panics work\n" as *const u8 as *const c_void, 12
             );
         }
@@ -54,6 +54,7 @@ fn test_panic(fd: &SceUid) {
 
 fn test_screenshot() {
     let screenshot = psp::screenshot();
+
     unsafe {
         let fd = psp::sys::io::sce_io_open(
             b"host0:/psp-ci-test.bmp\0" as *const u8,
@@ -63,7 +64,7 @@ fn test_screenshot() {
         psp::sys::io::sce_io_write(
             fd,
             &screenshot as *const _ as *const c_void,
-            557110
+            screenshot.len(),
         );
         psp::sys::io::sce_io_close(fd);
     }
