@@ -53,7 +53,7 @@ fn test_panic(fd: &SceUid) {
 }
 
 fn test_screenshot() {
-    let screenshot = psp::screenshot();
+    let screenshot = psp::screenshot_bmp();
 
     unsafe {
         let fd = psp::sys::io::sce_io_open(
