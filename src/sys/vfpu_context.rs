@@ -2,7 +2,7 @@
 //!
 //! This is similar (but not identical) to the pspvfpu library from PSPSDK.
 
-use crate::sys::gum::{FMatrix4, FVector4};
+use crate::sys::types::{ScePspFMatrix4, ScePspFVector4};
 
 const NUM_MATRICES: usize = 8;
 
@@ -21,7 +21,7 @@ bitflags::bitflags! {
 
 #[repr(C, align(16))]
 pub struct Context {
-    matrices: [FMatrix4; NUM_MATRICES],
+    matrices: [ScePspFMatrix4; NUM_MATRICES],
     saved: MatrixSet,
 }
 
@@ -34,8 +34,8 @@ impl Context {
             kernel::sce_kernel_change_current_thread_attr(0, ThreadAttributes::VFPU);
         }
 
-        let zero_vector = FVector4 { x: 0.0, y: 0.0, z: 0.0, w: 0.0 };
-        let zero_matrix = FMatrix4 {
+        let zero_vector = ScePspFVector4 { x: 0.0, y: 0.0, z: 0.0, w: 0.0 };
+        let zero_matrix = ScePspFMatrix4 {
             x: zero_vector,
             y: zero_vector,
             z: zero_vector,

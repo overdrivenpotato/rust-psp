@@ -2,7 +2,7 @@ CWD = $(shell pwd)
 CARGO_TARGET_DIR ?= ./target
 
 # Change this to the cargo package name
-TARGET_NAME = psp-vfpu-test
+TARGET_NAME = cube
 
 .PHONY: release
 release:
@@ -13,7 +13,7 @@ release:
 		"$(CARGO_TARGET_DIR)"/psp/release/$(TARGET_NAME) \
 		"$(CARGO_TARGET_DIR)"/psp/release/$(TARGET_NAME).prx
 
-	@mksfo "Rust VFPU test" "$(CARGO_TARGET_DIR)"/psp/release/PARAM.SFO
+	@mksfo "PSP Rust Cube" "$(CARGO_TARGET_DIR)"/psp/release/PARAM.SFO
 	@pack-pbp "$(CARGO_TARGET_DIR)"/psp/release/EBOOT.PBP \
 		"$(CARGO_TARGET_DIR)"/psp/release/PARAM.SFO NULL NULL NULL NULL NULL \
 		"$(CARGO_TARGET_DIR)"/psp/release/$(TARGET_NAME).prx NULL

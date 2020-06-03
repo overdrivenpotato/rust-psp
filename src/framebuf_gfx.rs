@@ -19,7 +19,7 @@ impl Framebuffer {
             display::sce_display_set_frame_buf(
                 vram_base as *const u8,
                 512,
-                display::DisplayPixelFormat::_8888,
+                display::DisplayPixelFormat::Psm8888,
                 display::DisplaySetBufSync::NextFrame,
             );
             Framebuffer { vram_base }
