@@ -30,22 +30,22 @@ See `examples` directory for sample programs.
 - [ ] Remove PSP toolchain dependency: rewrite `psp-prxgen`, `pack-pbp`, and
       `PRXEncrypter`
 
-## Rust Dependencies
+## Dependencies: Rust
 
 To compile for the PSP, you will need a rust **nightly** version equal to or
 later than `2020-05-30`.
 
 ```sh
-rustup toolchain add nightly
+$ rustup toolchain add nightly
 ```
 
 You also need `xargo` installed (for compilation of rust-internal crates).
 
 ```sh
-cargo install xargo
+$ cargo install xargo
 ```
 
-## PSP Toolchain
+## Dependency: PSP Toolchain
 
 You need the [psp toolchain] installed, and the binaries in your `$PATH`.
 
@@ -57,12 +57,12 @@ ported to rust.
 ## Running Examples
 
 Enter one of the example directories, `examples/hello-world` for instance, and
-type `make`.
+run `make`.
 
 This will create an `EBOOT.PBP` under `target/mipsel-sony-psp/release/`
 
 Assuming you have a PSP with custom firmware installed, you can simply copy this
-file into a new directory under `PSP/GAME` in your memory stick, and it will
+file into a new directory under `PSP/GAME` on your memory stick, and it will
 show up in your XMB menu.
 
 ```
