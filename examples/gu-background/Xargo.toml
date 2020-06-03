@@ -2,7 +2,3 @@
 [target.psp.dependencies.alloc]
 [target.psp.dependencies.panic_unwind]
 stage = 1
-
-[patch.crates-io.libc]
-git = "https://github.com/overdrivenpotato/libc"
-branch = "psp"
