@@ -5,7 +5,7 @@ CARGO_TARGET_DIR ?= ./target
 TARGET_NAME = psp-wlan-test-example
 
 # The name displayed on the PSP Menu
-DISPLAY_NAME = "Rust WLAN Test Example"
+DISPLAY_NAME = Rust WLAN Test Example
 
 .PHONY: release
 release:

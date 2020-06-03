@@ -12,7 +12,7 @@ use tinybmp::Bmp;
 
 use psp::framebuf_gfx;
 
-psp::module!("emb_gfx", 1, 1);
+psp::module!("sample_emb_gfx", 1, 1);
 
 fn psp_main() {
     psp::enable_home_button();

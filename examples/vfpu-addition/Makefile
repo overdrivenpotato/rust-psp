@@ -5,7 +5,7 @@ CARGO_TARGET_DIR ?= ./target
 TARGET_NAME = psp-vfpu-addition-example
 
 # The name displayed on the PSP Menu
-DISPLAY_NAME = "Rust VFPU Addition Example"
+DISPLAY_NAME = Rust VFPU Addition Example
 
 .PHONY: release
 release:

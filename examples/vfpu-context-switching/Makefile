@@ -5,7 +5,7 @@ CARGO_TARGET_DIR ?= ./target
 TARGET_NAME = psp-vfpu-context-switching-example
 
 # The name displayed on the PSP Menu
-DISPLAY_NAME = "Rust VFPU Context Switching Example"
+DISPLAY_NAME = Rust VFPU Context Switching Example
 
 .PHONY: release
 release:

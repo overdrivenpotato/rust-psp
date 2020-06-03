@@ -13,6 +13,14 @@ fn psp_main() {
 
         let mut ether_addr: [u8; 8] = [0; 8];
         psp::sys::wlan::sce_wlan_get_ether_addr(ether_addr.as_mut_ptr());
-        psp::dprintln!("ETHER ADDR: {:x}:{:x}:{:x}:{:x}:{:x}:{:x}", ether_addr[0], ether_addr[1], ether_addr[2], ether_addr[3], ether_addr[4], ether_addr[5]);
+        psp::dprintln!(
+            "ETHER ADDR: {:02x}:{:02x}:{:02x}:{:02x}:{:02x}:{:02x}",
+            ether_addr[0],
+            ether_addr[1],
+            ether_addr[2],
+            ether_addr[3],
+            ether_addr[4],
+            ether_addr[5],
+        );
     }
 }

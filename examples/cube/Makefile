@@ -5,7 +5,7 @@ CARGO_TARGET_DIR ?= ./target
 TARGET_NAME = psp-cube-example
 
 # The name displayed on the PSP Menu
-DISPLAY_NAME = "Rust Cube Example"
+DISPLAY_NAME = Rust Cube Example
 
 .PHONY: release
 release:

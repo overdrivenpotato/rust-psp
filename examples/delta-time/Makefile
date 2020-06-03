@@ -5,7 +5,7 @@ CARGO_TARGET_DIR ?= ./target
 TARGET_NAME = psp-delta-time-example
 
 # The name displayed on the PSP Menu
-DISPLAY_NAME = "Rust Delta Time Example"
+DISPLAY_NAME = Rust Delta Time Example
 
 .PHONY: release
 release:

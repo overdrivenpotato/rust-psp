@@ -5,12 +5,12 @@ CARGO_TARGET_DIR ?= ./target
 TARGET_NAME = psp-gu-background-example
 
 # The name displayed on the PSP Menu
-DISPLAY_NAME = "Rust GU Background Example"
+DISPLAY_NAME = Rust GU Background Example
 
 .PHONY: release
 release:
 	@RUSTFLAGS="-C link-dead-code" \
-		xargo build --target psp --release
+		xargo build --target mipsel-sony-psp --release
 
 	@psp-prxgen \
 		"$(CARGO_TARGET_DIR)"/mipsel-sony-psp/release/$(TARGET_NAME) \

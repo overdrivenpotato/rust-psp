@@ -5,7 +5,7 @@ CARGO_TARGET_DIR ?= ./target
 TARGET_NAME = psp-hello-world-example
 
 # The name displayed on the PSP Menu
-DISPLAY_NAME = "Rust Hello World Example"
+DISPLAY_NAME = Rust Hello World Example
 
 .PHONY: release
 release:

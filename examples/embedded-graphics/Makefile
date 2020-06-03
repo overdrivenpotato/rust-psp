@@ -5,7 +5,7 @@ CARGO_TARGET_DIR ?= ./target
 TARGET_NAME = psp-embedded-graphics-example
 
 # The name displayed on the PSP Menu
-DISPLAY_NAME = "Rust Embedded Graphics Example"
+DISPLAY_NAME = Rust Embedded Graphics Example
 
 .PHONY: release
 release:

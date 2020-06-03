@@ -5,7 +5,7 @@ CARGO_TARGET_DIR ?= ./target
 TARGET_NAME = psp-power-example
 
 # The name displayed on the PSP Menu
-DISPLAY_NAME = "Rust Power Example"
+DISPLAY_NAME = Rust Power Example
 
 .PHONY: release
 release:

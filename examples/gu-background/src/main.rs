@@ -6,7 +6,7 @@
 use core::ffi::c_void;
 use psp::sys::{gu::{self, TexturePixelFormat}, display::{self, DisplayPixelFormat}};
 
-psp::module!("gu_background", 1, 1);
+psp::module!("sample_gu_background", 1, 1);
 
 static mut LIST: psp::Align16<[u32; 0x40000]> = psp::Align16([0; 0x40000]);
 
