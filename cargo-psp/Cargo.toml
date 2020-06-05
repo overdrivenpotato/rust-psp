@@ -4,4 +4,13 @@ version = "0.0.0"
 authors = ["Marko Mijalkovic <marko.mijalkovic97@gmail.com>"]
 edition = "2018"
 
+[[bin]]
+name = "prxgen"
+
+[[bin]]
+name = "pack-pbp"
+
 [dependencies]
+clap = "2.33.1"
+goblin = "0.2.3"
+scroll = "0.10.1"
