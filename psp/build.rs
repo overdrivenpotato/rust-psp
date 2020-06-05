@@ -7,7 +7,7 @@ fn main() {
     // directly from the current directory.
     let out_dir = env::var("OUT_DIR").unwrap();
     let out_file = Path::new(&out_dir).join("libunwind.a");
-    std::fs::copy("./libunwind/libunwind.a", out_file).unwrap();
+    std::fs::copy("./libunwind.a", out_file).unwrap();
 
     println!("cargo:rustc-link-lib=static=unwind");
     println!("cargo:rustc-link-search=native={}", out_dir);

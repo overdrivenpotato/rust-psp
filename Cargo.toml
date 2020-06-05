@@ -1,23 +1,6 @@
-[package]
-name = "psp"
-version = "0.0.0"
-authors = ["Marko Mijalkovic <marko.mijalkovic97@gmail.com>"]
-edition = "2018"
-build = "build.rs"
+[workspace]
 
-[dependencies]
-paste = "0.1.12"
-bitflags = "1.2.1"
-embedded-graphics = { version = "0.6.2", optional = true }
-
-[dependencies.num_enum]
-version = "0.5.0"
-default-features = false
-
-[dependencies.num_enum_derive]
-version = "0.5.0"
-default-features = false
-
-[features]
-default = ["emb-gfx"]
-emb-gfx = ["embedded-graphics"]
+members = [
+    "psp",
+    "cargo-psp",
+]

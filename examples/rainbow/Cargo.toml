@@ -8,4 +8,4 @@ authors = [
 edition = "2018"
 
 [dependencies]
-psp = { path = "../.." }
+psp = { path = "../../psp" }
