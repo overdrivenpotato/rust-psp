@@ -94,7 +94,7 @@ AWK_CAMEL='
     }
 '
 
-cat <(pspModule $2) <(header $1 | rustfmt) \
+cat <(pspModule $2) <(header $1) \
     | awk "$AWK_CAMEL"'
         /^$/ { header_done = 1 }
 
