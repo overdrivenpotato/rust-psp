@@ -4,3 +4,5 @@ members = [
     "psp",
     "cargo-psp",
 ]
+
+exclude = [ "examples", "ci" ]
