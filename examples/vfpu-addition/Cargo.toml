@@ -1,5 +1,5 @@
 [package]
-name = "psp-vfpu-test"
+name = "psp-vfpu-addition-example"
 version = "0.1.0"
 authors = ["Marko Mijalkovic <marko.mijalkovic97@gmail.com>"]
 edition = "2018"

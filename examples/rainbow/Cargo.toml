@@ -1,5 +1,5 @@
 [package]
-name = "psp-rainbow"
+name = "psp-rainbow-example"
 version = "0.1.0"
 authors = [
     "Paul Sajna <sajattack@gmail.com>",

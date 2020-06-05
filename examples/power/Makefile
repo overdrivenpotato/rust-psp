@@ -2,10 +2,10 @@ CWD = $(shell pwd)
 CARGO_TARGET_DIR ?= ./target
 
 # Change this to the cargo package name
-TARGET_NAME = psp-embedded-graphics-example
+TARGET_NAME = psp-power-example
 
 # The name displayed on the PSP Menu
-DISPLAY_NAME = Rust Embedded Graphics Example
+DISPLAY_NAME = Rust Power Example
 
 .PHONY: release
 release:
