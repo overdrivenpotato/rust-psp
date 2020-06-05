@@ -33,7 +33,7 @@ See `examples` directory for sample programs.
 ## Dependencies: Rust
 
 To compile for the PSP, you will need a rust **nightly** version equal to or
-later than `2020-05-30`.
+later than `2020-06-04`.
 
 ```sh
 $ rustup toolchain add nightly
