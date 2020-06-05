@@ -1,7 +1,10 @@
 [package]
 name = "cargo-psp"
 version = "0.0.0"
-authors = ["Marko Mijalkovic <marko.mijalkovic97@gmail.com>"]
+authors = [
+    "Marko Mijalkovic <marko.mijalkovic97@gmail.com>",
+    "Paul Sajna <sajattack@gmail.com>"
+]
 edition = "2018"
 
 [[bin]]
@@ -9,6 +12,9 @@ name = "prxgen"
 
 [[bin]]
 name = "pack-pbp"
+
+[[bin]]
+name = "mksfo"
 
 [dependencies]
 clap = "2.33.1"
