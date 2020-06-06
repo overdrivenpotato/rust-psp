@@ -44,8 +44,6 @@ struct PrxGen {
 
     // Section index -> Vec<Rel>
     relocations: HashMap<usize, Vec<Rel>>,
-
-    module_info_offset: u32,
 }
 
 impl PrxGen {
@@ -61,39 +59,6 @@ impl PrxGen {
             &bytes[header.e_phoff as usize..],
             header.e_phnum as usize,
         );
-
-        let module_info_offset = {
-            let section_names = {
-                // Section header string table
-                let sh_string_table = section_headers[header.e_shstrndx as usize];
-
-                let start_idx = sh_string_table.sh_offset as usize;
-                let end_idx = start_idx + sh_string_table.sh_size as usize;
-
-                let strings = &bytes[start_idx..end_idx];
-
-                strings
-                    .split(|b| *b == 0)
-                    .map(Vec::from)
-                    .map(String::from_utf8)
-                    // All section header names should be utf8 or something is
-                    // severely wrong.
-                    .map(Result::unwrap)
-                    .collect::<Vec<_>>()
-            };
-
-            section_headers
-                .iter()
-                .enumerate()
-                .find_map(|(i, sh)| {
-                    if section_names[i] == ".rodata.sceModuleInfo" {
-                        Some(sh.sh_offset)
-                    } else {
-                        None
-                    }
-                })
-                .unwrap()
-        };
 
         let relocations = section_headers.iter()
             .enumerate()
@@ -119,7 +84,6 @@ impl PrxGen {
             section_headers,
             program_headers,
             relocations,
-            module_info_offset,
         }
     }
 
@@ -154,7 +118,38 @@ impl PrxGen {
 
         // Change first program header physical address to `.rodata.sceModuleInfo` file offset
         // TODO: Kernel mode support
-        self.program_headers[0].p_paddr = self.module_info_offset;
+        self.program_headers[0].p_paddr = {
+            let section_names = {
+                // Section header string table
+                let sh_string_table = self.section_headers[self.header.e_shstrndx as usize];
+
+                let start_idx = sh_string_table.sh_offset as usize;
+                let end_idx = start_idx + sh_string_table.sh_size as usize;
+
+                let strings = &self.elf_bytes[start_idx..end_idx];
+
+                strings
+                    .split(|b| *b == 0)
+                    .map(Vec::from)
+                    .map(String::from_utf8)
+                    // All section header names should be utf8 or something is
+                    // severely wrong.
+                    .map(Result::unwrap)
+                    .collect::<Vec<_>>()
+            };
+
+            section_headers
+                .iter()
+                .enumerate()
+                .find_map(|(i, sh)| {
+                    if section_names[i] == ".rodata.sceModuleInfo" {
+                        Some(sh.sh_offset)
+                    } else {
+                        None
+                    }
+                })
+                .unwrap()
+        };
 
         // Merge all segments. The PSP seems to only be able to handle 1 `LOAD`
         // segment. This code assumes that all load segments appear sequentially

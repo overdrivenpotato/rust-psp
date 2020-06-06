@@ -17,6 +17,7 @@ struct SfoHeader {
 impl SfoHeader {
     fn to_le_bytes(self) -> [u8;20] {
         let mut buf = [0u8;20];
+
         buf[0..=3].copy_from_slice(&self.magic.to_le_bytes());
         buf[4..=7].copy_from_slice(&self.version.to_le_bytes());
         buf[8..=11].copy_from_slice(&self.key_offset.to_le_bytes());
@@ -41,6 +42,7 @@ struct SfoEntry {
 impl SfoEntry {
     fn to_le_bytes(self) -> [u8;16] {
         let mut buf = [0u8;16]; 
+
         buf[0..=1].copy_from_slice(&self.key_offset.to_le_bytes());
         buf[2..=2].copy_from_slice(&self.alignment.to_le_bytes());
         buf[3..=3].copy_from_slice(&self.type_.to_le_bytes());
@@ -84,7 +86,7 @@ fn main() {
             .multiple(true)
             .takes_value(true)
         )
-        .arg(Arg::with_name("TITLE")
+        .arg(Arg::with_name("title")
             .takes_value(true)
             .required(true)
             .help("Display title")
@@ -94,14 +96,15 @@ fn main() {
             .required(true)
             .help("Output file name")
         )
-    .get_matches();
+        .get_matches();
 
     let mut strings: HashMap<String, String> = HashMap::new();
+
     // TODO this type is undocumented, unused in mksfoext
     //let mut binaries: HashMap<String, Vec<u8>> = HashMap::new();
     let mut dwords: HashMap<String, u32> = HashMap::new(); 
 
-    let title = matches.value_of("TITLE").unwrap();
+    let title = matches.value_of("title").unwrap();
     strings.insert("TITLE".to_string(), title.to_string());
 
     // Default Values
