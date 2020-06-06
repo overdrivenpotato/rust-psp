@@ -162,14 +162,17 @@ impl PrxGen {
             let load_segments = || self.program_headers.iter()
                 .filter(|ph| ph.p_type == PT_LOAD);
 
-            // Sum the `memsz` values.
+            let start_offset = load_segments().next().unwrap().p_offset;
+
             let mem_size = load_segments()
-                .map(|ph| ph.p_memsz)
-                .sum::<u32>();
+                .map(|ph| ph.p_offset + ph.p_memsz - start_offset)
+                .max()
+                .unwrap();
 
             let file_size = load_segments()
-                .map(|ph| ph.p_filesz)
-                .sum::<u32>();
+                .map(|ph| ph.p_offset + ph.p_filesz - start_offset)
+                .max()
+                .unwrap();
 
             self.program_headers[0].p_filesz = file_size;
             self.program_headers[0].p_memsz = mem_size;
