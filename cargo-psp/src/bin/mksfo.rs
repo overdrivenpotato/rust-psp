@@ -28,7 +28,7 @@ impl SfoHeader {
 }
 
 #[repr(C,packed)]
-#[derive(Default, Copy, Clone)]
+#[derive(Default, Debug, Copy, Clone)]
 struct SfoEntry {
     key_offset: u16,
     alignment: u8,
@@ -232,50 +232,64 @@ fn main() {
 
     let mut sfo_entries: Vec<SfoEntry> = Vec::new();
 
-    // TODO combine output for dwords and strings??
-    for (key, value) in dwords {
-        header.count += 1;
-        let mut sfo_entry = SfoEntry {
-            key_offset,
-            data_offset,
-            alignment: 4,
-            type_: EntryType::Dword as u8,
-            ..Default::default()
-        };
-        let idx = key_offset as usize;
-        &keys[idx..idx+key.len()].copy_from_slice(key.as_bytes());
-        key_offset += key.len() as u16 + 1;
-        sfo_entry.val_size = 4;
-        sfo_entry.total_size = 4;
-        let idx = data_offset as usize;
-        data[idx..idx+4].copy_from_slice(&value.to_le_bytes());
-        data_offset += 4;
-        sfo_entries.push(sfo_entry);
+    let mut sorted_keys: Vec<String> = Vec::new();
+    for (key, _value) in dwords.iter() {
+       sorted_keys.push(key.to_string()); 
     }
+    for (key, _value) in strings.iter() {
+       sorted_keys.push(key.to_string()); 
+    }   
+    sorted_keys.sort();
 
-    for (key, value) in strings {
-        header.count += 1;
-        let mut sfo_entry = SfoEntry {
-            key_offset,
-            data_offset,
-            alignment: 4,
-            type_: EntryType::String_ as u8,
-            ..Default::default()
-        };
-        let idx = key_offset as usize;
-        &keys[idx..idx+key.len()].copy_from_slice(key.as_bytes());
-        key_offset += key.len() as u16 + 1;
+    for key in sorted_keys {
+        if dwords.contains_key(&key) {
+            let value = dwords.get(&key).unwrap();    
+            header.count += 1;
+            let mut sfo_entry = SfoEntry {
+                key_offset,
+                data_offset,
+                alignment: 4,
+                type_: EntryType::Dword as u8,
+                ..Default::default()
+            };
+            let idx = key_offset as usize;
+            &keys[idx..idx+key.len()].copy_from_slice(key.as_bytes());
+            key_offset += key.len() as u16 + 1;
+            sfo_entry.val_size = 4;
+            sfo_entry.total_size = 4;
+            let idx = data_offset as usize;
+            data[idx..idx+4].copy_from_slice(&value.to_le_bytes());
+            data_offset += 4;
+            println!("{}", key);
+            println!("{:?}", sfo_entry);
+            sfo_entries.push(sfo_entry);
+        }
 
-        let val_size = value.len()+1;
-        let total_size = (val_size + 3) & !3;
-        sfo_entry.val_size = val_size as u32;
-        sfo_entry.total_size = total_size as u32;
-        let idx = data_offset as usize;
-        data[idx..idx + value.len()].copy_from_slice(
-            value.as_bytes()
-        );
-        data_offset += total_size as u32;
-        sfo_entries.push(sfo_entry);
+        else if strings.contains_key(&key) {
+            let value = strings.get(&key).unwrap();
+            header.count += 1;
+            let mut sfo_entry = SfoEntry {
+                key_offset,
+                data_offset,
+                alignment: 4,
+                type_: EntryType::String_ as u8,
+                ..Default::default()
+            };
+            let idx = key_offset as usize;
+            &keys[idx..idx+key.len()].copy_from_slice(key.as_bytes());
+            key_offset += key.len() as u16 + 1;
+
+            let val_size = value.len()+1;
+            let total_size = (val_size + 3) & !3;
+            sfo_entry.val_size = val_size as u32;
+            sfo_entry.total_size = total_size as u32;
+            let idx = data_offset as usize;
+            data[idx..idx + value.len()].copy_from_slice(
+                value.as_bytes()
+            );
+            data_offset += total_size as u32;
+            sfo_entries.push(sfo_entry);
+        }
     }
 
     header.key_offset = (
