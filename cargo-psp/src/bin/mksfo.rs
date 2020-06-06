@@ -41,7 +41,7 @@ struct SfoEntry {
 
 impl SfoEntry {
     fn to_le_bytes(self) -> [u8;16] {
-        let mut buf = [0u8;16]; 
+        let mut buf = [0u8;16];
 
         buf[0..=1].copy_from_slice(&self.key_offset.to_le_bytes());
         buf[2..=2].copy_from_slice(&self.alignment.to_le_bytes());
@@ -102,7 +102,7 @@ fn main() {
 
     // TODO this type is undocumented, unused in mksfoext
     //let mut binaries: HashMap<String, Vec<u8>> = HashMap::new();
-    let mut dwords: HashMap<String, u32> = HashMap::new(); 
+    let mut dwords: HashMap<String, u32> = HashMap::new();
 
     let title = matches.value_of("title").unwrap();
     strings.insert("TITLE".to_string(), title.to_string());
@@ -119,7 +119,7 @@ fn main() {
 
     let valid: HashMap<&'static str, (EntryType, bool, bool, bool, bool)> = [
         ("BOOTABLE", (EntryType::Dword, false, false, true, true)),
-        ("CATEGORY", (EntryType::String_, false, true, true, true)), 
+        ("CATEGORY", (EntryType::String_, false, true, true, true)),
         ("DISC_ID", (EntryType::String_, false, false, true, true)),
         ("DISC_NUMBER", (EntryType::Dword, false, false, false, true)),
         ("DISC_VERSION", (EntryType::String_, false, false, true, true)),
@@ -147,7 +147,7 @@ fn main() {
 
     if matches.values_of("string").is_some() {
         for s in matches.values_of("string").unwrap() {
-            let key_value_pair: Vec<String> = 
+            let key_value_pair: Vec<String> =
                 s.split("=").map(|s: &str| s.to_string()).collect();
             strings.insert(key_value_pair[0].clone(), key_value_pair[1].clone());
         }
@@ -155,7 +155,7 @@ fn main() {
 
     if matches.values_of("dword").is_some() {
         for s in matches.values_of("dword").unwrap() {
-            let key_value_pair: Vec<String> = 
+            let key_value_pair: Vec<String> =
                 s.split("=").map(|s: &str| s.to_string()).collect();
             dwords.insert(
                 key_value_pair[0].clone(),
@@ -177,16 +177,16 @@ fn main() {
             panic!("Key {} does not take a string value", key)
         }
         if category == "WG" && !wg {
-           panic!("Key {} is not valid for category WG", key); 
+           panic!("Key {} is not valid for category WG", key);
         }
         if category == "MS" && !ms {
-           panic!("Key {} is not valid for category MS", key); 
+           panic!("Key {} is not valid for category MS", key);
         }
         if category == "MG" && !mg {
-           panic!("Key {} is not valid for category MG", key); 
+           panic!("Key {} is not valid for category MG", key);
         }
         if category == "UG" && !ug {
-           panic!("Key {} is not valid for category UG", key); 
+           panic!("Key {} is not valid for category UG", key);
         }
     }
 
@@ -199,16 +199,16 @@ fn main() {
             panic!("Key {} does not take a dword value", key)
         }
         if category == "WG" && !wg {
-           panic!("Key {} is not valid for category WG", key); 
+           panic!("Key {} is not valid for category WG", key);
         }
         if category == "MS" && !ms {
-           panic!("Key {} is not valid for category MS", key); 
+           panic!("Key {} is not valid for category MS", key);
         }
         if category == "MG" && !mg {
-           panic!("Key {} is not valid for category MG", key); 
+           panic!("Key {} is not valid for category MG", key);
         }
         if category == "UG" && !ug {
-           panic!("Key {} is not valid for category UG", key); 
+           panic!("Key {} is not valid for category UG", key);
         }
     }
 
@@ -237,16 +237,16 @@ fn main() {
 
     let mut sorted_keys: Vec<String> = Vec::new();
     for (key, _value) in dwords.iter() {
-       sorted_keys.push(key.to_string()); 
+       sorted_keys.push(key.to_string());
     }
     for (key, _value) in strings.iter() {
-       sorted_keys.push(key.to_string()); 
-    }   
+       sorted_keys.push(key.to_string());
+    }
     sorted_keys.sort();
 
     for key in sorted_keys {
         if dwords.contains_key(&key) {
-            let value = dwords.get(&key).unwrap();    
+            let value = dwords.get(&key).unwrap();
             header.count += 1;
             let mut sfo_entry = SfoEntry {
                 key_offset,
@@ -280,8 +280,8 @@ fn main() {
             &keys[idx..idx+key.len()].copy_from_slice(key.as_bytes());
             key_offset += key.len() as u16 + 1;
 
-            let val_size = value.len()+1;
-            let total_size = (val_size + 7) & !7;
+            let val_size = value.len() + 1;
+            let total_size = (val_size + 3) & !3;
             sfo_entry.val_size = val_size as u32;
             sfo_entry.total_size = total_size as u32;
             let idx = data_offset as usize;
