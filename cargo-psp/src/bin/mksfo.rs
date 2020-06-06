@@ -260,8 +260,6 @@ fn main() {
             let idx = data_offset as usize;
             data[idx..idx+4].copy_from_slice(&value.to_le_bytes());
             data_offset += 4;
-            println!("{}", key);
-            println!("{:?}", sfo_entry);
             sfo_entries.push(sfo_entry);
         }
 
@@ -280,7 +278,7 @@ fn main() {
             key_offset += key.len() as u16 + 1;
 
             let val_size = value.len()+1;
-            let total_size = (val_size + 3) & !3;
+            let total_size = (val_size + 7) & !7;
             sfo_entry.val_size = val_size as u32;
             sfo_entry.total_size = total_size as u32;
             let idx = data_offset as usize;
