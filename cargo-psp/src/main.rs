@@ -1,13 +1,34 @@
-use std::{fs, env, io::ErrorKind, path::Path, process::{self, Command, Stdio}};
+use std::{fs, env, io::ErrorKind, process::{self, Command, Stdio}};
 use cargo_metadata::MetadataCommand;
 
 const CONFIG_NAME: &str = "Psp.toml";
 
 #[derive(serde_derive::Deserialize, Default)]
 struct PspConfig {
+    /// Title shown in the XMB menu.
     title: Option<String>,
 
-    // TODO: Other parameters
+    /// Path to 24bit 144x80 PNG icon shown in the XMB menu.
+    xmb_icon_png: Option<String>,
+
+    /// Path to animated icon shown in the XMB menu.
+    ///
+    /// The PSP expects a 29.97fps 144x80 PMF video file (custom Sony format).
+    xmb_icon_pmf: Option<String>,
+
+    /// Path to 24bit 480x272 PNG background shown in the XMB menu.
+    xmb_background_png: Option<String>,
+
+    /// Overlay background shown in the XMB menu.
+    ///
+    /// Exactly like `xmb_background_png`, but it is overlayed on top.
+    xmb_background_overlay_png: Option<String>,
+
+    /// Path to ATRAC3 audio file played in the XMB menu.
+    xmb_music_at3: Option<String>,
+
+    /// Path to associated PSAR data stored in the EBOOT.
+    psar: Option<String>,
 }
 
 fn main() {
@@ -21,7 +42,7 @@ fn main() {
             }
         }
 
-        Err(e) if e.kind() == ErrorKind::NotFound => Default::default(),
+        Err(e) if e.kind() == ErrorKind::NotFound => PspConfig::default(),
         Err(e) => panic!("{}", e)
     };
 
@@ -71,55 +92,45 @@ fn main() {
         for target in package.targets {
             if target.kind.iter().any(|k| k == "bin") {
                 let elf_path = bin_dir.join(&target.name);
-                let prx_path = bin_dir.join(target.name + ".prx");
+                let prx_path = bin_dir.join(target.name.clone() + ".prx");
 
                 let sfo_path = bin_dir.join("PARAM.SFO");
                 let pbp_path = bin_dir.join("EBOOT.PBP");
 
-                prxgen(&elf_path, &prx_path);
-                mksfo(&sfo_path, &config);
-                pack_pbp(&prx_path, &sfo_path, &pbp_path, &config);
+                Command::new("prxgen")
+                    .arg(&elf_path)
+                    .arg(&prx_path)
+                    .stdin(Stdio::inherit())
+                    .stdout(Stdio::inherit())
+                    .stderr(Stdio::inherit())
+                    .output()
+                    .expect("failed to run prxgen");
+
+                Command::new("mksfo")
+                    .arg(config.title.clone().unwrap_or(target.name))
+                    .arg(&sfo_path)
+                    .stdin(Stdio::inherit())
+                    .stdout(Stdio::inherit())
+                    .stderr(Stdio::inherit())
+                    .output()
+                    .expect("failed to run mksfo");
+
+                Command::new("pack-pbp")
+                    .arg(&pbp_path)
+                    .arg(&sfo_path)
+                    .arg(config.xmb_icon_png.clone().unwrap_or("NULL".into()))
+                    .arg(config.xmb_icon_pmf.clone().unwrap_or("NULL".into()))
+                    .arg(config.xmb_background_png.clone().unwrap_or("NULL".into()))
+                    .arg(config.xmb_background_overlay_png.clone().unwrap_or("NULL".into()))
+                    .arg(config.xmb_music_at3.clone().unwrap_or("NULL".into()))
+                    .arg(&prx_path)
+                    .arg(config.psar.clone().unwrap_or("NULL".into()))
+                    .stdin(Stdio::inherit())
+                    .stdout(Stdio::inherit())
+                    .stderr(Stdio::inherit())
+                    .output()
+                    .expect("failed to run pack-pbp");
             }
         }
     }
-}
-
-fn prxgen<P: AsRef<Path>>(elf: P, prx: P) {
-    Command::new("prxgen")
-        .arg(elf.as_ref().as_os_str())
-        .arg(prx.as_ref().as_os_str())
-        .stdin(Stdio::inherit())
-        .stdout(Stdio::inherit())
-        .stderr(Stdio::inherit())
-        .output()
-        .expect("failed to run prxgen");
-}
-
-fn mksfo<P: AsRef<Path>>(out: P, config: &PspConfig) {
-    Command::new("mksfo")
-        .arg(config.title.clone().unwrap_or("Default Title: cargo-psp".into()))
-        .arg(out.as_ref().as_os_str())
-        .stdin(Stdio::inherit())
-        .stdout(Stdio::inherit())
-        .stderr(Stdio::inherit())
-        .output()
-        .expect("failed to run mksfo");
-}
-
-fn pack_pbp<P: AsRef<Path>>(prx: P, sfo: P, out: P, config: &PspConfig) {
-    Command::new("pack-pbp")
-        .arg(out.as_ref().as_os_str())
-        .arg(sfo.as_ref().as_os_str())
-        .arg("NULL")
-        .arg("NULL")
-        .arg("NULL")
-        .arg("NULL")
-        .arg("NULL")
-        .arg(prx.as_ref().as_os_str())
-        .arg("NULL")
-        .stdin(Stdio::inherit())
-        .stdout(Stdio::inherit())
-        .stderr(Stdio::inherit())
-        .output()
-        .expect("failed to run pack-pbp");
 }
