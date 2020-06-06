@@ -60,7 +60,14 @@ fn main() {
         .stdout(Stdio::inherit())
         .stderr(Stdio::inherit())
         .output()
-        .expect("failed to run xargo");
+        .unwrap_or_else(|e| {
+            println!("Failed to run `xargo`: {}", e);
+            println!(
+                "Try running `cargo install xargo` and re-run this command"
+            );
+
+            process::exit(1);
+        });
 
     if !command.status.success() {
         let code = match command.status.code() {
