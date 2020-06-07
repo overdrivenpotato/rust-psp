@@ -34,60 +34,33 @@ struct PspConfig {
     /// Path to associated PSAR data stored in the EBOOT.
     psar: Option<String>,
 
-    /// Setting this to 1 indicates the game should be autolaunched at bootup.
-    bootable: Option<u32>,
-
-    //todo enum?
-    /// One of the following:
-    /// - WG (WLAN Game)
-    /// - MS (MemoryStick Save)
-    /// - MG (MemoryStick Game)
-    /// - UG (UMD Game)
-    category: Option<String>,
-
-    /// Product number of the game, e.g. ABCD-12345.
+    /// Product number of the game, in the format `ABCD-12345`.
+    ///
+    /// Example: UCJS-10001
     disc_id: Option<String>,
-
-    /// Which disc (out of disc_total) is this? Starts at 1.
-    disc_number: Option<u32>,
-
-    /// Total number of UMD discs for the game.
-    disc_total: Option<u32>,
 
     /// Version of the game, e.g. "1.00".
     disc_version: Option<String>,
 
-    /// Unknown.
-    driver_path: Option<String>,
-
-    // todo enum
-    /// Language of the game.
+    // TODO: enum
+    /// Language of the game. "JP" indicates Japanese, even though this is not
+    /// the proper ISO 639 code...
     language: Option<String>,
 
-    // todo enum
+    // TODO: enum
     /// Parental Control level needed to access the file. 1-11
-    /// - 1 - General audience
-    /// - 5 - 12 year old
-    /// - 7 - 15 year old
-    /// - 9 - 18 year old
+    /// - 1 = General audience
+    /// - 5 = 12 year old
+    /// - 7 = 15 year old
+    /// - 9 = 18 year old
     parental_level: Option<u32>,
 
     /// PSP Firmware Version required by the game (e.g. "6.61").
     psp_system_ver: Option<String>,
 
-    // todo document values
-    /// Bitmask of allowed regions, 0x8000 is region 2?
+    // TODO: document values
+    /// Bitmask of allowed regions. (0x8000 is region 2?)
     region: Option<u32>,
-
-    /// Text shown under the details heading in the save game menu.
-    savedata_detail: Option<String>,
-
-    /// The name of the subdirectory where this game stores it's save files.
-    /// e.g. ("UCJS10001")
-    savedata_directory: Option<String>,
-
-    /// Text shown under the "Saved Data" heading of the save game menu.
-    savedata_title: Option<String>,
 
     /// Japanese localized title.
     title_jp: Option<String>,
@@ -198,108 +171,41 @@ fn main() {
                     .output()
                     .expect("failed to run prxgen");
 
-                let mut mksfo_args: Vec<String> = Vec::new();
-                mksfo_args.push(config.title.clone().unwrap_or(target.name));
-
-                // TODO this is pretty janky
-                mksfo_args.push(sfo_path.to_str().unwrap().to_string());
-
-                if config.bootable.is_some() {
-                    mksfo_args.push(format!("-d BOOTABLE={}", config.bootable.unwrap()));
-                }
-                if config.category.is_some() {
-                    mksfo_args.push(format!("-s CATEGORY={}", config.category.clone().unwrap()));
-                }
-                if config.disc_id.is_some() {
-                    mksfo_args.push(format!("-s DISC_ID={}", config.disc_id.clone().unwrap()));
-                }
-                if config.disc_number.is_some() {
-                    mksfo_args.push(format!("-d DISC_NUMBER={}", config.disc_number.unwrap()));
-                }
-                if config.disc_total.is_some() {
-                    mksfo_args.push(format!("-d DISC_TOTAL={}", config.disc_total.unwrap()));
-                }
-                if config.disc_version.is_some() {
-                    mksfo_args.push(format!(
-                        "-s DISC_VERSION={}",
-                        config.disc_version.clone().unwrap()
-                    ));
-                }
-                if config.driver_path.is_some() {
-                    mksfo_args.push(format!(
-                        "-s DRIVER_PATH={}",
-                        config.driver_path.clone().unwrap()
-                    ));
-                }
-                if config.language.is_some() {
-                    mksfo_args.push(format!("-s LANGUAGE={}", config.language.clone().unwrap()));
-                }
-                if config.parental_level.is_some() {
-                    mksfo_args.push(format!(
-                        "-d PARENTAL_LEVEL={}",
-                        config.parental_level.unwrap()
-                    ));
-                }
-                if config.psp_system_ver.is_some() {
-                    mksfo_args.push(format!(
-                        "-s PSP_SYSTEM_VER={}",
-                        config.psp_system_ver.clone().unwrap()
-                    ));
-                }
-                if config.region.is_some() {
-                    mksfo_args.push(format!("-d REGION={}", config.region.unwrap()));
-                }
-                if config.savedata_detail.is_some() {
-                    mksfo_args.push(format!(
-                        "-s SAVEDATA_DETAIL={}",
-                        config.savedata_detail.clone().unwrap()
-                    ));
-                }
-                if config.savedata_directory.is_some() {
-                    mksfo_args.push(format!(
-                        "-s SAVEDATA_DIRECTORY={}",
-                        config.savedata_directory.clone().unwrap()
-                    ));
-                }
-                if config.savedata_title.is_some() {
-                    mksfo_args.push(format!(
-                        "-s SAVEDATA_TITLE={}",
-                        config.savedata_title.clone().unwrap()
-                    ));
-                }
-                if config.title_jp.is_some() {
-                    mksfo_args.push(format!("-s TITLE_0={}", config.title_jp.clone().unwrap()));
-                }
-                if config.title_fr.is_some() {
-                    mksfo_args.push(format!("-s TITLE_2={}", config.title_fr.clone().unwrap()));
-                }
-                if config.title_es.is_some() {
-                    mksfo_args.push(format!("-s TITLE_3={}", config.title_es.clone().unwrap()));
-                }
-                if config.title_de.is_some() {
-                    mksfo_args.push(format!("-s TITLE_4={}", config.title_de.clone().unwrap()));
-                }
-                if config.title_it.is_some() {
-                    mksfo_args.push(format!("-s TITLE_5={}", config.title_it.clone().unwrap()));
-                }
-                if config.title_nl.is_some() {
-                    mksfo_args.push(format!("-s TITLE_6={}", config.title_nl.clone().unwrap()));
-                }
-                if config.title_pt.is_some() {
-                    mksfo_args.push(format!("-s TITLE_7={}", config.title_pt.clone().unwrap()));
-                }
-                if config.title_ru.is_some() {
-                    mksfo_args.push(format!("-s TITLE_8={}", config.title_ru.clone().unwrap()));
-                }
-                if config.updater_version.is_some() {
-                    mksfo_args.push(format!(
-                        "-s UPDATER_VER={}",
-                        config.updater_version.clone().unwrap()
-                    ));
-                }
+                let config_args = vec![
+                    ("-s", "DISC_ID", config.disc_id.clone()),
+                    ("-s", "DISC_VERSION", config.disc_version.clone()),
+                    ("-s", "LANGUAGE", config.language.clone()),
+                    ("-d", "PARENTAL_LEVEL", config.parental_level.as_ref().map(u32::to_string)),
+                    ("-s", "PSP_SYSTEM_VER", config.psp_system_ver.clone()),
+                    ("-d", "REGION", config.region.as_ref().map(u32::to_string)),
+                    ("-s", "TITLE_0", config.title_jp.clone()),
+                    ("-s", "TITLE_2", config.title_fr.clone()),
+                    ("-s", "TITLE_3", config.title_es.clone()),
+                    ("-s", "TITLE_4", config.title_de.clone()),
+                    ("-s", "TITLE_5", config.title_it.clone()),
+                    ("-s", "TITLE_6", config.title_nl.clone()),
+                    ("-s", "TITLE_7", config.title_pt.clone()),
+                    ("-s", "TITLE_8", config.title_ru.clone()),
+                    ("-s", "UPDATER_VER", config.updater_version.clone()),
+                ];
 
                 Command::new("mksfo")
-                    .args(mksfo_args.as_slice())
+                    // Add the optional config args
+                    .args({
+                        config_args
+                            .into_iter()
+
+                            // Filter through all the values that are not `None`
+                            .filter_map(|(f, k, v)| v.map(|v| (f, k, v)))
+
+                            // Map into 2 arguments, e.g. "-s" "NAME=VALUE"
+                            .flat_map(|(flag, key, value)| vec![
+                                flag.into(),
+                                format!("{}={}", key, value),
+                            ])
+                    })
+                    .arg(config.title.clone().unwrap_or(target.name))
+                    .arg(&sfo_path)
                     .stdin(Stdio::inherit())
                     .stdout(Stdio::inherit())
                     .stderr(Stdio::inherit())
