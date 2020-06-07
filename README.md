@@ -22,7 +22,7 @@ See `examples` directory for sample programs.
 
 This project is a completely new SDK, with no dependency on the original C/C++
 PSPSDK. It aims to be a **complete** replacement, with more efficient
-implementations of graphics functions, and missing
+implementations of graphics functions, and the addition of missing libraries.
 
 ## Features / Roadmap
 
