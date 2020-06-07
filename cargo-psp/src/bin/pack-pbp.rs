@@ -101,7 +101,7 @@ fn main() {
         }
     };
 
-    let output_file = matches.value_of("output.pbp").unwrap();
+    let output_path = matches.value_of("output.pbp").unwrap();
 
     let files = vec![
         read("param.sfo"),
@@ -138,9 +138,9 @@ fn main() {
     output.extend(&header.to_bytes()[..]);
     output.extend(payload);
 
-    if let Err(e) = fs::write(output_file, &output) {
-        panic!("couldn't write to {}: {}", output_file, e);
+    if let Err(e) = fs::write(output_path, output) {
+        panic!("couldn't write to {}: {}", output_path, e);
     }
 
-    println!("pack-pbp: Wrote {} bytes", output.len());
+    println!("Saved to {}", output_path);
 }
