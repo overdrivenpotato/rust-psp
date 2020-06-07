@@ -1,6 +1,6 @@
 [package]
 name = "cargo-psp"
-version = "0.0.1"
+version = "0.0.2"
 description = "`cargo build` wrapper for creating Sony PSP executables"
 license = "MIT"
 authors = [
