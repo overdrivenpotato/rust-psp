@@ -40,7 +40,7 @@ implementations of graphics functions, and missing
 - [ ] Automatically sign EBOOT.PBP files to run on unmodified PSPs
 - [ ] Implement / reverse all libraries missing from PSPSDK
 
-## Dependencies: Rust
+## Dependencies
 
 To compile for the PSP, you will need a rust **nightly** version equal to or
 later than `2020-06-04`. Please install Rust using https://rustup.rs/
