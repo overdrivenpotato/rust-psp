@@ -18,6 +18,12 @@ fn psp_main() {
 
 See `examples` directory for sample programs.
 
+## What about PSPSDK?
+
+This project is a completely new SDK, with no dependency on the original C/C++
+PSPSDK. It aims to be a **complete** replacement, with more efficient
+implementations of graphics functions, and missing
+
 ## Features / Roadmap
 
 - [x] `core` support
@@ -25,41 +31,40 @@ See `examples` directory for sample programs.
 - [x] `alloc` support
 - [x] `panic = "unwind"` support
 - [x] Macro-based VFPU assembler
-- [x] Full 3D graphics support
-- [x] Migrate to LLVM-based linker
-- [ ] Remove PSP toolchain dependency: rewrite `psp-prxgen`, `pack-pbp`, and
-      `PRXEncrypter`
+- [x] Full 3D graphics support (faster than PSPSDK in some cases!)
+- [x] No dependency on PSPSDK
+- [ ] Reach full parity with user mode support in PSPSDK
+- [ ] Add support for creating kernel mode modules
+- [ ] Port definitions to `libc` crate
+- [ ] Add `std` support
+- [ ] Automatically sign EBOOT.PBP files to run on unmodified PSPs
+- [ ] Implement / reverse all libraries missing from PSPSDK
 
 ## Dependencies: Rust
 
 To compile for the PSP, you will need a rust **nightly** version equal to or
-later than `2020-06-04`.
+later than `2020-06-04`. Please install Rust using https://rustup.rs/
+
+Use the following if you are new to rust. (Feel free to set an override manually
+per-project).
 
 ```sh
 $ rustup toolchain add nightly
 ```
 
-You also need `xargo` installed (for compilation of rust-internal crates).
+You also need `xargo` and `cargo-psp` installed. (`xargo` version must be
+relatively recent).
 
 ```sh
-$ cargo install xargo
+$ cargo install cargo-psp xargo
 ```
-
-## Dependency: PSP Toolchain
-
-You need the [psp toolchain] installed, and the binaries in your `$PATH`.
-
-NB: The main binary we need is `psp-prxgen`, ideally this will eventually be
-ported to rust.
-
-[psp toolchain]: https://github.com/pspdev/psptoolchain
 
 ## Running Examples
 
 Enter one of the example directories, `examples/hello-world` for instance, and
-run `make`.
+run `cargo psp --release`.
 
-This will create an `EBOOT.PBP` under `target/mipsel-sony-psp/release/`
+This will create an `EBOOT.PBP` file under `target/mipsel-sony-psp/release/`
 
 Assuming you have a PSP with custom firmware installed, you can simply copy this
 file into a new directory under `PSP/GAME` on your memory stick, and it will
@@ -80,13 +85,15 @@ If you don't have a PSP with CFW installed, you can manually sign the PRX using
 
 ### Advanced usage: PSPLink
 
-You can also use `psplink` and `pspsh` to run the `.prx` under
+If you have the PSPSDK installed and have built a working copy PSPLink manually,
+you can also use `psplink` and `pspsh` to run the `.prx` under
 `target/mipsel-sony-psp/release` if you prefer. Refer to the installation and
 usage guides for those programs.
 
 ### Debugging
 
-`psp-gdb` is currently too old to support printing rust types.
+`psp-gdb` is currently too old to support printing rust types. `rust-lldb` may
+be possible but it has not be experimented with yet.
 
 ## Usage
 
@@ -107,45 +114,19 @@ You will also need a `Xargo.toml` file in the root of your project like so:
 stage = 1
 ```
 
-And a `Makefile` file in the root as well, like the following (you will have to
-modify `TARGET_NAME`):
-
-```make
-# Change this to the cargo package name
-TARGET_NAME = package-name
-
-.PHONY: release
-release:
-	@RUSTFLAGS="-C link-dead-code" \
-		xargo build --target mipsel-sony-psp --release
-
-	@psp-prxgen \
-		"$(CARGO_TARGET_DIR)"/mipsel-sony-psp/release/$(TARGET_NAME) \
-		"$(CARGO_TARGET_DIR)"/mipsel-sony-psp/release/$(TARGET_NAME).prx
-
-	@mksfo "PSP Rust Cube" "$(CARGO_TARGET_DIR)"/mipsel-sony-psp/release/PARAM.SFO
-	@pack-pbp "$(CARGO_TARGET_DIR)"/mipsel-sony-psp/release/EBOOT.PBP \
-		"$(CARGO_TARGET_DIR)"/mipsel-sony-psp/release/PARAM.SFO NULL NULL NULL NULL NULL \
-		"$(CARGO_TARGET_DIR)"/mipsel-sony-psp/release/$(TARGET_NAME).prx NULL
-
-	@echo Saved to "$(CARGO_TARGET_DIR)"/mipsel-sony-psp/release/EBOOT.PBP
-```
-
-Now you can simply run `make` to build your `EBOOT.PBP` file. The executable
-**must** be built with `--release` due to a bug in this crate, or it will not
-work as expected.
-
-The Makefile will eventually be replaced by a cargo subcommand, at which point
-this README will be updated.
+Now you can simply run `cargo psp --release` to build your `EBOOT.PBP` file. The
+executable **must** be built with `--release` due to a bug in this crate, or it
+will not work as expected. *This should be fixed soon.*
 
 ## Known Bugs
 
-This crate **breaks** on debug builds. Likely due to the ABI mapper
-implementation.
+This crate **breaks** on debug builds. Likely due to a bug in EABI interop.
 
 This can be worked around by enabling optimization for debug builds
 
 ```toml
+# Cargo.toml
+
 [profile.dev]
 opt-level="z"
 ```
