@@ -4,7 +4,7 @@ pub struct OpenPSID {
     pub data: [u8; 16usize],
 }
 
-sys_lib! {
+psp_extern! {
     #![name = "sceOpenPSID"]
     #![flags = 0x4001]
     #![version = (0x00, 0x11)]

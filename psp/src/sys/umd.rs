@@ -31,7 +31,7 @@ bitflags::bitflags! {
 /// Callback type
 pub type UmdCallback = fn(unknown: i32, event: i32) -> i32;
 
-sys_lib! {
+psp_extern! {
     #![name = "sceUmdUser"]
     #![flags = 0x4001]
     #![version = (0x00, 0x11)]

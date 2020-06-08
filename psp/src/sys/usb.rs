@@ -17,7 +17,7 @@ bitflags::bitflags! {
     }
 }
 
-sys_lib! {
+psp_extern! {
     #![name = "sceUsb"]
     #![flags = 0x4001]
     #![version = (0x00, 0x00)]
@@ -372,7 +372,7 @@ pub enum CamEvLevel {
     Neg2_0,
 }
 
-sys_lib! {
+psp_extern! {
     #![name = "sceUsbCam"]
     #![flags = 0x4009]
     #![version = (0x00, 0x00)]
@@ -794,7 +794,7 @@ sys_lib! {
     pub fn sce_usb_cam_get_lens_direction() -> i32;
 }
 
-sys_lib! {
+psp_extern! {
     #![name = "sceUsbstorBoot"]
     #![flags = 0x4009]
     #![version = (0x00, 0x00)]

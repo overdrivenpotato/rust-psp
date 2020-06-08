@@ -4,7 +4,7 @@ use core::ffi::c_void;
 mod thread;
 pub use thread::*;
 
-sys_lib! {
+psp_extern! {
     #![name = "LoadExecForUser"]
     #![flags = 0x4001]
     #![version = (0, 0)]
@@ -65,7 +65,7 @@ pub enum SceSysMemBlockTypes {
     Addr,
 }
 
-sys_lib! {
+psp_extern! {
     #![name = "SysMemUserForUser"]
     #![flags = 0x4000]
     #![version = (0, 0)]
@@ -168,7 +168,7 @@ pub struct Md5Context {
     pub buf: [u8; 64usize],
 }
 
-sys_lib! {
+psp_extern! {
     #![name = "UtilsForUser"]
     #![flags = 0x4001]
     #![version = (0x00, 0x00)]

@@ -55,7 +55,7 @@ pub const fn sample_align(sample_count:i32) -> i32 {
     (sample_count + 63) & !63
 }
 
-sys_lib! {
+psp_extern! {
     #![name = "sceAudio"]
     #![flags = 0x4001]
     #![version = (0, 0)]

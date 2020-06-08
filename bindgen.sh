@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# Quick and dirty script to generate sys_lib! bindings from a PSPSDK header.
+# Quick and dirty script to generate psp_extern! bindings from a PSPSDK header.
 
 header() {
     bindgen $1 --no-layout-tests --whitelist-function 'sce.*' -- \
@@ -46,7 +46,7 @@ header() {
             /^extern/ {
                 if (!found_extern) {
                     found_extern = 1;
-                    printf "\nsys_lib! {\n";
+                    printf "\npsp_extern! {\n";
                 }
 
                 next;
@@ -130,7 +130,7 @@ cat <(pspModule $2) <(header $1) \
             next
         }
 
-        /sys_lib!/ {
+        /psp_extern!/ {
             print
             print "    #![name = " name "]"
             print "    #![flags = 0x" flags "]"

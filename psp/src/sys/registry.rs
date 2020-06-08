@@ -36,7 +36,7 @@ pub enum KeyType {
     Bytes = 4,
 }
 
-sys_lib! {
+psp_extern! {
     #![name = "sceReg"]
     #![flags = 0x4001]
     #![version = (0x00, 0x00)]

@@ -343,7 +343,7 @@ pub enum Command {
     NopFF = 0xff,
 }
 
-sys_lib! {
+psp_extern! {
     #![name = "sceGe_user"]
     #![flags = 0x4001]
     #![version = (0, 0)]

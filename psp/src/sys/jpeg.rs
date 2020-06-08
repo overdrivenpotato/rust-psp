@@ -1,6 +1,6 @@
 use core::ffi::c_void;
 
-sys_lib! {
+psp_extern! {
     #![name = "sceJpeg"]
     #![flags = 0x0009]
     #![version = (0x00, 0x00)]

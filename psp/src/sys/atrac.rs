@@ -14,7 +14,7 @@ pub struct PspBufferInfo {
     pub ui_read_position_second_buf: u32,
 }
 
-sys_lib! {
+psp_extern! {
     #![name = "sceAtrac3plus"]
     #![flags = 0x0009]
     #![version = (0x00, 0x00)]

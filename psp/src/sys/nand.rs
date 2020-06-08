@@ -1,6 +1,6 @@
 use core::ffi::c_void;
 
-sys_lib! {
+psp_extern! {
     #![name = "sceNand_driver"]
     #![flags = 0x0001]
     #![version = (0x00, 0x00)]

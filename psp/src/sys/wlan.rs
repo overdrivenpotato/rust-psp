@@ -1,4 +1,4 @@
-sys_lib! {
+psp_extern! {
     #![name = "sceWlanDrv"]
     #![flags = 0x4001]
     #![version = (0, 0)]
@@ -33,7 +33,7 @@ sys_lib! {
     pub fn sce_wlan_get_ether_addr(ether_addr: *mut u8) -> i32;
 }
 
-sys_lib! {
+psp_extern! {
     #![name = "sceWlanDrv_lib"]
     #![flags = 0x4001]
     #![version = (0, 0)]

@@ -26,7 +26,7 @@ pub struct InitArg {
 #[repr(transparent)]
 pub struct Handle(pub i32);
 
-sys_lib! {
+psp_extern! {
     #![name = "sceMp3"]
     #![flags = 0x0009]
     #![version = (0x00, 0x11)]
@@ -40,7 +40,7 @@ sys_lib! {
     ///
     /// Raw MP3 handle on success, < 0 on error. Construct a `Handle` instance
     /// from this value to use the other functions in this module.
-    // TODO: Investigate adding `Result` support to `sys_lib!`.
+    // TODO: Investigate adding `Result` support to `psp_extern!`.
     pub fn sce_mp3_reserve_mp3_handle(args: *mut InitArg) -> i32;
 
     #[psp(0xF5478233)]

@@ -9,7 +9,7 @@ pub struct SircsData {
     pub dev: u16,
 }
 
-sys_lib! {
+psp_extern! {
     #![name = "sceSircs"]
     #![flags = 0x4001]
     #![version = (0x00, 0x00)]

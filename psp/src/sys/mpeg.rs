@@ -79,7 +79,7 @@ pub struct AvcMode {
     pub pixel_format: i32,
 }
 
-sys_lib! {
+psp_extern! {
     #![name = "sceMpeg"]
     #![flags = 0x0009]
     #![version = (0x00, 0x00)]

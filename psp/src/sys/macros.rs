@@ -32,8 +32,8 @@ macro_rules! stub {
 
 /// Generate a PSP function NID.
 ///
-/// This macro is split from `sys_lib!` to allow for `concat!`-based generation.
-/// If you try to generate a NID like so...
+/// This macro is split from `psp_extern!` to allow for `concat!`-based
+/// generation. If you try to generate a NID like so...
 ///
 /// ```ignore
 /// #[link_section = concat!(".foo", ".bar")]
@@ -81,7 +81,7 @@ pub const fn lib_name_bytes<const T: usize>(name: &str) -> [u8; T] {
 }
 
 /// A complex macro used to define and link a PSP system library.
-macro_rules! sys_lib {
+macro_rules! psp_extern {
     // Generate body with default ABI.
     (__BODY $name:ident ($($arg:ident : $arg_ty:ty),*) $(-> $ret:ty)?) => {
         expr! {
@@ -179,7 +179,7 @@ macro_rules! sys_lib {
             pub unsafe fn $name($($arg : $arg_ty),*) $(-> $ret)? {
                 #[cfg(target_os = "psp")]
                 {
-                    sys_lib!(
+                    psp_extern!(
                         __BODY $($abi)?
                         $name($($arg : $arg_ty),*) $(-> $ret)?
                     )

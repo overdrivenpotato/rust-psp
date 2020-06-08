@@ -116,7 +116,7 @@ bitflags::bitflags! {
 /// Octal unix permissions
 pub type Permissions = i32;
 
-sys_lib! {
+psp_extern! {
     #![name = "IoFileMgrForUser"]
     #![flags = 0x4001]
     #![version = (0, 0)]

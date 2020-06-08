@@ -81,7 +81,7 @@ pub struct SceCtrlLatch {
     pub ui_release: u32,
 }
 
-sys_lib! {
+psp_extern! {
     #![name = "sceCtrl"]
     #![flags = 0x4001]
     #![version = (0, 0)]

@@ -26,7 +26,7 @@ pub enum CheckValidError{
     InvalidMicroseconds = -7
 }
 
-sys_lib!{
+psp_extern!{
     #![name = "sceRtc"]
     #![flags = 0x4001]
     #![version = (0, 0)]

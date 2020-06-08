@@ -426,7 +426,7 @@ pub struct SceKernelCallbackInfo {
     pub notify_arg: i32,
 }
 
-sys_lib! {
+psp_extern! {
     #![name = "ThreadManForUser"]
     #![flags = 0x4001]
     #![version = (0x00, 0x00)]
