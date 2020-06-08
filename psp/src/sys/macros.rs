@@ -122,7 +122,7 @@ macro_rules! sys_lib {
         $(
             #[psp($nid:expr $(, $abi:ident)?)]
             $(#[$attr:meta])*
-            pub unsafe fn $name:ident($($arg:ident : $arg_ty:ty),* $(,)?)
+            pub fn $name:ident($($arg:ident : $arg_ty:ty),* $(,)?)
             $(-> $ret:ty)?;
         )*
     ) => {

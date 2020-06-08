@@ -53,7 +53,7 @@ sys_lib! {
     /// # Return Value
     ///
     /// 0 on success, < 0 on error
-    pub unsafe fn sce_reg_open_registry(
+    pub fn sce_reg_open_registry(
         reg: *mut Key,
         mode: i32,
         handle: *mut Handle,
@@ -69,7 +69,7 @@ sys_lib! {
     /// # Return Value
     ///
     /// 0 on success, < 0 on error
-    pub unsafe fn sce_reg_flush_registry(handle: Handle) -> i32;
+    pub fn sce_reg_flush_registry(handle: Handle) -> i32;
 
     #[psp(0xFA8A5739)]
     /// Close the registry
@@ -81,7 +81,7 @@ sys_lib! {
     /// # Return Value
     ///
     /// 0 on success, < 0 on error
-    pub unsafe fn sce_reg_close_registry(handle: Handle) -> i32;
+    pub fn sce_reg_close_registry(handle: Handle) -> i32;
 
     #[psp(0x1D8A762E)]
     /// Open a registry directory
@@ -96,7 +96,7 @@ sys_lib! {
     /// # Return Value
     ///
     /// 0 on success, < 0 on error
-    pub unsafe fn sce_reg_open_category(
+    pub fn sce_reg_open_category(
         handle: Handle,
         name: *const u8,
         mode: i32,
@@ -114,7 +114,7 @@ sys_lib! {
     /// # Return Value
     ///
     /// 0 on success, < 0 on error
-    pub unsafe fn sce_reg_remove_category(
+    pub fn sce_reg_remove_category(
         handle: Handle,
         name: *const u8,
     ) -> i32;
@@ -129,7 +129,7 @@ sys_lib! {
     /// # Return Value
     ///
     /// 0 on success, < 0 on error
-    pub unsafe fn sce_reg_close_category(dir_handle: Handle) -> i32;
+    pub fn sce_reg_close_category(dir_handle: Handle) -> i32;
 
     #[psp(0x0D69BF40)]
     /// Flush the registry directory to disk
@@ -141,7 +141,7 @@ sys_lib! {
     /// # Return Value
     ///
     /// 0 on success, < 0 on error
-    pub unsafe fn sce_reg_flush_category(dir_handle: Handle) -> i32;
+    pub fn sce_reg_flush_category(dir_handle: Handle) -> i32;
 
     #[psp(0xD4475AA8, i5)]
     /// Get a key's information
@@ -157,7 +157,7 @@ sys_lib! {
     /// # Return Value
     ///
     /// 0 on success, < 0 on error
-    pub unsafe fn sce_reg_get_key_info(
+    pub fn sce_reg_get_key_info(
         dir_handle: Handle,
         name: *const u8,
         key_handle: *mut Handle,
@@ -178,7 +178,7 @@ sys_lib! {
     /// # Return Value
     ///
     /// 0 on success, < 0 on error
-    pub unsafe fn sce_reg_get_key_info_by_name(
+    pub fn sce_reg_get_key_info_by_name(
         dir_handle: Handle,
         name: *const u8,
         type_: *mut KeyType,
@@ -198,7 +198,7 @@ sys_lib! {
     /// # Return Value
     ///
     /// 0 on success, < 0 on error
-    pub unsafe fn sce_reg_get_key_value(
+    pub fn sce_reg_get_key_value(
         dir_handle: Handle,
         key_handle: Handle,
         buf: *mut c_void,
@@ -218,7 +218,7 @@ sys_lib! {
     /// # Return Value
     ///
     /// 0 on success, < 0 on error
-    pub unsafe fn sce_reg_get_key_value_by_name(
+    pub fn sce_reg_get_key_value_by_name(
         dir_handle: Handle,
         name: *const u8,
         buf: *mut c_void,
@@ -238,7 +238,7 @@ sys_lib! {
     /// # Return Value
     ///
     /// 0 on success, < 0 on error
-    pub unsafe fn sce_reg_set_key_value(
+    pub fn sce_reg_set_key_value(
         dir_handle: Handle,
         name: *const u8,
         buf: *const c_void,
@@ -256,7 +256,7 @@ sys_lib! {
     /// # Return Value
     ///
     /// 0 on success, < 0 on error
-    pub unsafe fn sce_reg_get_keys_num(
+    pub fn sce_reg_get_keys_num(
         dir_handle: Handle,
         num: *mut i32,
     ) -> i32;
@@ -273,7 +273,7 @@ sys_lib! {
     /// # Return Value
     ///
     /// 0 on success, < 0 on error
-    pub unsafe fn sce_reg_get_keys(
+    pub fn sce_reg_get_keys(
         dir_handle: Handle,
         buf: *mut u8,
         num: i32,
@@ -292,7 +292,7 @@ sys_lib! {
     /// # Return Value
     ///
     /// 0 on success, < 0 on error
-    pub unsafe fn sce_reg_create_key(
+    pub fn sce_reg_create_key(
         dir_handle: Handle,
         name: *const u8,
         type_: i32,
@@ -309,5 +309,5 @@ sys_lib! {
     /// # Return Value
     ///
     /// 0 on success, < 0 on error
-    pub unsafe fn sce_reg_remove_registry(key: *mut Key) -> i32;
+    pub fn sce_reg_remove_registry(key: *mut Key) -> i32;
 }

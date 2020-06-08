@@ -33,7 +33,6 @@ header() {
             s/SceUInt32/u32/g
             s/SceUChar8/u8/g
 
-            s/pub fn/pub unsafe fn/
             s/@param (\w*)\s+- /- `\1`: /
             s/@return (.*)/# Return Value\n    \/\/\/\n    \/\/\/ \1/
 
@@ -143,7 +142,7 @@ cat <(pspModule $2) <(header $1) \
             next
         }
 
-        /pub unsafe fn/ {
+        /pub fn/ {
             # Function name start and end index
             fn_start = match($0, "fn ") + 3
             fn_end = match(substr($0, fn_start), "\\(") + fn_start

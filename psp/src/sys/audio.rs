@@ -75,7 +75,7 @@ sys_lib! {
     /// # Return value
     ///
     /// The channel number on success, or <0 on error.
-    pub unsafe fn sce_audio_ch_reserve(channel: i32, sample_count: i32, format: i32) -> i32;
+    pub fn sce_audio_ch_reserve(channel: i32, sample_count: i32, format: i32) -> i32;
     #[psp(0x6FC46853)]
     /// Release a hardware output channel.
     ///
@@ -86,7 +86,7 @@ sys_lib! {
     /// # Return value
     ///
     /// 0 on success, <0 on error.
-    pub unsafe fn sce_audio_ch_release(channel: i32) -> i32;
+    pub fn sce_audio_ch_release(channel: i32) -> i32;
 
     #[psp(0x8C1009B2)]
     /// Output audio to the specified channel.
@@ -100,7 +100,7 @@ sys_lib! {
     /// # Return value
     ///
     /// 0 on success, <0 on error.
-    pub unsafe fn sce_audio_output(channel: i32, vol: i32, buf: *mut c_void) -> i32;
+    pub fn sce_audio_output(channel: i32, vol: i32, buf: *mut c_void) -> i32;
 
     #[psp(0x136CAF51)]
     /// Output audio to the specified channel (blocking)
@@ -115,7 +115,7 @@ sys_lib! {
     ///
     /// 0 on success, <0 on error.
 
-    pub unsafe fn sce_audio_output_blocking(channel: i32, vol: i32, buf: *mut c_void) -> i32;
+    pub fn sce_audio_output_blocking(channel: i32, vol: i32, buf: *mut c_void) -> i32;
 
     #[psp(0xE2D56B2D)]
     /// Output panned audio to the specified channel.
@@ -130,7 +130,7 @@ sys_lib! {
     /// # Return value
     ///
     /// 0 on success, <0 on error.
-    pub unsafe fn sce_audio_output_panned(channel: i32, left_vol: i32, right_vol: i32, buf: *mut c_void) -> i32;
+    pub fn sce_audio_output_panned(channel: i32, left_vol: i32, right_vol: i32, buf: *mut c_void) -> i32;
 
     #[psp(0x13F592BC)]
     /// Output panned audio to the specified channel (blocking)
@@ -146,7 +146,7 @@ sys_lib! {
     ///
     /// 0 on success, <0 on error.
 
-    pub unsafe fn sce_audio_output_panned_blocking(channel: i32, left_vol: i32, right_vol: i32, buf: *mut c_void) -> i32;
+    pub fn sce_audio_output_panned_blocking(channel: i32, left_vol: i32, right_vol: i32, buf: *mut c_void) -> i32;
 
     #[psp(0xE9D97901)]
     /// Get count of uplayed samples remaining
@@ -158,7 +158,7 @@ sys_lib! {
     /// # Return value
     ///
     /// Number of samples to be played, <0 on error.
-    pub unsafe fn sce_audio_get_channel_rest_len(channel: i32) -> i32;
+    pub fn sce_audio_get_channel_rest_len(channel: i32) -> i32;
 
     #[psp(0xB011922F)]
     /// Get count of uplayed samples remaining
@@ -170,7 +170,7 @@ sys_lib! {
     /// # Return value
     ///
     /// Number of samples to be played, <0 on error.
-    pub unsafe fn sce_audio_get_channel_rest_length(channel: i32) -> i32;
+    pub fn sce_audio_get_channel_rest_length(channel: i32) -> i32;
 
     #[psp(0xCB2E439E)]
     /// Change the output sample count, after it's already been reserved
@@ -183,7 +183,7 @@ sys_lib! {
     /// # Return value
     ///
     /// 0 on success, <0 on error.
-    pub unsafe fn sce_audio_set_channel_data_len(channel: i32, sample_count: i32) -> i32;
+    pub fn sce_audio_set_channel_data_len(channel: i32, sample_count: i32) -> i32;
 
     #[psp(0x95FD0C2D)]
     /// Change the format of a channel
@@ -196,7 +196,7 @@ sys_lib! {
     /// # Return value
     ///
     /// 0 on success, < 0 on error.
-    pub unsafe fn sce_audio_change_channel_config(channel: i32, format: i32) -> i32;
+    pub fn sce_audio_change_channel_config(channel: i32, format: i32) -> i32;
 
     #[psp(0xB7E1D8E7)]
     /// Change the volume of a channel
@@ -210,7 +210,7 @@ sys_lib! {
     /// # Return value
     ///
     /// 0 on success, <0 on error.
-    pub unsafe fn sce_audio_change_channel_volume(channel:i32, left_vol: i32, right_vol:i32) -> i32;
+    pub fn sce_audio_change_channel_volume(channel:i32, left_vol: i32, right_vol:i32) -> i32;
 
     #[psp(0x01562BA3)]
     /// Reserve the audio output and set the sample count
@@ -222,7 +222,7 @@ sys_lib! {
     /// # Return value
     ///
     /// 0 on success, <0 on error.
-    pub unsafe fn sce_audio_output2_reserve(sample_count: i32) -> i32;
+    pub fn sce_audio_output2_reserve(sample_count: i32) -> i32;
 
     #[psp(0x43196845)]
     /// Release the audio output
@@ -230,7 +230,7 @@ sys_lib! {
     /// # Return value
     ///
     /// 0 on success, <0 on error.
-    pub unsafe fn sce_audio_output2_release() -> i32;
+    pub fn sce_audio_output2_release() -> i32;
 
     #[psp(0x63F2889C)]
     /// Change the output sample count, after it's already been reserved
@@ -242,7 +242,7 @@ sys_lib! {
     /// # Return value
     ///
     /// 0 on success, <0 on error.
-    pub unsafe fn sce_audio_output2_change_length(sample_count: i32) -> i32;
+    pub fn sce_audio_output2_change_length(sample_count: i32) -> i32;
 
     #[psp(0x2D53F36E)]
     /// Output audio (blocking)
@@ -255,7 +255,7 @@ sys_lib! {
     /// # Return value
     ///
     /// 0 on success, <0 on error.
-    pub unsafe fn sce_audio_output2_output_blocking(vol: i32, buf: *mut c_void) -> i32;
+    pub fn sce_audio_output2_output_blocking(vol: i32, buf: *mut c_void) -> i32;
 
     #[psp(0x647CEF33)]
     /// Get count of unplayed samples remaining
@@ -263,7 +263,7 @@ sys_lib! {
     /// # Return value
     ///
     /// Number of samples to be played, < 0 on error.
-    pub unsafe fn sce_audio_output2_get_rest_sample() -> i32;
+    pub fn sce_audio_output2_get_rest_sample() -> i32;
 
     #[psp(0x38553111)]
     /// Reserve the audio output
@@ -277,7 +277,7 @@ sys_lib! {
     /// # Return value
     ///
     /// 0 on success, <0 on error.
-    pub unsafe fn sce_audio_src_ch_reserve(sample_count: i32, freq: OutputFrequency, channels: i32) -> i32;
+    pub fn sce_audio_src_ch_reserve(sample_count: i32, freq: OutputFrequency, channels: i32) -> i32;
 
     #[psp(0x5C37C0AE)]
     /// Release the audio output
@@ -285,7 +285,7 @@ sys_lib! {
     /// # Return value
     ///
     /// 0 on success, <0 on error.
-    pub unsafe fn sce_audio_src_ch_release() -> i32;
+    pub fn sce_audio_src_ch_release() -> i32;
 
     #[psp(0xE0727056)]
     /// Output audio (blocking)
@@ -298,7 +298,7 @@ sys_lib! {
     /// # Return value
     ///
     /// 0 on success, <0 on error.
-    pub unsafe fn sce_audio_src_output_blocking(vol: i32, buf: *mut c_void) -> i32;
+    pub fn sce_audio_src_output_blocking(vol: i32, buf: *mut c_void) -> i32;
 
     #[psp(0x7DE61688)]
     /// Init audio input
@@ -312,7 +312,7 @@ sys_lib! {
     /// # Return value
     ///
     /// 0 on success, <0 on error.
-    pub unsafe fn sce_audio_input_init(unknown1: i32, gain: i32, unknown2: i32) -> i32;
+    pub fn sce_audio_input_init(unknown1: i32, gain: i32, unknown2: i32) -> i32;
 
     #[psp(0xE926D3FB)]
     /// Init audio input (with extra arguments)
@@ -324,7 +324,7 @@ sys_lib! {
     /// # Return value
     ///
     /// 0 on success, <0 on error.
-    pub unsafe fn sce_audio_input_init_ex(params: *mut InputParams) -> i32;
+    pub fn sce_audio_input_init_ex(params: *mut InputParams) -> i32;
 
     #[psp(0x086E5895)]
     /// Perform audio input (blocking)
@@ -338,7 +338,7 @@ sys_lib! {
     /// # Return value
     ///
     /// 0 on success, <0 on error.
-    pub unsafe fn sce_audio_input_blocking(sample_count: i32, freq: InputFrequency, buf: *mut c_void);
+    pub fn sce_audio_input_blocking(sample_count: i32, freq: InputFrequency, buf: *mut c_void);
 
     #[psp(0x6D4BEC68)]
     /// Perform audio input
@@ -352,7 +352,7 @@ sys_lib! {
     /// # Return value
     ///
     /// 0 on success, <0 on error.
-    pub unsafe fn sce_audio_input(sample_count: i32, freq: InputFrequency, buf: *mut c_void);
+    pub fn sce_audio_input(sample_count: i32, freq: InputFrequency, buf: *mut c_void);
 
     #[psp(0xA708C6A6)]
     /// Get the number of samples that were acquired
@@ -360,7 +360,7 @@ sys_lib! {
     /// # Return value
     ///
     /// Number of samples acquired, <0 on error.
-    pub unsafe fn sce_audio_get_input_length() -> i32;
+    pub fn sce_audio_get_input_length() -> i32;
 
     #[psp(0x87B2E651)]
     /// Wait for non-blocking audio input to complete
@@ -368,7 +368,7 @@ sys_lib! {
     /// # Return value 
     ///
     /// 0 on success, <0 on error.
-    pub unsafe fn sce_audio_wait_input_end() -> i32;
+    pub fn sce_audio_wait_input_end() -> i32;
 
     #[psp(0xA633048E)]
     /// Poll for non-blocking audio input status
@@ -376,5 +376,5 @@ sys_lib! {
     /// # Return value
     ///
     /// 0 if input has completed, 1 if not completed, <0 on error.
-    pub unsafe fn sce_audio_poll_input_end() -> i32;
+    pub fn sce_audio_poll_input_end() -> i32;
 }

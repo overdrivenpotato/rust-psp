@@ -10,7 +10,7 @@ sys_lib! {
     #![version = (0, 0)]
 
     #[psp(0x05572A5F)]
-    pub unsafe fn sce_kernel_exit_game();
+    pub fn sce_kernel_exit_game();
 
     #[psp(0x4AC57943)]
     /// Register callback.
@@ -26,7 +26,7 @@ sys_lib! {
     /// # Return value
     ///
     /// < 0 on error
-    pub unsafe fn sce_kernel_register_exit_callback(id: SceUid) -> i32;
+    pub fn sce_kernel_register_exit_callback(id: SceUid) -> i32;
 }
 
 /// UIDs are used to describe many different kernel objects.
@@ -90,7 +90,7 @@ sys_lib! {
     /// # Return value
     ///
     /// The UID of the new block, or if less than 0 an error.
-    pub unsafe fn sce_kernel_alloc_partition_memory(
+    pub fn sce_kernel_alloc_partition_memory(
         partition: SceSysMemPartitionId,
         name: *const u8,
         type_: SceSysMemBlockTypes,
@@ -108,7 +108,7 @@ sys_lib! {
     /// # Return value
     ///
     /// The lowest address belonging to the memory block.
-    pub unsafe fn sce_kernel_get_block_head_addr(blockid: SceUid) -> *mut c_void;
+    pub fn sce_kernel_get_block_head_addr(blockid: SceUid) -> *mut c_void;
 
     #[psp(0xB6D61D02)]
     /// Free a memory block allocated with `sce_kernel_alloc_partition_memory`.
@@ -120,7 +120,7 @@ sys_lib! {
     /// # Return value
     ///
     /// ? on success, less than 0 on error.
-    pub unsafe fn sce_kernel_free_partition_memory(blockid: SceUid) -> i32;
+    pub fn sce_kernel_free_partition_memory(blockid: SceUid) -> i32;
 }
 
 #[repr(C)]
@@ -176,53 +176,53 @@ sys_lib! {
     #[psp(0x27CC57F0)]
     /// Get the time in seconds since the epoc (1st Jan 1970)
     ///
-    pub unsafe fn sce_kernel_libc_time(t: *mut i32) -> i32;
+    pub fn sce_kernel_libc_time(t: *mut i32) -> i32;
 
     #[psp(0x91E4F6A7)]
     /// Get the processor clock used since the start of the process
-    pub unsafe fn sce_kernel_libc_clock() -> u32;
+    pub fn sce_kernel_libc_clock() -> u32;
 
     #[psp(0x71EC4271)]
     /// Get the current time of time and time zone information
-    pub unsafe fn sce_kernel_libc_gettimeofday(tp: *mut TimeVal, tzp: *mut Timezone)
+    pub fn sce_kernel_libc_gettimeofday(tp: *mut TimeVal, tzp: *mut Timezone)
         -> i32;
 
     #[psp(0x79D1C3FA)]
     /// Write back the data cache to memory
-    pub unsafe fn sce_kernel_dcache_writeback_all();
+    pub fn sce_kernel_dcache_writeback_all();
 
     #[psp(0xB435DEC5)]
     /// Write back and invalidate the data cache
-    pub unsafe fn sce_kernel_dcache_writeback_invalidate_all();
+    pub fn sce_kernel_dcache_writeback_invalidate_all();
 
     #[psp(0x3EE30821)]
     /// Write back a range of addresses from the data cache to memory
-    pub unsafe fn sce_kernel_dcache_writeback_range(
+    pub fn sce_kernel_dcache_writeback_range(
         p: *const c_void,
         size: u32,
     );
 
     #[psp(0x34B9FA9E)]
     /// Write back and invalidate a range of addresses in the data cache
-    pub unsafe fn sce_kernel_dcache_writeback_invalidate_range(
+    pub fn sce_kernel_dcache_writeback_invalidate_range(
         p: *const c_void,
         size: u32,
     );
 
     #[psp(0xBFA98062)]
     /// Invalidate a range of addresses in data cache
-    pub unsafe fn sce_kernel_dcache_invalidate_range(
+    pub fn sce_kernel_dcache_invalidate_range(
         p: *const c_void,
         size: u32,
     );
 
     #[psp(0x920F104A)]
     /// Invalidate the instruction cache
-    pub unsafe fn sce_kernel_icache_invalidate_all();
+    pub fn sce_kernel_icache_invalidate_all();
 
     #[psp(0xC2DF770E)]
     /// Invalidate a range of addresses in the instruction cache
-    pub unsafe fn sce_kernel_icache_invalidate_range(
+    pub fn sce_kernel_icache_invalidate_range(
         p: *const c_void,
         size: u32,
     );
@@ -238,7 +238,7 @@ sys_lib! {
     /// # Return Value
     ///
     /// < 0 on error.
-    pub unsafe fn sce_kernel_utils_mt19937_init(
+    pub fn sce_kernel_utils_mt19937_init(
         ctx: *mut Mt19937Context,
         seed: u32,
     ) -> i32;
@@ -252,7 +252,7 @@ sys_lib! {
     /// # Return Value
     ///
     /// A pseudo random number (between 0 and MAX_INT).
-    pub unsafe fn sce_kernel_utils_mt19937_uint(ctx: *mut Mt19937Context) -> u32;
+    pub fn sce_kernel_utils_mt19937_uint(ctx: *mut Mt19937Context) -> u32;
 
     #[psp(0xC8186A58)]
     /// Function to perform an MD5 digest of a data block.
@@ -266,7 +266,7 @@ sys_lib! {
     /// # Return Value
     ///
     /// < 0 on error.
-    pub unsafe fn sce_kernel_utils_md5_digest(
+    pub fn sce_kernel_utils_md5_digest(
         data: *mut u8,
         size: u32,
         digest: *mut u8,
@@ -282,7 +282,7 @@ sys_lib! {
     /// # Return Value
     ///
     /// < 0 on error.
-    pub unsafe fn sce_kernel_utils_md5_block_init(ctx: *mut Md5Context) -> i32;
+    pub fn sce_kernel_utils_md5_block_init(ctx: *mut Md5Context) -> i32;
 
     #[psp(0x61E1E525)]
     /// Function to update the MD5 digest with a block of data.
@@ -296,7 +296,7 @@ sys_lib! {
     /// # Return Value
     ///
     /// < 0 on error.
-    pub unsafe fn sce_kernel_utils_md5_block_update(
+    pub fn sce_kernel_utils_md5_block_update(
         ctx: *mut Md5Context,
         data: *mut u8,
         size: u32,
@@ -313,7 +313,7 @@ sys_lib! {
     /// # Return Value
     ///
     /// < 0 on error.
-    pub unsafe fn sce_kernel_utils_md5_block_result(
+    pub fn sce_kernel_utils_md5_block_result(
         ctx: *mut Md5Context,
         digest: *mut u8,
     ) -> i32;
@@ -330,7 +330,7 @@ sys_lib! {
     /// # Return Value
     ///
     /// < 0 on error.
-    pub unsafe fn sce_kernel_utils_sha1_digest(
+    pub fn sce_kernel_utils_sha1_digest(
         data: *mut u8,
         size: u32,
         digest: *mut u8,
@@ -346,7 +346,7 @@ sys_lib! {
     /// # Return Value
     ///
     /// < 0 on error.
-    pub unsafe fn sce_kernel_utils_sha1_block_init(
+    pub fn sce_kernel_utils_sha1_block_init(
         ctx: *mut Sha1Context,
     ) -> i32;
 
@@ -362,7 +362,7 @@ sys_lib! {
     /// # Return Value
     ///
     /// < 0 on error.
-    pub unsafe fn sce_kernel_utils_sha1_block_update(
+    pub fn sce_kernel_utils_sha1_block_update(
         ctx: *mut Sha1Context,
         data: *mut u8,
         size: u32,
@@ -379,7 +379,7 @@ sys_lib! {
     /// # Return Value
     ///
     /// < 0 on error.
-    pub unsafe fn sce_kernel_utils_sha1_block_result(
+    pub fn sce_kernel_utils_sha1_block_result(
         ctx: *mut Sha1Context,
         digest: *mut u8,
     ) -> i32;

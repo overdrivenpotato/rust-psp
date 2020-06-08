@@ -20,7 +20,7 @@ sys_lib! {
     #![version = (0x00, 0x00)]
 
     #[psp(0x780F88D1)]
-    pub unsafe fn sce_atrac_get_atrac_id(ui_codec_type: u32) -> i32;
+    pub fn sce_atrac_get_atrac_id(ui_codec_type: u32) -> i32;
 
     #[psp(0x7A20E7AF)]
     /// Creates a new Atrac ID from the specified data
@@ -33,7 +33,7 @@ sys_lib! {
     /// # Return Value
     ///
     /// the new atrac ID, or < 0 on error
-    pub unsafe fn sce_atrac_set_data_and_get_id(
+    pub fn sce_atrac_set_data_and_get_id(
         buf: *mut c_void,
         bufsize: usize,
     ) -> i32;
@@ -54,7 +54,7 @@ sys_lib! {
     /// # Return Value
     ///
     /// < 0 on error, otherwise 0
-    pub unsafe fn sce_atrac_decode_data(
+    pub fn sce_atrac_decode_data(
         atrac_id: i32,
         out_samples: *mut u16,
         out_n: *mut i32,
@@ -74,7 +74,7 @@ sys_lib! {
     /// # Return Value
     ///
     /// < 0 on error, otherwise 0
-    pub unsafe fn sce_atrac_get_remain_frame(
+    pub fn sce_atrac_get_remain_frame(
         atrac_id: i32,
         out_remain_frame: *mut i32,
     ) -> i32;
@@ -90,7 +90,7 @@ sys_lib! {
     /// # Return Value
     ///
     /// < 0 on error, otherwise 0
-    pub unsafe fn sce_atrac_get_stream_data_info(
+    pub fn sce_atrac_get_stream_data_info(
         atrac_id: i32,
         write_pointer: *mut *mut u8,
         available_bytes: *mut u32,
@@ -106,7 +106,7 @@ sys_lib! {
     /// # Return Value
     ///
     /// < 0 on error, otherwise 0
-    pub unsafe fn sce_atrac_add_stream_data(
+    pub fn sce_atrac_add_stream_data(
         atrac_id: i32,
         bytes_to_add: u32,
     ) -> i32;
@@ -122,7 +122,7 @@ sys_lib! {
     /// # Return Value
     ///
     /// < 0 on error, otherwise 0
-    pub unsafe fn sce_atrac_get_bitrate(
+    pub fn sce_atrac_get_bitrate(
         atrac_id: i32,
         out_bitrate: *mut i32,
     ) -> i32;
@@ -138,7 +138,7 @@ sys_lib! {
     /// # Return Value
     ///
     /// < 0 on error, otherwise 0
-    pub unsafe fn sce_atrac_set_loop_num(
+    pub fn sce_atrac_set_loop_num(
         atrac_id: i32,
         nloops: i32,
     ) -> i32;
@@ -153,7 +153,7 @@ sys_lib! {
     /// # Return Value
     ///
     /// < 0 on error
-    pub unsafe fn sce_atrac_release_atrac_id(atrac_id: i32) -> i32;
+    pub fn sce_atrac_release_atrac_id(atrac_id: i32) -> i32;
 
     #[psp(0x36FAABFB)]
     /// Gets the number of samples of the next frame to be decoded.
@@ -167,7 +167,7 @@ sys_lib! {
     ///
     /// < 0 on error, otherwise 0
     ///
-    pub unsafe fn sce_atrac_get_next_sample(
+    pub fn sce_atrac_get_next_sample(
         atrac_id: i32,
         out_n: *mut i32,
     ) -> i32;
@@ -184,52 +184,52 @@ sys_lib! {
     ///
     /// < 0 on error, otherwise 0
     ///
-    pub unsafe fn sce_atrac_get_max_sample(
+    pub fn sce_atrac_get_max_sample(
         atrac_id: i32,
         out_max: *mut i32,
     ) -> i32;
 
     #[psp(0xCA3CA3D2)]
-    pub unsafe fn sce_atrac_get_buffer_info_for_reseting(
+    pub fn sce_atrac_get_buffer_info_for_reseting(
         atrac_id: i32,
         ui_sample: u32,
         pbuffer_info: *mut PspBufferInfo,
     ) -> i32;
 
     #[psp(0x31668BAA)]
-    pub unsafe fn sce_atrac_get_channel(
+    pub fn sce_atrac_get_channel(
         atrac_id: i32,
         pui_channel: *mut u32,
     ) -> i32;
 
     #[psp(0xE88F759B)]
-    pub unsafe fn sce_atrac_get_internal_error_info(
+    pub fn sce_atrac_get_internal_error_info(
         atrac_id: i32,
         pi_result: *mut i32,
     ) -> i32;
 
     #[psp(0xFAA4F89B)]
-    pub unsafe fn sce_atrac_get_loop_status(
+    pub fn sce_atrac_get_loop_status(
         atrac_id: i32,
         pi_loop_num: *mut i32,
         pui_loop_status: *mut u32,
     ) -> i32;
 
     #[psp(0xE23E3A35)]
-    pub unsafe fn sce_atrac_get_next_decode_position(
+    pub fn sce_atrac_get_next_decode_position(
         atrac_id: i32,
         pui_sample_position: *mut u32,
     ) -> i32;
 
     #[psp(0x83E85EA0)]
-    pub unsafe fn sce_atrac_get_second_buffer_info(
+    pub fn sce_atrac_get_second_buffer_info(
         atrac_id: i32,
         pui_position: *mut u32,
         pui_data_byte: *mut u32,
     ) -> i32;
 
     #[psp(0xA2BBA8BE)]
-    pub unsafe fn sce_atrac_get_sound_sample(
+    pub fn sce_atrac_get_sound_sample(
         atrac_id: i32,
         pi_end_sample: *mut i32,
         pi_loop_start_sample: *mut i32,
@@ -237,7 +237,7 @@ sys_lib! {
     ) -> i32;
 
     #[psp(0x644E5607)]
-    pub unsafe fn sce_atrac_reset_play_position(
+    pub fn sce_atrac_reset_play_position(
         atrac_id: i32,
         ui_sample: u32,
         ui_write_byte_first_buf: u32,
@@ -245,14 +245,14 @@ sys_lib! {
     ) -> i32;
 
     #[psp(0x0E2A73AB)]
-    pub unsafe fn sce_atrac_set_data(
+    pub fn sce_atrac_set_data(
         atrac_id: i32,
         puc_buffer_addr: *mut u8,
         ui_buffer_byte: u32,
     ) -> i32;
 
     #[psp(0x3F6E26B5)]
-    pub unsafe fn sce_atrac_set_halfway_buffer(
+    pub fn sce_atrac_set_halfway_buffer(
         atrac_id: i32,
         puc_buffer_addr: *mut u8,
         ui_read_byte: u32,
@@ -260,14 +260,14 @@ sys_lib! {
     ) -> i32;
 
     #[psp(0x0FAE370E)]
-    pub unsafe fn sce_atrac_set_halfway_buffer_and_get_id(
+    pub fn sce_atrac_set_halfway_buffer_and_get_id(
         puc_buffer_addr: *mut u8,
         ui_read_byte: u32,
         ui_buffer_byte: u32,
     ) -> i32;
 
     #[psp(0x83BF7AFD)]
-    pub unsafe fn sce_atrac_set_second_buffer(
+    pub fn sce_atrac_set_second_buffer(
         atrac_id: i32,
         puc_second_buffer_addr: *mut u8,
         ui_second_buffer_byte: u32,

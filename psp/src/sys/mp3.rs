@@ -41,7 +41,7 @@ sys_lib! {
     /// Raw MP3 handle on success, < 0 on error. Construct a `Handle` instance
     /// from this value to use the other functions in this module.
     // TODO: Investigate adding `Result` support to `sys_lib!`.
-    pub unsafe fn sce_mp3_reserve_mp3_handle(args: *mut InitArg) -> i32;
+    pub fn sce_mp3_reserve_mp3_handle(args: *mut InitArg) -> i32;
 
     #[psp(0xF5478233)]
     /// # Parameters
@@ -51,19 +51,19 @@ sys_lib! {
     /// # Return Value
     ///
     /// 0 if success, < 0 on error.
-    pub unsafe fn sce_mp3_release_mp3_handle(handle: Handle) -> i32;
+    pub fn sce_mp3_release_mp3_handle(handle: Handle) -> i32;
 
     #[psp(0x35750070)]
     /// # Return Value
     ///
     /// 0 if success, < 0 on error.
-    pub unsafe fn sce_mp3_init_resource() -> i32;
+    pub fn sce_mp3_init_resource() -> i32;
 
     #[psp(0x3C2FA058)]
     /// # Return Value
     ///
     /// 0 if success, < 0 on error.
-    pub unsafe fn sce_mp3_term_resource() -> i32;
+    pub fn sce_mp3_term_resource() -> i32;
 
     #[psp(0x44E07129)]
     /// # Parameters
@@ -73,7 +73,7 @@ sys_lib! {
     /// # Return Value
     ///
     /// 0 if success, < 0 on error.
-    pub unsafe fn sce_mp3_init(handle: Handle) -> i32;
+    pub fn sce_mp3_init(handle: Handle) -> i32;
 
     #[psp(0xD021C0FB)]
     /// # Parameters
@@ -84,7 +84,7 @@ sys_lib! {
     /// # Return Value
     ///
     /// number of bytes in decoded pcm buffer, < 0 on error.
-    pub unsafe fn sce_mp3_decode(handle: Handle, dst: *mut *mut i16) -> i32;
+    pub fn sce_mp3_decode(handle: Handle, dst: *mut *mut i16) -> i32;
 
     #[psp(0xA703FE0F)]
     /// # Parameters
@@ -97,7 +97,7 @@ sys_lib! {
     /// # Return Value
     ///
     /// 0 if success, < 0 on error.
-    pub unsafe fn sce_mp3_get_info_to_add_stream_data(
+    pub fn sce_mp3_get_info_to_add_stream_data(
         handle: Handle,
         dst: *mut *mut u8,
         to_write: *mut i32,
@@ -113,7 +113,7 @@ sys_lib! {
     /// # Return Value
     ///
     /// 0 if success, < 0 on error.
-    pub unsafe fn sce_mp3_notify_add_stream_data(handle: Handle, size: i32) -> i32;
+    pub fn sce_mp3_notify_add_stream_data(handle: Handle, size: i32) -> i32;
 
     #[psp(0xD0A56296)]
     /// # Parameters
@@ -123,7 +123,7 @@ sys_lib! {
     /// # Return Value
     ///
     /// 1 if more stream data is needed, < 0 on error.
-    pub unsafe fn sce_mp3_check_stream_data_needed(handle: Handle) -> i32;
+    pub fn sce_mp3_check_stream_data_needed(handle: Handle) -> i32;
 
     #[psp(0x3CEF484F)]
     /// # Parameters
@@ -134,7 +134,7 @@ sys_lib! {
     /// # Return Value
     ///
     /// 0 if success, < 0 on error.
-    pub unsafe fn sce_mp3_set_loop_num(handle: Handle, loop_: i32) -> i32;
+    pub fn sce_mp3_set_loop_num(handle: Handle, loop_: i32) -> i32;
 
     #[psp(0xD8F54A51)]
     /// # Parameters
@@ -144,7 +144,7 @@ sys_lib! {
     /// # Return Value
     ///
     /// Number of loops
-    pub unsafe fn sce_mp3_get_loop_num(handle: Handle) -> i32;
+    pub fn sce_mp3_get_loop_num(handle: Handle) -> i32;
 
     #[psp(0x354D27EA)]
     /// # Parameters
@@ -154,7 +154,7 @@ sys_lib! {
     /// # Return Value
     ///
     /// Number of decoded samples
-    pub unsafe fn sce_mp3_get_sum_decoded_sample(handle: Handle) -> i32;
+    pub fn sce_mp3_get_sum_decoded_sample(handle: Handle) -> i32;
 
     #[psp(0x87C263D1)]
     /// # Parameters
@@ -164,7 +164,7 @@ sys_lib! {
     /// # Return Value
     ///
     /// Number of max samples to output
-    pub unsafe fn sce_mp3_get_max_output_sample(handle: Handle) -> i32;
+    pub fn sce_mp3_get_max_output_sample(handle: Handle) -> i32;
 
     #[psp(0x8F450998)]
     /// # Parameters
@@ -174,7 +174,7 @@ sys_lib! {
     /// # Return Value
     ///
     /// Sampling rate of the mp3
-    pub unsafe fn sce_mp3_get_sampling_rate(handle: Handle) -> i32;
+    pub fn sce_mp3_get_sampling_rate(handle: Handle) -> i32;
 
     #[psp(0x87677E40)]
     /// # Parameters
@@ -184,7 +184,7 @@ sys_lib! {
     /// # Return Value
     ///
     /// Bitrate of the mp3
-    pub unsafe fn sce_mp3_get_bit_rate(handle: Handle) -> i32;
+    pub fn sce_mp3_get_bit_rate(handle: Handle) -> i32;
 
     #[psp(0x7F696782)]
     /// # Parameters
@@ -194,7 +194,7 @@ sys_lib! {
     /// # Return Value
     ///
     /// Number of channels of the mp3
-    pub unsafe fn sce_mp3_get_mp3_channel_num(handle: Handle) -> i32;
+    pub fn sce_mp3_get_mp3_channel_num(handle: Handle) -> i32;
 
     #[psp(0x2A368661)]
     /// # Parameters
@@ -204,5 +204,5 @@ sys_lib! {
     /// # Return Value
     ///
     /// < 0 on error
-    pub unsafe fn sce_mp3_reset_play_position(handle: Handle) -> i32;
+    pub fn sce_mp3_reset_play_position(handle: Handle) -> i32;
 }

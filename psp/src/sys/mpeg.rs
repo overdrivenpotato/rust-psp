@@ -88,10 +88,10 @@ sys_lib! {
     /// # Return Value
     ///
     /// 0 if success.
-    pub unsafe fn sce_mpeg_init() -> i32;
+    pub fn sce_mpeg_init() -> i32;
 
     #[psp(0x874624D6)]
-    pub unsafe fn sce_mpeg_finish();
+    pub fn sce_mpeg_finish();
 
     #[psp(0xD7A29F46)]
     /// # Parameters
@@ -101,7 +101,7 @@ sys_lib! {
     /// # Return Value
     ///
     /// < 0 if error else ringbuffer data size.
-    pub unsafe fn sce_mpeg_ringbuffer_query_mem_size(packets: i32) -> i32;
+    pub fn sce_mpeg_ringbuffer_query_mem_size(packets: i32) -> i32;
 
     #[psp(0x37295ED8, i6)]
     /// # Parameters
@@ -116,7 +116,7 @@ sys_lib! {
     /// # Return Value
     ///
     /// 0 if success.
-    pub unsafe fn sce_mpeg_ringbuffer_construct(
+    pub fn sce_mpeg_ringbuffer_construct(
         ringbuffer: *mut Ringbuffer,
         packets: i32,
         data: *mut c_void,
@@ -129,7 +129,7 @@ sys_lib! {
     /// # Parameters
     ///
     /// - `ringbuffer`: pointer to a sceMpegRingbuffer struct
-    pub unsafe fn sce_mpeg_ringbuffer_destruct(ringbuffer: *mut Ringbuffer);
+    pub fn sce_mpeg_ringbuffer_destruct(ringbuffer: *mut Ringbuffer);
 
     #[psp(0xB5F6DC87)]
     /// # Parameters
@@ -139,7 +139,7 @@ sys_lib! {
     /// # Return Value
     ///
     /// < 0 if error else number of free packets in the ringbuffer.
-    pub unsafe fn sce_mpeg_ringbuffer_available_size(ringbuffer: *mut Ringbuffer) -> i32;
+    pub fn sce_mpeg_ringbuffer_available_size(ringbuffer: *mut Ringbuffer) -> i32;
 
     #[psp(0xB240A59E)]
     /// # Parameters
@@ -151,7 +151,7 @@ sys_lib! {
     /// # Return Value
     ///
     /// < 0 if error else number of packets.
-    pub unsafe fn sce_mpeg_ringbuffer_put(
+    pub fn sce_mpeg_ringbuffer_put(
         ringbuffer: *mut Ringbuffer,
         num_packets: i32,
         available: i32,
@@ -165,7 +165,7 @@ sys_lib! {
     /// # Return Value
     ///
     /// < 0 if error else decoder data size.
-    pub unsafe fn sce_mpeg_query_mem_size(unk: i32) -> i32;
+    pub fn sce_mpeg_query_mem_size(unk: i32) -> i32;
 
     #[psp(0xD8C5F121, i7)]
     /// # Parameters
@@ -181,7 +181,7 @@ sys_lib! {
     /// # Return Value
     ///
     /// 0 if success.
-    pub unsafe fn sce_mpeg_create(
+    pub fn sce_mpeg_create(
         handle: Handle,
         data: *mut c_void,
         size: i32,
@@ -195,7 +195,7 @@ sys_lib! {
     /// # Parameters
     ///
     /// - `handle`: Instance handle
-    pub unsafe fn sce_mpeg_delete(handle: Handle);
+    pub fn sce_mpeg_delete(handle: Handle);
 
     #[psp(0x21FF80E4)]
     /// # Parameters
@@ -207,7 +207,7 @@ sys_lib! {
     /// # Return Value
     ///
     /// 0 if success.
-    pub unsafe fn sce_mpeg_query_stream_offset(
+    pub fn sce_mpeg_query_stream_offset(
         handle: Handle,
         buffer: *mut c_void,
         offset: *mut i32,
@@ -222,7 +222,7 @@ sys_lib! {
     /// # Return Value
     ///
     /// 0 if success.
-    pub unsafe fn sce_mpeg_query_stream_size(buffer: *mut c_void, size: *mut i32) -> i32;
+    pub fn sce_mpeg_query_stream_size(buffer: *mut c_void, size: *mut i32) -> i32;
 
     #[psp(0x42560F23)]
     /// # Parameters
@@ -234,7 +234,7 @@ sys_lib! {
     /// # Return Value
     ///
     /// 0 if error.
-    pub unsafe fn sce_mpeg_regist_stream(
+    pub fn sce_mpeg_regist_stream(
         handle: Handle,
         stream_id: i32,
         unk: i32,
@@ -245,22 +245,22 @@ sys_lib! {
     ///
     /// - `handle`: Instance handle
     /// - `stream`: pointer to stream
-    pub unsafe fn sce_mpeg_un_regist_stream(handle: Handle, stream: Stream);
+    pub fn sce_mpeg_un_regist_stream(handle: Handle, stream: Stream);
 
     #[psp(0x707B7629)]
     /// # Return Value
     ///
     /// 0 if success.
-    pub unsafe fn sce_mpeg_flush_all_stream(handle: Handle) -> i32;
+    pub fn sce_mpeg_flush_all_stream(handle: Handle) -> i32;
 
     #[psp(0xA780CF7E)]
     /// # Return Value
     ///
     /// 0 if error else pointer to buffer.
-    pub unsafe fn sce_mpeg_malloc_avc_es_buf(handle: Handle) -> *mut c_void;
+    pub fn sce_mpeg_malloc_avc_es_buf(handle: Handle) -> *mut c_void;
 
     #[psp(0xCEB870B1)]
-    pub unsafe fn sce_mpeg_free_avc_es_buf(handle: Handle, buf: *mut c_void);
+    pub fn sce_mpeg_free_avc_es_buf(handle: Handle, buf: *mut c_void);
 
     #[psp(0xF8DCB679)]
     /// # Parameters
@@ -272,7 +272,7 @@ sys_lib! {
     /// # Return Value
     ///
     /// 0 if success.
-    pub unsafe fn sce_mpeg_query_atrac_es_size(
+    pub fn sce_mpeg_query_atrac_es_size(
         handle: Handle,
         es_size: *mut i32,
         out_size: *mut i32,
@@ -288,7 +288,7 @@ sys_lib! {
     /// # Return Value
     ///
     /// 0 if success.
-    pub unsafe fn sce_mpeg_init_au(handle: Handle, es_buffer: *mut c_void, au: *mut Au) -> i32;
+    pub fn sce_mpeg_init_au(handle: Handle, es_buffer: *mut c_void, au: *mut Au) -> i32;
 
     #[psp(0xFE246728)]
     /// # Parameters
@@ -301,7 +301,7 @@ sys_lib! {
     /// # Return Value
     ///
     /// 0 if success.
-    pub unsafe fn sce_mpeg_get_avc_au(
+    pub fn sce_mpeg_get_avc_au(
         handle: Handle,
         stream: Stream,
         au: *mut Au,
@@ -317,7 +317,7 @@ sys_lib! {
     /// # Return Value
     ///
     /// 0 if success.
-    pub unsafe fn sce_mpeg_avc_decode_mode(handle: Handle, mode: *mut AvcMode) -> i32;
+    pub fn sce_mpeg_avc_decode_mode(handle: Handle, mode: *mut AvcMode) -> i32;
 
     #[psp(0x0E3C2E9D, i5)]
     /// # Parameters
@@ -331,7 +331,7 @@ sys_lib! {
     /// # Return Value
     ///
     /// 0 if success.
-    pub unsafe fn sce_mpeg_avc_decode(
+    pub fn sce_mpeg_avc_decode(
         handle: Handle,
         au: *mut Au,
         iframe_width: i32,
@@ -350,7 +350,7 @@ sys_lib! {
     /// # Return Value
     ///
     /// 0 if success.
-    pub unsafe fn sce_mpeg_avc_decode_stop(
+    pub fn sce_mpeg_avc_decode_stop(
         handle: Handle,
         frame_width: i32,
         buffer: *mut c_void,
@@ -368,7 +368,7 @@ sys_lib! {
     /// # Return Value
     ///
     /// 0 if success.
-    pub unsafe fn sce_mpeg_get_atrac_au(
+    pub fn sce_mpeg_get_atrac_au(
         handle: Handle,
         stream: Stream,
         au: *mut Au,
@@ -386,7 +386,7 @@ sys_lib! {
     /// # Return Value
     ///
     /// 0 if success.
-    pub unsafe fn sce_mpeg_atrac_decode(
+    pub fn sce_mpeg_atrac_decode(
         handle: Handle,
         au: *mut Au,
         buffer: *mut c_void,
