@@ -1,57 +1,61 @@
-/// Enumeration for the digital controller buttons.
-/// NOTE: Home, Note, Screen, VolUp, VolDown, Disc, WlanUp, Remote, MS can only be read in kernel mode
-#[repr(u32)]
-pub enum PspCtrlButtons {
-    /// Select button. 
-    Select     = 0x000001,
-    /// Start button. 
-    Start      = 0x000008,
-    /// Up D-Pad button.
-    Up         = 0x000010,
-    /// Right D-Pad button.
-    Right      = 0x000020,
-    /// Down D-Pad button.
-    Down      	= 0x000040,
-    /// Left D-Pad button.
-    Left      	= 0x000080,
-    /// Left trigger.
-    LTrigger   = 0x000100,
-    /// Right trigger.
-    RTrigger   = 0x000200,
-    /// Triangle button.
-    Triangle   = 0x001000,
-    /// Circle button.
-    Circle     = 0x002000,
-    /// Cross button.
-    Cross      = 0x004000,
-    /// Square button.
-    Square     = 0x008000,
-    /// Home button. In user mode this bit is set if the exit dialog is visible.
-    Home       = 0x010000,
-    /// Hold button. 
-    Hold       = 0x020000,
-    /// Music Note button. 
-    Note       = 0x800000,
-    /// Screen button. 
-    Screen     = 0x400000,
-    /// Volume up button. 
-    VolUp      = 0x100000,
-    /// Volume down button. 
-    VolDown    = 0x200000,
-    /// Wlan switch up. 
-    WlanUp    = 0x040000,
-    /// Remote hold position.
-    Remote     = 0x080000,	
-    /// Disc present. 
-    Disc       = 0x1000000,
-    /// Memory stick present. 
-    MS         = 0x2000000,
+bitflags::bitflags! {
+    /// Enumeration for the digital controller buttons.
+    ///
+    /// # Note
+    ///
+    /// Home, Note, Screen, VolUp, VolDown, Disc, WlanUp, Remote, and MS can only be
+    /// read in kernel mode.
+    pub struct PspCtrlButtons: u32 {
+        /// Select button.
+        const SELECT = 0x000001;
+        /// Start button.
+        const START = 0x000008;
+        /// Up D-Pad button.
+        const UP = 0x000010;
+        /// Right D-Pad button.
+        const RIGHT = 0x000020;
+        /// Down D-Pad button.
+        const DOWN = 0x000040;
+        /// Left D-Pad button.
+        const LEFT = 0x000080;
+        /// Left trigger.
+        const LTRIGGER = 0x000100;
+        /// Right trigger.
+        const RTRIGGER = 0x000200;
+        /// Triangle button.
+        const TRIANGLE = 0x001000;
+        /// Circle button.
+        const CIRCLE = 0x002000;
+        /// Cross button.
+        const CROSS = 0x004000;
+        /// Square button.
+        const SQUARE = 0x008000;
+        /// Home button. In user mode this bit is set if the exit dialog is visible.
+        const HOME = 0x010000;
+        /// Hold button.
+        const HOLD = 0x020000;
+        /// Music Note button.
+        const NOTE = 0x800000;
+        /// Screen button.
+        const SCREEN = 0x400000;
+        /// Volume up button.
+        const VOL_UP = 0x100000;
+        /// Volume down button.
+        const VOL_DOWN = 0x200000;
+        /// Wlan switch up.
+        const WLAN_UP = 0x040000;
+        /// Remote hold position.
+        const REMOTE = 0x080000;
+        /// Disc present.
+        const DISC = 0x1000000;
+        /// Memory stick present.
+        const MEM_STICK = 0x2000000;
+    }
 }
 
 /// Controller mode.
 #[repr(u32)]
-pub enum PspCtrlMode
-{
+pub enum PspCtrlMode {
     /// Digital.
     Digital = 0,
     /// Analog.
@@ -63,7 +67,7 @@ pub enum PspCtrlMode
 pub struct SceCtrlData {
     /// The current read frame.
     pub timestamp: u32,
-    /// Bit mask containing zero or more of ::PspCtrlButtons.
+    /// Bit mask containing zero or more of `PspCtrlButtons`.
     pub buttons: u32,
     /// Analogue stick, X axis.
     pub lx: u8,
@@ -91,7 +95,7 @@ psp_extern! {
     ///
     /// # Parameters
     ///
-    /// `cycle` - Cycle. Normally set to 0.
+    /// - `cycle`: Cycle. Normally set to 0.
     ///
     /// # Return value
     ///
@@ -100,10 +104,10 @@ psp_extern! {
 
     #[psp(0x02BAAD91)]
     /// Get the controller current cycle setting.
-    /// 
+    ///
     /// # Parameters
     ///
-    /// `pcycle` - Return value.
+    /// - `pcycle`: Return value.
     ///
     /// # Return value
     ///
@@ -115,19 +119,19 @@ psp_extern! {
     ///
     /// # Parameters
     ///
-    /// `mode` - One of PspCtrlMode.
+    /// - `mode`: One of PspCtrlMode.
     ///
     /// # Return Value
     ///
     /// The previous mode.
     pub fn sce_ctrl_set_sampling_mode(mode: i32) -> i32;
-    
+
     #[psp(0xDA6B76A1)]
     /// Get the current controller mode.
     ///
     /// # Parameters
     ///
-    /// `pmode` - Return value.
+    /// - `pmode`: Return value.
     ///
     /// # Return value
     ///
@@ -138,15 +142,15 @@ psp_extern! {
     pub fn sce_ctrl_peek_buffer_positive(pad_data: *mut SceCtrlData, count: i32) -> i32;
 
     #[psp(0xC152080A)]
-    pub fn sce_ctrl_peek_buffer_negative(pad_data: *mut SceCtrlData, count: i32) -> i32; 
+    pub fn sce_ctrl_peek_buffer_negative(pad_data: *mut SceCtrlData, count: i32) -> i32;
 
     #[psp(0x1F803938)]
     /// Read buffer positive
     ///
     /// # Parameters
     ///
-    /// `pad_data` - Pointer to a SceCtrlData structure used to hold the returned pad data.
-    /// `count` - Number of SceCtrlData buffers to read.
+    /// - `pad_data`: Pointer to a `SceCtrlData` structure used to hold the returned pad data.
+    /// - `count`: Number of `SceCtrlData` buffers to read.
     pub fn sce_ctrl_read_buffer_positive(pad_data: *mut SceCtrlData, count: i32) -> i32;
 
     #[psp(0x60B81F86)]
@@ -163,12 +167,16 @@ psp_extern! {
     ///
     /// # Parameters
     ///
-    /// `idlereset` -  Movement needed by the analog to reset the idle timer.
-    /// `idleback` - Movement needed by the analog to bring the PSP back from an idle state.
-    /// Set to -1 for analog to not cancel idle timer.
-    /// Set to 0 for idle timer to be cancelled even if the analog is not moved.
-    /// Set between 1-128 to specify the movement on either axis needed by the analog 
-    /// to fire the  event.
+    /// - `idlereset`:  Movement needed by the analog to reset the idle timer.
+    /// - `idleback`: Movement needed by the analog to bring the PSP back from
+    ///   an idle state.
+    ///
+    ///   Set to -1 for analog to not cancel idle timer.
+    ///
+    ///   Set to 0 for idle timer to be cancelled even if the analog is not moved.
+    ///
+    ///   Set between 1-128 to specify the movement on either axis needed by the analog
+    ///   to fire the  event.
     ///
     /// # Return value
     ///
@@ -180,8 +188,9 @@ psp_extern! {
     ///
     /// # Parameters
     ///
-    /// `idlereset` - Movement needed by the analog to reset the idle timer.
-    /// `idleback` - Movement needed by the analog to bring the PSP back from an idle state.
+    /// - `idlereset`: Movement needed by the analog to reset the idle timer.
+    /// - `idleback`: Movement needed by the analog to bring the PSP back from
+    ///   an idle state.
     ///
     /// # Return value
     ///

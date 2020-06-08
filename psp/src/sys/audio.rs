@@ -65,12 +65,12 @@ psp_extern! {
     ///
     /// # Parameters
     ///
-    /// `channel` - Use a value between 0-7 to reserve a specific channel.
-    /// Pass NEXT_CHANNEL to get the first available channel.
-    /// `sample_count` - The number of samples that can be output on the channel per output
-    /// call. It must be a value between SAMPLE_MIN and SAMPLE_MAX, and it must be 
-    /// aligned to 64 bytes. Use sample_align to align it.
-    /// `format` - The output format to use for the channel. One of Format.
+    /// - `channel`: Use a value between 0-7 to reserve a specific channel. Pass
+    ///   `NEXT_CHANNEL` to get the first available channel.
+    /// - `sample_count`: The number of samples that can be output on the channel
+    ///   per output call. It must be a value between SAMPLE_MIN and SAMPLE_MAX,
+    ///   and it must be aligned to 64 bytes. Use `sample_align()` to align it.
+    /// - `format`: The output format to use for the channel. One of Format.
     ///
     /// # Return value
     ///
@@ -81,7 +81,7 @@ psp_extern! {
     ///
     /// # Parameters
     ///
-    /// `channel` - The channel to release.
+    /// - `channel`: The channel to release.
     ///
     /// # Return value
     ///
@@ -93,9 +93,9 @@ psp_extern! {
     ///
     /// # Parameters
     ///
-    /// `channel` - The channel number.
-    /// `vol` - The volume.
-    /// `buf` - Pointer to PCM data to output
+    /// - `channel`: The channel number.
+    /// - `vol`: The volume.
+    /// - `buf`: Pointer to PCM data to output
     ///
     /// # Return value
     ///
@@ -107,9 +107,9 @@ psp_extern! {
     ///
     /// # Parameters
     ///
-    /// `channel` - The channel number.
-    /// `vol` - The volume.
-    /// `buf` - Pointer to PCM data to output
+    /// - `channel`: The channel number.
+    /// - `vol`: The volume.
+    /// - `buf`: Pointer to PCM data to output
     ///
     /// # Return value
     ///
@@ -122,10 +122,10 @@ psp_extern! {
     ///
     /// # Parameters
     ///
-    /// `channel` - The channel number.
-    /// `left_vol` - The left volume.
-    /// `right_vol` - The right volume.
-    /// `buf` Pointer to PCM data to output
+    /// - `channel`: The channel number.
+    /// - `left_vol`: The left volume.
+    /// - `right_vol`: The right volume.
+    /// - `buf` Pointer to PCM data to output
     ///
     /// # Return value
     ///
@@ -137,10 +137,10 @@ psp_extern! {
     ///
     /// # Parameters
     ///
-    /// `channel` - The channel number.
-    /// `left_vol` - The left volume.
-    /// `right_vol` - The right volume.
-    /// `buf` Pointer to PCM data to output
+    /// - `channel`: The channel number.
+    /// - `left_vol`: The left volume.
+    /// - `right_vol`: The right volume.
+    /// - `buf`: Pointer to PCM data to output
     ///
     /// # Return value
     ///
@@ -153,8 +153,8 @@ psp_extern! {
     ///
     /// # Parameters
     ///
-    /// `channel` - The channel number.
-    /// 
+    /// - `channel`: The channel number.
+    ///
     /// # Return value
     ///
     /// Number of samples to be played, <0 on error.
@@ -165,8 +165,8 @@ psp_extern! {
     ///
     /// # Parameters
     ///
-    /// `channel` - The channel number.
-    /// 
+    /// - `channel`: The channel number.
+    ///
     /// # Return value
     ///
     /// Number of samples to be played, <0 on error.
@@ -177,8 +177,8 @@ psp_extern! {
     ///
     /// # Parameters
     ///
-    /// `channel` - The channel number.
-    /// `sample_count` - The number of samples to output in one output call.
+    /// - `channel`: The channel number.
+    /// - `sample_count`: The number of samples to output in one output call.
     ///
     /// # Return value
     ///
@@ -190,8 +190,8 @@ psp_extern! {
     ///
     /// # Parameters
     ///
-    /// `channel` - The channel number.
-    /// `format` - One of Format.
+    /// - `channel`: The channel number.
+    /// - `format`: One of Format.
     ///
     /// # Return value
     ///
@@ -203,9 +203,9 @@ psp_extern! {
     ///
     /// # Parameters
     ///
-    /// `channel` - The channel number.
-    /// `left_vol` - The left volume.
-    /// `right_vol` - The right volume.
+    /// - `channel`: The channel number.
+    /// - `left_vol`: The left volume.
+    /// - `right_vol`: The right volume.
     ///
     /// # Return value
     ///
@@ -214,10 +214,10 @@ psp_extern! {
 
     #[psp(0x01562BA3)]
     /// Reserve the audio output and set the sample count
-    /// 
+    ///
     /// # Parameters
     ///
-    /// `sample_count` - The number of samples to output in one output call (min 17, max 4111).
+    /// - `sample_count`: The number of samples to output in one output call (min 17, max 4111).
     ///
     /// # Return value
     ///
@@ -236,8 +236,8 @@ psp_extern! {
     /// Change the output sample count, after it's already been reserved
     ///
     /// # Parameters
-    /// 
-    /// `sample_count` - The number of samples to output in one output call (min 17, max 4111)
+    ///
+    /// - `sample_count`: The number of samples to output in one output call (min 17, max 4111)
     ///
     /// # Return value
     ///
@@ -249,8 +249,8 @@ psp_extern! {
     ///
     /// # Parameters
     ///
-    /// `vol` - The volume.
-    /// ` buf` - Pointer to PCM data.
+    /// - `vol`: The volume.
+    /// - `buf`: Pointer to PCM data.
     ///
     /// # Return value
     ///
@@ -270,9 +270,9 @@ psp_extern! {
     ///
     /// # Parameters
     ///
-    /// `sample_count` - The number of samples to output in one output call (min 17, max 4111).
-    /// `freq` - One of OutputFrequency.
-    /// `channels` - Number of channels. Pass 2 (stereo).
+    /// - `sample_count`: The number of samples to output in one output call (min 17, max 4111).
+    /// - `freq`: One of OutputFrequency.
+    /// - `channels`: Number of channels. Pass 2 (stereo).
     ///
     /// # Return value
     ///
@@ -289,11 +289,11 @@ psp_extern! {
 
     #[psp(0xE0727056)]
     /// Output audio (blocking)
-    /// 
+    ///
     /// # Parameters
     ///
-    /// `vol` - The volume.
-    /// `buf` - Pointer to PCM data.
+    /// - `vol`: The volume.
+    /// - `buf`: Pointer to PCM data.
     ///
     /// # Return value
     ///
@@ -305,9 +305,9 @@ psp_extern! {
     ///
     /// # Parameters
     ///
-    /// `unknown1` - Unknown. Pass 0.
-    /// `gain` - Gain.
-    /// `unknown2` - Unknown. Pass 0.
+    /// - `unknown1`: Unknown. Pass 0.
+    /// - `gain`: Gain.
+    /// - `unknown2`: Unknown. Pass 0.
     ///
     /// # Return value
     ///
@@ -319,7 +319,7 @@ psp_extern! {
     ///
     /// # Parameters
     ///
-    /// `params` - A pointer to an InputParams struct.
+    /// - `params`: A pointer to an InputParams struct.
     ///
     /// # Return value
     ///
@@ -330,10 +330,10 @@ psp_extern! {
     /// Perform audio input (blocking)
     ///
     /// # Parameters
-    /// 
-    /// `sample_count` - Number of samples.
-    /// `freq` - One of InputFrequency.
-    /// `buf` - Pointer to where the audio data will be stored.
+    ///
+    /// - `sample_count`: Number of samples.
+    /// - `freq`: One of InputFrequency.
+    /// - `buf`: Pointer to where the audio data will be stored.
     ///
     /// # Return value
     ///
@@ -344,10 +344,10 @@ psp_extern! {
     /// Perform audio input
     ///
     /// # Parameters
-    /// 
-    /// `sample_count` - Number of samples.
-    /// `freq` - One of InputFrequency.
-    /// `buf` - Pointer to where the audio data will be stored.
+    ///
+    /// - `sample_count`: Number of samples.
+    /// - `freq`: One of InputFrequency.
+    /// - `buf`: Pointer to where the audio data will be stored.
     ///
     /// # Return value
     ///
@@ -365,7 +365,7 @@ psp_extern! {
     #[psp(0x87B2E651)]
     /// Wait for non-blocking audio input to complete
     ///
-    /// # Return value 
+    /// # Return value
     ///
     /// 0 on success, <0 on error.
     pub fn sce_audio_wait_input_end() -> i32;

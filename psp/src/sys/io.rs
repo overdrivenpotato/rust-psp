@@ -126,9 +126,9 @@ psp_extern! {
     ///
     /// # Parameters
     ///
-    /// `file` - Pointer to a string holding the name of the file to open
-    /// `flags` - Libc styled flags that are or'ed together
-    /// `permissions` - Octal unix permissions.
+    /// - `file`: Pointer to a string holding the name of the file to open
+    /// - `flags`: Libc styled flags that are or'ed together
+    /// - `permissions`: Octal unix permissions.
     ///
     /// # Return value
     ///
@@ -140,9 +140,9 @@ psp_extern! {
     ///
     /// # Parameters
     ///
-    /// `file` - Pointer to a string holding the name of the file to open
-    /// `flags` - Libc styled flags that are or'ed together
-    /// `permissions` - Octal unix permissions.
+    /// - `file`: Pointer to a string holding the name of the file to open
+    /// - `flags`: Libc styled flags that are or'ed together
+    /// - `permissions`: Octal unix permissions.
     ///
     /// # Return value
     ///
@@ -158,7 +158,7 @@ psp_extern! {
     ///
     /// # Parameters
     ///
-    /// `fd` - File descriptor to close
+    /// - `fd`: File descriptor to close
     ///
     /// # Return value
     ///
@@ -170,7 +170,7 @@ psp_extern! {
     ///
     /// # Parameters
     ///
-    /// `fd` - File descriptor to close
+    /// - `fd`: File descriptor to close
     ///
     /// # Return value
     ///
@@ -182,9 +182,9 @@ psp_extern! {
     ///
     /// # Parameters
     ///
-    /// `fd` - Opened file descriptor to read from
-    /// `data` - Pointer to the buffer where the read data will be placed
-    /// `size` - Size of the read in bytes
+    /// - `fd`: Opened file descriptor to read from
+    /// - `data`: Pointer to the buffer where the read data will be placed
+    /// - `size`: Size of the read in bytes
     ///
     /// # Return value
     ///
@@ -197,9 +197,9 @@ psp_extern! {
     ///
     /// # Parameters
     ///
-    /// `fd` - Opened file descriptor to read from
-    /// `data` - Pointer to the buffer where the read data will be placed
-    /// `size` - Size of the read in bytes
+    /// - `fd`: Opened file descriptor to read from
+    /// - `data`: Pointer to the buffer where the read data will be placed
+    /// - `size`: Size of the read in bytes
     ///
     /// # Return value
     ///
@@ -213,9 +213,9 @@ psp_extern! {
     ///
     /// # Parameters
     ///
-    /// `fd` - Opened file descriptor to write to
-    /// `data` - Pointer to the data to write
-    /// `size` - Size of data to write
+    /// - `fd`: Opened file descriptor to write to
+    /// - `data`: Pointer to the data to write
+    /// - `size`: Size of data to write
     ///
     /// # Return value
     ///
@@ -227,9 +227,9 @@ psp_extern! {
     ///
     /// # Parameters
     ///
-    /// `fd` - Opened file descriptor to write to
-    /// `data` - Pointer to the data to write
-    /// `size` - Size of data to write
+    /// - `fd`: Opened file descriptor to write to
+    /// - `data`: Pointer to the data to write
+    /// - `size`: Size of data to write
     ///
     /// # Return value
     ///
@@ -242,10 +242,11 @@ psp_extern! {
     ///
     /// # Parameters
     ///
-    /// `fd` - Opened file descriptor with which to seek
-    /// `offset` - Relative offset from the start position given by whence
-    /// `whence` - Set to Whence::Set to seek from the start of the file, Whence::Cur
-    /// seek from the current position and Whence::End to seek from the end.
+    /// - `fd`: Opened file descriptor with which to seek
+    /// - `offset`: Relative offset from the start position given by whence
+    /// - `whence`: Set to `Whence::Set` to seek from the start of the file,
+    ///   `Whence::Cur` seek from the current position and `Whence::End` to seek
+    ///   from the end.
     ///
     /// # Return value
     ///
@@ -257,10 +258,11 @@ psp_extern! {
     ///
     /// # Parameters
     ///
-    /// `fd` - Opened file descriptor with which to seek
-    /// `offset` - Relative offset from the start position given by whence
-    /// `whence` - Set to Whence::Set to seek from the start of the file, Whence::Cur
-    /// seek from the current position and Whence::End to seek from the end.
+    /// - `fd`: Opened file descriptor with which to seek
+    /// - `offset`: Relative offset from the start position given by whence
+    /// - `whence`: Set to `Whence::Set` to seek from the start of the file,
+    ///   `Whence::Cur` seek from the current position and Whence::End to seek
+    ///   from the end.
     ///
     /// # Return value
     ///
@@ -273,10 +275,11 @@ psp_extern! {
     ///
     /// # Parameters
     ///
-    /// `fd` - Opened file descriptor with which to seek
-    /// `offset` - Relative offset from the start position given by whence
-    /// `whence` - Set to Whence::Set to seek from the start of the file, Whence::Cur
-    /// seek from the current position and Whence::End to seek from the end.
+    /// - `fd`: Opened file descriptor with which to seek
+    /// - `offset`: Relative offset from the start position given by whence
+    /// - `whence`: Set to `Whence::Set` to seek from the start of the file,
+    ///   `Whence::Cur` seek from the current position and Whence::End to seek
+    ///   from the end.
     ///
     /// # Return value
     ///
@@ -289,10 +292,10 @@ psp_extern! {
     ///
     /// # Parameters
     ///
-    /// `fd` - Opened file descriptor with which to seek
-    /// `offset` - Relative offset from the start position given by whence
-    /// `whence` - Set to Whence::Set to seek from the start of the file, Whence::Cur
-    /// seek from the current position and Whence::End to seek from the end.
+    /// - `fd`: Opened file descriptor with which to seek
+    /// - `offset`: Relative offset from the start position given by whence
+    /// - `whence`: Set to Whence::Set to seek from the start of the file, Whence::Cur
+    ///   seek from the current position and Whence::End to seek from the end.
     ///
     /// # Return value
     ///
@@ -305,7 +308,7 @@ psp_extern! {
     ///
     /// # Parameters
     ///
-    /// `file` - Path to the file to remove
+    /// - `file`: Path to the file to remove
     ///
     /// # Return value
     ///
@@ -318,7 +321,7 @@ psp_extern! {
     /// # Parameters
     ///
     /// `dir`
-    /// `mode` - Access mode.
+    /// - `mode`: Access mode.
     ///
     /// # Return value
     ///
@@ -329,7 +332,7 @@ psp_extern! {
     /// Remove a directory file
     /// # Parameters
     ///
-    /// `path` - Removes a directory file pointed by the string path
+    /// - `path`: Removes a directory file pointed by the string path
     ///
     /// # Return value
     ///
@@ -340,7 +343,7 @@ psp_extern! {
     /// Change the current directory.
     /// # Parameters
     ///
-    /// `path` - The path to change to.
+    /// - `path`: The path to change to.
     ///
     /// # Return value
     ///
@@ -352,8 +355,8 @@ psp_extern! {
     ///
     /// # Parameters
     ///
-    /// `oldname` - The old filename
-    /// `newname` - The new filename
+    /// - `oldname`: The old filename
+    /// - `newname`: The new filename
     ///
     /// # Return value
     ///
@@ -366,7 +369,7 @@ psp_extern! {
     ///
     /// # Parameters
     ///
-    /// `dirname` - The directory to open for reading.
+    /// - `dirname`: The directory to open for reading.
     ///
     /// # Return value
     ///
@@ -378,8 +381,8 @@ psp_extern! {
     ///
     /// # Parameters
     ///
-    /// `fd` - Already opened file descriptor (using sceIoDopen)
-    /// `dir` - Pointer to an io_dirent_t structure to hold the file information
+    /// - `fd`: Already opened file descriptor (using sceIoDopen)
+    /// - `dir`: Pointer to an io_dirent_t structure to hold the file information
     ///
     /// # Return value
     ///
@@ -394,7 +397,7 @@ psp_extern! {
     ///
     /// # Parameters
     ///
-    /// `fd` - Already opened file descriptor (using sceIoDopen)
+    /// - `fd`: Already opened file descriptor (using sceIoDopen)
     ///
     /// # Return value
     ///
@@ -406,12 +409,12 @@ psp_extern! {
     ///
     ///  # Parameters
     ///
-    /// `dev` - String for the device to send the devctl to (e.g. "ms0:")
-    /// `cmd` - The command to send to the device
-    /// `indata` - A data block to send to the device, if NULL sends no data
-    /// `inlen` - Length of indata, if 0 sends no data
-    /// `outdata` - A data block to receive the result of a command, if NULL receives no data
-    /// `outlen` - Length of outdata, if 0 receives no data
+    /// - `dev`: String for the device to send the devctl to (e.g. "ms0:")
+    /// - `cmd`: The command to send to the device
+    /// - `indata`: A data block to send to the device, if NULL sends no data
+    /// - `inlen`: Length of indata, if 0 sends no data
+    /// - `outdata`: A data block to receive the result of a command, if NULL receives no data
+    /// - `outlen`: Length of outdata, if 0 receives no data
     ///
     /// # Return value
     ///
@@ -430,12 +433,12 @@ psp_extern! {
     ///
     /// # Parameters
     ///
-    /// `dev1` - The device name to assign.
-    /// `dev2` - The block device to assign from.
-    /// `dev3` - The filesystem device to mape the block device to dev1
-    /// `mode` - Read/Write mode. One of AssignPerms.
-    /// `unk1` - Unknown, set to NULL.
-    /// `unk2` - Unknown, set to 0.
+    /// - `dev1`: The device name to assign.
+    /// - `dev2`: The block device to assign from.
+    /// - `dev3`: The filesystem device to mape the block device to dev1
+    /// - `mode`: Read/Write mode. One of AssignPerms.
+    /// - `unk1`: Unknown, set to NULL.
+    /// - `unk2`: Unknown, set to 0.
     ///
     /// # Return value
     ///
@@ -454,7 +457,7 @@ psp_extern! {
     ///
     /// # Parameters
     ///
-    /// `dev` - The device to unassign.
+    /// - `dev`: The device to unassign.
     ///
     /// # Return value
     ///
@@ -466,8 +469,8 @@ psp_extern! {
     ///
     /// # Parameters
     ///
-    /// `file` - The path to the file.
-    /// `stat` - A pointer to an io_stat_t structure.
+    /// - `file`: The path to the file.
+    /// - `stat`: A pointer to an io_stat_t structure.
     ///
     /// # Return value
     ///
@@ -480,9 +483,9 @@ psp_extern! {
     ///
     /// # Parameters
     ///
-    /// `file` - The path to the file.
-    /// `stat` - A pointer to an io_stat_t structure.
-    /// `bits` - Bitmask defining which bits to change.
+    /// - `file`: The path to the file.
+    /// - `stat`: A pointer to an io_stat_t structure.
+    /// - `bits`: Bitmask defining which bits to change.
     ///
     /// # Return value
     ///
@@ -494,12 +497,12 @@ psp_extern! {
     ///
     /// # Parameters
     ///
-    /// `fd` - Opened file descriptor to ioctl to
-    /// `cmd` - The command to send to the device
-    /// `indata` - A data block to send to the device, if NULL sends no data
-    /// `inlen` - Length of indata, if 0 sends no data
-    /// `outdata` - A data block to receive the result of a command, if NULL receives no data
-    /// `outlen` - Length of outdata, if 0 receives no data
+    /// - `fd`: Opened file descriptor to ioctl to
+    /// - `cmd`: The command to send to the device
+    /// - `indata`: A data block to send to the device, if NULL sends no data
+    /// - `inlen`: Length of indata, if 0 sends no data
+    /// - `outdata`: A data block to receive the result of a command, if NULL receives no data
+    /// - `outlen`: Length of outdata, if 0 receives no data
     ///
     /// # Return value
     ///
@@ -518,12 +521,12 @@ psp_extern! {
     ///
     /// # Parameters
     ///
-    /// `fd` - Opened file descriptor to ioctl to
-    /// `cmd` - The command to send to the device
-    /// `indata` - A data block to send to the device, if NULL sends no data
-    /// `inlen` - Length of indata, if 0 sends no data
-    /// `outdata` - A data block to receive the result of a command, if NULL receives no data
-    /// `outlen` - Length of outdata, if 0 receives no data
+    /// - `fd`: Opened file descriptor to ioctl to
+    /// - `cmd`: The command to send to the device
+    /// - `indata`: A data block to send to the device, if NULL sends no data
+    /// - `inlen`: Length of indata, if 0 sends no data
+    /// - `outdata`: A data block to receive the result of a command, if NULL receives no data
+    /// - `outlen`: Length of outdata, if 0 receives no data
     ///
     /// # Return value
     ///
@@ -542,8 +545,8 @@ psp_extern! {
     ///
     /// # Parameters
     ///
-    /// `device` - The device to synchronise (e.g. msfat0:)
-    /// `unk` - Unknown
+    /// - `device`: The device to synchronise (e.g. msfat0:)
+    /// - `unk`: Unknown
     ///
     /// # Return value
     ///
@@ -555,8 +558,8 @@ psp_extern! {
     ///
     /// # Parameters
     ///
-    /// `fd` - The file descriptor which is current performing an asynchronous action.
-    /// `res` - The result of the async action.
+    /// - `fd`: The file descriptor which is current performing an asynchronous action.
+    /// - `res`: The result of the async action.
     ///
     /// # Return value
     ///
@@ -568,8 +571,8 @@ psp_extern! {
     ///
     /// # Parameters
     ///
-    /// `fd` - The file descriptor which is current performing an asynchronous action.
-    /// `res` - The result of the async action.
+    /// - `fd`: The file descriptor which is current performing an asynchronous action.
+    /// - `res`: The result of the async action.
     ///
     /// # Return value
     ///
@@ -581,8 +584,8 @@ psp_extern! {
     ///
     /// # Parameters
     ///
-    /// `fd` - The file descriptor which is current performing an asynchronous action.
-    /// `res` - The result of the async action.
+    /// - `fd`: The file descriptor which is current performing an asynchronous action.
+    /// - `res`: The result of the async action.
     ///
     /// # Return value
     ///
@@ -594,9 +597,9 @@ psp_extern! {
     ///
     /// # Parameters
     ///
-    /// `fd` - The file descriptor which is current performing an asynchronous action.
-    /// `poll` - If 0 then waits for the status, otherwise it polls the fd.
-    /// `res` - The result of the async action.
+    /// - `fd`: The file descriptor which is current performing an asynchronous action.
+    /// - `poll`: If 0 then waits for the status, otherwise it polls the fd.
+    /// - `res`: The result of the async action.
     ///
     /// # Return value
     ///
@@ -608,7 +611,7 @@ psp_extern! {
     /// Cancel an asynchronous operation on a file descriptor.
     /// # Parameters
     ///
-    /// `fd` - The file descriptor to perform cancel on.
+    /// - `fd`: The file descriptor to perform cancel on.
     ///
     /// # Return value
     ///
@@ -620,7 +623,7 @@ psp_extern! {
     ///
     /// # Parameters
     ///
-    /// `fd` - The opened file descriptor.
+    /// - `fd`: The opened file descriptor.
     ///
     /// # Return value
     ///
@@ -632,8 +635,8 @@ psp_extern! {
     ///
     /// # Parameters
     ///
-    /// `fd` - The opened fd on which the priority should be changed.
-    /// `pri` - The priority of the thread.
+    /// - `fd`: The opened fd on which the priority should be changed.
+    /// - `pri`: The priority of the thread.
     ///
     /// # Return value
     ///
@@ -645,9 +648,9 @@ psp_extern! {
     ///
     /// # Parameters
     ///
-    /// `fd` - The filedescriptor currently performing an asynchronous action.
-    /// `cb` - The UID of the callback created with ::sceKernelCreateCallback
-    /// `argp` - Pointer to an argument to pass to the callback.
+    /// - `fd`: The filedescriptor currently performing an asynchronous action.
+    /// - `cb`: The UID of the callback created with `sce_kernel_create_callback`
+    /// - `argp`: Pointer to an argument to pass to the callback.
     ///
     /// # Return value
     ///

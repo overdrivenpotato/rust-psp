@@ -109,7 +109,7 @@ psp_extern! {
     /// - `ringbuffer`: pointer to a sceMpegRingbuffer struct
     /// - `packets`: number of packets in the ringbuffer
     /// - `data`: pointer to allocated memory
-    /// - `size`: size of allocated memory, shoud be sceMpegRingbufferQueryMemSize(iPackets)
+    /// - `size`: size of allocated memory, shoud be `sce_mpeg_ringbuffer_query_mem_size`(iPackets)
     /// - `callback`: ringbuffer callback
     /// - `cb_param`: param passed to callback
     ///

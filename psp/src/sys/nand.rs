@@ -50,4 +50,3 @@ psp_extern! {
     #[psp(0x01F09203)]
     pub unsafe fn sce_nand_is_bad_block(ppn: u32) -> i32;
 }
-

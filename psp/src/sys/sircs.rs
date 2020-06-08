@@ -1,4 +1,5 @@
-/// Sony Integrated Remote Control System Library 
+/// Sony Integrated Remote Control System Library.
+///
 /// This module contains the imports for the kernel's remote control routines.
 
 #[repr(C)]
@@ -17,4 +18,3 @@ psp_extern! {
     #[psp(0x71EEF62D)]
     pub unsafe fn sce_sircs_send(sd: *mut SircsData, count: i32) -> i32;
 }
-

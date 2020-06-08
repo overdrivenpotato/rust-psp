@@ -24,7 +24,7 @@ pub enum DisplayPixelFormat {
     Psm4444 = 2,
     /// 32-bit RGBA 8:8:8:8
     Psm8888 = 3,
-} 
+}
 
 #[derive(Debug, Clone, Copy)]
 #[repr(u32)]
@@ -45,9 +45,9 @@ psp_extern! {
     ///
     /// # Parameters
     ///
-    /// `mode` - Display mode, normally `DisplayMode::Lcd`.
-    /// `width` - Width of screen in pixels.
-    /// `height` - Height of screen in pixels.
+    /// - `mode`: Display mode, normally `DisplayMode::Lcd`.
+    /// - `width`: Width of screen in pixels.
+    /// - `height`: Height of screen in pixels.
     ///
     /// # Return value
     ///
@@ -59,9 +59,9 @@ psp_extern! {
     ///
     /// # Parameters
     ///
-    /// `pmode` - Pointer to an integer to receive the current mode.
-    /// `pwidth` - Pointer to an integer to receive the current width.
-    /// `pheight` - Pointer to an integer to receive the current height.
+    /// - `pmode`: Pointer to an integer to receive the current mode.
+    /// - `pwidth`: Pointer to an integer to receive the current width.
+    /// - `pheight`: Pointer to an integer to receive the current height.
     ///
     /// # Return value
     ///
@@ -73,10 +73,10 @@ psp_extern! {
     ///
     /// # Parameters
     ///
-    /// `top_addr` - Address of start of framebuffer
-    /// `buffer_width` - Buffer width (must be power of 2)
-    /// `pixel_format` - One of PspDisplayPixelFormats.
-    /// `sync` - One of PspDisplaySetBufSync
+    /// - `top_addr`: Address of start of framebuffer
+    /// - `buffer_width`: Buffer width (must be power of 2)
+    /// - `pixel_format`: One of `PspDisplayPixelFormats`.
+    /// - `sync`: One of `PspDisplaySetBufSync`
     ///
     /// # Return value
     ///
@@ -114,8 +114,6 @@ psp_extern! {
 
     #[psp(0x46F186C3)]
     /// Wait for vertical blank start with callback
-    ///
-    /// ??? Where does the callback fn go?
     pub fn sce_display_wait_vblank_start_cb() -> i32;
 
     #[psp(0x210EAB3A)]

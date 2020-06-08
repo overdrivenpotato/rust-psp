@@ -18,7 +18,7 @@ psp_extern! {
     ///
     /// Return 0 if off, 1 if on
     pub fn sce_wlan_get_switch_state() -> i32;
-    
+
     #[psp(0x0C622081)]
     /// Get the ethernet address of the wlan controller
     ///
@@ -45,7 +45,7 @@ psp_extern! {
     ///
     /// Returns 0 on success, < 0 on error
     pub fn sce_wlan_dev_attach() -> i32;
-    
+
     #[psp(0xC9A8CAB7)]
     /// Detach to the WLAN device
     ///

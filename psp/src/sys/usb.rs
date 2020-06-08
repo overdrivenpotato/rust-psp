@@ -241,15 +241,15 @@ pub struct CamSetupVideoExParam {
 #[repr(i32)]
 #[derive(Copy, Clone, Debug)]
 pub enum CamResolution {
-    _160_120  = 0,
-    _176_144  = 1,
-    _320_240  = 2,
-    _352_288  = 3,
-    _640_480  = 4,
-    _1024_768 = 5,
-    _1280_960 = 6,
-    _480_272  = 7,
-    _360_272  = 8,
+    Px160_120  = 0,
+    Px176_144  = 1,
+    Px320_240  = 2,
+    Px352_288  = 3,
+    Px640_480  = 4,
+    Px1024_768 = 5,
+    Px1280_960 = 6,
+    Px480_272  = 7,
+    Px360_272  = 8,
 }
 
 /// Resolutions for `sce_usb_cam_setup_still_ex` & `sce_usb_cam_setup_video_ex`
@@ -258,22 +258,22 @@ pub enum CamResolution {
 #[derive(Copy, Clone, Debug)]
 #[repr(i32)]
 pub enum CamResolutionEx {
-    _160_120  = 0,
-    _176_144  = 1,
-    _320_240  = 2,
-    _352_288  = 3,
-    _360_272  = 4,
-    _480_272  = 5,
-    _640_480  = 6,
-    _1024_768 = 7,
-    _1280_960 = 8,
+    Px160_120  = 0,
+    Px176_144  = 1,
+    Px320_240  = 2,
+    Px352_288  = 3,
+    Px360_272  = 4,
+    Px480_272  = 5,
+    Px640_480  = 6,
+    Px1024_768 = 7,
+    Px1280_960 = 8,
 }
 
 bitflags::bitflags! {
     /// Flags for reverse effects.
     pub struct CamReverseFlags: i32 {
-	const FLIP = 1;
-	const MIRROR = 0x100;
+        const FLIP = 1;
+        const MIRROR = 0x100;
     }
 }
 
@@ -416,9 +416,11 @@ psp_extern! {
     pub fn sce_usb_cam_still_input_blocking(buf: *mut u8, size: usize) -> i32;
 
     #[psp(0xFB0A6C5D)]
-    /// Gets a still image. The function returns inmediately, and
-    /// the completion has to be handled by calling `sce_usb_cam_still_wait_input_end`
-    /// or `sce_usb_cam_still_poll_input_end`.
+    /// Gets a still image.
+    ///
+    /// The function returns inmediately, and the completion has to be handled
+    /// by calling `sce_usb_cam_still_wait_input_end` or
+    /// `sce_usb_cam_still_poll_input_end`.
     ///
     /// # Parameters
     ///
@@ -443,8 +445,8 @@ psp_extern! {
     ///
     /// # Return Value
     ///
-    /// the size of the acquired image if still input has ended,
-    /// 0 if the input has not ended, < 0 on error.
+    /// the size of the acquired image if still input has ended, 0 if the input
+    /// has not ended, < 0 on error.
     pub fn sce_usb_cam_still_poll_input_end() -> i32;
 
     #[psp(0xA720937C)]
@@ -804,8 +806,7 @@ psp_extern! {
     ///
     /// # Parameters
     ///
-    /// - `event_flag`: Event flag created with 
-    /// crate::sys::kernel::sce_kernel_create_event_flag
+    /// - `event_flag`: Event flag created with `sce_kernel_create_event_flag`
     ///
     /// # Return Value
     ///
@@ -817,8 +818,7 @@ psp_extern! {
     ///
     /// # Parameters
     ///
-    /// - `event_flag`: event flag created with
-    /// crate::sys::kernel::sce_kernel_create_event_flag
+    /// - `event_flag`: event flag created with `sce_kernel_create_event_flag`
     ///
     /// # Return Value
     ///
@@ -828,9 +828,10 @@ psp_extern! {
     #[psp(0xE58818A8)]
     /// Tell the USBstorBoot driver the size of MS
     ///
-    /// Note: I'm not sure if this is the actual size of the media or not
-    /// as it seems to have no bearing on what size windows detects.
-    /// PSPPET passes 0x800000
+    /// # Note
+    ///
+    /// I'm not sure if this is the actual size of the media or not as it seems
+    /// to have no bearing on what size windows detects. PSPPET passes 0x800000.
     ///
     /// # Parameters
     ///

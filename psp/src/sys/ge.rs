@@ -369,7 +369,7 @@ psp_extern! {
     ///
     /// # Parameters
     ///
-    /// `width` - 0 to not set the translation width, otherwise 512, 1024, 2048 or 4096.
+    /// - `width`: 0 to not set the translation width, otherwise 512, 1024, 2048 or 4096.
     ///
     /// # Return value
     ///
@@ -381,7 +381,7 @@ psp_extern! {
     ///
     /// # Parameters
     ///
-    /// `cmd` - The GE command register to retrieve (0 to 0xFF, both included).
+    /// - `cmd`: The GE command register to retrieve (0 to 0xFF, both included).
     ///
     /// # Return value
     ///
@@ -393,8 +393,8 @@ psp_extern! {
     ///
     /// # Parameters
     ///
-    /// `type_` - One of MatrixTypes.
-    /// `matrix` - Pointer to a variable to store the matrix.
+    /// - `type_`: One of MatrixTypes.
+    /// - `matrix`: Pointer to a variable to store the matrix.
     ///
     /// # Return value
     ///
@@ -406,8 +406,8 @@ psp_extern! {
     ///
     /// # Parameters
     ///
-    /// `stack_id` - The ID of the stack to retrieve.
-    /// `stack` - Pointer to a structure to store the stack, or NULL to not store it.
+    /// - `stack_id`: The ID of the stack to retrieve.
+    /// - `stack`: Pointer to a structure to store the stack, or NULL to not store it.
     ///
     /// # Return value
     ///
@@ -419,7 +419,7 @@ psp_extern! {
     ///
     /// # Parameters
     ///
-    /// `context` - Pointer to a GeContext.
+    /// - `context`: Pointer to a GeContext.
     ///
     /// # Return value
     ///
@@ -431,7 +431,7 @@ psp_extern! {
     ///
     /// # Parameters
     ///
-    /// `context` - Pointer to a GeContext.
+    /// - `context`: Pointer to a GeContext.
     ///
     /// # Return value
     ///
@@ -443,11 +443,11 @@ psp_extern! {
     ///
     /// # Parameters
     ///
-    /// `list` - The head of the list to queue.
-    /// `stall` - The stall address. If NULL then no stall address is set and the list is
+    /// - `list`: The head of the list to queue.
+    /// - `stall`: The stall address. If NULL then no stall address is set and the list is
     /// transferred  immediately.
-    /// `cbid` - ID of the callback set by calling sce_ge_set_callback
-    /// `arg` - Structure containing GE context buffer address
+    /// - `cbid`: ID of the callback set by calling sce_ge_set_callback
+    /// - `arg`: Structure containing GE context buffer address
     ///
     /// # Return value
     ///
@@ -464,11 +464,11 @@ psp_extern! {
     ///
     /// # Parameters
     ///
-    /// `list` - The head of the list to queue.
-    /// `stall` - The stall address. If NULL then no stall address is set and the list is
-    /// transferred  immediately.
-    /// `cbid` - ID of the callback set by calling sce_ge_set_callback
-    /// `arg` - Structure containing GE context buffer address
+    /// - `list`: The head of the list to queue.
+    /// - `stall`: The stall address. If NULL then no stall address is set and
+    ///   the list is transferred  immediately.
+    /// - `cbid`: ID of the callback set by calling sce_ge_set_callback
+    /// - `arg`: Structure containing GE context buffer address
     ///
     /// # Return value
     ///
@@ -480,7 +480,7 @@ psp_extern! {
     ///
     /// # Parameters
     ///
-    /// `qid` - The ID of the queue.
+    /// - `qid`: The ID of the queue.
     ///
     /// # Return value
     ///
@@ -492,8 +492,8 @@ psp_extern! {
     ///
     /// # Parameters
     ///
-    /// `qid` - The ID of the queue.
-    /// `stall` - The new stall address.
+    /// - `qid`: The ID of the queue.
+    /// - `stall`: The new stall address.
     ///
     /// # Return value
     ///
@@ -505,9 +505,9 @@ psp_extern! {
     ///
     /// # Parameters
     ///
-    /// `qid` - The queue ID of the list to sync.
-    /// `sync_type` - 0 if you want to wait for the list to be completed, or 1 if you just
-    /// want to peek the actual state.
+    /// - `qid`: The queue ID of the list to sync.
+    /// - `sync_type`: 0 if you want to wait for the list to be completed, or 1
+    ///   if you just want to peek the actual state.
     ///
     /// # Return value
     ///
@@ -519,8 +519,8 @@ psp_extern! {
     ///
     /// # Parameters
     ///
-    /// - `sync_type`: 0 if you want to wait for the drawing to be completed, or 1 if you
-    /// just want to peek the actual state.
+    /// - `sync_type`: 0 if you want to wait for the drawing to be completed, or
+    ///   1 if you just want to peek the actual state.
     ///
     /// # Return value
     ///
@@ -532,8 +532,8 @@ psp_extern! {
     ///
     /// # Parameters
     ///
-    /// `mode` - If set to 1, reset all the queues.
-    /// `p_param` - Unused (just K1-checked).
+    /// - `mode`: If set to 1, reset all the queues.
+    /// - `p_param`: Unused (just K1-checked).
     ///
     /// # Return value
     ///
@@ -553,7 +553,7 @@ psp_extern! {
     ///
     /// # Parameters
     ///
-    /// `cb` - Configured callback data structure.
+    /// - `cb`: Configured callback data structure.
     ///
     /// # Return value
     ///
@@ -565,7 +565,7 @@ psp_extern! {
     ///
     /// # Parameters
     ///
-    /// `cbid` - The ID of the callbacks, returned by sce_ge_set_callback().
+    /// - `cbid`: The ID of the callbacks, returned by `sce_ge_set_callback()`.
     ///
     /// # Return value
     ///
