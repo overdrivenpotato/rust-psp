@@ -68,7 +68,7 @@ pub enum GeMatrixType {
     TexGen,
 }
 
-/// List status for `sce_ge_list_sync` and `sce_ge_draw_sync`.
+/// List status for `sceGeListSync` and `sceGeDrawSync`.
 #[repr(i32)]
 pub enum GeListState {
     Done = 0,
@@ -354,7 +354,7 @@ psp_extern! {
     /// # Return value
     ///
     /// The size of VRAM (in bytes).
-    pub fn sce_ge_edram_get_size() -> u32;
+    pub fn sceGeEdramGetSize() -> u32;
 
     #[psp(0xE47E40E4)]
     /// Get the eDRAM address.
@@ -362,7 +362,7 @@ psp_extern! {
     /// # Return value
     ///
     /// A pointer to the base of the eDRAM.
-    pub fn sce_ge_edram_get_addr() -> *mut u8;
+    pub fn sceGeEdramGetAddr() -> *mut u8;
 
     #[psp(0xB77905EA)]
     /// Set the eDRAM address translation mode.
@@ -374,7 +374,7 @@ psp_extern! {
     /// # Return value
     ///
     /// The previous width if it was set, otherwise 0, <0 on error.
-    pub fn sce_ge_edram_set_addr_translation(width: i32) -> i32;
+    pub fn sceGeEdramSetAddrTranslation(width: i32) -> i32;
 
     #[psp(0xDC93CFEF)]
     /// Retrieve the current value of a GE command.
@@ -386,7 +386,7 @@ psp_extern! {
     /// # Return value
     ///
     /// The value of the GE command, < 0 on error.
-    pub fn sce_ge_get_cmd(cmd: i32) -> u32;
+    pub fn sceGeGetCmd(cmd: i32) -> u32;
 
     #[psp(0x57C8945B)]
     /// Retrieve a matrix of the given type.
@@ -399,7 +399,7 @@ psp_extern! {
     /// # Return value
     ///
     /// < 0 on error.
-    pub fn sce_ge_get_mtx(type_: GeMatrixType, matrix: *mut c_void) -> i32;
+    pub fn sceGeGetMtx(type_: GeMatrixType, matrix: *mut c_void) -> i32;
 
     #[psp(0xE66CB92E)]
     /// Retrieve the stack of the display list currently being executed.
@@ -412,7 +412,7 @@ psp_extern! {
     /// # Return value
     ///
     /// The number of stacks of the current display list, < 0 on error.
-    pub fn sce_ge_get_stack(stack_id: i32, stack: *mut GeStack) -> i32;
+    pub fn sceGeGetStack(stack_id: i32, stack: *mut GeStack) -> i32;
 
     #[psp(0x438A385A)]
     /// Save the GE's current state.
@@ -424,7 +424,7 @@ psp_extern! {
     /// # Return value
     ///
     /// < 0 on error.
-    pub fn sce_ge_save_context(context: *mut GeContext) -> i32;
+    pub fn sceGeSaveContext(context: *mut GeContext) -> i32;
 
     #[psp(0x0BF608FB)]
     /// Restore a previously saved GE context.
@@ -436,7 +436,7 @@ psp_extern! {
     /// # Return value
     ///
     /// < 0 on error.
-    pub fn sce_ge_restore_context(context: *const GeContext) -> i32;
+    pub fn sceGeRestoreContext(context: *const GeContext) -> i32;
 
     #[psp(0xAB49E76A)]
     /// Enqueue a display list at the tail of the GE display list queue.
@@ -446,13 +446,13 @@ psp_extern! {
     /// - `list`: The head of the list to queue.
     /// - `stall`: The stall address. If NULL then no stall address is set and the list is
     /// transferred  immediately.
-    /// - `cbid`: ID of the callback set by calling sce_ge_set_callback
+    /// - `cbid`: ID of the callback set by calling sceGeSetCallback
     /// - `arg`: Structure containing GE context buffer address
     ///
     /// # Return value
     ///
     /// ID of the queue, < 0 on error.
-    pub fn sce_ge_list_enqueue(
+    pub fn sceGeListEnQueue(
        list: *const c_void,
        stall: *mut c_void,
        cbid: i32,
@@ -467,13 +467,13 @@ psp_extern! {
     /// - `list`: The head of the list to queue.
     /// - `stall`: The stall address. If NULL then no stall address is set and
     ///   the list is transferred  immediately.
-    /// - `cbid`: ID of the callback set by calling sce_ge_set_callback
+    /// - `cbid`: ID of the callback set by calling sceGeSetCallback
     /// - `arg`: Structure containing GE context buffer address
     ///
     /// # Return value
     ///
     /// ID of the queue, < 0 on error.
-    pub fn sce_ge_list_enqueue_head(list: *const c_void, stall: *mut c_void, cbid: i32, arg: *mut GeListArgs) -> i32;
+    pub fn sceGeListEnQueueHead(list: *const c_void, stall: *mut c_void, cbid: i32, arg: *mut GeListArgs) -> i32;
 
    #[psp(0x5FB86AB0)]
     /// Cancel a queued or running list.
@@ -485,7 +485,7 @@ psp_extern! {
     /// # Return value
     ///
     /// < 0 on error.
-    pub fn sce_ge_list_dequeue(qid: i32) -> i32;
+    pub fn sceGeListDeQueue(qid: i32) -> i32;
 
     #[psp(0xE0D68148)]
     /// Update the stall address for the specified queue.
@@ -498,7 +498,7 @@ psp_extern! {
     /// # Return value
     ///
     /// < 0 on error
-    pub fn sce_ge_list_update_stall_addr(qid: i32, stall: *mut c_void) -> i32;
+    pub fn sceGeListUpdateStallAddr(qid: i32, stall: *mut c_void) -> i32;
 
     #[psp(0x03444EB4)]
     /// Wait for synchronisation of a list.
@@ -512,7 +512,7 @@ psp_extern! {
     /// # Return value
     ///
     /// The specified queue status, one of `GeListState`.
-    pub fn sce_ge_list_sync(qid: i32, sync_type: i32) -> GeListState;
+    pub fn sceGeListSync(qid: i32, sync_type: i32) -> GeListState;
 
     #[psp(0xB287BD61)]
     /// Wait for drawing to complete.
@@ -525,7 +525,7 @@ psp_extern! {
     /// # Return value
     ///
     /// The current queue status, one of GeListState.
-    pub fn sce_ge_draw_sync(sync_type: i32) -> GeListState;
+    pub fn sceGeDrawSync(sync_type: i32) -> GeListState;
 
     #[psp(0xB448EC0D)]
     /// Interrupt drawing queue.
@@ -538,7 +538,7 @@ psp_extern! {
     /// # Return value
     ///
     /// The stopped queue ID if mode isnt set to 0, otherwise 0, and < 0 on error.
-    pub fn sce_ge_break(mode: i32, p_param: *mut GeBreakParam) -> i32;
+    pub fn sceGeBreak(mode: i32, p_param: *mut GeBreakParam) -> i32;
 
     #[psp(0x4C06E472)]
     /// Restart drawing queue.
@@ -546,7 +546,7 @@ psp_extern! {
     /// # Return value
     ///
     /// < 0 on error.
-    pub fn sce_ge_continue() -> i32;
+    pub fn sceGeContinue() -> i32;
 
     #[psp(0xA4FC06A4)]
     /// Register callback handlers for the GE.
@@ -558,17 +558,17 @@ psp_extern! {
     /// # Return value
     ///
     /// The callback ID, < 0 on error.
-    pub fn sce_ge_set_callback(cb: *mut GeCallbackData) -> i32;
+    pub fn sceGeSetCallback(cb: *mut GeCallbackData) -> i32;
 
     #[psp(0x05DB22CE)]
     /// Unregister the callback handlers.
     ///
     /// # Parameters
     ///
-    /// - `cbid`: The ID of the callbacks, returned by `sce_ge_set_callback()`.
+    /// - `cbid`: The ID of the callbacks, returned by `sceGeSetCallback()`.
     ///
     /// # Return value
     ///
     /// < 0 on error.
-    pub fn sce_ge_unset_callback(cbid: i32) -> i32;
+    pub fn sceGeUnsetCallback(cbid: i32) -> i32;
 }

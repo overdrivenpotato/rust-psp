@@ -9,7 +9,7 @@ psp_extern! {
     /// # Return Value
     ///
     /// Returns 0 if off, 1 if on
-    pub fn sce_wlan_dev_is_power_on() -> i32;
+    pub fn sceWlanDevIsPowerOn() -> i32;
 
     #[psp(0xD7763699)]
     /// Determine the state of the WLAN power switch
@@ -17,7 +17,7 @@ psp_extern! {
     /// # Return Value
     ///
     /// Return 0 if off, 1 if on
-    pub fn sce_wlan_get_switch_state() -> i32;
+    pub fn sceWlanGetSwitchState() -> i32;
 
     #[psp(0x0C622081)]
     /// Get the ethernet address of the wlan controller
@@ -30,7 +30,7 @@ psp_extern! {
     /// # Return Value
     ///
     /// Return 0 on success, < 0 on error
-    pub fn sce_wlan_get_ether_addr(ether_addr: *mut u8) -> i32;
+    pub fn sceWlanGetEtherAddr(ether_addr: *mut u8) -> i32;
 }
 
 psp_extern! {
@@ -44,7 +44,7 @@ psp_extern! {
     /// # Return Value
     ///
     /// Returns 0 on success, < 0 on error
-    pub fn sce_wlan_dev_attach() -> i32;
+    pub fn sceWlanDevAttach() -> i32;
 
     #[psp(0xC9A8CAB7)]
     /// Detach to the WLAN device
@@ -52,5 +52,5 @@ psp_extern! {
     /// # Return Value
     ///
     /// Returns 0 on success, < 0 on error
-    pub fn sce_wlan_dev_detach() -> i32;
+    pub fn sceWlanDevDetach() -> i32;
 }

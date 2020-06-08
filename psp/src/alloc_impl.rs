@@ -18,7 +18,7 @@ unsafe impl GlobalAlloc for SystemAlloc {
 
         // crate::debug::print_num(size);
 
-        let id = sys::kernel::sce_kernel_alloc_partition_memory(
+        let id = sys::kernel::sceKernelAllocPartitionMemory(
             SceSysMemPartitionId::SceKernelPrimaryUserPartition,
             &b"block\0"[0],
             SceSysMemBlockTypes::Low,
@@ -27,7 +27,7 @@ unsafe impl GlobalAlloc for SystemAlloc {
         );
 
         // TODO: Error handling.
-        let mut ptr: *mut u8 = sys::kernel::sce_kernel_get_block_head_addr(id).cast();
+        let mut ptr: *mut u8 = sys::kernel::sceKernelGetBlockHeadAddr(id).cast();
         *ptr.cast() = id;
 
         ptr = ptr.add(mem::size_of::<SceUid>());
@@ -47,7 +47,7 @@ unsafe impl GlobalAlloc for SystemAlloc {
             .cast::<SceUid>().offset(-1);
 
         // TODO: Error handling.
-        sys::kernel::sce_kernel_free_partition_memory(id);
+        sys::kernel::sceKernelFreePartitionMemory(id);
     }
 }
 

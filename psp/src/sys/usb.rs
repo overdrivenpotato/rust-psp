@@ -1,7 +1,7 @@
 use core::ffi::c_void;
 use crate::sys::kernel::SceUid;
 
-/// For use with `sce_usb_activate` and `sce_usb_deactivate`.
+/// For use with `sceUsbActivate` and `sceUsbDeactivate`.
 pub const USB_CAM_PID: i32 = 0x282;
 
 pub const USB_BUS_DRIVER_NAME: &str = "USBBusDriver";
@@ -36,7 +36,7 @@ psp_extern! {
     /// # Return Value
     ///
     /// 0 on success
-    pub fn sce_usb_start(
+    pub fn sceUsbStart(
         driver_name: *const u8,
         size: i32,
         args: *mut c_void,
@@ -54,7 +54,7 @@ psp_extern! {
     /// # Return Value
     ///
     /// 0 on success
-    pub fn sce_usb_stop(
+    pub fn sceUsbStop(
         driver_name: *const u8,
         size: i32,
         args: *mut c_void,
@@ -71,7 +71,7 @@ psp_extern! {
     /// # Return Value
     ///
     /// 0 on success
-    pub fn sce_usb_activate(pid: u32) -> i32;
+    pub fn sceUsbActivate(pid: u32) -> i32;
 
     #[psp(0xC572A9C8)]
     /// Deactivate USB driver.
@@ -83,7 +83,7 @@ psp_extern! {
     /// # Return Value
     ///
     /// 0 on success
-    pub fn sce_usb_deactivate(pid: u32) -> i32;
+    pub fn sceUsbDeactivate(pid: u32) -> i32;
 
     #[psp(0xC21645A4)]
     /// Get USB state
@@ -91,7 +91,7 @@ psp_extern! {
     /// # Return Value
     ///
     /// USB `State`.
-    pub fn sce_usb_get_state() -> State;
+    pub fn sceUsbGetState() -> State;
 
     #[psp(0x112CC951)]
     /// Get state of a specific USB driver
@@ -103,10 +103,10 @@ psp_extern! {
     /// # Return Value
     ///
     /// 1 if the driver has been started, 2 if it is stopped
-    pub fn sce_usb_get_drv_state(driver_name: *const u8) -> i32;
+    pub fn sceUsbGetDrvState(driver_name: *const u8) -> i32;
 }
 
-/// Structure for `sce_usb_cam_setup_still`
+/// Structure for `sceUsbCamSetupStill`
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct CamSetupStillParam {
@@ -126,7 +126,7 @@ pub struct CamSetupStillParam {
     pub comp_level: i32,
 }
 
-/// Structure for `sce_usb_cam_setup_still_ex`
+/// Structure for `sceUsbCamSetupStillEx`
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct CamSetupStillExParam {
@@ -235,9 +235,9 @@ pub struct CamSetupVideoExParam {
     pub ev_level: CamEvLevel,
 }
 
-/// Resolutions for `sce_usb_cam_setup_still` & `sce_usb_cam_setup_video`
+/// Resolutions for `sceUsbCamSetupStill` & `sceUsbCamSetupVideo`
 ///
-/// DO NOT use on `sce_usb_cam_setup_still_ex` & `sce_usb_cam_setup_video_ex`
+/// DO NOT use on `sceUsbCamSetupStillEx` & `sceUsbCamSetupVideoEx`
 #[repr(i32)]
 #[derive(Copy, Clone, Debug)]
 pub enum CamResolution {
@@ -252,9 +252,9 @@ pub enum CamResolution {
     Px360_272  = 8,
 }
 
-/// Resolutions for `sce_usb_cam_setup_still_ex` & `sce_usb_cam_setup_video_ex`
+/// Resolutions for `sceUsbCamSetupStillEx` & `sceUsbCamSetupVideoEx`
 ///
-/// DO NOT use on `sce_usb_cam_setup_still` & `sce_usb_cam_setup_video`
+/// DO NOT use on `sceUsbCamSetupStill` & `sceUsbCamSetupVideo`
 #[derive(Copy, Clone, Debug)]
 #[repr(i32)]
 pub enum CamResolutionEx {
@@ -387,7 +387,7 @@ psp_extern! {
     /// # Return Value
     ///
     /// 0 on success, < 0 on error
-    pub fn sce_usb_cam_setup_still(param: *mut CamSetupStillParam) -> i32;
+    pub fn sceUsbCamSetupStill(param: *mut CamSetupStillParam) -> i32;
 
     #[psp(0x0A41A298)]
     /// Setups the parameters to take a still image (with more options)
@@ -399,7 +399,7 @@ psp_extern! {
     /// # Return Value
     ///
     /// 0 on success, < 0 on error
-    pub fn sce_usb_cam_setup_still_ex(param: *mut CamSetupStillExParam) -> i32;
+    pub fn sceUsbCamSetupStillEx(param: *mut CamSetupStillExParam) -> i32;
 
     #[psp(0x61BE5CAC)]
     /// Gets a still image. The function doesn't return until the image
@@ -413,14 +413,14 @@ psp_extern! {
     /// # Return Value
     ///
     /// size of acquired image on success, < 0 on error
-    pub fn sce_usb_cam_still_input_blocking(buf: *mut u8, size: usize) -> i32;
+    pub fn sceUsbCamStillInputBlocking(buf: *mut u8, size: usize) -> i32;
 
     #[psp(0xFB0A6C5D)]
     /// Gets a still image.
     ///
     /// The function returns inmediately, and the completion has to be handled
-    /// by calling `sce_usb_cam_still_wait_input_end` or
-    /// `sce_usb_cam_still_poll_input_end`.
+    /// by calling `sceUsbCamStillWaitInputEnd` or
+    /// `sceUsbCamStillPollInputEnd`.
     ///
     /// # Parameters
     ///
@@ -430,7 +430,7 @@ psp_extern! {
     /// # Return Value
     ///
     /// 0 on success, < 0 on error
-    pub fn sce_usb_cam_still_input(buf: *mut u8, size: usize) -> i32;
+    pub fn sceUsbCamStillInput(buf: *mut u8, size: usize) -> i32;
 
     #[psp(0x7563AFA1)]
     /// Waits untils still input has been finished.
@@ -438,7 +438,7 @@ psp_extern! {
     /// # Return Value
     ///
     /// the size of the acquired image on success, < 0 on error
-    pub fn sce_usb_cam_still_wait_input_end() -> i32;
+    pub fn sceUsbCamStillWaitInputEnd() -> i32;
 
     #[psp(0x1A46CFE7)]
     /// Polls the status of still input completion.
@@ -447,7 +447,7 @@ psp_extern! {
     ///
     /// the size of the acquired image if still input has ended, 0 if the input
     /// has not ended, < 0 on error.
-    pub fn sce_usb_cam_still_poll_input_end() -> i32;
+    pub fn sceUsbCamStillPollInputEnd() -> i32;
 
     #[psp(0xA720937C)]
     /// Cancels the still input.
@@ -455,7 +455,7 @@ psp_extern! {
     /// # Return Value
     ///
     /// 0 on success, < 0 on error
-    pub fn sce_usb_cam_still_cancel_input() -> i32;
+    pub fn sceUsbCamStillCancelInput() -> i32;
 
     #[psp(0xE5959C36)]
     /// Gets the size of the acquired still image.
@@ -463,7 +463,7 @@ psp_extern! {
     /// # Return Value
     ///
     /// the size of the acquired image on success, < 0 on error
-    pub fn sce_usb_cam_still_get_input_length() -> i32;
+    pub fn sceUsbCamStillGetInputLength() -> i32;
 
     #[psp(0x17F7B2FB)]
     /// Set ups the parameters for video capture.
@@ -477,7 +477,7 @@ psp_extern! {
     /// # Return Value
     ///
     /// 0 on success, < 0 on error
-    pub fn sce_usb_cam_setup_video(
+    pub fn sceUsbCamSetupVideo(
         param: *mut CamSetupVideoParam,
         work_area: *mut c_void,
         work_area_size: i32,
@@ -495,7 +495,7 @@ psp_extern! {
     /// # Return Value
     ///
     /// 0 on success, < 0 on error
-    pub fn sce_usb_cam_setup_video_ex(
+    pub fn sceUsbCamSetupVideoEx(
         param: *mut CamSetupVideoExParam,
         work_area: *mut c_void,
         work_area_size: i32,
@@ -507,7 +507,7 @@ psp_extern! {
     /// # Return Value
     ///
     /// 0 on success, < 0 on error
-    pub fn sce_usb_cam_start_video() -> i32;
+    pub fn sceUsbCamStartVideo() -> i32;
 
     #[psp(0x6CF32CB9)]
     /// Stops video input from the camera.
@@ -515,7 +515,7 @@ psp_extern! {
     /// # Return Value
     ///
     /// 0 on success, < 0 on error
-    pub fn sce_usb_cam_stop_video() -> i32;
+    pub fn sceUsbCamStopVideo() -> i32;
 
     #[psp(0x7DAC0C71)]
     /// Reads a video frame. The function doesn't return until the frame
@@ -529,12 +529,12 @@ psp_extern! {
     /// # Return Value
     ///
     /// size of acquired frame on success, < 0 on error
-    pub fn sce_usb_cam_read_video_frame_blocking(buf: *mut u8, size: usize) -> i32;
+    pub fn sceUsbCamReadVideoFrameBlocking(buf: *mut u8, size: usize) -> i32;
 
     #[psp(0x99D86281)]
     /// Reads a video frame. The function returns inmediately, and
-    /// the completion has to be handled by calling `sce_usb_cam_wait_read_video_frame_end`
-    /// or `sce_usb_cam_poll_read_video_frame_end`.
+    /// the completion has to be handled by calling `sceUsbCamWaitReadVideoFrameEnd`
+    /// or `sceUsbCamPollReadVideoFrameEnd`.
     ///
     /// # Parameters
     ///
@@ -544,7 +544,7 @@ psp_extern! {
     /// # Return Value
     ///
     /// 0 on success, < 0 on error
-    pub fn sce_usb_cam_read_video_frame(buf: *mut u8, size: usize) -> i32;
+    pub fn sceUsbCamReadVideoFrame(buf: *mut u8, size: usize) -> i32;
 
     #[psp(0xF90B2293)]
     /// Waits untils the current frame has been read.
@@ -552,7 +552,7 @@ psp_extern! {
     /// # Return Value
     ///
     /// the size of the acquired frame on sucess, < 0 on error
-    pub fn sce_usb_cam_wait_read_video_frame_end() -> i32;
+    pub fn sceUsbCamWaitReadVideoFrameEnd() -> i32;
 
     #[psp(0x41E73E95)]
     /// Polls the status of video frame read completion.
@@ -561,7 +561,7 @@ psp_extern! {
     ///
     /// the size of the acquired frame if it has been read,
     /// 0 if the frame has not yet been read, < 0 on error.
-    pub fn sce_usb_cam_poll_read_video_frame_end() -> i32;
+    pub fn sceUsbCamPollReadVideoFrameEnd() -> i32;
 
     #[psp(0xDF9D0C92)]
     /// Gets the size of the acquired frame.
@@ -569,7 +569,7 @@ psp_extern! {
     /// # Return Value
     ///
     /// the size of the acquired frame on success, < 0 on error
-    pub fn sce_usb_cam_get_read_video_frame_size() -> i32;
+    pub fn sceUsbCamGetReadVideoFrameSize() -> i32;
 
     #[psp(0x6E205974)]
     /// Sets the saturation
@@ -581,7 +581,7 @@ psp_extern! {
     /// # Return Value
     ///
     /// 0 on success, < 0 on error
-    pub fn sce_usb_cam_set_saturation(saturation: i32) -> i32;
+    pub fn sceUsbCamSetSaturation(saturation: i32) -> i32;
 
     #[psp(0x4F3D84D5)]
     /// Sets the brightness
@@ -593,7 +593,7 @@ psp_extern! {
     /// # Return Value
     ///
     /// 0 on success, < 0 on error
-    pub fn sce_usb_cam_set_brightness(brightness: i32) -> i32;
+    pub fn sceUsbCamSetBrightness(brightness: i32) -> i32;
 
     #[psp(0x09C26C7E)]
     /// Sets the contrast
@@ -605,7 +605,7 @@ psp_extern! {
     /// # Return Value
     ///
     /// 0 on success, < 0 on error
-    pub fn sce_usb_cam_set_contrast(contrast: i32) -> i32;
+    pub fn sceUsbCamSetContrast(contrast: i32) -> i32;
 
     #[psp(0x622F83CC)]
     /// Sets the sharpness
@@ -617,7 +617,7 @@ psp_extern! {
     /// # Return Value
     ///
     /// 0 on success, < 0 on error
-    pub fn sce_usb_cam_set_sharpness(sharpness: i32) -> i32;
+    pub fn sceUsbCamSetSharpness(sharpness: i32) -> i32;
 
     #[psp(0xD4876173)]
     /// Sets the image effect mode
@@ -629,7 +629,7 @@ psp_extern! {
     /// # Return Value
     ///
     /// 0 on success, < 0 on error
-    pub fn sce_usb_cam_set_image_effect_mode(effect_mode: CamEffectMode) -> i32;
+    pub fn sceUsbCamSetImageEffectMode(effect_mode: CamEffectMode) -> i32;
 
     #[psp(0x1D686870)]
     /// Sets the exposure level
@@ -641,7 +641,7 @@ psp_extern! {
     /// # Return Value
     ///
     /// 0 on success, < 0 on error
-    pub fn sce_usb_cam_set_ev_level(exposure_level: CamEvLevel) -> i32;
+    pub fn sceUsbCamSetEvLevel(exposure_level: CamEvLevel) -> i32;
 
     #[psp(0x951BEDF5)]
     /// Sets the reverse mode
@@ -653,7 +653,7 @@ psp_extern! {
     /// # Return Value
     ///
     /// 0 on success, < 0 on error
-    pub fn sce_usb_cam_set_reverse_mode(reverse_flags: CamReverseFlags) -> i32;
+    pub fn sceUsbCamSetReverseMode(reverse_flags: CamReverseFlags) -> i32;
 
     #[psp(0xC484901F)]
     /// Sets the zoom.
@@ -663,7 +663,7 @@ psp_extern! {
     /// - `zoom`: The zoom level starting by 10. (10 = 1X, 11 = 1.1X, etc)
     ///
     /// @returns 0 on success, < 0 on error
-    pub fn sce_usb_cam_set_zoom(zoom: i32) -> i32;
+    pub fn sceUsbCamSetZoom(zoom: i32) -> i32;
 
     #[psp(0x383E9FA8)]
     /// Gets the current saturation
@@ -675,7 +675,7 @@ psp_extern! {
     /// # Return Value
     ///
     /// 0 on success, < 0 on error
-    pub fn sce_usb_cam_get_saturation(saturation: *mut i32) -> i32;
+    pub fn sceUsbCamGetSaturation(saturation: *mut i32) -> i32;
 
     #[psp(0x70F522C5)]
     /// Gets the current brightness
@@ -687,7 +687,7 @@ psp_extern! {
     /// # Return Value
     ///
     /// 0 on success, < 0 on error
-    pub fn sce_usb_cam_get_brightness(brightness: *mut i32) -> i32;
+    pub fn sceUsbCamGetBrightness(brightness: *mut i32) -> i32;
 
     #[psp(0xA063A957)]
     /// Gets the current contrast
@@ -699,7 +699,7 @@ psp_extern! {
     /// # Return Value
     ///
     /// 0 on success, < 0 on error
-    pub fn sce_usb_cam_get_contrast(contrast: *mut i32) -> i32;
+    pub fn sceUsbCamGetContrast(contrast: *mut i32) -> i32;
 
     #[psp(0xFDB68C23)]
     /// Gets the current sharpness
@@ -711,7 +711,7 @@ psp_extern! {
     /// # Return Value
     ///
     /// 0 on success, < 0 on error
-    pub fn sce_usb_cam_get_sharpness(sharpness: *mut i32) -> i32;
+    pub fn sceUsbCamGetSharpness(sharpness: *mut i32) -> i32;
 
     #[psp(0x994471E0)]
     /// Gets the current image efect mode
@@ -723,7 +723,7 @@ psp_extern! {
     /// # Return Value
     ///
     /// 0 on success, < 0 on error
-    pub fn sce_usb_cam_get_image_effect_mode(
+    pub fn sceUsbCamGetImageEffectMode(
         effect_mode: *mut CamEffectMode,
     ) -> i32;
 
@@ -737,7 +737,7 @@ psp_extern! {
     /// # Return Value
     ///
     /// 0 on success, < 0 on error
-    pub fn sce_usb_cam_get_ev_level(exposure_level: *mut CamEvLevel) -> i32;
+    pub fn sceUsbCamGetEvLevel(exposure_level: *mut CamEvLevel) -> i32;
 
     #[psp(0xD5279339)]
     /// Gets the current reverse mode.
@@ -749,7 +749,7 @@ psp_extern! {
     /// # Return Value
     ///
     /// 0 on success, < 0 on error
-    pub fn sce_usb_cam_get_reverse_mode(
+    pub fn sceUsbCamGetReverseMode(
         reverse_flags: *mut CamReverseFlags,
     ) -> i32;
 
@@ -763,7 +763,7 @@ psp_extern! {
     /// # Return Value
     ///
     /// 0 on success, < 0 on error
-    pub fn sce_usb_cam_get_zoom(zoom: *mut i32) -> i32;
+    pub fn sceUsbCamGetZoom(zoom: *mut i32) -> i32;
 
     #[psp(0xF93C4669)]
     /// Sets if the image should be automatically reversed, depending of the position
@@ -776,7 +776,7 @@ psp_extern! {
     /// # Return Value
     ///
     /// 0 on success, < 0 on error
-    pub fn sce_usb_cam_auto_image_reverse_sw(on: i32) -> i32;
+    pub fn sceUsbCamAutoImageReverseSW(on: i32) -> i32;
 
     #[psp(0x11A1F128)]
     /// Gets the state of the autoreversal of the image.
@@ -784,7 +784,7 @@ psp_extern! {
     /// # Return Value
     ///
     /// 1 if it is set to automatic, 0 otherwise
-    pub fn sce_usb_cam_get_auto_image_reverse_state() -> i32;
+    pub fn sceUsbCamGetAutoImageReverseState() -> i32;
 
     #[psp(0x4C34F553)]
     /// Gets the direction of the camera lens
@@ -793,7 +793,7 @@ psp_extern! {
     ///
     /// 1 if the camera is "looking to you", 0 if the camera
     /// is "looking to the other side".
-    pub fn sce_usb_cam_get_lens_direction() -> i32;
+    pub fn sceUsbCamGetLensDirection() -> i32;
 }
 
 psp_extern! {
@@ -806,24 +806,24 @@ psp_extern! {
     ///
     /// # Parameters
     ///
-    /// - `event_flag`: Event flag created with `sce_kernel_create_event_flag`
+    /// - `event_flag`: Event flag created with `sceKernelCreateEventFlag`
     ///
     /// # Return Value
     ///
     /// 0 on success
-    pub fn sce_usbstor_boot_register_notify(event_flag: SceUid) -> i32;
+    pub fn sceUsbstorBootRegisterNotify(event_flag: SceUid) -> i32;
 
     #[psp(0xA55C9E16)]
     /// Unregister a previously registered event flag.
     ///
     /// # Parameters
     ///
-    /// - `event_flag`: event flag created with `sce_kernel_create_event_flag`
+    /// - `event_flag`: event flag created with `sceKernelCreateEventFlag`
     ///
     /// # Return Value
     ///
     /// 0 on success
-    pub fn sce_usbstor_boot_unregister_notify(event_flag: u32) -> i32;
+    pub fn sceUsbstorBootUnregisterNotify(event_flag: u32) -> i32;
 
     #[psp(0xE58818A8)]
     /// Tell the USBstorBoot driver the size of MS
@@ -840,5 +840,5 @@ psp_extern! {
     /// # Return Value
     ///
     /// 0 on success
-    pub fn sce_usbstor_boot_set_capacity(size: u32) -> i32;
+    pub fn sceUsbstorBootSetCapacity(size: u32) -> i32;
 }

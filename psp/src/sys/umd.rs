@@ -42,7 +42,7 @@ psp_extern! {
     /// # Return Value
     ///
     /// 0 if no disc present, anything else indicates a disc is inserted.
-    pub fn sce_umd_check_medium() -> i32;
+    pub fn sceUmdCheckMedium() -> i32;
 
     #[psp(0x340B7686)]
     /// Get the disc info
@@ -54,7 +54,7 @@ psp_extern! {
     /// # Return Value
     ///
     /// < 0 on error
-    pub fn sce_umd_get_disc_info(info: *mut UmdInfo) -> i32;
+    pub fn sceUmdGetDiscInfo(info: *mut UmdInfo) -> i32;
 
     #[psp(0xC6183D47)]
     /// Activates the UMD drive
@@ -67,7 +67,7 @@ psp_extern! {
     /// # Return Value
     ///
     /// < 0 on error
-    pub fn sce_umd_activate(unit: i32, drive: *const u8) -> i32;
+    pub fn sceUmdActivate(unit: i32, drive: *const u8) -> i32;
 
     #[psp(0xE83742BA)]
     /// Deativates the UMD drive
@@ -80,7 +80,7 @@ psp_extern! {
     /// # Return Value
     ///
     /// < 0 on error
-    pub fn sce_umd_deactivate(unit: i32, drive: *const u8) -> i32;
+    pub fn sceUmdDeactivate(unit: i32, drive: *const u8) -> i32;
 
     #[psp(0x8EF08FCE)]
     /// Wait for the UMD drive to reach a certain state
@@ -92,7 +92,7 @@ psp_extern! {
     /// # Return Value
     ///
     /// < 0 on error
-    pub fn sce_umd_wait_drive_stat(state: UmdStateFlags) -> i32;
+    pub fn sceUmdWaitDriveStat(state: UmdStateFlags) -> i32;
 
     #[psp(0x56202973)]
     /// Wait for the UMD drive to reach a certain state
@@ -108,7 +108,7 @@ psp_extern! {
     /// # Return Value
     ///
     /// < 0 on error
-    pub fn sce_umd_wait_drive_stat_with_timer(
+    pub fn sceUmdWaitDriveStatWithTimer(
         state: UmdStateFlags,
         timeout: u32,
     ) -> i32;
@@ -127,18 +127,18 @@ psp_extern! {
     /// # Return Value
     ///
     /// < 0 on error
-    pub fn sce_umd_wait_drive_stat_cb(
+    pub fn sceUmdWaitDriveStatCB(
         state: UmdStateFlags,
         timeout: u32,
     ) -> i32;
 
     #[psp(0x6AF9B50A)]
-    /// Cancel a `sce_umd_wait_*` call
+    /// Cancel a `sceUmdWait*` call
     ///
     /// # Return Value
     ///
     /// < 0 on error
-    pub fn sce_umd_cancel_wait_drive_stat() -> i32;
+    pub fn sceUmdCancelWaitDriveStat() -> i32;
 
     #[psp(0x6B4A146C)]
     /// Get (poll) the current state of the UMD drive
@@ -146,7 +146,7 @@ psp_extern! {
     /// # Return Value
     ///
     /// < 0 on error, one or more of `UmdStateFlags` on success
-    pub fn sce_umd_get_drive_stat() -> i32;
+    pub fn sceUmdGetDriveStat() -> i32;
 
     #[psp(0x20628E6F)]
     /// Get the error code associated with a failed event
@@ -154,32 +154,32 @@ psp_extern! {
     /// # Return Value
     ///
     /// < 0 on error, the error code on success
-    pub fn sce_umd_get_error_stat() -> i32;
+    pub fn sceUmdGetErrorStat() -> i32;
 
     #[psp(0xAEE7404D)]
     /// Register a callback for the UMD drive
     ///
     /// # Parameters
     ///
-    /// - `cbid`: A callback ID created from `sce_kernel_create_callback`.
+    /// - `cbid`: A callback ID created from `sceKernelCreateCallback`.
     ///   Callback should be of type `UmdCallback`.
     ///
     /// # Return Value
     ///
     /// < 0 on error
-    pub fn sce_umd_register_umd_callback(cbid: i32) -> i32;
+    pub fn sceUmdRegisterUMDCallBack(cbid: i32) -> i32;
 
     #[psp(0xBD2BDE07)]
     /// Un-register a callback for the UMD drive
     ///
     /// # Parameters
     ///
-    /// - `cbid`: A callback ID created from `sce_kernel_create_callback`
+    /// - `cbid`: A callback ID created from `sceKernelCreateCallback`
     ///
     /// # Return Value
     ///
     /// < 0 on error
-    pub fn sce_umd_un_register_umd_callback(cbid: i32) -> i32;
+    pub fn sceUmdUnRegisterUMDCallBack(cbid: i32) -> i32;
 
     #[psp(0xCBE9F02A)]
     /// Permit UMD disc being replaced
@@ -187,7 +187,7 @@ psp_extern! {
     /// # Return Value
     ///
     /// < 0 on error
-    pub fn sce_umd_replace_permit() -> i32;
+    pub fn sceUmdReplacePermit() -> i32;
 
     #[psp(0x87533940)]
     /// Prohibit UMD disc being replaced
@@ -195,5 +195,5 @@ psp_extern! {
     /// # Return Value
     ///
     /// < 0 on error
-    pub fn sce_umd_replace_prohibit() -> i32;
+    pub fn sceUmdReplaceProhibit() -> i32;
 }

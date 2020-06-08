@@ -11,7 +11,7 @@ psp_extern! {
     /// # Return Value
     ///
     /// 0 on success, < 0 on error
-    pub fn sce_jpeg_init_mjpeg() -> i32;
+    pub fn sceJpegInitMJpeg() -> i32;
 
     #[psp(0x7D2F3D7F)]
     /// Finishes the MJpeg library
@@ -19,7 +19,7 @@ psp_extern! {
     /// # Return Value
     ///
     /// 0 on success, < 0 on error
-    pub fn sce_jpeg_finish_mjpeg() -> i32;
+    pub fn sceJpegFinishMJpeg() -> i32;
 
     #[psp(0x9D47469C)]
     /// Creates the decoder context.
@@ -32,7 +32,7 @@ psp_extern! {
     /// # Return Value
     ///
     /// 0 on success, < 0 on error
-    pub fn sce_jpeg_create_mjpeg(width: i32, height: i32) -> i32;
+    pub fn sceJpegCreateMJpeg(width: i32, height: i32) -> i32;
 
     #[psp(0x48B602B7)]
     /// Deletes the current decoder context.
@@ -40,7 +40,7 @@ psp_extern! {
     /// # Return Value
     ///
     /// 0 on success, < 0 on error
-    pub fn sce_jpeg_delete_mjpeg() -> i32;
+    pub fn sceJpegDeleteMJpeg() -> i32;
 
     #[psp(0x04B93CEF)]
     /// Decodes a mjpeg frame.
@@ -56,7 +56,7 @@ psp_extern! {
     /// # Return Value
     ///
     /// (width * 65536) + height on success, < 0 on error
-    pub fn sce_jpeg_decode_mjpeg(
+    pub fn sceJpegDecodeMJpeg(
         jpeg_buf: *mut u8,
         size: usize,
         rgba: *mut c_void,

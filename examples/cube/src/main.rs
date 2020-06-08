@@ -128,56 +128,56 @@ unsafe fn psp_main_inner() {
     let fbp1 = get_static_vram_buffer(BUF_WIDTH, SCR_HEIGHT, TexturePixelFormat::Psm8888);
     let zbp = get_static_vram_buffer(BUF_WIDTH, SCR_HEIGHT, TexturePixelFormat::Psm4444);
 
-    gum::sce_gum_load_identity();
+    gum::sceGumLoadIdentity();
 
-    gu::sce_gu_init();
+    gu::sceGuInit();
 
-    gu::sce_gu_start(Context::Direct, &mut LIST.0 as *mut [u32; 0x40000] as *mut _);
-    gu::sce_gu_draw_buffer(DisplayPixelFormat::Psm8888, fbp0, BUF_WIDTH);
-    gu::sce_gu_disp_buffer(SCR_WIDTH, SCR_HEIGHT, fbp1, BUF_WIDTH);
-    gu::sce_gu_depth_buffer(zbp, BUF_WIDTH);
-    gu::sce_gu_offset(2048 - (SCR_WIDTH as u32 / 2), 2048 - (SCR_HEIGHT as u32 / 2));
-    gu::sce_gu_viewport(2048, 2048, SCR_WIDTH, SCR_HEIGHT);
-    gu::sce_gu_depth_range(65535, 0);
-    gu::sce_gu_scissor(0, 0, SCR_WIDTH, SCR_HEIGHT);
-    gu::sce_gu_enable(State::ScissorTest);
-    gu::sce_gu_depth_func(DepthFunc::GreaterOrEqual);
-    gu::sce_gu_enable(State::DepthTest);
-    gu::sce_gu_front_face(FrontFaceDirection::Clockwise);
-    gu::sce_gu_shade_model(ShadingModel::Smooth);
-    gu::sce_gu_enable(State::CullFace);
-    gu::sce_gu_enable(State::Texture2D);
-    gu::sce_gu_enable(State::ClipPlanes);
-    gu::sce_gu_finish();
-    gu::sce_gu_sync(SyncMode::Finish, SyncBehavior::Wait);
+    gu::sceGuStart(Context::Direct, &mut LIST.0 as *mut [u32; 0x40000] as *mut _);
+    gu::sceGuDrawBuffer(DisplayPixelFormat::Psm8888, fbp0, BUF_WIDTH);
+    gu::sceGuDispBuffer(SCR_WIDTH, SCR_HEIGHT, fbp1, BUF_WIDTH);
+    gu::sceGuDepthBuffer(zbp, BUF_WIDTH);
+    gu::sceGuOffset(2048 - (SCR_WIDTH as u32 / 2), 2048 - (SCR_HEIGHT as u32 / 2));
+    gu::sceGuViewport(2048, 2048, SCR_WIDTH, SCR_HEIGHT);
+    gu::sceGuDepthRange(65535, 0);
+    gu::sceGuScissor(0, 0, SCR_WIDTH, SCR_HEIGHT);
+    gu::sceGuEnable(State::ScissorTest);
+    gu::sceGuDepthFunc(DepthFunc::GreaterOrEqual);
+    gu::sceGuEnable(State::DepthTest);
+    gu::sceGuFrontFace(FrontFaceDirection::Clockwise);
+    gu::sceGuShadeModel(ShadingModel::Smooth);
+    gu::sceGuEnable(State::CullFace);
+    gu::sceGuEnable(State::Texture2D);
+    gu::sceGuEnable(State::ClipPlanes);
+    gu::sceGuFinish();
+    gu::sceGuSync(SyncMode::Finish, SyncBehavior::Wait);
 
-    psp::sys::display::sce_display_wait_vblank_start();
+    psp::sys::display::sceDisplayWaitVblankStart();
 
-    gu::sce_gu_display(true);
+    gu::sceGuDisplay(true);
 
     // run sample
 
     let mut val = 0.0;
 
     loop {
-        gu::sce_gu_start(Context::Direct, &mut LIST.0 as *mut [u32; 0x40000] as *mut _);
+        gu::sceGuStart(Context::Direct, &mut LIST.0 as *mut [u32; 0x40000] as *mut _);
 
         // clear screen
-        gu::sce_gu_clear_color(0xff554433);
-        gu::sce_gu_clear_depth(0);
-        gu::sce_gu_clear(ClearBuffer::COLOR_BUFFER_BIT | ClearBuffer::DEPTH_BUFFER_BIT);
+        gu::sceGuClearColor(0xff554433);
+        gu::sceGuClearDepth(0);
+        gu::sceGuClear(ClearBuffer::COLOR_BUFFER_BIT | ClearBuffer::DEPTH_BUFFER_BIT);
 
         // setup matrices for cube
 
-        gum::sce_gum_matrix_mode(gum::Mode::Projection);
-        gum::sce_gum_load_identity();
-        gum::sce_gum_perspective(75.0, 16.0 / 9.0, 0.5, 1000.0);
+        gum::sceGumMatrixMode(gum::Mode::Projection);
+        gum::sceGumLoadIdentity();
+        gum::sceGumPerspective(75.0, 16.0 / 9.0, 0.5, 1000.0);
 
-        gum::sce_gum_matrix_mode(gum::Mode::View);
-        gum::sce_gum_load_identity();
+        gum::sceGumMatrixMode(gum::Mode::View);
+        gum::sceGumLoadIdentity();
 
-        gum::sce_gum_matrix_mode(gum::Mode::Model);
-        gum::sce_gum_load_identity();
+        gum::sceGumMatrixMode(gum::Mode::Model);
+        gum::sceGumLoadIdentity();
 
         {
             let pos = ScePspFVector3 { x: 0.0, y: 0.0, z: -2.5 };
@@ -187,22 +187,22 @@ unsafe fn psp_main_inner() {
                 z: val * 1.32 * (gu::PI / 180.0),
             };
 
-            gum::sce_gum_translate(&pos);
-            gum::sce_gum_rotate_xyz(&rot);
+            gum::sceGumTranslate(&pos);
+            gum::sceGumRotateXYZ(&rot);
         }
 
         // setup texture
 
-        gu::sce_gu_tex_mode(TexturePixelFormat::Psm8888, 0, 0, 0);
-        gu::sce_gu_tex_image(MipmapLevel::None, 128, 128, 128, &FERRIS as *const _ as *const _);
-        gu::sce_gu_tex_func(TextureEffect::Replace, TextureColorComponent::Rgb);
-        gu::sce_gu_tex_filter(TextureFilter::Linear, TextureFilter::Linear);
-        gu::sce_gu_tex_scale(1.0, 1.0);
-        gu::sce_gu_tex_offset(0.0, 0.0);
+        gu::sceGuTexMode(TexturePixelFormat::Psm8888, 0, 0, 0);
+        gu::sceGuTexImage(MipmapLevel::None, 128, 128, 128, &FERRIS as *const _ as *const _);
+        gu::sceGuTexFunc(TextureEffect::Replace, TextureColorComponent::Rgb);
+        gu::sceGuTexFilter(TextureFilter::Linear, TextureFilter::Linear);
+        gu::sceGuTexScale(1.0, 1.0);
+        gu::sceGuTexOffset(0.0, 0.0);
 
         // draw cube
 
-        gum::sce_gum_draw_array(
+        gum::sceGumDrawArray(
             Primitive::Triangles,
             VertexType::TEXTURE_32BITF | VertexType::VERTEX_32BITF | VertexType::TRANSFORM_3D,
             12 * 3,
@@ -210,15 +210,15 @@ unsafe fn psp_main_inner() {
             &VERTICES as *const Align16<_> as *const _,
         );
 
-        gu::sce_gu_finish();
-        gu::sce_gu_sync(SyncMode::Finish, SyncBehavior::Wait);
+        gu::sceGuFinish();
+        gu::sceGuSync(SyncMode::Finish, SyncBehavior::Wait);
 
-        psp::sys::display::sce_display_wait_vblank_start();
-        gu::sce_gu_swap_buffers();
+        psp::sys::display::sceDisplayWaitVblankStart();
+        gu::sceGuSwapBuffers();
 
         val += 1.0;
     }
 
-    // gu::sce_gu_term();
-    // psp::sys::kernel::sce_kernel_exit_game();
+    // gu::sceGuTerm();
+    // psp::sys::kernel::sceKernelExitGame();
 }

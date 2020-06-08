@@ -15,12 +15,12 @@ static mut VRAM: *mut u32 = 0x4000_0000 as *mut u32;
 fn psp_main() {
     psp::enable_home_button();
     unsafe {
-        display::sce_display_set_mode(display::DisplayMode::Lcd, DISPLAY_WIDTH, DISPLAY_HEIGHT);
+        display::sceDisplaySetMode(display::DisplayMode::Lcd, DISPLAY_WIDTH, DISPLAY_HEIGHT);
 
         // Cache-through address
-        VRAM = (0x4000_0000u32 | ge::sce_ge_edram_get_addr() as u32) as *mut u32;
+        VRAM = (0x4000_0000u32 | ge::sceGeEdramGetAddr() as u32) as *mut u32;
 
-        display::sce_display_set_frame_buf(
+        display::sceDisplaySetFrameBuf(
             VRAM as *const u8,
             BUFFER_WIDTH,
             display::DisplayPixelFormat::Psm8888,
@@ -28,7 +28,7 @@ fn psp_main() {
         );
 
         loop {
-            display::sce_display_wait_vblank_start();
+            display::sceDisplayWaitVblankStart();
             for pos in 0..255  {
                 let color = wheel(pos);
 

@@ -4,13 +4,13 @@ use crate::eabi::{i5, i6, i7};
 /// A data handle used for various functions.
 ///
 /// This struct can be created with the `Handle::null()` method, and initialized
-/// via `sce_mpeg_create`.
+/// via `sceMpegCreate`.
 #[repr(C)]
 #[derive(Copy, Clone, Debug)]
 pub struct Handle(*mut *mut c_void);
 
 impl Handle {
-    /// Create a null handle, which needs to be initialized with `sce_mpeg_create`.
+    /// Create a null handle, which needs to be initialized with `sceMpegCreate`.
     pub fn null() -> Self {
         Self(core::ptr::null_mut())
     }
@@ -88,10 +88,10 @@ psp_extern! {
     /// # Return Value
     ///
     /// 0 if success.
-    pub fn sce_mpeg_init() -> i32;
+    pub fn sceMpegInit() -> i32;
 
     #[psp(0x874624D6)]
-    pub fn sce_mpeg_finish();
+    pub fn sceMpegFinish();
 
     #[psp(0xD7A29F46)]
     /// # Parameters
@@ -101,7 +101,7 @@ psp_extern! {
     /// # Return Value
     ///
     /// < 0 if error else ringbuffer data size.
-    pub fn sce_mpeg_ringbuffer_query_mem_size(packets: i32) -> i32;
+    pub fn sceMpegRingbufferQueryMemSize(packets: i32) -> i32;
 
     #[psp(0x37295ED8, i6)]
     /// # Parameters
@@ -109,14 +109,14 @@ psp_extern! {
     /// - `ringbuffer`: pointer to a sceMpegRingbuffer struct
     /// - `packets`: number of packets in the ringbuffer
     /// - `data`: pointer to allocated memory
-    /// - `size`: size of allocated memory, shoud be `sce_mpeg_ringbuffer_query_mem_size`(iPackets)
+    /// - `size`: size of allocated memory, shoud be `sceMpegRingbufferQueryMemSize`(iPackets)
     /// - `callback`: ringbuffer callback
     /// - `cb_param`: param passed to callback
     ///
     /// # Return Value
     ///
     /// 0 if success.
-    pub fn sce_mpeg_ringbuffer_construct(
+    pub fn sceMpegRingbufferConstruct(
         ringbuffer: *mut Ringbuffer,
         packets: i32,
         data: *mut c_void,
@@ -129,7 +129,7 @@ psp_extern! {
     /// # Parameters
     ///
     /// - `ringbuffer`: pointer to a sceMpegRingbuffer struct
-    pub fn sce_mpeg_ringbuffer_destruct(ringbuffer: *mut Ringbuffer);
+    pub fn sceMpegRingbufferDestruct(ringbuffer: *mut Ringbuffer);
 
     #[psp(0xB5F6DC87)]
     /// # Parameters
@@ -139,7 +139,7 @@ psp_extern! {
     /// # Return Value
     ///
     /// < 0 if error else number of free packets in the ringbuffer.
-    pub fn sce_mpeg_ringbuffer_available_size(ringbuffer: *mut Ringbuffer) -> i32;
+    pub fn sceMpegRingbufferAvailableSize(ringbuffer: *mut Ringbuffer) -> i32;
 
     #[psp(0xB240A59E)]
     /// # Parameters
@@ -151,7 +151,7 @@ psp_extern! {
     /// # Return Value
     ///
     /// < 0 if error else number of packets.
-    pub fn sce_mpeg_ringbuffer_put(
+    pub fn sceMpegRingbufferPut(
         ringbuffer: *mut Ringbuffer,
         num_packets: i32,
         available: i32,
@@ -165,7 +165,7 @@ psp_extern! {
     /// # Return Value
     ///
     /// < 0 if error else decoder data size.
-    pub fn sce_mpeg_query_mem_size(unk: i32) -> i32;
+    pub fn sceMpegQueryMemSize(unk: i32) -> i32;
 
     #[psp(0xD8C5F121, i7)]
     /// # Parameters
@@ -181,7 +181,7 @@ psp_extern! {
     /// # Return Value
     ///
     /// 0 if success.
-    pub fn sce_mpeg_create(
+    pub fn sceMpegCreate(
         handle: Handle,
         data: *mut c_void,
         size: i32,
@@ -195,7 +195,7 @@ psp_extern! {
     /// # Parameters
     ///
     /// - `handle`: Instance handle
-    pub fn sce_mpeg_delete(handle: Handle);
+    pub fn sceMpegDelete(handle: Handle);
 
     #[psp(0x21FF80E4)]
     /// # Parameters
@@ -207,7 +207,7 @@ psp_extern! {
     /// # Return Value
     ///
     /// 0 if success.
-    pub fn sce_mpeg_query_stream_offset(
+    pub fn sceMpegQueryStreamOffset(
         handle: Handle,
         buffer: *mut c_void,
         offset: *mut i32,
@@ -222,7 +222,7 @@ psp_extern! {
     /// # Return Value
     ///
     /// 0 if success.
-    pub fn sce_mpeg_query_stream_size(buffer: *mut c_void, size: *mut i32) -> i32;
+    pub fn sceMpegQueryStreamSize(buffer: *mut c_void, size: *mut i32) -> i32;
 
     #[psp(0x42560F23)]
     /// # Parameters
@@ -234,7 +234,7 @@ psp_extern! {
     /// # Return Value
     ///
     /// 0 if error.
-    pub fn sce_mpeg_regist_stream(
+    pub fn sceMpegRegistStream(
         handle: Handle,
         stream_id: i32,
         unk: i32,
@@ -245,22 +245,22 @@ psp_extern! {
     ///
     /// - `handle`: Instance handle
     /// - `stream`: pointer to stream
-    pub fn sce_mpeg_un_regist_stream(handle: Handle, stream: Stream);
+    pub fn sceMpegUnRegistStream(handle: Handle, stream: Stream);
 
     #[psp(0x707B7629)]
     /// # Return Value
     ///
     /// 0 if success.
-    pub fn sce_mpeg_flush_all_stream(handle: Handle) -> i32;
+    pub fn sceMpegFlushAllStream(handle: Handle) -> i32;
 
     #[psp(0xA780CF7E)]
     /// # Return Value
     ///
     /// 0 if error else pointer to buffer.
-    pub fn sce_mpeg_malloc_avc_es_buf(handle: Handle) -> *mut c_void;
+    pub fn sceMpegMallocAvcEsBuf(handle: Handle) -> *mut c_void;
 
     #[psp(0xCEB870B1)]
-    pub fn sce_mpeg_free_avc_es_buf(handle: Handle, buf: *mut c_void);
+    pub fn sceMpegFreeAvcEsBuf(handle: Handle, buf: *mut c_void);
 
     #[psp(0xF8DCB679)]
     /// # Parameters
@@ -272,7 +272,7 @@ psp_extern! {
     /// # Return Value
     ///
     /// 0 if success.
-    pub fn sce_mpeg_query_atrac_es_size(
+    pub fn sceMpegQueryAtracEsSize(
         handle: Handle,
         es_size: *mut i32,
         out_size: *mut i32,
@@ -288,7 +288,7 @@ psp_extern! {
     /// # Return Value
     ///
     /// 0 if success.
-    pub fn sce_mpeg_init_au(handle: Handle, es_buffer: *mut c_void, au: *mut Au) -> i32;
+    pub fn sceMpegInitAu(handle: Handle, es_buffer: *mut c_void, au: *mut Au) -> i32;
 
     #[psp(0xFE246728)]
     /// # Parameters
@@ -301,7 +301,7 @@ psp_extern! {
     /// # Return Value
     ///
     /// 0 if success.
-    pub fn sce_mpeg_get_avc_au(
+    pub fn sceMpegGetAvcAu(
         handle: Handle,
         stream: Stream,
         au: *mut Au,
@@ -317,7 +317,7 @@ psp_extern! {
     /// # Return Value
     ///
     /// 0 if success.
-    pub fn sce_mpeg_avc_decode_mode(handle: Handle, mode: *mut AvcMode) -> i32;
+    pub fn sceMpegAvcDecodeMode(handle: Handle, mode: *mut AvcMode) -> i32;
 
     #[psp(0x0E3C2E9D, i5)]
     /// # Parameters
@@ -331,7 +331,7 @@ psp_extern! {
     /// # Return Value
     ///
     /// 0 if success.
-    pub fn sce_mpeg_avc_decode(
+    pub fn sceMpegAvcDecode(
         handle: Handle,
         au: *mut Au,
         iframe_width: i32,
@@ -350,7 +350,7 @@ psp_extern! {
     /// # Return Value
     ///
     /// 0 if success.
-    pub fn sce_mpeg_avc_decode_stop(
+    pub fn sceMpegAvcDecodeStop(
         handle: Handle,
         frame_width: i32,
         buffer: *mut c_void,
@@ -368,7 +368,7 @@ psp_extern! {
     /// # Return Value
     ///
     /// 0 if success.
-    pub fn sce_mpeg_get_atrac_au(
+    pub fn sceMpegGetAtracAu(
         handle: Handle,
         stream: Stream,
         au: *mut Au,
@@ -386,7 +386,7 @@ psp_extern! {
     /// # Return Value
     ///
     /// 0 if success.
-    pub fn sce_mpeg_atrac_decode(
+    pub fn sceMpegAtracDecode(
         handle: Handle,
         au: *mut Au,
         buffer: *mut c_void,

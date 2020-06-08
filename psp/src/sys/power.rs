@@ -57,12 +57,12 @@ psp_extern! {
     ///
     /// - `slot`: slot of the callback in the list, 0 to 15, pass -1 to get an
     ///   auto assignment.
-    /// - `cbid`: callback id from calling `sce_kernel_create_callback`
+    /// - `cbid`: callback id from calling `sceKernelCreateCallback`
     ///
     /// # Return value
     ///
     /// Returns 0 on success, the slot number if -1 is passed, or < 0 on error.
-    pub fn sce_power_register_callback(slot: i32, cbid: SceUid) -> i32;
+    pub fn scePowerRegisterCallback(slot: i32, cbid: SceUid) -> i32;
 
     #[psp(0xDFA8BAF8)]
     /// Unregister Power Callback Function
@@ -74,7 +74,7 @@ psp_extern! {
     /// # Return Value
     ///
     /// Return 0 on success, < 0 on error
-    pub fn sce_power_unregister_callback(slot: i32) -> i32;
+    pub fn scePowerUnregisterCallback(slot: i32) -> i32;
 
     #[psp(0x87440F5E)]
     /// Check if unit is plugged in
@@ -82,7 +82,7 @@ psp_extern! {
     /// # Return Value
     ///
     /// Return 1 if plugged in, 0 if not plugged in, < 0 on error
-    pub fn sce_power_is_power_online() -> i32;
+    pub fn scePowerIsPowerOnline() -> i32;
 
     #[psp(0x0AFD0D8B)]
     /// Check if a battery is present
@@ -90,7 +90,7 @@ psp_extern! {
     /// # Return Value
     ///
     /// Return 1 if battery present, 0 if battery not present, < 0 on error
-    pub fn sce_power_is_battery_exist() -> i32;
+    pub fn scePowerIsBatteryExist() -> i32;
 
     #[psp(0x1E490401)]
     /// Check if the battery is charging
@@ -98,11 +98,11 @@ psp_extern! {
     /// # Return Value
     ///
     /// Return 1 if battery charging, 0 if battery not charging, < 0 on error
-    pub fn sce_power_is_battery_charging() -> i32;
+    pub fn scePowerIsBatteryCharging() -> i32;
 
     #[psp(0xB4432BC8)]
     /// Get the status of battery charging
-    pub fn sce_power_get_battery_charging_status() -> i32;
+    pub fn scePowerGetBatteryChargingStatus() -> i32;
 
     #[psp(0xD3075926)]
     /// Check if the battery is low
@@ -110,7 +110,7 @@ psp_extern! {
     /// # Return Value
     ///
     /// Return 1 if the battery is low, Return 0 if the battery is not low, < 0 on error
-    pub fn sce_power_is_low_battery() -> i32;
+    pub fn scePowerIsLowBattery() -> i32;
 
     #[psp(0x2085D15D)]
     /// Get battery life as integer percent
@@ -118,7 +118,7 @@ psp_extern! {
     /// # Return Value
     ///
     /// Return battery charger as a percentage 0-100, < 0 on error
-    pub fn sce_power_get_battery_life_percent() -> i32;
+    pub fn scePowerGetBatteryLifePercent() -> i32;
 
     #[psp(0x8EFB3FA2)]
     /// Get battery life as time
@@ -126,19 +126,19 @@ psp_extern! {
     /// # Return Value
     ///
     /// Return battery life in minutes, < 0 on error
-    pub fn sce_power_get_battery_life_time() -> i32;
+    pub fn scePowerGetBatteryLifeTime() -> i32;
 
     #[psp(0x28E12023)]
     /// Get temperature of battery
-    pub fn sce_power_get_battery_temp() -> i32;
+    pub fn scePowerGetBatteryTemp() -> i32;
 
     #[psp(0x862AE1A6)]
     /// Unknown - can crash
-    pub fn sce_power_get_battery_elec() -> i32;
+    pub fn scePowerGetBatteryElec() -> i32;
 
     #[psp(0x483CE86B)]
     /// Get battery volt level
-    pub fn sce_power_get_battery_volt() -> i32;
+    pub fn scePowerGetBatteryVolt() -> i32;
 
     #[psp(0x843FBF43)]
     /// Set CPU Frequency
@@ -146,7 +146,7 @@ psp_extern! {
     /// # Parameters
     ///
     /// - `cpufreq`: new CPU frequency from 1-333
-    pub fn sce_power_set_cpu_clock_frequency(cpufreq: i32) -> i32;
+    pub fn scePowerSetCpuClockFrequency(cpufreq: i32) -> i32;
 
     #[psp(0xB8D7B3FB)]
     /// Set CPU Frequency
@@ -154,7 +154,7 @@ psp_extern! {
     /// # Parameters
     ///
     /// - `cpufreq`: new CPU frequency from 1-333
-    pub fn sce_power_set_bus_clock_frequency(busfreq: i32) -> i32;
+    pub fn scePowerSetBusClockFrequency(busfreq: i32) -> i32;
 
     #[psp(0xFEE03A2F)]
     /// Get CPU Frequency
@@ -162,7 +162,7 @@ psp_extern! {
     /// # Return Value
     ///
     /// Returns cpu frequency as an integer
-    pub fn sce_power_get_cpu_clock_frequency() -> i32;
+    pub fn scePowerGetCpuClockFrequency() -> i32;
 
     #[psp(0xFDB5BFE9)]
     /// Get CPU Frequency
@@ -170,7 +170,7 @@ psp_extern! {
     /// # Return Value
     ///
     /// Returns cpu frequency as an integer
-    pub fn sce_power_get_cpu_clock_frequency_int() -> i32;
+    pub fn scePowerGetCpuClockFrequencyInt() -> i32;
 
     #[psp(0xB1A52C83)]
     /// Get CPU Frequency
@@ -178,7 +178,7 @@ psp_extern! {
     /// # Return Value
     ///
     /// Returns cpu frequency as a float
-    pub fn sce_power_get_cpu_clock_frequency_float() -> f32;
+    pub fn scePowerGetCpuClockFrequencyFloat() -> f32;
 
     #[psp(0x478FE6F5)]
     /// Get bus Frequency
@@ -186,7 +186,7 @@ psp_extern! {
     /// # Return Value
     ///
     /// Returns bus frequency as an integer
-    pub fn sce_power_get_bus_clock_frequency() -> i32;
+    pub fn scePowerGetBusClockFrequency() -> i32;
 
     #[psp(0xBD681969)]
     /// Get bus Frequency
@@ -194,7 +194,7 @@ psp_extern! {
     /// # Return Value
     ///
     /// Returns bus frequency as an integer
-    pub fn sce_power_get_bus_clock_frequency_int() -> i32;
+    pub fn scePowerGetBusClockFrequencyInt() -> i32;
 
     #[psp(0x9BADB3EB)]
     /// Get bus Frequency
@@ -202,7 +202,7 @@ psp_extern! {
     /// # Return Value
     ///
     /// Returns bus frequency as a float
-    pub fn sce_power_get_bus_clock_frequency_float() -> f32;
+    pub fn scePowerGetBusClockFrequencyFloat() -> f32;
 
     #[psp(0x737486F2)]
     /// Set Clock Frequencies
@@ -217,7 +217,7 @@ psp_extern! {
     /// Given:
     ///  cpufreq <= pllfreq
     ///  busfreq*2 <= pllfreq
-    pub fn sce_power_set_clock_frequency(pllfreq: i32, cpufreq: i32, busfreq: i32) -> i32;
+    pub fn scePowerSetClockFrequency(pllfreq: i32, cpufreq: i32, busfreq: i32) -> i32;
 
     #[psp(0xD6D016EF)]
     /// Lock Power Switch
@@ -232,7 +232,7 @@ psp_extern! {
     /// # Return Value
     ///
     /// Return 0 on success, < 0 on error
-    pub fn sce_power_lock(unknown: i32) -> i32;
+    pub fn scePowerLock(unknown: i32) -> i32;
 
     #[psp(0xCA3D34C1)]
     /// Unlock Power Switch
@@ -244,7 +244,7 @@ psp_extern! {
     /// # Return Value
     ///
     /// Return 0 on success, < 0 on error
-    pub fn sce_power_unlock(unknown: i32) -> i32;
+    pub fn scePowerUnlock(unknown: i32) -> i32;
 
     #[psp(0xEFD3C963)]
     /// Generate a power tick, preventing unit from
@@ -257,11 +257,11 @@ psp_extern! {
     /// # Return Value
     ///
     /// Return 0 on success, < 0 on error.
-    pub fn sce_power_tick(t: Tick) -> i32;
+    pub fn scePowerTick(t: Tick) -> i32;
 
     #[psp(0xEDC13FE5)]
     /// Get Idle Timer
-    pub fn sce_power_get_idle_timer() -> i32;
+    pub fn scePowerGetIdleTimer() -> i32;
 
     #[psp(0x7F30B3B1)]
     /// Enable Idle Timer
@@ -269,7 +269,7 @@ psp_extern! {
     /// # Parameters
     ///
     /// unknown - pass 0
-    pub fn sce_power_idle_timer_enable(unknown: i32) -> i32;
+    pub fn scePowerIdleTimerEnable(unknown: i32) -> i32;
 
     #[psp(0x972CE941)]
     /// Disable Idle Timer
@@ -277,7 +277,7 @@ psp_extern! {
     /// # Parameters
     ///
     /// unknown - pass 0
-    pub fn sce_power_idle_timer_disable(unknown: i32) -> i32;
+    pub fn scePowerIdleTimerDisable(unknown: i32) -> i32;
 
     #[psp(0x2B7C7CF4)]
     /// Request PSP to go into standby mode
@@ -285,7 +285,7 @@ psp_extern! {
     /// # Return Value
     ///
     /// Always returns 0
-    pub fn sce_power_request_standby() -> i32;
+    pub fn scePowerRequestStandby() -> i32;
 
     #[psp(0xAC32C9CC)]
     /// Request PSP to go into suspend mode
@@ -293,5 +293,5 @@ psp_extern! {
     /// # Return Value
     ///
     /// Always returns 0
-    pub fn sce_power_request_suspend() -> i32;
+    pub fn scePowerRequestSuspend() -> i32;
 }

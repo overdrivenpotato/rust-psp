@@ -5,15 +5,15 @@ pub fn benchmark<F: FnMut()>(mut f: F, iterations: usize) -> core::time::Duratio
     let avg_micros: u64;
 
     unsafe {
-        crate::sys::rtc::sce_rtc_get_current_tick(&mut loop_start as *mut u64);
+        crate::sys::rtc::sceRtcGetCurrentTick(&mut loop_start as *mut u64);
 
         for _ in 0..iterations {
             f();
         }
 
-        crate::sys::rtc::sce_rtc_get_current_tick(&mut loop_end as *mut u64);
+        crate::sys::rtc::sceRtcGetCurrentTick(&mut loop_end as *mut u64);
         let avg_iter_ticks = (loop_end - loop_start) / iterations as u64;
-        let ticks_per_sec = crate::sys::rtc::sce_rtc_get_tick_resolution();
+        let ticks_per_sec = crate::sys::rtc::sceRtcGetTickResolution();
         avg_micros = ((avg_iter_ticks as f64 / ticks_per_sec as f64) * 1_000_000.0) as u64;
     }
 

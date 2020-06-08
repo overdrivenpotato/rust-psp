@@ -203,7 +203,7 @@ macro_rules! module {
                         0
                     }
 
-                    let id = $crate::sys::kernel::sce_kernel_create_thread(
+                    let id = $crate::sys::kernel::sceKernelCreateThread(
                         &b"main_thread\0"[0],
                         main_thread,
                         // default priority of 32.
@@ -214,7 +214,7 @@ macro_rules! module {
                         core::ptr::null_mut(),
                     );
 
-                    $crate::sys::kernel::sce_kernel_start_thread(id, 0, core::ptr::null_mut());
+                    $crate::sys::kernel::sceKernelStartThread(id, 0, core::ptr::null_mut());
                 }
 
                 0
@@ -234,24 +234,24 @@ pub fn enable_home_button() {
     unsafe {
         unsafe extern fn exit_thread(_args: usize, _argp: *mut c_void) -> i32 {
             unsafe extern fn exit_callback(_arg1: i32, _arg2: i32, _arg: *mut c_void) -> i32 {
-                sys::kernel::sce_kernel_exit_game();
+                sys::kernel::sceKernelExitGame();
                 0
             }
 
-            let id = sys::kernel::sce_kernel_create_callback(
+            let id = sys::kernel::sceKernelCreateCallback(
                 &b"exit_callback\0"[0],
                 exit_callback,
                 ptr::null_mut(),
             );
 
-            sys::kernel::sce_kernel_register_exit_callback(id);
-            sys::kernel::sce_kernel_sleep_thread_cb();
+            sys::kernel::sceKernelRegisterExitCallback(id);
+            sys::kernel::sceKernelSleepThreadCB();
 
             0
         }
 
         // Enable the home button.
-        let id = sys::kernel::sce_kernel_create_thread(
+        let id = sys::kernel::sceKernelCreateThread(
             &b"exit_thread\0"[0],
             exit_thread,
             32,
@@ -260,6 +260,6 @@ pub fn enable_home_button() {
             ptr::null_mut(),
         );
 
-        sys::kernel::sce_kernel_start_thread(id, 0, ptr::null_mut());
+        sys::kernel::sceKernelStartThread(id, 0, ptr::null_mut());
     }
 }

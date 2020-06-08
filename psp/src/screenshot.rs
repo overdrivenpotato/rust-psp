@@ -82,7 +82,7 @@ pub fn screenshot_argb_be() -> alloc::vec::Vec<u32> {
     let mut top_addr: *mut c_void = ptr::null_mut();
 
     unsafe {
-        display::sce_display_get_frame_buf(
+        display::sceDisplayGetFrameBuf(
             &mut top_addr,
             &mut buffer_width,
             &mut pixel_format,

@@ -26,7 +26,7 @@ psp_extern! {
     /// # Return Value
     ///
     /// < 0 on error
-    pub fn sce_hprm_peek_current_key(key: *mut Key) -> i32;
+    pub fn sceHprmPeekCurrentKey(key: *mut Key) -> i32;
 
     #[psp(0x2BCEC83E)]
     /// Peek at the current latch data.
@@ -38,7 +38,7 @@ psp_extern! {
     /// # Return Value
     ///
     /// < 0 on error.
-    pub fn sce_hprm_peek_latch(latch: *mut [u32;4]) -> i32;
+    pub fn sceHprmPeekLatch(latch: *mut [u32;4]) -> i32;
 
     #[psp(0x40D2F9F0)]
     /// Read the current latch data.
@@ -50,7 +50,7 @@ psp_extern! {
     /// # Return Value
     ///
     /// < 0 on error.
-    pub fn sce_hprm_read_latch(latch: *mut [u32;4]) -> i32;
+    pub fn sceHprmReadLatch(latch: *mut [u32;4]) -> i32;
 
     #[psp(0x7E69EDA4)]
     /// Determines whether the headphones are plugged in.
@@ -58,7 +58,7 @@ psp_extern! {
     /// # Return Value
     ///
     /// 1 if the headphones are plugged in, else 0.
-    pub fn sce_hprm_is_headphone_exist() -> i32;
+    pub fn sceHprmIsHeadphoneExist() -> i32;
 
     #[psp(0x208DB1BD)]
     /// Determines whether the remote is plugged in.
@@ -66,7 +66,7 @@ psp_extern! {
     /// # Return Value
     ///
     /// 1 if the remote is plugged in, else 0.
-    pub fn sce_hprm_is_remote_exist() -> i32;
+    pub fn sceHprmIsRemoteExist() -> i32;
 
     #[psp(0x219C58F1)]
     /// Determines whether the microphone is plugged in.
@@ -74,5 +74,5 @@ psp_extern! {
     /// # Return Value
     ///
     /// 1 if the microphone is plugged in, else 0.
-    pub fn sce_hprm_is_microphone_exist() -> i32;
+    pub fn sceHprmIsMicrophoneExist() -> i32;
 }

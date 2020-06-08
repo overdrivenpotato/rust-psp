@@ -14,9 +14,9 @@ pub struct Framebuffer {
 impl Framebuffer {
     pub fn new() -> Self {
         unsafe {
-            display::sce_display_set_mode(display::DisplayMode::Lcd, 480, 272);
-            let vram_base = (0x4000_0000u32 | ge::sce_ge_edram_get_addr() as u32) as *mut u16;
-            display::sce_display_set_frame_buf(
+            display::sceDisplaySetMode(display::DisplayMode::Lcd, 480, 272);
+            let vram_base = (0x4000_0000u32 | ge::sceGeEdramGetAddr() as u32) as *mut u16;
+            display::sceDisplaySetFrameBuf(
                 vram_base as *const u8,
                 512,
                 display::DisplayPixelFormat::Psm8888,

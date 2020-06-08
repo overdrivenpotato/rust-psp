@@ -31,7 +31,7 @@ impl Context {
             use crate::sys::kernel::{self, ThreadAttributes};
 
             // TODO: Handle errors.
-            kernel::sce_kernel_change_current_thread_attr(0, ThreadAttributes::VFPU);
+            kernel::sceKernelChangeCurrentThreadAttr(0, ThreadAttributes::VFPU);
         }
 
         let zero_vector = ScePspFVector4 { x: 0.0, y: 0.0, z: 0.0, w: 0.0 };

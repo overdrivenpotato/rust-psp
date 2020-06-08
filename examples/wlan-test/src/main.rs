@@ -8,11 +8,11 @@ fn psp_main() {
 
     unsafe{
         psp::dprintln!("Hello PSP from rust!");
-        psp::dprintln!("POWER ON: {}", psp::sys::wlan::sce_wlan_dev_is_power_on());
-        psp::dprintln!("SWITCH ON: {}", psp::sys::wlan::sce_wlan_get_switch_state());
+        psp::dprintln!("POWER ON: {}", psp::sys::wlan::sceWlanDevIsPowerOn());
+        psp::dprintln!("SWITCH ON: {}", psp::sys::wlan::sceWlanGetSwitchState());
 
         let mut ether_addr: [u8; 8] = [0; 8];
-        psp::sys::wlan::sce_wlan_get_ether_addr(ether_addr.as_mut_ptr());
+        psp::sys::wlan::sceWlanGetEtherAddr(ether_addr.as_mut_ptr());
         psp::dprintln!(
             "ETHER ADDR: {:02x}:{:02x}:{:02x}:{:02x}:{:02x}:{:02x}",
             ether_addr[0],

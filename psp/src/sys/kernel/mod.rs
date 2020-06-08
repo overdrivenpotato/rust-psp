@@ -10,13 +10,13 @@ psp_extern! {
     #![version = (0, 0)]
 
     #[psp(0x05572A5F)]
-    pub fn sce_kernel_exit_game();
+    pub fn sceKernelExitGame();
 
     #[psp(0x4AC57943)]
     /// Register callback.
     ///
     /// By installing the exit callback the home button becomes active. However
-    /// if `sce_kernel_exit_game` is not called in the callback it is likely
+    /// if `sceKernelExitGame` is not called in the callback it is likely
     /// that the PSP will just crash.
     ///
     /// # Parameters
@@ -26,7 +26,7 @@ psp_extern! {
     /// # Return value
     ///
     /// < 0 on error
-    pub fn sce_kernel_register_exit_callback(id: SceUid) -> i32;
+    pub fn sceKernelRegisterExitCallback(id: SceUid) -> i32;
 }
 
 /// UIDs are used to describe many different kernel objects.
@@ -90,7 +90,7 @@ psp_extern! {
     /// # Return value
     ///
     /// The UID of the new block, or if less than 0 an error.
-    pub fn sce_kernel_alloc_partition_memory(
+    pub fn sceKernelAllocPartitionMemory(
         partition: SceSysMemPartitionId,
         name: *const u8,
         type_: SceSysMemBlockTypes,
@@ -108,10 +108,10 @@ psp_extern! {
     /// # Return value
     ///
     /// The lowest address belonging to the memory block.
-    pub fn sce_kernel_get_block_head_addr(blockid: SceUid) -> *mut c_void;
+    pub fn sceKernelGetBlockHeadAddr(blockid: SceUid) -> *mut c_void;
 
     #[psp(0xB6D61D02)]
-    /// Free a memory block allocated with `sce_kernel_alloc_partition_memory`.
+    /// Free a memory block allocated with `sceKernelAllocPartitionMemory`.
     ///
     /// # Parameters
     ///
@@ -120,7 +120,7 @@ psp_extern! {
     /// # Return value
     ///
     /// ? on success, less than 0 on error.
-    pub fn sce_kernel_free_partition_memory(blockid: SceUid) -> i32;
+    pub fn sceKernelFreePartitionMemory(blockid: SceUid) -> i32;
 }
 
 #[repr(C)]
@@ -176,53 +176,53 @@ psp_extern! {
     #[psp(0x27CC57F0)]
     /// Get the time in seconds since the epoc (1st Jan 1970)
     ///
-    pub fn sce_kernel_libc_time(t: *mut i32) -> i32;
+    pub fn sceKernelLibcTime(t: *mut i32) -> i32;
 
     #[psp(0x91E4F6A7)]
     /// Get the processor clock used since the start of the process
-    pub fn sce_kernel_libc_clock() -> u32;
+    pub fn sceKernelLibcClock() -> u32;
 
     #[psp(0x71EC4271)]
     /// Get the current time of time and time zone information
-    pub fn sce_kernel_libc_gettimeofday(tp: *mut TimeVal, tzp: *mut Timezone)
+    pub fn sceKernelLibcGettimeofday(tp: *mut TimeVal, tzp: *mut Timezone)
         -> i32;
 
     #[psp(0x79D1C3FA)]
     /// Write back the data cache to memory
-    pub fn sce_kernel_dcache_writeback_all();
+    pub fn sceKernelDcacheWritebackAll();
 
     #[psp(0xB435DEC5)]
     /// Write back and invalidate the data cache
-    pub fn sce_kernel_dcache_writeback_invalidate_all();
+    pub fn sceKernelDcacheWritebackInvalidateAll();
 
     #[psp(0x3EE30821)]
     /// Write back a range of addresses from the data cache to memory
-    pub fn sce_kernel_dcache_writeback_range(
+    pub fn sceKernelDcacheWritebackRange(
         p: *const c_void,
         size: u32,
     );
 
     #[psp(0x34B9FA9E)]
     /// Write back and invalidate a range of addresses in the data cache
-    pub fn sce_kernel_dcache_writeback_invalidate_range(
+    pub fn sceKernelDcacheWritebackInvalidateRange(
         p: *const c_void,
         size: u32,
     );
 
     #[psp(0xBFA98062)]
     /// Invalidate a range of addresses in data cache
-    pub fn sce_kernel_dcache_invalidate_range(
+    pub fn sceKernelDcacheInvalidateRange(
         p: *const c_void,
         size: u32,
     );
 
     #[psp(0x920F104A)]
     /// Invalidate the instruction cache
-    pub fn sce_kernel_icache_invalidate_all();
+    pub fn sceKernelIcacheInvalidateAll();
 
     #[psp(0xC2DF770E)]
     /// Invalidate a range of addresses in the instruction cache
-    pub fn sce_kernel_icache_invalidate_range(
+    pub fn sceKernelIcacheInvalidateRange(
         p: *const c_void,
         size: u32,
     );
@@ -238,7 +238,7 @@ psp_extern! {
     /// # Return Value
     ///
     /// < 0 on error.
-    pub fn sce_kernel_utils_mt19937_init(
+    pub fn sceKernelUtilsMt19937Init(
         ctx: *mut Mt19937Context,
         seed: u32,
     ) -> i32;
@@ -252,7 +252,7 @@ psp_extern! {
     /// # Return Value
     ///
     /// A pseudo random number (between 0 and MAX_INT).
-    pub fn sce_kernel_utils_mt19937_uint(ctx: *mut Mt19937Context) -> u32;
+    pub fn sceKernelUtilsMt19937UInt(ctx: *mut Mt19937Context) -> u32;
 
     #[psp(0xC8186A58)]
     /// Function to perform an MD5 digest of a data block.
@@ -266,7 +266,7 @@ psp_extern! {
     /// # Return Value
     ///
     /// < 0 on error.
-    pub fn sce_kernel_utils_md5_digest(
+    pub fn sceKernelUtilsMd5Digest(
         data: *mut u8,
         size: u32,
         digest: *mut u8,
@@ -282,7 +282,7 @@ psp_extern! {
     /// # Return Value
     ///
     /// < 0 on error.
-    pub fn sce_kernel_utils_md5_block_init(ctx: *mut Md5Context) -> i32;
+    pub fn sceKernelUtilsMd5BlockInit(ctx: *mut Md5Context) -> i32;
 
     #[psp(0x61E1E525)]
     /// Function to update the MD5 digest with a block of data.
@@ -296,7 +296,7 @@ psp_extern! {
     /// # Return Value
     ///
     /// < 0 on error.
-    pub fn sce_kernel_utils_md5_block_update(
+    pub fn sceKernelUtilsMd5BlockUpdate(
         ctx: *mut Md5Context,
         data: *mut u8,
         size: u32,
@@ -313,7 +313,7 @@ psp_extern! {
     /// # Return Value
     ///
     /// < 0 on error.
-    pub fn sce_kernel_utils_md5_block_result(
+    pub fn sceKernelUtilsMd5BlockResult(
         ctx: *mut Md5Context,
         digest: *mut u8,
     ) -> i32;
@@ -330,7 +330,7 @@ psp_extern! {
     /// # Return Value
     ///
     /// < 0 on error.
-    pub fn sce_kernel_utils_sha1_digest(
+    pub fn sceKernelUtilsSha1Digest(
         data: *mut u8,
         size: u32,
         digest: *mut u8,
@@ -346,7 +346,7 @@ psp_extern! {
     /// # Return Value
     ///
     /// < 0 on error.
-    pub fn sce_kernel_utils_sha1_block_init(
+    pub fn sceKernelUtilsSha1BlockInit(
         ctx: *mut Sha1Context,
     ) -> i32;
 
@@ -362,7 +362,7 @@ psp_extern! {
     /// # Return Value
     ///
     /// < 0 on error.
-    pub fn sce_kernel_utils_sha1_block_update(
+    pub fn sceKernelUtilsSha1BlockUpdate(
         ctx: *mut Sha1Context,
         data: *mut u8,
         size: u32,
@@ -379,7 +379,7 @@ psp_extern! {
     /// # Return Value
     ///
     /// < 0 on error.
-    pub fn sce_kernel_utils_sha1_block_result(
+    pub fn sceKernelUtilsSha1BlockResult(
         ctx: *mut Sha1Context,
         digest: *mut u8,
     ) -> i32;

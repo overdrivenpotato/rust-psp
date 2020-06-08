@@ -53,7 +53,7 @@ psp_extern! {
     /// # Return Value
     ///
     /// 0 on success, < 0 on error
-    pub fn sce_reg_open_registry(
+    pub fn sceRegOpenRegistry(
         reg: *mut Key,
         mode: i32,
         handle: *mut Handle,
@@ -69,7 +69,7 @@ psp_extern! {
     /// # Return Value
     ///
     /// 0 on success, < 0 on error
-    pub fn sce_reg_flush_registry(handle: Handle) -> i32;
+    pub fn sceRegFlushRegistry(handle: Handle) -> i32;
 
     #[psp(0xFA8A5739)]
     /// Close the registry
@@ -81,7 +81,7 @@ psp_extern! {
     /// # Return Value
     ///
     /// 0 on success, < 0 on error
-    pub fn sce_reg_close_registry(handle: Handle) -> i32;
+    pub fn sceRegCloseRegistry(handle: Handle) -> i32;
 
     #[psp(0x1D8A762E)]
     /// Open a registry directory
@@ -96,7 +96,7 @@ psp_extern! {
     /// # Return Value
     ///
     /// 0 on success, < 0 on error
-    pub fn sce_reg_open_category(
+    pub fn sceRegOpenCategory(
         handle: Handle,
         name: *const u8,
         mode: i32,
@@ -114,7 +114,7 @@ psp_extern! {
     /// # Return Value
     ///
     /// 0 on success, < 0 on error
-    pub fn sce_reg_remove_category(
+    pub fn sceRegRemoveCategory(
         handle: Handle,
         name: *const u8,
     ) -> i32;
@@ -129,7 +129,7 @@ psp_extern! {
     /// # Return Value
     ///
     /// 0 on success, < 0 on error
-    pub fn sce_reg_close_category(dir_handle: Handle) -> i32;
+    pub fn sceRegCloseCategory(dir_handle: Handle) -> i32;
 
     #[psp(0x0D69BF40)]
     /// Flush the registry directory to disk
@@ -141,7 +141,7 @@ psp_extern! {
     /// # Return Value
     ///
     /// 0 on success, < 0 on error
-    pub fn sce_reg_flush_category(dir_handle: Handle) -> i32;
+    pub fn sceRegFlushCategory(dir_handle: Handle) -> i32;
 
     #[psp(0xD4475AA8, i5)]
     /// Get a key's information
@@ -150,14 +150,14 @@ psp_extern! {
     ///
     /// - `dir_handle`: The open registry dir handle
     /// - `name`: Name of the key
-    /// - `key_handle`: Pointer to a `Handle` to get registry key handle (used in `sce_reg_get_key_value`)
+    /// - `key_handle`: Pointer to a `Handle` to get registry key handle (used in `sceRegGetKeyValue`)
     /// - `type_`: Type of the key
     /// - `size`: The size of the key's value in bytes
     ///
     /// # Return Value
     ///
     /// 0 on success, < 0 on error
-    pub fn sce_reg_get_key_info(
+    pub fn sceRegGetKeyInfo(
         dir_handle: Handle,
         name: *const u8,
         key_handle: *mut Handle,
@@ -178,7 +178,7 @@ psp_extern! {
     /// # Return Value
     ///
     /// 0 on success, < 0 on error
-    pub fn sce_reg_get_key_info_by_name(
+    pub fn sceRegGetKeyInfoByName(
         dir_handle: Handle,
         name: *const u8,
         type_: *mut KeyType,
@@ -191,14 +191,14 @@ psp_extern! {
     /// # Parameters
     ///
     /// - `dir_handle`: The open registry dir handle
-    /// - `key_handle`: The open registry key handler (from `sce_reg_get_key_info`)
+    /// - `key_handle`: The open registry key handler (from `sceRegGetKeyInfo`)
     /// - `buf`: Buffer to hold the value
     /// - `size`: The size of the buffer
     ///
     /// # Return Value
     ///
     /// 0 on success, < 0 on error
-    pub fn sce_reg_get_key_value(
+    pub fn sceRegGetKeyValue(
         dir_handle: Handle,
         key_handle: Handle,
         buf: *mut c_void,
@@ -218,7 +218,7 @@ psp_extern! {
     /// # Return Value
     ///
     /// 0 on success, < 0 on error
-    pub fn sce_reg_get_key_value_by_name(
+    pub fn sceRegGetKeyValueByName(
         dir_handle: Handle,
         name: *const u8,
         buf: *mut c_void,
@@ -238,7 +238,7 @@ psp_extern! {
     /// # Return Value
     ///
     /// 0 on success, < 0 on error
-    pub fn sce_reg_set_key_value(
+    pub fn sceRegSetKeyValue(
         dir_handle: Handle,
         name: *const u8,
         buf: *const c_void,
@@ -256,7 +256,7 @@ psp_extern! {
     /// # Return Value
     ///
     /// 0 on success, < 0 on error
-    pub fn sce_reg_get_keys_num(
+    pub fn sceRegGetKeysNum(
         dir_handle: Handle,
         num: *mut i32,
     ) -> i32;
@@ -273,7 +273,7 @@ psp_extern! {
     /// # Return Value
     ///
     /// 0 on success, < 0 on error
-    pub fn sce_reg_get_keys(
+    pub fn sceRegGetKeys(
         dir_handle: Handle,
         buf: *mut u8,
         num: i32,
@@ -292,7 +292,7 @@ psp_extern! {
     /// # Return Value
     ///
     /// 0 on success, < 0 on error
-    pub fn sce_reg_create_key(
+    pub fn sceRegCreateKey(
         dir_handle: Handle,
         name: *const u8,
         type_: i32,
@@ -309,5 +309,5 @@ psp_extern! {
     /// # Return Value
     ///
     /// 0 on success, < 0 on error
-    pub fn sce_reg_remove_registry(key: *mut Key) -> i32;
+    pub fn sceRegRemoveRegistry(key: *mut Key) -> i32;
 }

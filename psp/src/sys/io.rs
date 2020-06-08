@@ -133,7 +133,7 @@ psp_extern! {
     /// # Return value
     ///
     /// A non-negative integer is a valid fd, anything else an error
-    pub fn sce_io_open(file: *const u8, flags: OpenFlags, permissions: Permissions) -> SceUid;
+    pub fn sceIoOpen(file: *const u8, flags: OpenFlags, permissions: Permissions) -> SceUid;
 
     #[psp(0x89AA9906)]
     /// Open or create a file for reading or writing (asynchronous)
@@ -147,7 +147,7 @@ psp_extern! {
     /// # Return value
     ///
     /// A non-negative integer is a valid fd, anything else an error
-    pub fn sce_io_open_async(
+    pub fn sceIoOpenAsync(
         file: *const u8,
         flags: OpenFlags,
         permissions: Permissions
@@ -163,7 +163,7 @@ psp_extern! {
     /// # Return value
     ///
     /// < 0 on error
-    pub fn sce_io_close(fd: SceUid) -> i32;
+    pub fn sceIoClose(fd: SceUid) -> i32;
 
     #[psp(0xFF5940B6)]
     /// Delete a descriptor (asynchronous)
@@ -175,7 +175,7 @@ psp_extern! {
     /// # Return value
     ///
     /// < 0 on error
-    pub fn sce_io_close_async(fd: SceUid) -> i32;
+    pub fn sceIoCloseAsync(fd: SceUid) -> i32;
 
     #[psp(0x6A638D83)]
     /// Read input
@@ -189,7 +189,7 @@ psp_extern! {
     /// # Return value
     ///
     /// The number of bytes read
-    pub fn sce_io_read(fd: SceUid, data: *mut c_void, size: u32)
+    pub fn sceIoRead(fd: SceUid, data: *mut c_void, size: u32)
      -> i32;
 
     #[psp(0xA0B5A7C2)]
@@ -204,7 +204,7 @@ psp_extern! {
     /// # Return value
     ///
     /// < 0 on error.
-    pub fn sce_io_read_async(fd: SceUid, data: *mut c_void, size: u32)
+    pub fn sceIoReadAsync(fd: SceUid, data: *mut c_void, size: u32)
      -> i32;
 
 
@@ -220,7 +220,7 @@ psp_extern! {
     /// # Return value
     ///
     /// The number of bytes written
-    pub fn sce_io_write(fd: SceUid, data: *const c_void, size: usize) -> i32;
+    pub fn sceIoWrite(fd: SceUid, data: *const c_void, size: usize) -> i32;
 
     #[psp(0x0FACAB19)]
     /// Write output (asynchronous)
@@ -234,7 +234,7 @@ psp_extern! {
     /// # Return value
     ///
     /// < 0 on error.
-    pub fn sce_io_write_async(fd: SceUid, data: *const c_void, size: u32)
+    pub fn sceIoWriteAsync(fd: SceUid, data: *const c_void, size: u32)
      -> i32;
 
     #[psp(0x27EB27B8)]
@@ -251,7 +251,7 @@ psp_extern! {
     /// # Return value
     ///
     /// The position in the file after the seek.
-    pub fn sce_io_lseek(fd: SceUid, offset: i64, whence: Whence) -> i64;
+    pub fn sceIoLseek(fd: SceUid, offset: i64, whence: Whence) -> i64;
 
     #[psp(0x71B19E77)]
     /// Reposition read/write file descriptor offset (asynchronous)
@@ -267,7 +267,7 @@ psp_extern! {
     /// # Return value
     ///
     /// < 0 on error. Actual value should be passed returned by the ::sceIoWaitAsync call.
-    pub fn sce_io_lseek_async(fd: SceUid, offset: i64, whence: Whence)
+    pub fn sceIoLseekAsync(fd: SceUid, offset: i64, whence: Whence)
      -> i32;
 
     #[psp(0x68963324)]
@@ -284,7 +284,7 @@ psp_extern! {
     /// # Return value
     ///
     /// The position in the file after the seek.
-    pub fn sce_io_lseek32(fd: SceUid, offset: i32, whence: Whence)
+    pub fn sceIoLseek32(fd: SceUid, offset: i32, whence: Whence)
      -> i32;
 
     #[psp(0x1B385D8F)]
@@ -300,7 +300,7 @@ psp_extern! {
     /// # Return value
     ///
     /// < 0 on error.
-    pub fn sce_io_lseek32_async(fd: SceUid, offset: i32, whence: Whence)
+    pub fn sceIoLseek32Async(fd: SceUid, offset: i32, whence: Whence)
      -> i32;
 
     #[psp(0xF27A9C51)]
@@ -313,7 +313,7 @@ psp_extern! {
     /// # Return value
     ///
     /// < 0 on error
-    pub fn sce_io_remove(file: *const u8) -> i32;
+    pub fn sceIoRemove(file: *const u8) -> i32;
 
     #[psp(0x06A70004)]
     /// Make a directory file
@@ -326,7 +326,7 @@ psp_extern! {
     /// # Return value
     ///
     /// Returns the value 0 if its succesful otherwise -1
-    pub fn sce_io_mkdir(dir: *const u8, mode: Permissions) -> i32;
+    pub fn sceIoMkdir(dir: *const u8, mode: Permissions) -> i32;
 
     #[psp(0x1117C65F)]
     /// Remove a directory file
@@ -337,7 +337,7 @@ psp_extern! {
     /// # Return value
     ///
     /// Returns the value 0 if its succesful otherwise -1
-    pub fn sce_io_rmdir(path: *const u8) -> i32;
+    pub fn sceIoRmdir(path: *const u8) -> i32;
 
     #[psp(0x55F4717D)]
     /// Change the current directory.
@@ -348,7 +348,7 @@ psp_extern! {
     /// # Return value
     ///
     /// < 0 on error.
-    pub fn sce_io_chdir(path: *const u8) -> i32;
+    pub fn sceIoChdir(path: *const u8) -> i32;
 
     #[psp(0x779103A0)]
     /// Change the name of a file
@@ -361,7 +361,7 @@ psp_extern! {
     /// # Return value
     ///
     /// < 0 on error.
-    pub fn sce_io_rename(oldname: *const u8, newname: *const u8)
+    pub fn sceIoRename(oldname: *const u8, newname: *const u8)
      -> i32;
 
     #[psp(0xB29DDF9C)]
@@ -374,7 +374,7 @@ psp_extern! {
     /// # Return value
     ///
     /// If >= 0 then a valid file descriptor, otherwise a Sony error code.
-    pub fn sce_io_dopen(dirname: *const u8) -> SceUid;
+    pub fn sceIoDopen(dirname: *const u8) -> SceUid;
 
     #[psp(0xE3EB004C)]
     /// Reads an entry from an opened file descriptor.
@@ -390,7 +390,7 @@ psp_extern! {
     /// -   0 - No more directory entries left
     /// - > 0 - More directory entired to go
     /// - < 0 - Error
-    pub fn sce_io_dread(fd: SceUid, dir: *mut Dirent) -> i32;
+    pub fn sceIoDread(fd: SceUid, dir: *mut Dirent) -> i32;
 
     #[psp(0xEB092469)]
     /// Close an opened directory file descriptor
@@ -402,7 +402,7 @@ psp_extern! {
     /// # Return value
     ///
     /// < 0 on error
-    pub fn sce_io_dclose(fd: SceUid) -> i32;
+    pub fn sceIoDclose(fd: SceUid) -> i32;
 
     #[psp(0x54F5FB11, i6)]
     /// Send a devctl command to a device.
@@ -419,7 +419,7 @@ psp_extern! {
     /// # Return value
     ///
     /// 0 on success, < 0 on error
-    pub fn sce_io_devctl(
+    pub fn sceIoDevctl(
         dev: *const u8,
         cmd: u32,
         indata: *mut c_void,
@@ -443,7 +443,7 @@ psp_extern! {
     /// # Return value
     ///
     /// < 0 on error.
-    pub fn sce_io_assign(
+    pub fn sceIoAssign(
         dev1: *const u8,
         dev2: *const u8,
         dev3: *const u8,
@@ -462,7 +462,7 @@ psp_extern! {
     /// # Return value
     ///
     /// < 0 on error
-    pub fn sce_io_unassign(dev: *const u8) -> i32;
+    pub fn sceIoUnassign(dev: *const u8) -> i32;
 
     #[psp(0xACE946E8)]
     /// Get the status of a file.
@@ -475,7 +475,7 @@ psp_extern! {
     /// # Return value
     ///
     /// < 0 on error.
-    pub fn sce_io_getstat(file: *const u8, stat: *mut Stat)
+    pub fn sceIoGetstat(file: *const u8, stat: *mut Stat)
      -> i32;
 
     #[psp(0xB8A740F4)]
@@ -490,7 +490,7 @@ psp_extern! {
     /// # Return value
     ///
     /// < 0 on error.
-    pub fn sce_io_chstat(file: *const u8, stat: *mut Stat, bits: i32) -> i32;
+    pub fn sceIoChstat(file: *const u8, stat: *mut Stat, bits: i32) -> i32;
 
     #[psp(0x63632449, i6)]
     /// Perform an ioctl on a device.
@@ -507,7 +507,7 @@ psp_extern! {
     /// # Return value
     ///
     /// 0 on success, < 0 on error
-    pub fn sce_io_ioctl(
+    pub fn sceIoIoctl(
         fd: SceUid,
         cmd: u32,
         indata: *mut c_void,
@@ -531,7 +531,7 @@ psp_extern! {
     /// # Return value
     ///
     /// 0 on success, < 0 on error
-    pub fn sce_io_ioctl_async(
+    pub fn sceIoIoctlAsync(
         fd: SceUid,
         cmd: u32,
         indata: *mut c_void,
@@ -551,7 +551,7 @@ psp_extern! {
     /// # Return value
     ///
     /// ???
-    pub fn sce_io_sync(device: *const u8, unk: u32) -> i32;
+    pub fn sceIoSync(device: *const u8, unk: u32) -> i32;
 
     #[psp(0xE23EEC33)]
     /// Wait for asyncronous completion.
@@ -564,7 +564,7 @@ psp_extern! {
     /// # Return value
     ///
     /// < 0 on error.
-    pub fn sce_io_wait_async(fd: SceUid, res: *mut i64) -> i32;
+    pub fn sceIoWaitAsync(fd: SceUid, res: *mut i64) -> i32;
 
     #[psp(0x35DBD746)]
     /// Wait for asyncronous completion (with callbacks).
@@ -577,7 +577,7 @@ psp_extern! {
     /// # Return value
     ///
     /// < 0 on error.
-    pub fn sce_io_wait_async_cb(fd: SceUid, res: *mut i64) -> i32;
+    pub fn sceIoWaitAsyncCB(fd: SceUid, res: *mut i64) -> i32;
 
     #[psp(0x3251EA56)]
     /// Poll for asyncronous completion.
@@ -590,7 +590,7 @@ psp_extern! {
     /// # Return value
     ///
     /// < 0 on error.
-    pub fn sce_io_poll_async(fd: SceUid, res: *mut i64) -> i32;
+    pub fn sceIoPollAsync(fd: SceUid, res: *mut i64) -> i32;
 
     #[psp(0xCB05F8D6)]
     /// Get the asyncronous completion status.
@@ -604,7 +604,7 @@ psp_extern! {
     /// # Return value
     ///
     /// < 0 on error.
-    pub fn sce_io_get_async_stat(fd: SceUid, poll: i32, res: *mut i64)
+    pub fn sceIoGetAsyncStat(fd: SceUid, poll: i32, res: *mut i64)
      -> i32;
 
     #[psp(0xE8BC6571)]
@@ -616,7 +616,7 @@ psp_extern! {
     /// # Return value
     ///
     /// < 0 on error.
-    pub fn sce_io_cancel(fd: SceUid) -> i32;
+    pub fn sceIoCancel(fd: SceUid) -> i32;
 
     #[psp(0x08BD7374)]
     /// Get the device type of the currently opened file descriptor.
@@ -628,7 +628,7 @@ psp_extern! {
     /// # Return value
     ///
     /// < 0 on error. Otherwise the device type?
-    pub fn sce_io_get_dev_type(fd: SceUid) -> i32;
+    pub fn sceIoGetDevType(fd: SceUid) -> i32;
 
     #[psp(0xB293727F)]
     /// Change the priority of the asynchronous thread.
@@ -641,7 +641,7 @@ psp_extern! {
     /// # Return value
     ///
     /// < 0 on error.
-    pub fn sce_io_change_async_priority(fd: SceUid, pri: i32) -> i32;
+    pub fn sceIoChangeAsyncPriority(fd: SceUid, pri: i32) -> i32;
 
     #[psp(0xA12A0514)]
     /// Sets a callback for the asynchronous action.
@@ -649,13 +649,13 @@ psp_extern! {
     /// # Parameters
     ///
     /// - `fd`: The filedescriptor currently performing an asynchronous action.
-    /// - `cb`: The UID of the callback created with `sce_kernel_create_callback`
+    /// - `cb`: The UID of the callback created with `sceKernelCreateCallback`
     /// - `argp`: Pointer to an argument to pass to the callback.
     ///
     /// # Return value
     ///
     /// < 0 on error.
-    pub fn sce_io_set_async_callback(
+    pub fn sceIoSetAsyncCallback(
         fd: SceUid,
         cb: SceUid,
         argp: *mut c_void

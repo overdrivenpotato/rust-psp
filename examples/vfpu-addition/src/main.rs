@@ -45,7 +45,7 @@ fn psp_main() {
     // Enable the VFPU
     unsafe {
         use psp::sys::kernel::{self, ThreadAttributes};
-        kernel::sce_kernel_change_current_thread_attr(0, ThreadAttributes::VFPU);
+        kernel::sceKernelChangeCurrentThreadAttr(0, ThreadAttributes::VFPU);
     }
 
     psp::dprintln!("Testing VFPU...");

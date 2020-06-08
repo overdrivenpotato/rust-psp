@@ -19,7 +19,7 @@ fn psp_main() {
 fn init_tests() -> SceUid {
     let buf = b"host0:/psp-ci-test.test\0";
     unsafe {
-        let fd = psp::sys::io::sce_io_open(
+        let fd = psp::sys::io::sceIoOpen(
             buf as *const u8,
             psp::sys::io::OpenFlags::CREAT |
             psp::sys::io::OpenFlags::RD_WR, 0o777
@@ -29,12 +29,12 @@ fn init_tests() -> SceUid {
 }
 
 fn end_tests(fd: SceUid) {
-    unsafe { psp::sys::io::sce_io_close(fd); }
+    unsafe { psp::sys::io::sceIoClose(fd); }
 }
 
 fn test_hello(fd: &SceUid) {
     unsafe {
-        psp::sys::io::sce_io_write(*fd, b"Hello CI\n" as *const u8 as *const c_void, 9);
+        psp::sys::io::sceIoWrite(*fd, b"Hello CI\n" as *const u8 as *const c_void, 9);
     }
 }
 
@@ -44,7 +44,7 @@ fn test_panic(fd: &SceUid) {
     });
     if result.is_err() {
         unsafe {
-            psp::sys::io::sce_io_write(
+            psp::sys::io::sceIoWrite(
                 *fd,
                 b"Panics work\n" as *const u8 as *const c_void, 12
             );
@@ -56,16 +56,16 @@ fn test_screenshot() {
     let screenshot = psp::screenshot_bmp();
 
     unsafe {
-        let fd = psp::sys::io::sce_io_open(
+        let fd = psp::sys::io::sceIoOpen(
             b"host0:/psp-ci-test.bmp\0" as *const u8,
             psp::sys::io::OpenFlags::CREAT |
             psp::sys::io::OpenFlags::RD_WR, 0o777
         );
-        psp::sys::io::sce_io_write(
+        psp::sys::io::sceIoWrite(
             fd,
             &screenshot as *const _ as *const c_void,
             screenshot.len(),
         );
-        psp::sys::io::sce_io_close(fd);
+        psp::sys::io::sceIoClose(fd);
     }
 }

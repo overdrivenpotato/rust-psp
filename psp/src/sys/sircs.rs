@@ -16,5 +16,5 @@ psp_extern! {
     #![version = (0x00, 0x00)]
 
     #[psp(0x71EEF62D)]
-    pub unsafe fn sce_sircs_send(sd: *mut SircsData, count: i32) -> i32;
+    pub unsafe fn sceSircsSend(sd: *mut SircsData, count: i32) -> i32;
 }

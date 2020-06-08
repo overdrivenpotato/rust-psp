@@ -70,18 +70,20 @@ unsafe fn get_context_unchecked() -> &'static mut Context {
 
 pub const EPSILON: f32 = 0.00001;
 
-pub unsafe fn sce_gum_draw_array(
+#[allow(non_snake_case)]
+pub unsafe fn sceGumDrawArray(
     prim: gu::Primitive,
     v_type: gu::VertexType,
     count: i32,
     indices: *const c_void,
     vertices: *const c_void,
 ) {
-    sce_gum_update_matrix();
-    gu::sce_gu_draw_array(prim, v_type, count, indices, vertices);
+    sceGumUpdateMatrix();
+    gu::sceGuDrawArray(prim, v_type, count, indices, vertices);
 }
 
-pub unsafe fn sce_gum_draw_array_n(
+#[allow(non_snake_case)]
+pub unsafe fn sceGumDrawArrayN(
     prim: gu::Primitive,
     v_type: gu::VertexType,
     count: i32,
@@ -89,22 +91,24 @@ pub unsafe fn sce_gum_draw_array_n(
     indices: *const c_void,
     vertices: *const c_void,
 ) {
-    sce_gum_update_matrix();
-    gu::sce_gu_draw_array_n(prim, v_type, count, a3, indices, vertices);
+    sceGumUpdateMatrix();
+    gu::sceGuDrawArrayN(prim, v_type, count, a3, indices, vertices);
 }
 
-pub unsafe fn sce_gum_draw_bezier(
+#[allow(non_snake_case)]
+pub unsafe fn sceGumDrawBezier(
     v_type: gu::VertexType,
     u_count: i32,
     v_count: i32,
     indices: *const c_void,
     vertices: *const c_void,
 ) {
-    sce_gum_update_matrix();
-    gu::sce_gu_draw_bezier(v_type, u_count, v_count, indices, vertices);
+    sceGumUpdateMatrix();
+    gu::sceGuDrawBezier(v_type, u_count, v_count, indices, vertices);
 }
 
-pub unsafe fn sce_gum_draw_spline(
+#[allow(non_snake_case)]
+pub unsafe fn sceGumDrawSpline(
     v_type: gu::VertexType,
     u_count: i32,
     v_count: i32,
@@ -113,11 +117,12 @@ pub unsafe fn sce_gum_draw_spline(
     indices: *const c_void,
     vertices: *const c_void,
 ) {
-    sce_gum_update_matrix();
-    gu::sce_gu_draw_spline(v_type, u_count, v_count, u_edge, v_edge, indices, vertices);
+    sceGumUpdateMatrix();
+    gu::sceGuDrawSpline(v_type, u_count, v_count, u_edge, v_edge, indices, vertices);
 }
 
-pub unsafe fn sce_gum_fast_inverse() {
+#[allow(non_snake_case)]
+pub unsafe fn sceGumFastInverse() {
     get_context_unchecked().prepare(MatrixSet::VMAT3, MatrixSet::VMAT0 | MatrixSet::VMAT1);
 
     vfpu_asm!(
@@ -133,7 +138,8 @@ pub unsafe fn sce_gum_fast_inverse() {
     CURRENT_MATRIX_UPDATE = 1;
 }
 
-pub unsafe fn sce_gum_full_inverse() {
+#[allow(non_snake_case)]
+pub unsafe fn sceGumFullInverse() {
     let mut t = MaybeUninit::uninit();
 
     get_context_unchecked().prepare(MatrixSet::VMAT3, MatrixSet::VMAT0 | MatrixSet::VMAT1);
@@ -169,7 +175,8 @@ pub unsafe fn sce_gum_full_inverse() {
 /// [0 0 1 0]
 /// [0 0 0 1]
 /// ```
-pub unsafe fn sce_gum_load_identity() {
+#[allow(non_snake_case)]
+pub unsafe fn sceGumLoadIdentity() {
     VFPU_CONTEXT
         .get_or_insert_with(Context::new)
         .prepare(MatrixSet::VMAT3, MatrixSet::empty());
@@ -184,7 +191,8 @@ pub unsafe fn sce_gum_load_identity() {
 /// # Parameters
 ///
 /// - `m`: Matrix to load into stack
-pub unsafe fn sce_gum_load_matrix(m: &ScePspFMatrix4) {
+#[allow(non_snake_case)]
+pub unsafe fn sceGumLoadMatrix(m: &ScePspFMatrix4) {
     VFPU_CONTEXT
         .get_or_insert_with(Context::new)
         .prepare(MatrixSet::VMAT3, MatrixSet::empty());
@@ -201,7 +209,8 @@ pub unsafe fn sce_gum_load_matrix(m: &ScePspFMatrix4) {
     CURRENT_MATRIX_UPDATE = 1;
 }
 
-pub unsafe fn sce_gum_look_at(eye: &ScePspFVector3, center: &ScePspFVector3, up: &ScePspFVector3) {
+#[allow(non_snake_case)]
+pub unsafe fn sceGumLookAt(eye: &ScePspFVector3, center: &ScePspFVector3, up: &ScePspFVector3) {
     let mut t = gum_load_identity();
     gum_look_at(&mut t, eye, center, up);
 
@@ -226,7 +235,8 @@ pub unsafe fn sce_gum_look_at(eye: &ScePspFVector3, center: &ScePspFVector3, up:
 /// # Parameters
 ///
 /// - `mode`: Matrix mode to use
-pub unsafe fn sce_gum_matrix_mode(mode: Mode) {
+#[allow(non_snake_case)]
+pub unsafe fn sceGumMatrixMode(mode: Mode) {
     get_context_unchecked().prepare(MatrixSet::VMAT3, MatrixSet::empty());
 
     vfpu_asm!(
@@ -259,7 +269,8 @@ pub unsafe fn sce_gum_matrix_mode(mode: Mode) {
 /// # Parameters
 ///
 /// - `m`: Matrix to multiply stack with
-pub unsafe fn sce_gum_mult_matrix(m: &ScePspFMatrix4) {
+#[allow(non_snake_case)]
+pub unsafe fn sceGumMultMatrix(m: &ScePspFMatrix4) {
     get_context_unchecked().prepare(MatrixSet::VMAT3, MatrixSet::VMAT0 | MatrixSet::VMAT1);
 
     vfpu_asm!(
@@ -282,7 +293,8 @@ pub unsafe fn sce_gum_mult_matrix(m: &ScePspFMatrix4) {
 /// # Note
 ///
 /// The matrix loses its orthonogal status after executing this function.
-pub unsafe fn sce_gum_ortho(
+#[allow(non_snake_case)]
+pub unsafe fn sceGumOrtho(
     left: f32,
     right: f32,
     bottom: f32,
@@ -339,7 +351,8 @@ pub unsafe fn sce_gum_ortho(
 /// # Note
 ///
 /// The matrix loses its orthonogal status after executing this function.
-pub unsafe fn sce_gum_perspective(fovy: f32, aspect: f32, near: f32, far: f32) {
+#[allow(non_snake_case)]
+pub unsafe fn sceGumPerspective(fovy: f32, aspect: f32, near: f32, far: f32) {
     get_context_unchecked().prepare(MatrixSet::VMAT3, MatrixSet::VMAT0 | MatrixSet::VMAT1);
 
     vfpu_asm!(
@@ -389,7 +402,8 @@ pub unsafe fn sce_gum_perspective(fovy: f32, aspect: f32, near: f32, far: f32) {
 }
 
 /// Pop matrix from stack
-pub unsafe fn sce_gum_pop_matrix() {
+#[allow(non_snake_case)]
+pub unsafe fn sceGumPopMatrix() {
     CURRENT_MATRIX = CURRENT_MATRIX.offset(-1);
     get_context_unchecked().prepare(MatrixSet::VMAT3, MatrixSet::empty());
 
@@ -406,7 +420,8 @@ pub unsafe fn sce_gum_pop_matrix() {
 }
 
 /// Push current matrix onto stack
-pub unsafe fn sce_gum_push_matrix() {
+#[allow(non_snake_case)]
+pub unsafe fn sceGumPushMatrix() {
     CURRENT_MATRIX = CURRENT_MATRIX.offset(1);
     get_context_unchecked().prepare(MatrixSet::VMAT3, MatrixSet::empty());
 
@@ -425,7 +440,8 @@ pub unsafe fn sce_gum_push_matrix() {
 /// # Parameters
 ///
 /// - `angle`: Angle in radians
-pub unsafe fn sce_gum_rotate_x(angle: f32) {
+#[allow(non_snake_case)]
+pub unsafe fn sceGumRotateX(angle: f32) {
     get_context_unchecked().prepare(MatrixSet::VMAT3, MatrixSet::VMAT0 | MatrixSet::VMAT1);
 
     vfpu_asm!(
@@ -450,7 +466,8 @@ pub unsafe fn sce_gum_rotate_x(angle: f32) {
 /// # Parameters
 ///
 /// - `angle`: Angle in radians
-pub unsafe fn sce_gum_rotate_y(angle: f32) {
+#[allow(non_snake_case)]
+pub unsafe fn sceGumRotateY(angle: f32) {
     get_context_unchecked().prepare(MatrixSet::VMAT3, MatrixSet::VMAT0 | MatrixSet::VMAT1);
 
     vfpu_asm!(
@@ -475,7 +492,8 @@ pub unsafe fn sce_gum_rotate_y(angle: f32) {
 /// # Parameters
 ///
 /// - `angle`: Angle in radians
-pub unsafe fn sce_gum_rotate_z(angle: f32) {
+#[allow(non_snake_case)]
+pub unsafe fn sceGumRotateZ(angle: f32) {
     get_context_unchecked().prepare(MatrixSet::VMAT3, MatrixSet::VMAT0 | MatrixSet::VMAT1);
 
     vfpu_asm!(
@@ -500,10 +518,11 @@ pub unsafe fn sce_gum_rotate_z(angle: f32) {
 /// # Parameters
 ///
 /// - `v`: Pointer to vector containing angles
-pub unsafe fn sce_gum_rotate_xyz(v: &ScePspFVector3) {
-    sce_gum_rotate_x(v.x);
-    sce_gum_rotate_y(v.y);
-    sce_gum_rotate_z(v.z);
+#[allow(non_snake_case)]
+pub unsafe fn sceGumRotateXYZ(v: &ScePspFVector3) {
+    sceGumRotateX(v.x);
+    sceGumRotateY(v.y);
+    sceGumRotateZ(v.z);
 }
 
 /// Rotate around all 3 axis in order Z, Y, X
@@ -511,10 +530,11 @@ pub unsafe fn sce_gum_rotate_xyz(v: &ScePspFVector3) {
 /// # Parameters
 ///
 /// - `v`: Pointer to vector containing angles
-pub unsafe fn sce_gum_rotate_zyx(v: &ScePspFVector3) {
-    sce_gum_rotate_z(v.z);
-    sce_gum_rotate_y(v.y);
-    sce_gum_rotate_x(v.x);
+#[allow(non_snake_case)]
+pub unsafe fn sceGumRotateZYX(v: &ScePspFVector3) {
+    sceGumRotateZ(v.z);
+    sceGumRotateY(v.y);
+    sceGumRotateX(v.x);
 }
 
 /// Scale matrix
@@ -522,7 +542,8 @@ pub unsafe fn sce_gum_rotate_zyx(v: &ScePspFVector3) {
 /// # Note
 ///
 /// The matrix loses its orthonogal status after executing this function.
-pub unsafe fn sce_gum_scale(v: &ScePspFVector3) {
+#[allow(non_snake_case)]
+pub unsafe fn sceGumScale(v: &ScePspFVector3) {
     get_context_unchecked().prepare(MatrixSet::VMAT3, MatrixSet::VMAT0);
 
     vfpu_asm!(
@@ -540,7 +561,8 @@ pub unsafe fn sce_gum_scale(v: &ScePspFVector3) {
 /// # Parameters
 ///
 /// - `m`: Matrix to write result to
-pub unsafe fn sce_gum_store_matrix(m: &mut ScePspFMatrix4) {
+#[allow(non_snake_case)]
+pub unsafe fn sceGumStoreMatrix(m: &mut ScePspFMatrix4) {
     get_context_unchecked().prepare(MatrixSet::VMAT3, MatrixSet::VMAT0);
 
     vfpu_asm!(
@@ -558,7 +580,8 @@ pub unsafe fn sce_gum_store_matrix(m: &mut ScePspFMatrix4) {
 /// # Parameters
 ///
 /// - `v`: Translation coordinates
-pub unsafe fn sce_gum_translate(v: &ScePspFVector3) {
+#[allow(non_snake_case)]
+pub unsafe fn sceGumTranslate(v: &ScePspFVector3) {
     get_context_unchecked().prepare(MatrixSet::VMAT3, MatrixSet::VMAT0 | MatrixSet::VMAT1);
 
     vfpu_asm!(
@@ -575,7 +598,8 @@ pub unsafe fn sce_gum_translate(v: &ScePspFVector3) {
 }
 
 /// Explicitly flush dirty matrices to the hardware
-pub unsafe fn sce_gum_update_matrix() {
+#[allow(non_snake_case)]
+pub unsafe fn sceGumUpdateMatrix() {
     STACK_DEPTH[CURRENT_MODE as usize] = CURRENT_MATRIX;
 
     if CURRENT_MATRIX_UPDATE != 0 {
@@ -604,7 +628,7 @@ pub unsafe fn sce_gum_update_matrix() {
                 _ => core::intrinsics::unreachable(),
             };
 
-            gu::sce_gu_set_matrix(mode, &*STACK_DEPTH[i]);
+            gu::sceGuSetMatrix(mode, &*STACK_DEPTH[i]);
 
             MATRIX_UPDATE[i] = 0;
         }

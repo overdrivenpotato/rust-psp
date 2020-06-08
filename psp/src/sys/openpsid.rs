@@ -10,5 +10,5 @@ psp_extern! {
     #![version = (0x00, 0x11)]
 
     #[psp(0xC69BEBCE)]
-    pub fn sce_open_psid_get_open_psid(openpsid: *mut OpenPSID) -> i32;
+    pub fn sceOpenPSIDGetOpenPSID(openpsid: *mut OpenPSID) -> i32;
 }

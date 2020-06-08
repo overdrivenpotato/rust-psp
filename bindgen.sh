@@ -146,11 +146,11 @@ cat <(pspModule $2) <(header $1) \
             # Function name start and end index
             fn_start = match($0, "fn ") + 3
             fn_end = match(substr($0, fn_start), "\\(") + fn_start
-            fn_camel = substr($0, fn_start, fn_end - fn_start - 1)
+            fn_name = substr($0, fn_start, fn_end - fn_start - 1)
 
-            printf "    #[psp(" nid_map[fn_camel] ")]\n"
+            printf "    #[psp(" nid_map[fn_name] ")]\n"
             printf substr($0, 1, fn_start - 1)
-            printf camelToSnake(fn_camel) "("
+            printf fn_name "("
 
             # Substring of the argument list
             args = substr($0, fn_end, match(substr($0, fn_end), ")") - 1)

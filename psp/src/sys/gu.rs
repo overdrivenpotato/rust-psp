@@ -362,7 +362,7 @@ bitflags::bitflags! {
 /// - `Cv`: Color value result
 /// - `Ct`: Texture color
 /// - `Cf`: Fragment color
-/// - `Cc`: Constant color (specified by `sce_gu_tex_env_color`)
+/// - `Cc`: Constant color (specified by `sceGuTexEnvColor`)
 ///
 /// The fields TCC_RGB and TCC_RGBA specify components that differ between
 /// the two different component modes.
@@ -449,7 +449,7 @@ pub enum BlendSrc {
     // 6, 7, 8, 9? This can probably be determined with some experimentation.
     // They may also be reserved values.
 
-    /// Use the fixed value provided as `src_fix` in `sce_gu_blend_func`.
+    /// Use the fixed value provided as `src_fix` in `sceGuBlendFunc`.
     Fix = 10,
 }
 
@@ -460,7 +460,7 @@ pub enum BlendDst {
     OneMinusDstColor = 1,
     DstAlpha = 4,
     OneMinusDstAlpha = 5,
-    /// Use the fixed value provided as `dst_fix` in `sce_gu_blend_func`.
+    /// Use the fixed value provided as `dst_fix` in `sceGuBlendFunc`.
     Fix = 10,
 }
 
@@ -471,7 +471,7 @@ pub enum StencilOperation {
     Keep = 0,
     /// Sets the stencil buffer value to zero
     Zero = 1,
-    /// Sets the stencil buffer value to ref, as specified by `sce_gu_stencil_func`
+    /// Sets the stencil buffer value to ref, as specified by `sceGuStencilFunc`
     Replace = 2,
     /// Increments the current stencil buffer value
     Invert = 3,
@@ -557,7 +557,7 @@ pub enum SyncBehavior {
 /// GU Callback ID
 #[repr(u32)]
 pub enum CallbackId {
-    /// Called when `sce_gu_signal` is used.
+    /// Called when `sceGuSignal` is used.
     Signal = 1,
 
     /// Called when display list is finished.
@@ -883,7 +883,7 @@ unsafe fn send_command_f(cmd: Command, argument: f32) {
 unsafe fn send_command_i_stall(cmd: Command, argument: i32) {
     send_command_i(cmd, argument);
     if let (Context::Direct, 0) = (CURR_CONTEXT, OBJECT_STACK_DEPTH) {
-        crate::sys::ge::sce_ge_list_update_stall_addr(
+        crate::sys::ge::sceGeListUpdateStallAddr(
             GE_LIST_EXECUTED[0],
             (*LIST).current as *mut c_void,
         );
@@ -957,7 +957,7 @@ extern "C" fn callback_sig(id: i32, arg: *mut c_void) {
             f(id & 0xffff);
         }
 
-        crate::sys::kernel::sce_kernel_set_event_flag((*settings).kernel_event_flag, 1);
+        crate::sys::kernel::sceKernelSetEventFlag((*settings).kernel_event_flag, 1);
     }
 }
 
@@ -983,7 +983,8 @@ extern "C" fn callback_fin(id: i32, arg: *mut c_void) {
 ///
 /// - `zbp`: VRAM pointer where the depth buffer should start
 /// - `zbw`: The width of the depth buffer (block-aligned)
-pub unsafe fn sce_gu_depth_buffer(zbp: *mut c_void, zbw: i32) {
+#[allow(non_snake_case)]
+pub unsafe fn sceGuDepthBuffer(zbp: *mut c_void, zbw: i32) {
     DRAW_BUFFER.depth_buffer = zbp;
 
     if DRAW_BUFFER.depth_width == 0 || DRAW_BUFFER.depth_width != zbw {
@@ -1002,7 +1003,8 @@ pub unsafe fn sce_gu_depth_buffer(zbp: *mut c_void, zbw: i32) {
 /// - `height`: Width of the display buffer in pixels
 /// - `dispbp`: VRAM pointer to where the display-buffer starts
 /// - `dispbw`: Display buffer width (block aligned)
-pub unsafe fn sce_gu_disp_buffer(width: i32, height: i32, dispbp: *mut c_void, dispbw: i32) {
+#[allow(non_snake_case)]
+pub unsafe fn sceGuDispBuffer(width: i32, height: i32, dispbp: *mut c_void, dispbw: i32) {
     use crate::sys::display::DisplaySetBufSync;
 
     DRAW_BUFFER.width = width;
@@ -1015,14 +1017,14 @@ pub unsafe fn sce_gu_disp_buffer(width: i32, height: i32, dispbp: *mut c_void, d
 
     draw_region(0, 0, DRAW_BUFFER.width, DRAW_BUFFER.height);
 
-    crate::sys::display::sce_display_set_mode(
+    crate::sys::display::sceDisplaySetMode(
         crate::sys::display::DisplayMode::Lcd,
         DRAW_BUFFER.width as usize,
         DRAW_BUFFER.height as usize,
     );
 
     if DISPLAY_ON == true {
-        crate::sys::display::sce_display_set_frame_buf(
+        crate::sys::display::sceDisplaySetFrameBuf(
             (GE_EDRAM_ADDRESS as *mut u8).add(DRAW_BUFFER.disp_buffer as usize),
             dispbw as usize,
             DRAW_BUFFER.pixel_size,
@@ -1038,7 +1040,8 @@ pub unsafe fn sce_gu_disp_buffer(width: i32, height: i32, dispbp: *mut c_void, d
 /// - `psm`: Pixel format to use for rendering (and display)
 /// - `fbp`: VRAM pointer to where the draw buffer starts
 /// - `fbw`: Frame buffer width (block aligned)
-pub unsafe fn sce_gu_draw_buffer(psm: DisplayPixelFormat, fbp: *mut c_void, fbw: i32) {
+#[allow(non_snake_case)]
+pub unsafe fn sceGuDrawBuffer(psm: DisplayPixelFormat, fbp: *mut c_void, fbw: i32) {
     DRAW_BUFFER.pixel_size = psm;
     DRAW_BUFFER.frame_width = fbw;
     DRAW_BUFFER.frame_buffer = fbp;
@@ -1074,7 +1077,8 @@ pub unsafe fn sce_gu_draw_buffer(psm: DisplayPixelFormat, fbp: *mut c_void, fbw:
 /// - `psm`: Pixel format to use for rendering
 /// - `fbp`: VRAM pointer to where the draw buffer starts
 /// - `fbw`: Frame buffer width (block aligned)
-pub unsafe fn sce_gu_draw_buffer_list(psm: DisplayPixelFormat, fbp: *mut c_void, fbw: i32) {
+#[allow(non_snake_case)]
+pub unsafe fn sceGuDrawBufferList(psm: DisplayPixelFormat, fbp: *mut c_void, fbw: i32) {
     send_command_i(Command::FramebufPixFormat, psm as i32);
     send_command_i(Command::FrameBufPtr, fbp as i32 & 0xffffff);
     send_command_i(Command::FrameBufWidth, ((fbp as u32 & 0xff000000) >> 8) as i32 | fbw);
@@ -1089,18 +1093,19 @@ pub unsafe fn sce_gu_draw_buffer_list(psm: DisplayPixelFormat, fbp: *mut c_void,
 /// # Return Value
 ///
 /// State of the display prior to this call
-pub unsafe fn sce_gu_display(state: bool) -> bool {
+#[allow(non_snake_case)]
+pub unsafe fn sceGuDisplay(state: bool) -> bool {
     use crate::sys::display::DisplaySetBufSync;
 
     if state {
-        crate::sys::display::sce_display_set_frame_buf(
+        crate::sys::display::sceDisplaySetFrameBuf(
             (GE_EDRAM_ADDRESS as *mut u8).add(DRAW_BUFFER.disp_buffer as usize),
             DRAW_BUFFER.frame_width as usize,
             DRAW_BUFFER.pixel_size,
             DisplaySetBufSync::NextFrame,
         );
     } else {
-        crate::sys::display::sce_display_set_frame_buf(
+        crate::sys::display::sceDisplaySetFrameBuf(
             null_mut(),
             0,
             DisplayPixelFormat::Psm5650,
@@ -1117,7 +1122,8 @@ pub unsafe fn sce_gu_display(state: bool) -> bool {
 /// # Parameters
 ///
 /// - `function`: Depth test function to use
-pub unsafe fn sce_gu_depth_func(function: DepthFunc) {
+#[allow(non_snake_case)]
+pub unsafe fn sceGuDepthFunc(function: DepthFunc) {
     send_command_i(Command::ZTest, function as i32);
 }
 
@@ -1127,14 +1133,16 @@ pub unsafe fn sce_gu_depth_func(function: DepthFunc) {
 ///
 /// - `mask`: `1` to disable Z writes, `0` to enable
 // TODO: Use bool instead?
-pub unsafe fn sce_gu_depth_mask(mask: i32) {
+#[allow(non_snake_case)]
+pub unsafe fn sceGuDepthMask(mask: i32) {
     send_command_i(Command::ZWriteDisable, mask);
 }
 
-pub unsafe fn sce_gu_depth_offset(offset: i32) {
+#[allow(non_snake_case)]
+pub unsafe fn sceGuDepthOffset(offset: i32) {
     let context = &mut CONTEXTS[CURR_CONTEXT as usize];
     context.depth_offset = offset;
-    sce_gu_depth_range(context.near_plane, context.far_plane);
+    sceGuDepthRange(context.near_plane, context.far_plane);
 }
 
 /// Set which range to use for depth calculations.
@@ -1147,7 +1155,8 @@ pub unsafe fn sce_gu_depth_offset(offset: i32) {
 ///
 /// - `near`: Value to use for the near plane
 /// - `far`: Value to use for the far plane
-pub unsafe fn sce_gu_depth_range(mut near: i32, mut far: i32) {
+#[allow(non_snake_case)]
+pub unsafe fn sceGuDepthRange(mut near: i32, mut far: i32) {
     let context = &mut CONTEXTS[CURR_CONTEXT as usize];
     let max = near as u32 + far as u32;
     let val = ((max >> 31) + max) as i32;
@@ -1169,7 +1178,8 @@ pub unsafe fn sce_gu_depth_range(mut near: i32, mut far: i32) {
     send_command_i(Command::MaxZ, far);
 }
 
-pub unsafe fn sce_gu_fog(near: f32, far: f32, color: u32) {
+#[allow(non_snake_case)]
+pub unsafe fn sceGuFog(near: f32, far: f32, color: u32) {
     let mut distance = far - near;
 
     if distance != 0.0 {
@@ -1184,7 +1194,8 @@ pub unsafe fn sce_gu_fog(near: f32, far: f32, color: u32) {
 /// Initalize the GU system
 ///
 /// This function MUST be called as the first function, otherwise state is undetermined.
-pub unsafe fn sce_gu_init() {
+#[allow(non_snake_case)]
+pub unsafe fn sceGuInit() {
     const INIT_COMMANDS: [Command; 223] = [
         Command::Vaddr,
         Command::Iaddr,
@@ -1430,13 +1441,13 @@ pub unsafe fn sce_gu_init() {
         finish_arg: &mut SETTINGS as *mut _ as *mut c_void,
     };
 
-    SETTINGS.ge_callback_id = crate::sys::ge::sce_ge_set_callback(&mut callback);
+    SETTINGS.ge_callback_id = crate::sys::ge::sceGeSetCallback(&mut callback);
     SETTINGS.swap_buffers_callback = None;
     SETTINGS.swap_buffers_behaviour = super::display::DisplaySetBufSync::Immediate;
 
-    GE_EDRAM_ADDRESS = super::ge::sce_ge_edram_get_addr() as *mut c_void;
+    GE_EDRAM_ADDRESS = super::ge::sceGeEdramGetAddr() as *mut c_void;
 
-    GE_LIST_EXECUTED[0] = super::ge::sce_ge_list_enqueue(
+    GE_LIST_EXECUTED[0] = super::ge::sceGeListEnQueue(
         (&INIT_LIST as *const _ as u32 & 0x1fffffff) as *const _,
         core::ptr::null_mut(),
         SETTINGS.ge_callback_id as i32,
@@ -1445,40 +1456,43 @@ pub unsafe fn sce_gu_init() {
 
     reset_values();
 
-    SETTINGS.kernel_event_flag = super::kernel::sce_kernel_create_event_flag(
+    SETTINGS.kernel_event_flag = super::kernel::sceKernelCreateEventFlag(
         b"SceGuSignal\0" as *const u8,
         super::kernel::EventFlagAttributes::WAIT_MULTIPLE,
         3,
         null_mut()
     );
 
-    super::ge::sce_ge_list_sync(GE_LIST_EXECUTED[0], 0);
+    super::ge::sceGeListSync(GE_LIST_EXECUTED[0], 0);
 }
 
 /// Shutdown the GU system
 ///
 /// Called when GU is no longer needed
-pub unsafe fn sce_gu_term() {
+#[allow(non_snake_case)]
+pub unsafe fn sceGuTerm() {
     use crate::sys::kernel;
 
-    kernel::sce_kernel_delete_event_flag(SETTINGS.kernel_event_flag);
-    ge::sce_ge_unset_callback(SETTINGS.ge_callback_id);
+    kernel::sceKernelDeleteEventFlag(SETTINGS.kernel_event_flag);
+    ge::sceGeUnsetCallback(SETTINGS.ge_callback_id);
 }
 
 /// # Parameters
 ///
 /// - `mode`: If set to 1, reset all the queues.
-pub unsafe fn sce_gu_break(mode: i32) {
+#[allow(non_snake_case)]
+pub unsafe fn sceGuBreak(mode: i32) {
     static mut UNUSED_BREAK: GeBreakParam = GeBreakParam {
         buf: [0; 4],
     };
 
-    ge::sce_ge_break(mode, &mut UNUSED_BREAK);
+    ge::sceGeBreak(mode, &mut UNUSED_BREAK);
 }
 
-pub unsafe fn sce_gu_continue() {
+#[allow(non_snake_case)]
+pub unsafe fn sceGuContinue() {
     // Return this?
-    ge::sce_ge_continue();
+    ge::sceGeContinue();
 }
 
 // FIXME: This documentation is confusing.
@@ -1492,7 +1506,8 @@ pub unsafe fn sce_gu_continue() {
 /// # Return Value
 ///
 /// The old callback handler
-pub unsafe fn sce_gu_set_callback(
+#[allow(non_snake_case)]
+pub unsafe fn sceGuSetCallback(
     signal: CallbackId,
     callback: GuCallback,
 ) -> GuCallback {
@@ -1520,7 +1535,8 @@ pub unsafe fn sce_gu_set_callback(
 ///
 /// - `behavior`: Behavior type
 /// - `signal`: Signal to trigger
-pub unsafe fn sce_gu_signal(behavior: SignalBehavior, signal: i32) {
+#[allow(non_snake_case)]
+pub unsafe fn sceGuSignal(behavior: SignalBehavior, signal: i32) {
     send_command_i(Command::Signal, ((signal & 0xff) << 16) | (behavior as i32 & 0xffff));
     send_command_i(Command::End, 0);
 
@@ -1540,7 +1556,8 @@ pub unsafe fn sce_gu_signal(behavior: SignalBehavior, signal: i32) {
 ///
 /// - `cmd`: Which command to send
 /// - `argument`: Argument to pass along
-pub unsafe fn sce_gu_send_command_f(cmd: Command, argument: f32) {
+#[allow(non_snake_case)]
+pub unsafe fn sceGuSendCommandf(cmd: Command, argument: f32) {
     send_command_f(cmd, argument);
 }
 
@@ -1552,7 +1569,8 @@ pub unsafe fn sce_gu_send_command_f(cmd: Command, argument: f32) {
 ///
 /// - `cmd`: Which command to send
 /// - `argument`: Argument to pass along
-pub unsafe fn sce_gu_send_command_i(cmd: Command, argument: i32) {
+#[allow(non_snake_case)]
+pub unsafe fn sceGuSendCommandi(cmd: Command, argument: i32) {
     send_command_i(cmd, argument);
 }
 
@@ -1570,7 +1588,8 @@ pub unsafe fn sce_gu_send_command_i(cmd: Command, argument: i32) {
 /// # Return Value
 ///
 /// Memory-block ready for use
-pub unsafe fn sce_gu_get_memory(mut size: i32) -> *mut c_void {
+#[allow(non_snake_case)]
+pub unsafe fn sceGuGetMemory(mut size: i32) -> *mut c_void {
     // Some kind of 4-byte alignment?
     size += 3;
     size += (((size >> 31) as u32) >> 30) as i32;
@@ -1588,7 +1607,7 @@ pub unsafe fn sce_gu_get_memory(mut size: i32) -> *mut c_void {
     (*LIST).current = new_ptr;
 
     if let Context::Direct = CURR_CONTEXT {
-        crate::sys::ge::sce_ge_list_update_stall_addr(GE_LIST_EXECUTED[0], new_ptr as *mut _);
+        crate::sys::ge::sceGeListUpdateStallAddr(GE_LIST_EXECUTED[0], new_ptr as *mut _);
     }
 
     orig_ptr.add(2) as *mut _
@@ -1596,13 +1615,14 @@ pub unsafe fn sce_gu_get_memory(mut size: i32) -> *mut c_void {
 
 /// Start filling a new display-context
 ///
-/// The previous context-type is stored so that it can be restored at `sce_gu_finish`.
+/// The previous context-type is stored so that it can be restored at `sceGuFinish`.
 ///
 /// # Parameters
 ///
 /// - `cid`: Context Type
 /// - `list`: Pointer to display-list (16 byte aligned)
-pub unsafe fn sce_gu_start(context_type: Context, list: *mut c_void) {
+#[allow(non_snake_case)]
+pub unsafe fn sceGuStart(context_type: Context, list: *mut c_void) {
     let mut context = &mut CONTEXTS[context_type as usize];
     let local_list = ((list as u32) | 0x4000_0000) as *mut u32;
 
@@ -1616,7 +1636,7 @@ pub unsafe fn sce_gu_start(context_type: Context, list: *mut c_void) {
     CURR_CONTEXT = context_type;
 
     if let Context::Direct = context_type {
-        GE_LIST_EXECUTED[0] = crate::sys::ge::sce_ge_list_enqueue(
+        GE_LIST_EXECUTED[0] = crate::sys::ge::sceGeListEnQueue(
             local_list as *mut c_void,
             local_list as *mut c_void,
             SETTINGS.ge_callback_id as i32,
@@ -1634,14 +1654,14 @@ pub unsafe fn sce_gu_start(context_type: Context, list: *mut c_void) {
             w: ScePspIVector4 { x:  3, y: -1, z:  2, w: -2, },
         };
 
-        sce_gu_set_dither(&DITHER_MATRIX);
-        sce_gu_patch_divide(16, 16);
-        sce_gu_color_material(
+        sceGuSetDither(&DITHER_MATRIX);
+        sceGuPatchDivide(16, 16);
+        sceGuColorMaterial(
             LightComponent::AMBIENT | LightComponent::DIFFUSE | LightComponent::SPECULAR,
         );
 
-        sce_gu_specular(1.0);
-        sce_gu_tex_scale(1.0, 1.0);
+        sceGuSpecular(1.0);
+        sceGuTexScale(1.0, 1.0);
 
         INIT = 1;
     }
@@ -1672,7 +1692,8 @@ pub unsafe fn sce_gu_start(context_type: Context, list: *mut c_void) {
 /// # Return Value
 ///
 /// Size of finished display list
-pub unsafe fn sce_gu_finish() -> i32 {
+#[allow(non_snake_case)]
+pub unsafe fn sceGuFinish() -> i32 {
     match CURR_CONTEXT {
         Context::Direct | Context::Send => {
             send_command_i(Command::Finish, 0);
@@ -1712,7 +1733,8 @@ pub unsafe fn sce_gu_finish() -> i32 {
 /// # Return Value
 ///
 /// Size of finished display list
-pub unsafe fn sce_gu_finish_id(id: u32) -> i32 {
+#[allow(non_snake_case)]
+pub unsafe fn sceGuFinishId(id: u32) -> i32 {
     match CURR_CONTEXT {
         Context::Direct | Context::Send => {
             send_command_i(Command::Finish, (id & 0xffff) as i32);
@@ -1743,7 +1765,8 @@ pub unsafe fn sce_gu_finish_id(id: u32) -> i32 {
 /// # Parameters
 ///
 /// - `list`: Display list to call
-pub unsafe fn sce_gu_call_list(list: *const c_void) {
+#[allow(non_snake_case)]
+pub unsafe fn sceGuCallList(list: *const c_void) {
     let list_addr = list as u32;
 
     if CALL_MODE == 1 {
@@ -1763,7 +1786,8 @@ pub unsafe fn sce_gu_call_list(list: *const c_void) {
 ///
 /// - `mode`: True (1) to enable signals, false (0) to disable signals and use
 ///   normal calls instead.
-pub unsafe fn sce_gu_call_mode(mode: i32) {
+#[allow(non_snake_case)]
+pub unsafe fn sceGuCallMode(mode: i32) {
     CALL_MODE = mode;
 }
 
@@ -1772,7 +1796,8 @@ pub unsafe fn sce_gu_call_mode(mode: i32) {
 /// # Return Value
 ///
 /// The size of the current display list
-pub unsafe fn sce_gu_check_list() -> i32 {
+#[allow(non_snake_case)]
+pub unsafe fn sceGuCheckList() -> i32 {
     (*LIST).current.sub((*LIST).start as usize) as i32
 }
 
@@ -1783,7 +1808,8 @@ pub unsafe fn sce_gu_check_list() -> i32 {
 /// - `mode`: Whether to place the list first or last in queue
 /// - `list`: List to send
 /// - `context`: Temporary storage for the GE context
-pub unsafe fn sce_gu_send_list(mode: QueueMode, list: *const c_void, context: *mut GeContext) {
+#[allow(non_snake_case)]
+pub unsafe fn sceGuSendList(mode: QueueMode, list: *const c_void, context: *mut GeContext) {
     SETTINGS.signal_offset = 0;
 
     let mut args = GeListArgs::default();
@@ -1794,7 +1820,7 @@ pub unsafe fn sce_gu_send_list(mode: QueueMode, list: *const c_void, context: *m
 
     let list_id = match mode {
         QueueMode::Head => {
-            crate::sys::ge::sce_ge_list_enqueue_head(
+            crate::sys::ge::sceGeListEnQueueHead(
                 list,
                 null_mut(),
                 callback as i32,
@@ -1803,7 +1829,7 @@ pub unsafe fn sce_gu_send_list(mode: QueueMode, list: *const c_void, context: *m
         }
 
         QueueMode::Tail => {
-            crate::sys::ge::sce_ge_list_enqueue(list, null_mut(), callback as i32, &mut args)
+            crate::sys::ge::sceGeListEnQueue(list, null_mut(), callback as i32, &mut args)
         }
     };
 
@@ -1815,7 +1841,8 @@ pub unsafe fn sce_gu_send_list(mode: QueueMode, list: *const c_void, context: *m
 /// # Return Value
 ///
 /// Pointer to the new drawbuffer
-pub unsafe fn sce_gu_swap_buffers() -> *mut c_void {
+#[allow(non_snake_case)]
+pub unsafe fn sceGuSwapBuffers() -> *mut c_void {
     if let Some(cb) = SETTINGS.swap_buffers_callback {
         cb(
             &mut DRAW_BUFFER.disp_buffer as *mut _,
@@ -1826,7 +1853,7 @@ pub unsafe fn sce_gu_swap_buffers() -> *mut c_void {
     }
 
     if DISPLAY_ON {
-        crate::sys::display::sce_display_set_frame_buf(
+        crate::sys::display::sceDisplaySetFrameBuf(
             GE_EDRAM_ADDRESS.add(DRAW_BUFFER.disp_buffer as usize) as *const u8,
             DRAW_BUFFER.frame_width as usize,
             DRAW_BUFFER.pixel_size,
@@ -1850,11 +1877,12 @@ pub unsafe fn sce_gu_swap_buffers() -> *mut c_void {
 /// # Return Value
 ///
 /// Unknown at this time. GeListState?
-pub unsafe fn sce_gu_sync(mode: SyncMode, behavior: SyncBehavior) -> GeListState {
+#[allow(non_snake_case)]
+pub unsafe fn sceGuSync(mode: SyncMode, behavior: SyncBehavior) -> GeListState {
     match mode {
-        SyncMode::Finish => crate::sys::ge::sce_ge_draw_sync(behavior as i32),
-        SyncMode::List => crate::sys::ge::sce_ge_list_sync(GE_LIST_EXECUTED[0], behavior as i32),
-        SyncMode::Send => crate::sys::ge::sce_ge_list_sync(GE_LIST_EXECUTED[1], behavior as i32),
+        SyncMode::Finish => crate::sys::ge::sceGeDrawSync(behavior as i32),
+        SyncMode::List => crate::sys::ge::sceGeListSync(GE_LIST_EXECUTED[0], behavior as i32),
+        SyncMode::Send => crate::sys::ge::sceGeListSync(GE_LIST_EXECUTED[1], behavior as i32),
         _ => GeListState::Done,
     }
 }
@@ -1881,7 +1909,8 @@ pub unsafe fn sce_gu_sync(mode: SyncMode, behavior: SyncBehavior) -> GeListState
 /// - `count`: How many vertices to process
 /// - `indices`: Optional pointer to an index-list
 /// - `vertices`: Pointer to a vertex-list
-pub unsafe fn sce_gu_draw_array(
+#[allow(non_snake_case)]
+pub unsafe fn sceGuDrawArray(
     prim: Primitive,
     vtype: VertexType,
     count: i32,
@@ -1917,7 +1946,8 @@ pub unsafe fn sce_gu_draw_array(
 /// - `count`: Number of vertices to test
 /// - `indices`: Optional list to an index-list
 /// - `vertices`: Pointer to a vertex-list
-pub unsafe fn sce_gu_begin_object(
+#[allow(non_snake_case)]
+pub unsafe fn sceGuBeginObject(
     vtype: i32,
     count: i32,
     indices: *const c_void,
@@ -1943,14 +1973,15 @@ pub unsafe fn sce_gu_begin_object(
     (*OBJECT_STACK.offset(OBJECT_STACK_DEPTH as isize)) = (*LIST).current;
     OBJECT_STACK_DEPTH += 1;
 
-    // Dummy commands, overwritten in `sce_gu_end_object`
+    // Dummy commands, overwritten in `sceGuEndObject`
     send_command_i(Command::Base, 0);
     send_command_i(Command::BJump, 0);
 }
 
 /// End conditional rendering of object
-pub unsafe fn sce_gu_end_object() {
-    // Rewrite commands from `sce_gu_begin_object`
+#[allow(non_snake_case)]
+pub unsafe fn sceGuEndObject() {
+    // Rewrite commands from `sceGuBeginObject`
 
     let current = (*LIST).current;
     (*LIST).current = *OBJECT_STACK.offset(OBJECT_STACK_DEPTH as isize - 1);
@@ -1970,11 +2001,12 @@ pub unsafe fn sce_gu_end_object() {
 /// - `state`: Which state to change
 /// - `status`: `1` to enable or `0` to disable the state
 // TODO: bool for ABI?
-pub unsafe fn sce_gu_set_status(state: State, status: i32) {
+#[allow(non_snake_case)]
+pub unsafe fn sceGuSetStatus(state: State, status: i32) {
     if status != 0 {
-        sce_gu_enable(state);
+        sceGuEnable(state);
     } else {
-        sce_gu_disable(state);
+        sceGuDisable(state);
     }
 }
 
@@ -1987,7 +2019,8 @@ pub unsafe fn sce_gu_set_status(state: State, status: i32) {
 /// # Return Value
 ///
 /// Whether state is enabled or not
-pub unsafe fn sce_gu_get_status(state: State) -> bool {
+#[allow(non_snake_case)]
+pub unsafe fn sceGuGetStatus(state: State) -> bool {
     let state = state as u32;
 
     if state < 22 {
@@ -2002,12 +2035,13 @@ pub unsafe fn sce_gu_get_status(state: State) -> bool {
 /// # Parameters
 ///
 /// - `status`: Bitmask (0-21) containing the status of all 22 states
-pub unsafe fn sce_gu_set_all_status(status: i32) {
+#[allow(non_snake_case)]
+pub unsafe fn sceGuSetAllStatus(status: i32) {
     for i in 0..22 {
         if (status >> i) & 1 != 0 {
-            sce_gu_enable(mem::transmute(i));
+            sceGuEnable(mem::transmute(i));
         } else {
-            sce_gu_disable(mem::transmute(i));
+            sceGuDisable(mem::transmute(i));
         }
     }
 }
@@ -2017,7 +2051,8 @@ pub unsafe fn sce_gu_set_all_status(status: i32) {
 /// # Return Value
 ///
 /// Status of all 22 states as a bitmask (0-21)
-pub unsafe fn sce_gu_get_all_status() -> i32 {
+#[allow(non_snake_case)]
+pub unsafe fn sceGuGetAllStatus() -> i32 {
     STATES as i32
 }
 
@@ -2026,7 +2061,8 @@ pub unsafe fn sce_gu_get_all_status() -> i32 {
 /// # Parameters
 ///
 /// - `state`: Which state to enable, one of `State`
-pub unsafe fn sce_gu_enable(state: State) {
+#[allow(non_snake_case)]
+pub unsafe fn sceGuEnable(state: State) {
     match state {
         State::AlphaTest => send_command_i(Command::AlphaTestEnable, 1),
         State::DepthTest => send_command_i(Command::ZTestEnable, 1),
@@ -2074,7 +2110,8 @@ pub unsafe fn sce_gu_enable(state: State) {
 /// # Parameters
 ///
 /// - `state`: Which state to disable, one of `State`
-pub unsafe fn sce_gu_disable(state: State) {
+#[allow(non_snake_case)]
+pub unsafe fn sceGuDisable(state: State) {
     match state {
         State::AlphaTest => send_command_i(Command::AlphaTestEnable, 0),
         State::DepthTest => send_command_i(Command::ZTestEnable, 0),
@@ -2126,7 +2163,8 @@ pub unsafe fn sce_gu_disable(state: State) {
 /// - `components`: Light components, one or more of `LightComponent`
 /// - `position`: Light position
 // FIXME: light components seem to be a subset here.
-pub unsafe fn sce_gu_light(
+#[allow(non_snake_case)]
+pub unsafe fn sceGuLight(
     light: i32,
     type_: LightType,
     components: LightComponent,
@@ -2157,7 +2195,8 @@ pub unsafe fn sce_gu_light(
 /// - `atten0`: Constant attenuation factor
 /// - `atten1`: Linear attenuation factor
 /// - `atten2`: Quadratic attenuation factor
-pub unsafe fn sce_gu_light_att(light: i32, atten0: f32, atten1: f32, atten2: f32) {
+#[allow(non_snake_case)]
+pub unsafe fn sceGuLightAtt(light: i32, atten0: f32, atten1: f32, atten2: f32) {
     let settings = &LIGHT_COMMANDS[light as usize];
     send_command_f(settings.constant, atten0);
     send_command_f(settings.linear, atten1);
@@ -2171,7 +2210,8 @@ pub unsafe fn sce_gu_light_att(light: i32, atten0: f32, atten1: f32, atten2: f32
 /// - `light`: Light index
 /// - `component`: Which component(s) to set
 /// - `color`: Which color to use
-pub unsafe fn sce_gu_light_color(light: i32, component: LightComponent, color: u32) {
+#[allow(non_snake_case)]
+pub unsafe fn sceGuLightColor(light: i32, component: LightComponent, color: u32) {
     let settings = &LIGHT_COMMANDS[light as usize];
 
     // PSPSDK implements this as a jump table, probably for speed. Should we do
@@ -2197,7 +2237,8 @@ pub unsafe fn sce_gu_light_color(light: i32, component: LightComponent, color: u
 /// # Parameters
 ///
 /// - `mode`: Light mode to use
-pub unsafe fn sce_gu_light_mode(mode: LightMode) {
+#[allow(non_snake_case)]
+pub unsafe fn sceGuLightMode(mode: LightMode) {
     send_command_i(Command::LightMode, mode as i32);
 }
 
@@ -2209,7 +2250,8 @@ pub unsafe fn sce_gu_light_mode(mode: LightMode) {
 /// - `direction`: Spotlight direction
 /// - `exponent`: Spotlight exponent
 /// - `cutoff`: Spotlight cutoff angle (in radians)
-pub unsafe fn sce_gu_light_spot(light: i32, direction: &ScePspFVector3, exponent: f32, cutoff: f32) {
+#[allow(non_snake_case)]
+pub unsafe fn sceGuLightSpot(light: i32, direction: &ScePspFVector3, exponent: f32, cutoff: f32) {
     let settings = &LIGHT_COMMANDS[light as usize];
 
     send_command_f(settings.exponent, exponent);
@@ -2225,7 +2267,8 @@ pub unsafe fn sce_gu_light_spot(light: i32, direction: &ScePspFVector3, exponent
 /// # Parameters
 ///
 /// - `flags`: Which part of the buffer to clear
-pub unsafe fn sce_gu_clear(flags: ClearBuffer) {
+#[allow(non_snake_case)]
+pub unsafe fn sceGuClear(flags: ClearBuffer) {
     let context = &mut CONTEXTS[CURR_CONTEXT as usize];
     let filter: u32;
 
@@ -2254,7 +2297,7 @@ pub unsafe fn sce_gu_clear(flags: ClearBuffer) {
     let count;
 
     if !flags.intersects(ClearBuffer::FAST_CLEAR_BIT) {
-        vertices = sce_gu_get_memory(2 * mem::size_of::<Vertex>() as i32) as *mut Vertex;
+        vertices = sceGuGetMemory(2 * mem::size_of::<Vertex>() as i32) as *mut Vertex;
         count = 2;
 
         (*vertices.offset(0)).color = 0;
@@ -2268,7 +2311,7 @@ pub unsafe fn sce_gu_clear(flags: ClearBuffer) {
         (*vertices.offset(1)).z = context.clear_depth as u16;
     } else {
         count = ((DRAW_BUFFER.width + 63) / 64) * 2;
-        vertices = sce_gu_get_memory(count * core::mem::size_of::<Vertex>() as i32) as *mut Vertex;
+        vertices = sceGuGetMemory(count * core::mem::size_of::<Vertex>() as i32) as *mut Vertex;
 
         let mut curr = vertices;
 
@@ -2298,7 +2341,7 @@ pub unsafe fn sce_gu_clear(flags: ClearBuffer) {
         );
     }
 
-    sce_gu_draw_array(
+    sceGuDrawArray(
         Primitive::Sprites,
         VertexType::COLOR_8888 | VertexType::VERTEX_16BIT | VertexType::TRANSFORM_2D,
         count,
@@ -2314,7 +2357,8 @@ pub unsafe fn sce_gu_clear(flags: ClearBuffer) {
 /// # Parameters
 ///
 /// - `color`: Color to clear with
-pub unsafe fn sce_gu_clear_color(color: u32) {
+#[allow(non_snake_case)]
+pub unsafe fn sceGuClearColor(color: u32) {
     CONTEXTS[CURR_CONTEXT as usize].clear_color = color;
 }
 
@@ -2324,7 +2368,8 @@ pub unsafe fn sce_gu_clear_color(color: u32) {
 ///
 /// - `depth`: Set which depth to clear with (0x0000-0xffff)
 // TODO: Can `depth` be u16 or does this cause issues with FFI ABI compatibility?
-pub unsafe fn sce_gu_clear_depth(depth: u32) {
+#[allow(non_snake_case)]
+pub unsafe fn sceGuClearDepth(depth: u32) {
     CONTEXTS[CURR_CONTEXT as usize].clear_depth = depth;
 }
 
@@ -2334,7 +2379,8 @@ pub unsafe fn sce_gu_clear_depth(depth: u32) {
 ///
 /// - `stencil`: Set which stencil value to clear with (0-255)
 // TODO: Can `stencil` be u8 or does this cause issues with FFI ABI compatibility?
-pub unsafe fn sce_gu_clear_stencil(stencil: u32) {
+#[allow(non_snake_case)]
+pub unsafe fn sceGuClearStencil(stencil: u32) {
     CONTEXTS[CURR_CONTEXT as usize].clear_stencil = stencil;
 }
 
@@ -2343,7 +2389,8 @@ pub unsafe fn sce_gu_clear_stencil(stencil: u32) {
 /// # Parameters
 ///
 /// - `mask`: Which bits to filter against writes
-pub unsafe fn sce_gu_pixel_mask(mask: u32) {
+#[allow(non_snake_case)]
+pub unsafe fn sceGuPixelMask(mask: u32) {
     send_command_i(Command::MaskRgb, mask as i32 & 0xffffff);
     send_command_i(Command::MaskAlpha, (mask >> 24) as i32);
 }
@@ -2353,8 +2400,9 @@ pub unsafe fn sce_gu_pixel_mask(mask: u32) {
 /// # Parameters
 ///
 /// - `color`: Which color to use (overridden by vertex colors)
-pub unsafe fn sce_gu_color(color: u32) {
-    sce_gu_material(
+#[allow(non_snake_case)]
+pub unsafe fn sceGuColor(color: u32) {
+    sceGuMaterial(
         LightComponent::AMBIENT | LightComponent::DIFFUSE | LightComponent::SPECULAR,
         color,
     );
@@ -2363,14 +2411,15 @@ pub unsafe fn sce_gu_color(color: u32) {
 /// Set the color test function
 ///
 /// The color test is only performed while `State::ColorTest` is enabled, e.g.
-/// via `sce_gu_enable`.
+/// via `sceGuEnable`.
 ///
 /// # Parameters
 ///
 /// - `func`: Color test function
 /// - `color`: Color to test against
 /// - `mask`: Mask ANDed against both source and destination when testing
-pub unsafe fn sce_gu_color_func(func: ColorFunc, color: u32, mask: u32) {
+#[allow(non_snake_case)]
+pub unsafe fn sceGuColorFunc(func: ColorFunc, color: u32, mask: u32) {
     send_command_i(Command::ColorTest, func as i32 & 0x03);
     send_command_i(Command::ColorRef, color as i32 & 0xffffff);
     send_command_i(Command::ColorTestmask, mask as i32);
@@ -2381,7 +2430,8 @@ pub unsafe fn sce_gu_color_func(func: ColorFunc, color: u32, mask: u32) {
 /// # Parameters
 ///
 /// - `components`: Which component(s) to receive
-pub unsafe fn sce_gu_color_material(components: LightComponent) {
+#[allow(non_snake_case)]
+pub unsafe fn sceGuColorMaterial(components: LightComponent) {
     send_command_i(Command::MaterialUpdate, components.bits() as i32);
 }
 
@@ -2392,17 +2442,20 @@ pub unsafe fn sce_gu_color_material(components: LightComponent) {
 /// - `func`: Specifies the alpha comparison function.
 /// - `value`: Specifies the reference value that incoming alpha values are compared to.
 /// - `mask`: Specifies the mask that both values are ANDed with before comparison.
-pub unsafe fn sce_gu_alpha_func(func: AlphaFunc, value: i32, mask: i32) {
+#[allow(non_snake_case)]
+pub unsafe fn sceGuAlphaFunc(func: AlphaFunc, value: i32, mask: i32) {
     let arg = func as i32 | ((value & 0xff) << 8) | ((mask & 0xff) << 16);
     send_command_i(Command::AlphaTest, arg);
 }
 
-pub unsafe fn sce_gu_ambient(color: u32) {
+#[allow(non_snake_case)]
+pub unsafe fn sceGuAmbient(color: u32) {
     send_command_i(Command::AmbientColor, color as i32 & 0xffffff);
     send_command_i(Command::AmbientAlpha, (color >> 24) as i32);
 }
 
-pub unsafe fn sce_gu_ambient_color(color: u32) {
+#[allow(non_snake_case)]
+pub unsafe fn sceGuAmbientColor(color: u32) {
     send_command_i(Command::MaterialAmbient, color as i32 & 0xffffff);
     send_command_i(Command::MaterialAlpha, (color >> 24) as i32);
 }
@@ -2418,7 +2471,8 @@ pub unsafe fn sce_gu_ambient_color(color: u32) {
 /// - `dest`: Blending function for dest operand
 /// - `srcfix`: Fixed value for `BlendSrc::Fix` (source operand)
 /// - `destfix`: Fixed value for `BlendDst::Fix` (dest operand)
-pub unsafe fn sce_gu_blend_func(
+#[allow(non_snake_case)]
+pub unsafe fn sceGuBlendFunc(
     op: BlendOp,
     src: BlendSrc,
     dest: BlendDst,
@@ -2439,7 +2493,8 @@ pub unsafe fn sce_gu_blend_func(
 ///
 /// - `components`: Which component(s) to set
 /// - `color`: Color to set (*likely* overridden by vertex colors)
-pub unsafe fn sce_gu_material(components: LightComponent, color: u32) {
+#[allow(non_snake_case)]
+pub unsafe fn sceGuMaterial(components: LightComponent, color: u32) {
     if components.intersects(LightComponent::AMBIENT) {
         send_command_i(Command::MaterialAmbient, color as i32 & 0xffffff);
         send_command_i(Command::MaterialAlpha, (color >> 24) as i32);
@@ -2455,7 +2510,8 @@ pub unsafe fn sce_gu_material(components: LightComponent, color: u32) {
 }
 
 // TODO: Needs documentation.
-pub unsafe fn sce_gu_model_color(emissive: u32, ambient: u32, diffuse: u32, specular: u32) {
+#[allow(non_snake_case)]
+pub unsafe fn sceGuModelColor(emissive: u32, ambient: u32, diffuse: u32, specular: u32) {
     send_command_i(Command::MaterialEmissive, emissive as i32 & 0xffffff);
     send_command_i(Command::MaterialAmbient, ambient as i32 & 0xffffff);
     send_command_i(Command::MaterialDiffuse, diffuse as i32 & 0xffffff);
@@ -2470,7 +2526,8 @@ pub unsafe fn sce_gu_model_color(emissive: u32, ambient: u32, diffuse: u32, spec
 /// - `ref_`: The reference value for the stencil test
 /// - `mask`: Mask that is ANDed with both the reference value and stored
 ///   stencil value when the test is done
-pub unsafe fn sce_gu_stencil_func(func: StencilFunc, ref_: i32, mask: i32) {
+#[allow(non_snake_case)]
+pub unsafe fn sceGuStencilFunc(func: StencilFunc, ref_: i32, mask: i32) {
     send_command_i(
         Command::StencilTest,
         func as i32 | ((ref_ as i32 & 0xff) << 8) | ((mask as i32 & 0xff) << 16),
@@ -2487,7 +2544,8 @@ pub unsafe fn sce_gu_stencil_func(func: StencilFunc, ref_: i32, mask: i32) {
 /// - `fail`: The action to take when the stencil test fails
 /// - `zfail`: The action to take when the stencil test passes, but the depth test fails
 /// - `zpass`: The action to take when both the stencil test and depth test pass
-pub unsafe fn sce_gu_stencil_op(
+#[allow(non_snake_case)]
+pub unsafe fn sceGuStencilOp(
     fail: StencilOperation,
     zfail: StencilOperation,
     zpass: StencilOperation,
@@ -2503,19 +2561,21 @@ pub unsafe fn sce_gu_stencil_op(
 /// # Parameters
 ///
 /// - `power`: Specular power
-pub unsafe fn sce_gu_specular(power: f32) {
+#[allow(non_snake_case)]
+pub unsafe fn sceGuSpecular(power: f32) {
     send_command_f(Command::MaterialSpecularCoef, power);
 }
 
 /// Set the current face-order (for culling)
 ///
 /// This only has effect when culling (`State::CullFace`) is enabled, e.g. via
-/// `sce_gu_enable`.
+/// `sceGuEnable`.
 ///
 /// # Parameters
 ///
 /// - `order`: Which order to use, one of `FrontFaceDirection`
-pub unsafe fn sce_gu_front_face(order: FrontFaceDirection) {
+#[allow(non_snake_case)]
+pub unsafe fn sceGuFrontFace(order: FrontFaceDirection) {
     match order {
         FrontFaceDirection::CounterClockwise => send_command_i(Command::Cull, 0),
         FrontFaceDirection::Clockwise => send_command_i(Command::Cull, 1),
@@ -2525,24 +2585,26 @@ pub unsafe fn sce_gu_front_face(order: FrontFaceDirection) {
 /// Set color logical operation
 ///
 /// This operation only has effect if `State::ColorLogicOp` is enabled, e.g. via
-/// `sce_gu_enable`.
+/// `sceGuEnable`.
 ///
 /// # Parameters
 ///
 /// - `op`: Operation to execute
-pub unsafe fn sce_gu_logical_op(op: LogicalOperation) {
+#[allow(non_snake_case)]
+pub unsafe fn sceGuLogicalOp(op: LogicalOperation) {
     send_command_i(Command::LogicOp, op as i32 & 0x0f);
 }
 
 /// Set ordered pixel dither matrix
 ///
 /// This dither matrix is only applied if `State::Dither` is enabled, e.g. via
-/// `sce_gu_enable`.
+/// `sceGuEnable`.
 ///
 /// # Parameters
 ///
 /// - `matrix`: Dither matrix
-pub unsafe fn sce_gu_set_dither(matrix: &ScePspIMatrix4) {
+#[allow(non_snake_case)]
+pub unsafe fn sceGuSetDither(matrix: &ScePspIMatrix4) {
     send_command_i(
         Command::Dith0,
         (matrix.x.x & 0x0f)
@@ -2581,7 +2643,8 @@ pub unsafe fn sce_gu_set_dither(matrix: &ScePspIMatrix4) {
 /// # Parameters
 ///
 /// - `mode`: Which mode to use, one of `ShadingModel`.
-pub unsafe fn sce_gu_shade_model(mode: ShadingModel) {
+#[allow(non_snake_case)]
+pub unsafe fn sceGuShadeModel(mode: ShadingModel) {
     match mode {
         ShadingModel::Smooth => send_command_i(Command::ShadeMode, 1),
         ShadingModel::Flat => send_command_i(Command::ShadeMode, 0),
@@ -2608,7 +2671,8 @@ pub unsafe fn sce_gu_shade_model(mode: ShadingModel) {
 /// - `dy`: Destination Y
 /// - `destw`: Destination buffer width (block aligned)
 /// - `dest`: Destination pointer
-pub unsafe fn sce_gu_copy_image(
+#[allow(non_snake_case)]
+pub unsafe fn sceGuCopyImage(
     psm: DisplayPixelFormat,
     sx: i32,
     sy: i32,
@@ -2651,12 +2715,13 @@ pub unsafe fn sce_gu_copy_image(
 ///
 /// This is used in the texture function when a constant color is needed.
 ///
-/// See `sce_gu_tex_func` for more information.
+/// See `sceGuTexFunc` for more information.
 ///
 /// # Parameters
 ///
 /// - `color`: Constant color (0x00BBGGRR)
-pub unsafe fn sce_gu_tex_env_color(color: u32) {
+#[allow(non_snake_case)]
+pub unsafe fn sceGuTexEnvColor(color: u32) {
     send_command_i(Command::TexEnvColor, color as i32 & 0xffffff);
 }
 
@@ -2666,7 +2731,8 @@ pub unsafe fn sce_gu_tex_env_color(color: u32) {
 ///
 /// - `min`: Minimizing filter
 /// - `mag`: Magnifying filter
-pub unsafe fn sce_gu_tex_filter(min: TextureFilter, mag: TextureFilter) {
+#[allow(non_snake_case)]
+pub unsafe fn sceGuTexFilter(min: TextureFilter, mag: TextureFilter) {
     send_command_i(Command::TexFilter, ((mag as i32) << 8) | (min as i32));
 }
 
@@ -2674,7 +2740,8 @@ pub unsafe fn sce_gu_tex_filter(min: TextureFilter, mag: TextureFilter) {
 ///
 /// Do this if you have copied/rendered into an area currently in the texture
 /// cache.
-pub unsafe fn sce_gu_tex_flush() {
+#[allow(non_snake_case)]
+pub unsafe fn sceGuTexFlush() {
     send_command_f(Command::TexFlush, 0.0);
 }
 
@@ -2684,7 +2751,8 @@ pub unsafe fn sce_gu_tex_flush() {
 ///
 /// - `tfx`: Which apply-mode to use
 /// - `tcc`: Which component-mode to use
-pub unsafe fn sce_gu_tex_func(tfx: TextureEffect, tcc: TextureColorComponent) {
+#[allow(non_snake_case)]
+pub unsafe fn sceGuTexFunc(tfx: TextureEffect, tcc: TextureColorComponent) {
     let context = &mut CONTEXTS[CURR_CONTEXT as usize];
     context.texture_function = (((tcc as u32) << 8) | (tfx as u32)) as i32;
     send_command_i(
@@ -2724,7 +2792,7 @@ pub unsafe fn sce_gu_tex_func(tfx: TextureEffect, tcc: TextureColorComponent) {
 ///
 /// ```ignore
 /// let image_data = ...; // Some 16-byte aligned source.
-/// sce_gu_tex_image(MipmapLevel::None, 512, 512, 340, data);
+/// sceGuTexImage(MipmapLevel::None, 512, 512, 340, data);
 /// ```
 ///
 /// This will generate a 512x512 pixel texture map, with the remaining horizontal
@@ -2733,7 +2801,8 @@ pub unsafe fn sce_gu_tex_func(tfx: TextureEffect, tcc: TextureColorComponent) {
 /// appear as garbage data. This is not a problem as the UV coordinates on the
 /// triangles can be crafted to stay within the image bounds, both vertically and
 /// horizontally.
-pub unsafe fn sce_gu_tex_image(mipmap: MipmapLevel, width: i32, height: i32, tbw: i32, tbp: *const c_void) {
+#[allow(non_snake_case)]
+pub unsafe fn sceGuTexImage(mipmap: MipmapLevel, width: i32, height: i32, tbw: i32, tbp: *const c_void) {
     use core::intrinsics::ctlz;
 
     const TBP_CMD_TBL: [Command; 8] = [
@@ -2781,7 +2850,7 @@ pub unsafe fn sce_gu_tex_image(mipmap: MipmapLevel, width: i32, height: i32, tbw
         TSIZE_CMD_TBL[mipmap as usize],
         ((31 - ctlz(height & 0x3ff)) << 8) | (31 - ctlz(width & 0x3ff)),
     );
-    sce_gu_tex_flush();
+    sceGuTexFlush();
 }
 
 /// Set texture-level mode (mipmapping)
@@ -2790,7 +2859,8 @@ pub unsafe fn sce_gu_tex_image(mipmap: MipmapLevel, width: i32, height: i32, tbw
 ///
 /// - `mode`: Which mode to use, one of TextureLevelMode
 /// - `bias`: Which mipmap bias to use
-pub unsafe fn sce_gu_tex_level_mode(mode: TextureLevelMode, bias: f32) {
+#[allow(non_snake_case)]
+pub unsafe fn sceGuTexLevelMode(mode: TextureLevelMode, bias: f32) {
     // Linker error if this is not here.
     #[no_mangle]
     unsafe extern fn truncf(mut x: f32) -> f32 {
@@ -2817,7 +2887,8 @@ pub unsafe fn sce_gu_tex_level_mode(mode: TextureLevelMode, bias: f32) {
 /// - `mode`: Which mode to use
 /// - `a1`: Unknown
 /// - `a2`: Unknown
-pub unsafe fn sce_gu_tex_map_mode(mode: TextureMapMode, a1: u32, a2: u32) {
+#[allow(non_snake_case)]
+pub unsafe fn sceGuTexMapMode(mode: TextureMapMode, a1: u32, a2: u32) {
     let context = &mut CONTEXTS[CURR_CONTEXT as usize];
     context.texture_map_mode = mode;
     send_command_i(
@@ -2838,7 +2909,8 @@ pub unsafe fn sce_gu_tex_map_mode(mode: TextureMapMode, a1: u32, a2: u32) {
 // TODO: Are boolean parameters ABI compatibile with FFI i32 parameters?
 // TODO: Better documentation for `maxmips`. What does it do? Maybe it should be
 //       of type `MipmapLevel`?
-pub unsafe fn sce_gu_tex_mode(tpsm: TexturePixelFormat, maxmips: i32, a2: i32, swizzle: i32) {
+#[allow(non_snake_case)]
+pub unsafe fn sceGuTexMode(tpsm: TexturePixelFormat, maxmips: i32, a2: i32, swizzle: i32) {
     CONTEXTS[CURR_CONTEXT as usize].texture_mode = tpsm;
 
     send_command_i(
@@ -2847,7 +2919,7 @@ pub unsafe fn sce_gu_tex_mode(tpsm: TexturePixelFormat, maxmips: i32, a2: i32, s
     );
 
     send_command_i(Command::TexFormat, tpsm as i32);
-    sce_gu_tex_flush();
+    sceGuTexFlush();
 }
 
 /// Set texture offset
@@ -2861,7 +2933,8 @@ pub unsafe fn sce_gu_tex_mode(tpsm: TexturePixelFormat, maxmips: i32, a2: i32, s
 ///
 /// - `u`: Offset to add to the U coordinate
 /// - `v`: Offset to add to the V coordinate
-pub unsafe fn sce_gu_tex_offset(u: f32, v: f32) {
+#[allow(non_snake_case)]
+pub unsafe fn sceGuTexOffset(u: f32, v: f32) {
     send_command_f(Command::TexOffsetU, u);
     send_command_f(Command::TexOffsetV, v);
 }
@@ -2871,7 +2944,8 @@ pub unsafe fn sce_gu_tex_offset(u: f32, v: f32) {
 /// # Parameters
 ///
 /// - `mode`: Which mode to use
-pub unsafe fn sce_gu_tex_proj_map_mode(mode: TextureProjectionMapMode) {
+#[allow(non_snake_case)]
+pub unsafe fn sceGuTexProjMapMode(mode: TextureProjectionMapMode) {
     let context = &mut CONTEXTS[CURR_CONTEXT as usize];
     context.texture_proj_map_mode = mode;
     send_command_i(
@@ -2891,20 +2965,23 @@ pub unsafe fn sce_gu_tex_proj_map_mode(mode: TextureProjectionMapMode) {
 ///
 /// - `u`: Scalar to multiply U coordinate with
 /// - `v`: Scalar to multiply V coordinate with
-pub unsafe fn sce_gu_tex_scale(u: f32, v: f32) {
+#[allow(non_snake_case)]
+pub unsafe fn sceGuTexScale(u: f32, v: f32) {
     send_command_f(Command::TexScaleU, u);
     send_command_f(Command::TexScaleV, v);
 }
 
-pub unsafe fn sce_gu_tex_slope(slope: f32) {
+#[allow(non_snake_case)]
+pub unsafe fn sceGuTexSlope(slope: f32) {
     send_command_f(Command::TexLodSlope, slope);
 }
 
 /// Synchronize rendering pipeline with image upload.
 ///
 /// This will stall the rendering pipeline until the current image upload initiated by
-/// `sce_gu_copy_image` has completed.
-pub unsafe fn sce_gu_tex_sync() {
+/// `sceGuCopyImage` has completed.
+#[allow(non_snake_case)]
+pub unsafe fn sceGuTexSync() {
     send_command_i(Command::TexSync, 0);
 }
 
@@ -2916,7 +2993,8 @@ pub unsafe fn sce_gu_tex_sync() {
 ///
 /// - `u`: Wrap-mode for the U direction
 /// - `v`: Wrap-mode for the V direction
-pub unsafe fn sce_gu_tex_wrap(u: WrapMode, v: WrapMode) {
+#[allow(non_snake_case)]
+pub unsafe fn sceGuTexWrap(u: WrapMode, v: WrapMode) {
     send_command_i(Command::TexWrap, ((v as i32) << 8) | u as i32);
 }
 
@@ -2930,7 +3008,8 @@ pub unsafe fn sce_gu_tex_wrap(u: WrapMode, v: WrapMode) {
 ///
 /// - `num_blocks`: How many blocks of 8 entries to upload (32*8 is 256 colors)
 /// - `cbp`: Pointer to palette (16 byte aligned)
-pub unsafe fn sce_gu_clut_load(num_blocks: i32, cbp: *const c_void) {
+#[allow(non_snake_case)]
+pub unsafe fn sceGuClutLoad(num_blocks: i32, cbp: *const c_void) {
     send_command_i(Command::ClutAddr, (cbp as i32) & 0xffffff);
     send_command_i(Command::ClutAddrUpper, ((cbp as u32) >> 8) as i32 & 0xf0000);
     send_command_i(Command::LoadClut, num_blocks);
@@ -2959,7 +3038,8 @@ pub enum ClutPixelFormat {
 /// - `shift`: Shifts color index by that many bits to the right
 /// - `mask`: Masks the color index with this bitmask after the shift (0-0xFF)
 /// - `a3`: Unknown, set to 0
-pub unsafe fn sce_gu_clut_mode(cpsm: ClutPixelFormat, shift: u32, mask: u32, a3: u32) {
+#[allow(non_snake_case)]
+pub unsafe fn sceGuClutMode(cpsm: ClutPixelFormat, shift: u32, mask: u32, a3: u32) {
     let arg = ((cpsm as u32) | (shift << 2) | (mask << 8) | (a3 << 16)) as i32;
     send_command_i(Command::ClutFormat, arg);
 }
@@ -2974,15 +3054,16 @@ pub unsafe fn sce_gu_clut_mode(cpsm: ClutPixelFormat, shift: u32, mask: u32, a3:
 /// Center the virtual coordinate range:
 ///
 /// ```no_run
-/// # use psp::sys::gu::sce_gu_offset;
-/// sce_gu_offset(2048 - (480 / 2), 2048 - (272 / 2)) {
+/// # use psp::sys::gu::sceGuOffset;
+/// sceGuOffset(2048 - (480 / 2), 2048 - (272 / 2)) {
 /// ```
 ///
 /// # Parameters
 ///
 /// - `x`: Offset (0-4095)
 /// - `y`: Offset (0-4095)
-pub unsafe fn sce_gu_offset(x: u32, y: u32) {
+#[allow(non_snake_case)]
+pub unsafe fn sceGuOffset(x: u32, y: u32) {
     send_command_i(Command::OffsetX, (x << 4) as i32);
     send_command_i(Command::OffsetY, (y << 4) as i32);
 }
@@ -2990,7 +3071,7 @@ pub unsafe fn sce_gu_offset(x: u32, y: u32) {
 /// Set what to scissor within the current viewport
 ///
 /// Note that scissoring is only performed if the custom scissoring
-/// (`State::ScissorTest`) is enabled, e.g. via `sce_gu_enable`.
+/// (`State::ScissorTest`) is enabled, e.g. via `sceGuEnable`.
 ///
 /// # Parameters
 ///
@@ -2998,7 +3079,8 @@ pub unsafe fn sce_gu_offset(x: u32, y: u32) {
 /// - `y`: Top of scissor region
 /// - `w`: Width of scissor region
 /// - `h`: Height of scissor region
-pub unsafe fn sce_gu_scissor(x: i32, y: i32, w: i32, h: i32) {
+#[allow(non_snake_case)]
+pub unsafe fn sceGuScissor(x: i32, y: i32, w: i32, h: i32) {
     let context = &mut CONTEXTS[CURR_CONTEXT as usize];
 
     context.scissor_start = [x, y];
@@ -3020,8 +3102,8 @@ pub unsafe fn sce_gu_scissor(x: i32, y: i32, w: i32, h: i32) {
 /// Setup a viewport of size (480,272) with origin at (2048,2048)
 ///
 /// ```no_run
-/// # use psp::sys::gu::sce_gu_viewport;
-/// sce_gu_viewport(2048, 2048, 480, 272);
+/// # use psp::sys::gu::sceGuViewport;
+/// sceGuViewport(2048, 2048, 480, 272);
 /// ```
 ///
 /// # Parameters
@@ -3030,7 +3112,8 @@ pub unsafe fn sce_gu_scissor(x: i32, y: i32, w: i32, h: i32) {
 /// - `cy`: Center for vertical viewport
 /// - `width`: Width of viewport
 /// - `height`: Height of viewport
-pub unsafe fn sce_gu_viewport(cx: i32, cy: i32, width: i32, height: i32) {
+#[allow(non_snake_case)]
+pub unsafe fn sceGuViewport(cx: i32, cy: i32, width: i32, height: i32) {
     send_command_f(Command::ViewportXScale, (width >> 1) as f32);
     send_command_f(Command::ViewportYScale, ((-height) >> 1) as f32);
     send_command_f(Command::ViewportXCenter, cx as f32);
@@ -3046,7 +3129,8 @@ pub unsafe fn sce_gu_viewport(cx: i32, cy: i32, width: i32, height: i32) {
 /// - `vcount`: Number of vertices used in the V direction
 /// - `indices`: Pointer to index buffer
 /// - `vertices`: Pointer to vertex buffer
-pub unsafe fn sce_gu_draw_bezier(
+#[allow(non_snake_case)]
+pub unsafe fn sceGuDrawBezier(
     v_type: VertexType,
     u_count: i32,
     v_count: i32,
@@ -3076,11 +3160,13 @@ pub unsafe fn sce_gu_draw_bezier(
 ///
 /// - `ulevel`: Number of division on u direction
 /// - `vlevel`: Number of division on v direction
-pub unsafe fn sce_gu_patch_divide(ulevel: u32, vlevel: u32) {
+#[allow(non_snake_case)]
+pub unsafe fn sceGuPatchDivide(ulevel: u32, vlevel: u32) {
     send_command_i(Command::PatchDivision, ((vlevel << 8) | ulevel) as i32);
 }
 
-pub unsafe fn sce_gu_patch_front_face(a0: u32) {
+#[allow(non_snake_case)]
+pub unsafe fn sceGuPatchFrontFace(a0: u32) {
     send_command_i(Command::PatchFacing, a0 as i32);
 }
 
@@ -3089,7 +3175,8 @@ pub unsafe fn sce_gu_patch_front_face(a0: u32) {
 /// # Parameters
 ///
 /// - `prim`: Desired primitive type
-pub unsafe fn sce_gu_patch_prim(prim: PatchPrimitive) {
+#[allow(non_snake_case)]
+pub unsafe fn sceGuPatchPrim(prim: PatchPrimitive) {
     match prim {
         PatchPrimitive::Points => send_command_i(Command::PatchPrimitive, 2),
         PatchPrimitive::LineStrip => send_command_i(Command::PatchPrimitive, 1),
@@ -3097,7 +3184,8 @@ pub unsafe fn sce_gu_patch_prim(prim: PatchPrimitive) {
     }
 }
 
-pub unsafe fn sce_gu_draw_spline(
+#[allow(non_snake_case)]
+pub unsafe fn sceGuDrawSpline(
     v_type: VertexType,
     u_count: i32,
     v_count: i32,
@@ -3132,7 +3220,8 @@ pub unsafe fn sce_gu_draw_spline(
 ///
 /// - `type`: Which matrix-type to set
 /// - `matrix`: Matrix to load
-pub unsafe fn sce_gu_set_matrix(type_: MatrixMode, matrix: &ScePspFMatrix4) {
+#[allow(non_snake_case)]
+pub unsafe fn sceGuSetMatrix(type_: MatrixMode, matrix: &ScePspFMatrix4) {
     let fmatrix = matrix as *const _ as *const f32;
 
     match type_ {
@@ -3186,7 +3275,8 @@ pub unsafe fn sce_gu_set_matrix(type_: MatrixMode, matrix: &ScePspFMatrix4) {
 ///
 /// - `index`: Skinning matrix index (0-7)
 /// - `matrix`: Matrix to set
-pub unsafe fn sce_gu_bone_matrix(index: u32, matrix: &ScePspFMatrix4) {
+#[allow(non_snake_case)]
+pub unsafe fn sceGuBoneMatrix(index: u32, matrix: &ScePspFMatrix4) {
     send_command_i(Command::BoneMatrixNumber, index as i32 * 12); // 3 * 4 matrix
 
     send_command_f(Command::BoneMatrixData, matrix.x.x);
@@ -3219,7 +3309,8 @@ pub unsafe fn sce_gu_bone_matrix(index: u32, matrix: &ScePspFMatrix4) {
 ///
 /// - `index`: Morph weight index (0-7)
 /// - `weight`: Weight to set
-pub unsafe fn sce_gu_morph_weight(index: i32, weight: f32) {
+#[allow(non_snake_case)]
+pub unsafe fn sceGuMorphWeight(index: i32, weight: f32) {
     let cmd = match index {
         0 => Command::MorphWeight0,
         1 => Command::MorphWeight1,
@@ -3235,7 +3326,8 @@ pub unsafe fn sce_gu_morph_weight(index: i32, weight: f32) {
     send_command_f(cmd, weight);
 }
 
-pub unsafe fn sce_gu_draw_array_n(
+#[allow(non_snake_case)]
+pub unsafe fn sceGuDrawArrayN(
     primitive_type: Primitive,
     v_type: VertexType,
     count: i32,

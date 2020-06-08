@@ -18,39 +18,39 @@ fn psp_main() {
         let fbp1 = get_static_vram_buffer(512, 272, TexturePixelFormat::Psm8888);
         let zbp = get_static_vram_buffer(512, 272, TexturePixelFormat::Psm4444);
 
-        gu::sce_gu_init();
-        gu::sce_gu_start(
+        gu::sceGuInit();
+        gu::sceGuStart(
             gu::Context::Direct,
             &mut LIST as *mut _ as *mut c_void,
         );
-        gu::sce_gu_draw_buffer(DisplayPixelFormat::Psm8888, fbp0, 512);
-        gu::sce_gu_disp_buffer(480, 272, fbp1, 512);
-        gu::sce_gu_depth_buffer(zbp, 512);
-        gu::sce_gu_offset(2048 - (480/2), 2048 - (272/2));
-        gu::sce_gu_viewport(2048, 2048, 480, 272);
-        gu::sce_gu_depth_range(65535, 0);
-        gu::sce_gu_scissor(0, 0, 480, 272);
-        gu::sce_gu_enable(gu::State::ScissorTest);
-        gu::sce_gu_finish();
-        gu::sce_gu_sync(gu::SyncMode::Finish, gu::SyncBehavior::Wait);
-        psp::sys::display::sce_display_wait_vblank_start();
-        gu::sce_gu_display(true);
+        gu::sceGuDrawBuffer(DisplayPixelFormat::Psm8888, fbp0, 512);
+        gu::sceGuDispBuffer(480, 272, fbp1, 512);
+        gu::sceGuDepthBuffer(zbp, 512);
+        gu::sceGuOffset(2048 - (480/2), 2048 - (272/2));
+        gu::sceGuViewport(2048, 2048, 480, 272);
+        gu::sceGuDepthRange(65535, 0);
+        gu::sceGuScissor(0, 0, 480, 272);
+        gu::sceGuEnable(gu::State::ScissorTest);
+        gu::sceGuFinish();
+        gu::sceGuSync(gu::SyncMode::Finish, gu::SyncBehavior::Wait);
+        psp::sys::display::sceDisplayWaitVblankStart();
+        gu::sceGuDisplay(true);
 
         loop {
-            gu::sce_gu_start(
+            gu::sceGuStart(
                 gu::Context::Direct,
                 &mut LIST as *mut _ as *mut c_void
             );
-            gu::sce_gu_clear_color(0xff554433);
-            gu::sce_gu_clear_depth(0);
-            gu::sce_gu_clear(
+            gu::sceGuClearColor(0xff554433);
+            gu::sceGuClearDepth(0);
+            gu::sceGuClear(
                 gu::ClearBuffer::COLOR_BUFFER_BIT |
                 gu::ClearBuffer::DEPTH_BUFFER_BIT
             );
-            gu::sce_gu_finish();
-            gu::sce_gu_sync(gu::SyncMode::Finish, gu::SyncBehavior::Wait);
-            display::sce_display_wait_vblank_start();
-            gu::sce_gu_swap_buffers();
+            gu::sceGuFinish();
+            gu::sceGuSync(gu::SyncMode::Finish, gu::SyncBehavior::Wait);
+            display::sceDisplayWaitVblankStart();
+            gu::sceGuSwapBuffers();
         }
     }
 }

@@ -100,7 +100,7 @@ psp_extern! {
     /// # Return value
     ///
     /// The previous cycle setting.
-    pub fn sce_ctrl_set_sampling_cycle(cycle: i32) -> i32;
+    pub fn sceCtrlSetSamplingCycle(cycle: i32) -> i32;
 
     #[psp(0x02BAAD91)]
     /// Get the controller current cycle setting.
@@ -112,7 +112,7 @@ psp_extern! {
     /// # Return value
     ///
     /// 0
-    pub fn sce_ctrl_get_sampling_cycle(pcycle: *mut i32) -> i32;
+    pub fn sceCtrlGetSamplingCycle(pcycle: *mut i32) -> i32;
 
     #[psp(0x1F4011E6)]
     /// Set the controller mode.
@@ -124,7 +124,7 @@ psp_extern! {
     /// # Return Value
     ///
     /// The previous mode.
-    pub fn sce_ctrl_set_sampling_mode(mode: i32) -> i32;
+    pub fn sceCtrlSetSamplingMode(mode: i32) -> i32;
 
     #[psp(0xDA6B76A1)]
     /// Get the current controller mode.
@@ -136,13 +136,13 @@ psp_extern! {
     /// # Return value
     ///
     /// 0
-    pub fn sce_ctrl_get_sampling_mode(pmode: *mut i32) -> i32;
+    pub fn sceCtrlGetSamplingMode(pmode: *mut i32) -> i32;
 
     #[psp(0x3A622550)]
-    pub fn sce_ctrl_peek_buffer_positive(pad_data: *mut SceCtrlData, count: i32) -> i32;
+    pub fn sceCtrlPeekBufferPositive(pad_data: *mut SceCtrlData, count: i32) -> i32;
 
     #[psp(0xC152080A)]
-    pub fn sce_ctrl_peek_buffer_negative(pad_data: *mut SceCtrlData, count: i32) -> i32;
+    pub fn sceCtrlPeekBufferNegative(pad_data: *mut SceCtrlData, count: i32) -> i32;
 
     #[psp(0x1F803938)]
     /// Read buffer positive
@@ -151,16 +151,16 @@ psp_extern! {
     ///
     /// - `pad_data`: Pointer to a `SceCtrlData` structure used to hold the returned pad data.
     /// - `count`: Number of `SceCtrlData` buffers to read.
-    pub fn sce_ctrl_read_buffer_positive(pad_data: *mut SceCtrlData, count: i32) -> i32;
+    pub fn sceCtrlReadBufferPositive(pad_data: *mut SceCtrlData, count: i32) -> i32;
 
     #[psp(0x60B81F86)]
-    pub fn sce_ctrl_read_buffer_negative(pad_data: *mut SceCtrlData, count: i32) -> i32;
+    pub fn sceCtrlReadBufferNegative(pad_data: *mut SceCtrlData, count: i32) -> i32;
 
     #[psp(0xB1D0E5CD)]
-    pub fn sce_ctrl_peek_latch(latch_data: *mut SceCtrlLatch) -> i32;
+    pub fn sceCtrlPeekLatch(latch_data: *mut SceCtrlLatch) -> i32;
 
     #[psp(0x0B588501)]
-    pub fn sce_ctrl_read_latch(latch_data: *mut SceCtrlLatch) -> i32;
+    pub fn sceCtrlReadLatch(latch_data: *mut SceCtrlLatch) -> i32;
 
     #[psp(0xA7144800)]
     /// Set analog threshold relating to the idle timer.
@@ -181,7 +181,7 @@ psp_extern! {
     /// # Return value
     ///
     /// < 0 on error.
-    pub fn sce_ctrl_set_idle_cancel_threshold(idlereset: i32, idleback: i32) -> i32;
+    pub fn sceCtrlSetIdleCancelThreshold(idlereset: i32, idleback: i32) -> i32;
 
     #[psp(0x687660FA)]
     /// Get the idle threshold values.
@@ -195,5 +195,5 @@ psp_extern! {
     /// # Return value
     ///
     /// < 0 on error.
-    pub fn sce_ctrl_get_idle_cancel_threshold(idlereset: *mut i32, idleback: *mut i32) -> i32;
+    pub fn sceCtrlGetIdleCancelThreshold(idlereset: *mut i32, idleback: *mut i32) -> i32;
 }

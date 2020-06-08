@@ -52,7 +52,7 @@ psp_extern! {
     /// # Return value
     ///
     /// ???
-    pub fn sce_display_set_mode(mode: DisplayMode, width: usize, height: usize) -> u32;
+    pub fn sceDisplaySetMode(mode: DisplayMode, width: usize, height: usize) -> u32;
 
     #[psp(0xDEA197D4)]
     /// Get display mode
@@ -66,7 +66,7 @@ psp_extern! {
     /// # Return value
     ///
     /// 0 on success
-    pub fn sce_display_get_mode(pmode: *mut i32, pwidth: *mut i32, pheight: *mut i32) -> i32;
+    pub fn sceDisplayGetMode(pmode: *mut i32, pwidth: *mut i32, pheight: *mut i32) -> i32;
 
     #[psp(0x289D82FE)]
     /// Display set framebuffer
@@ -81,7 +81,7 @@ psp_extern! {
     /// # Return value
     ///
     /// 0 on success
-    pub fn sce_display_set_frame_buf(
+    pub fn sceDisplaySetFrameBuf(
         top_addr: *const u8,
         buffer_width: usize,
         pixel_format: DisplayPixelFormat,
@@ -97,7 +97,7 @@ psp_extern! {
     /// - `buffer_width`: Pointer to usize to receive buffer width (must be power of 2)
     /// - `pixelformat`: Pointer to receive DisplayPixelFormat.
     /// - `sync`: One of `DisplaySetBufSync`
-    pub fn sce_display_get_frame_buf(
+    pub fn sceDisplayGetFrameBuf(
         top_addr: *mut *mut c_void,
         buffer_width: *mut usize,
         pixel_format: *mut DisplayPixelFormat,
@@ -106,33 +106,33 @@ psp_extern! {
 
     #[psp(0x9C6EAAD7)]
     /// Number of vertical blank pulses up to now
-    pub fn sce_display_get_vcount() -> u32;
+    pub fn sceDisplayGetVcount() -> u32;
 
     #[psp(0x984C27E7)]
     /// Wait for vertical blank start
-    pub fn sce_display_wait_vblank_start() -> i32;
+    pub fn sceDisplayWaitVblankStart() -> i32;
 
     #[psp(0x46F186C3)]
     /// Wait for vertical blank start with callback
-    pub fn sce_display_wait_vblank_start_cb() -> i32;
+    pub fn sceDisplayWaitVblankStartCB() -> i32;
 
     #[psp(0x210EAB3A)]
     /// Get accumulated HSYNC count
-    pub fn sce_display_get_accumulated_hcount() -> i32;
+    pub fn sceDisplayGetAccumulatedHcount() -> i32;
 
     #[psp(0x773DD3A3)]
     /// Get current HSYNC count
-    pub fn sce_display_get_current_hcount() -> i32;
+    pub fn sceDisplayGetCurrentHcount() -> i32;
 
     #[psp(0xDBA6C4C4)]
     /// Get number of frames per second
-    pub fn sce_display_get_frame_per_sec() -> f32;
+    pub fn sceDisplayGetFramePerSec() -> f32;
 
     #[psp(0xB4F378FA)]
     /// Get whether or not frame buffer is being displayed
-    pub fn sce_display_is_foreground() -> i32;
+    pub fn sceDisplayIsForeground() -> i32;
 
     #[psp(0x4D4E10EC)]
     /// Test whether vblank is active
-    pub fn sce_display_is_vblank() -> i32;
+    pub fn sceDisplayIsVblank() -> i32;
 }

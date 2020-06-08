@@ -106,11 +106,11 @@ unsafe fn put_str<T: Font>(s: &[u8], x: usize, y: usize, color: u32) {
 
 unsafe fn init() {
     // The OR operation here specifies the address bypasses cache.
-    VRAM_BASE = (0x4000_0000u32 | sys::ge::sce_ge_edram_get_addr() as u32) as *mut u32;
+    VRAM_BASE = (0x4000_0000u32 | sys::ge::sceGeEdramGetAddr() as u32) as *mut u32;
 
     // TODO: Change sys types to usize.
-    sys::display::sce_display_set_mode(sys::display::DisplayMode::Lcd, DISPLAY_WIDTH, DISPLAY_HEIGHT);
-    sys::display::sce_display_set_frame_buf(
+    sys::display::sceDisplaySetMode(sys::display::DisplayMode::Lcd, DISPLAY_WIDTH, DISPLAY_HEIGHT);
+    sys::display::sceDisplaySetFrameBuf(
         VRAM_BASE as *const u8,
         BUFFER_WIDTH,
         sys::display::DisplayPixelFormat::Psm8888,
