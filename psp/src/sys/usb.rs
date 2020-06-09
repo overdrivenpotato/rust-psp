@@ -1,5 +1,5 @@
 use core::ffi::c_void;
-use crate::sys::kernel::SceUid;
+use crate::sys::SceUid;
 
 /// For use with `sceUsbActivate` and `sceUsbDeactivate`.
 pub const USB_CAM_PID: i32 = 0x282;

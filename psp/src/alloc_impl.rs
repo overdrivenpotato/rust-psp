@@ -1,6 +1,6 @@
 use alloc::alloc::{Layout, GlobalAlloc};
 use core::{ptr, mem};
-use crate::sys::{self, kernel::{SceUid, SceSysMemPartitionId, SceSysMemBlockTypes}};
+use crate::sys::{self, SceUid, SceSysMemPartitionId, SceSysMemBlockTypes};
 
 /// An allocator that hooks directly into the PSP OS memory allocator.
 struct SystemAlloc;
@@ -18,7 +18,7 @@ unsafe impl GlobalAlloc for SystemAlloc {
 
         // crate::debug::print_num(size);
 
-        let id = sys::kernel::sceKernelAllocPartitionMemory(
+        let id = sys::sceKernelAllocPartitionMemory(
             SceSysMemPartitionId::SceKernelPrimaryUserPartition,
             &b"block\0"[0],
             SceSysMemBlockTypes::Low,
@@ -27,7 +27,7 @@ unsafe impl GlobalAlloc for SystemAlloc {
         );
 
         // TODO: Error handling.
-        let mut ptr: *mut u8 = sys::kernel::sceKernelGetBlockHeadAddr(id).cast();
+        let mut ptr: *mut u8 = sys::sceKernelGetBlockHeadAddr(id).cast();
         *ptr.cast() = id;
 
         ptr = ptr.add(mem::size_of::<SceUid>());
@@ -47,7 +47,7 @@ unsafe impl GlobalAlloc for SystemAlloc {
             .cast::<SceUid>().offset(-1);
 
         // TODO: Error handling.
-        sys::kernel::sceKernelFreePartitionMemory(id);
+        sys::sceKernelFreePartitionMemory(id);
     }
 }
 

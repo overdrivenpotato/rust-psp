@@ -1,7 +1,8 @@
 use core::{mem, ffi::c_void, ptr::null_mut};
 use num_enum::TryFromPrimitive;
 use crate::sys::{
-    ge::{self, GeContext, GeListArgs, Command, GeListState, GeBreakParam},
+    self,
+    ge::{GeContext, GeListArgs, Command, GeListState, GeBreakParam},
     kernel::SceUid,
     display::DisplayPixelFormat,
     types::{ScePspFMatrix4, ScePspFVector3, ScePspIMatrix4, ScePspIVector4},
@@ -44,7 +45,7 @@ pub enum PatchPrimitive {
 /// States
 #[derive(Debug, Clone, Copy, Eq, PartialEq, TryFromPrimitive)]
 #[repr(u32)]
-pub enum State {
+pub enum GuState {
     AlphaTest = 0,
     DepthTest = 1,
     ScissorTest = 2,
@@ -616,7 +617,7 @@ struct Settings {
     kernel_event_flag: SceUid,
     ge_callback_id: i32,
     swap_buffers_callback: GuSwapBuffersCallback,
-    swap_buffers_behaviour: crate::sys::display::DisplaySetBufSync,
+    swap_buffers_behaviour: crate::sys::DisplaySetBufSync,
 }
 
 struct GuDisplayList {
@@ -772,7 +773,7 @@ static mut SETTINGS: Settings = Settings {
     kernel_event_flag: SceUid(-1),
 
     ge_callback_id: 0,
-    swap_buffers_behaviour: crate::sys::display::DisplaySetBufSync::Immediate,
+    swap_buffers_behaviour: crate::sys::DisplaySetBufSync::Immediate,
     swap_buffers_callback: None,
 };
 
@@ -883,7 +884,7 @@ unsafe fn send_command_f(cmd: Command, argument: f32) {
 unsafe fn send_command_i_stall(cmd: Command, argument: i32) {
     send_command_i(cmd, argument);
     if let (Context::Direct, 0) = (CURR_CONTEXT, OBJECT_STACK_DEPTH) {
-        crate::sys::ge::sceGeListUpdateStallAddr(
+        crate::sys::sceGeListUpdateStallAddr(
             GE_LIST_EXECUTED[0],
             (*LIST).current as *mut c_void,
         );
@@ -957,7 +958,7 @@ extern "C" fn callback_sig(id: i32, arg: *mut c_void) {
             f(id & 0xffff);
         }
 
-        crate::sys::kernel::sceKernelSetEventFlag((*settings).kernel_event_flag, 1);
+        crate::sys::sceKernelSetEventFlag((*settings).kernel_event_flag, 1);
     }
 }
 
@@ -1005,7 +1006,7 @@ pub unsafe fn sceGuDepthBuffer(zbp: *mut c_void, zbw: i32) {
 /// - `dispbw`: Display buffer width (block aligned)
 #[allow(non_snake_case)]
 pub unsafe fn sceGuDispBuffer(width: i32, height: i32, dispbp: *mut c_void, dispbw: i32) {
-    use crate::sys::display::DisplaySetBufSync;
+    use crate::sys::DisplaySetBufSync;
 
     DRAW_BUFFER.width = width;
     DRAW_BUFFER.height = height;
@@ -1017,14 +1018,14 @@ pub unsafe fn sceGuDispBuffer(width: i32, height: i32, dispbp: *mut c_void, disp
 
     draw_region(0, 0, DRAW_BUFFER.width, DRAW_BUFFER.height);
 
-    crate::sys::display::sceDisplaySetMode(
-        crate::sys::display::DisplayMode::Lcd,
+    crate::sys::sceDisplaySetMode(
+        crate::sys::DisplayMode::Lcd,
         DRAW_BUFFER.width as usize,
         DRAW_BUFFER.height as usize,
     );
 
     if DISPLAY_ON == true {
-        crate::sys::display::sceDisplaySetFrameBuf(
+        crate::sys::sceDisplaySetFrameBuf(
             (GE_EDRAM_ADDRESS as *mut u8).add(DRAW_BUFFER.disp_buffer as usize),
             dispbw as usize,
             DRAW_BUFFER.pixel_size,
@@ -1095,17 +1096,17 @@ pub unsafe fn sceGuDrawBufferList(psm: DisplayPixelFormat, fbp: *mut c_void, fbw
 /// State of the display prior to this call
 #[allow(non_snake_case)]
 pub unsafe fn sceGuDisplay(state: bool) -> bool {
-    use crate::sys::display::DisplaySetBufSync;
+    use crate::sys::DisplaySetBufSync;
 
     if state {
-        crate::sys::display::sceDisplaySetFrameBuf(
+        crate::sys::sceDisplaySetFrameBuf(
             (GE_EDRAM_ADDRESS as *mut u8).add(DRAW_BUFFER.disp_buffer as usize),
             DRAW_BUFFER.frame_width as usize,
             DRAW_BUFFER.pixel_size,
             DisplaySetBufSync::NextFrame,
         );
     } else {
-        crate::sys::display::sceDisplaySetFrameBuf(
+        crate::sys::sceDisplaySetFrameBuf(
             null_mut(),
             0,
             DisplayPixelFormat::Psm5650,
@@ -1434,20 +1435,20 @@ pub unsafe fn sceGuInit() {
         out
     });
 
-    let mut callback = crate::sys::ge::GeCallbackData {
+    let mut callback = crate::sys::GeCallbackData {
         signal_func: Some(callback_sig),
         signal_arg: &mut SETTINGS as *mut _ as *mut c_void,
         finish_func: Some(callback_fin),
         finish_arg: &mut SETTINGS as *mut _ as *mut c_void,
     };
 
-    SETTINGS.ge_callback_id = crate::sys::ge::sceGeSetCallback(&mut callback);
+    SETTINGS.ge_callback_id = crate::sys::sceGeSetCallback(&mut callback);
     SETTINGS.swap_buffers_callback = None;
     SETTINGS.swap_buffers_behaviour = super::display::DisplaySetBufSync::Immediate;
 
-    GE_EDRAM_ADDRESS = super::ge::sceGeEdramGetAddr() as *mut c_void;
+    GE_EDRAM_ADDRESS = sys::sceGeEdramGetAddr() as *mut c_void;
 
-    GE_LIST_EXECUTED[0] = super::ge::sceGeListEnQueue(
+    GE_LIST_EXECUTED[0] = sys::sceGeListEnQueue(
         (&INIT_LIST as *const _ as u32 & 0x1fffffff) as *const _,
         core::ptr::null_mut(),
         SETTINGS.ge_callback_id as i32,
@@ -1463,7 +1464,7 @@ pub unsafe fn sceGuInit() {
         null_mut()
     );
 
-    super::ge::sceGeListSync(GE_LIST_EXECUTED[0], 0);
+    sys::sceGeListSync(GE_LIST_EXECUTED[0], 0);
 }
 
 /// Shutdown the GU system
@@ -1471,10 +1472,8 @@ pub unsafe fn sceGuInit() {
 /// Called when GU is no longer needed
 #[allow(non_snake_case)]
 pub unsafe fn sceGuTerm() {
-    use crate::sys::kernel;
-
-    kernel::sceKernelDeleteEventFlag(SETTINGS.kernel_event_flag);
-    ge::sceGeUnsetCallback(SETTINGS.ge_callback_id);
+    sys::sceKernelDeleteEventFlag(SETTINGS.kernel_event_flag);
+    sys::sceGeUnsetCallback(SETTINGS.ge_callback_id);
 }
 
 /// # Parameters
@@ -1486,13 +1485,13 @@ pub unsafe fn sceGuBreak(mode: i32) {
         buf: [0; 4],
     };
 
-    ge::sceGeBreak(mode, &mut UNUSED_BREAK);
+    sys::sceGeBreak(mode, &mut UNUSED_BREAK);
 }
 
 #[allow(non_snake_case)]
 pub unsafe fn sceGuContinue() {
     // Return this?
-    ge::sceGeContinue();
+    sys::sceGeContinue();
 }
 
 // FIXME: This documentation is confusing.
@@ -1607,7 +1606,7 @@ pub unsafe fn sceGuGetMemory(mut size: i32) -> *mut c_void {
     (*LIST).current = new_ptr;
 
     if let Context::Direct = CURR_CONTEXT {
-        crate::sys::ge::sceGeListUpdateStallAddr(GE_LIST_EXECUTED[0], new_ptr as *mut _);
+        crate::sys::sceGeListUpdateStallAddr(GE_LIST_EXECUTED[0], new_ptr as *mut _);
     }
 
     orig_ptr.add(2) as *mut _
@@ -1636,7 +1635,7 @@ pub unsafe fn sceGuStart(context_type: Context, list: *mut c_void) {
     CURR_CONTEXT = context_type;
 
     if let Context::Direct = context_type {
-        GE_LIST_EXECUTED[0] = crate::sys::ge::sceGeListEnQueue(
+        GE_LIST_EXECUTED[0] = crate::sys::sceGeListEnQueue(
             local_list as *mut c_void,
             local_list as *mut c_void,
             SETTINGS.ge_callback_id as i32,
@@ -1820,7 +1819,7 @@ pub unsafe fn sceGuSendList(mode: QueueMode, list: *const c_void, context: *mut 
 
     let list_id = match mode {
         QueueMode::Head => {
-            crate::sys::ge::sceGeListEnQueueHead(
+            crate::sys::sceGeListEnQueueHead(
                 list,
                 null_mut(),
                 callback as i32,
@@ -1829,7 +1828,7 @@ pub unsafe fn sceGuSendList(mode: QueueMode, list: *const c_void, context: *mut 
         }
 
         QueueMode::Tail => {
-            crate::sys::ge::sceGeListEnQueue(list, null_mut(), callback as i32, &mut args)
+            crate::sys::sceGeListEnQueue(list, null_mut(), callback as i32, &mut args)
         }
     };
 
@@ -1853,7 +1852,7 @@ pub unsafe fn sceGuSwapBuffers() -> *mut c_void {
     }
 
     if DISPLAY_ON {
-        crate::sys::display::sceDisplaySetFrameBuf(
+        crate::sys::sceDisplaySetFrameBuf(
             GE_EDRAM_ADDRESS.add(DRAW_BUFFER.disp_buffer as usize) as *const u8,
             DRAW_BUFFER.frame_width as usize,
             DRAW_BUFFER.pixel_size,
@@ -1880,9 +1879,9 @@ pub unsafe fn sceGuSwapBuffers() -> *mut c_void {
 #[allow(non_snake_case)]
 pub unsafe fn sceGuSync(mode: SyncMode, behavior: SyncBehavior) -> GeListState {
     match mode {
-        SyncMode::Finish => crate::sys::ge::sceGeDrawSync(behavior as i32),
-        SyncMode::List => crate::sys::ge::sceGeListSync(GE_LIST_EXECUTED[0], behavior as i32),
-        SyncMode::Send => crate::sys::ge::sceGeListSync(GE_LIST_EXECUTED[1], behavior as i32),
+        SyncMode::Finish => crate::sys::sceGeDrawSync(behavior as i32),
+        SyncMode::List => crate::sys::sceGeListSync(GE_LIST_EXECUTED[0], behavior as i32),
+        SyncMode::Send => crate::sys::sceGeListSync(GE_LIST_EXECUTED[1], behavior as i32),
         _ => GeListState::Done,
     }
 }
@@ -2002,7 +2001,7 @@ pub unsafe fn sceGuEndObject() {
 /// - `status`: `1` to enable or `0` to disable the state
 // TODO: bool for ABI?
 #[allow(non_snake_case)]
-pub unsafe fn sceGuSetStatus(state: State, status: i32) {
+pub unsafe fn sceGuSetStatus(state: GuState, status: i32) {
     if status != 0 {
         sceGuEnable(state);
     } else {
@@ -2020,7 +2019,7 @@ pub unsafe fn sceGuSetStatus(state: State, status: i32) {
 ///
 /// Whether state is enabled or not
 #[allow(non_snake_case)]
-pub unsafe fn sceGuGetStatus(state: State) -> bool {
+pub unsafe fn sceGuGetStatus(state: GuState) -> bool {
     let state = state as u32;
 
     if state < 22 {
@@ -2060,13 +2059,13 @@ pub unsafe fn sceGuGetAllStatus() -> i32 {
 ///
 /// # Parameters
 ///
-/// - `state`: Which state to enable, one of `State`
+/// - `state`: Which state to enable, one of `GuState`
 #[allow(non_snake_case)]
-pub unsafe fn sceGuEnable(state: State) {
+pub unsafe fn sceGuEnable(state: GuState) {
     match state {
-        State::AlphaTest => send_command_i(Command::AlphaTestEnable, 1),
-        State::DepthTest => send_command_i(Command::ZTestEnable, 1),
-        State::ScissorTest => {
+        GuState::AlphaTest => send_command_i(Command::AlphaTestEnable, 1),
+        GuState::DepthTest => send_command_i(Command::ZTestEnable, 1),
+        GuState::ScissorTest => {
             let context = &mut CONTEXTS[CURR_CONTEXT as usize];
             context.scissor_enable = 1;
             send_command_i(
@@ -2075,25 +2074,25 @@ pub unsafe fn sceGuEnable(state: State) {
             );
             send_command_i(Command::Scissor2, (context.scissor_end[1] << 10) | context.scissor_end[0]);
         }
-        State::StencilTest => send_command_i(Command::StencilTestEnable, 1),
-        State::Blend => send_command_i(Command::AlphaBlendEnable, 1),
-        State::CullFace => send_command_i(Command::CullFaceEnable, 1),
-        State::Dither => send_command_i(Command::DitherEnable, 1),
-        State::Fog => send_command_i(Command::FogEnable, 1),
-        State::ClipPlanes => send_command_i(Command::DepthClampEnable, 1),
-        State::Texture2D => send_command_i(Command::TextureMapEnable, 1),
-        State::Lighting => send_command_i(Command::LightingEnable, 1),
-        State::Light0 => send_command_i(Command::LightEnable0, 1),
-        State::Light1 => send_command_i(Command::LightEnable1, 1),
-        State::Light2 => send_command_i(Command::LightEnable2, 1),
-        State::Light3 => send_command_i(Command::LightEnable3, 1),
-        State::LineSmooth => send_command_i(Command::AntiAliasEnable, 1),
-        State::PatchCullFace => send_command_i(Command::PatchCullEnable, 1),
-        State::ColorTest => send_command_i(Command::ColorTestEnable, 1),
-        State::ColorLogicOp => send_command_i(Command::LogicOpEnable, 1),
-        State::FaceNormalReverse => send_command_i(Command::ReverseNormal, 1),
-        State::PatchFace => send_command_i(Command::PatchFacing, 1),
-        State::Fragment2X => {
+        GuState::StencilTest => send_command_i(Command::StencilTestEnable, 1),
+        GuState::Blend => send_command_i(Command::AlphaBlendEnable, 1),
+        GuState::CullFace => send_command_i(Command::CullFaceEnable, 1),
+        GuState::Dither => send_command_i(Command::DitherEnable, 1),
+        GuState::Fog => send_command_i(Command::FogEnable, 1),
+        GuState::ClipPlanes => send_command_i(Command::DepthClampEnable, 1),
+        GuState::Texture2D => send_command_i(Command::TextureMapEnable, 1),
+        GuState::Lighting => send_command_i(Command::LightingEnable, 1),
+        GuState::Light0 => send_command_i(Command::LightEnable0, 1),
+        GuState::Light1 => send_command_i(Command::LightEnable1, 1),
+        GuState::Light2 => send_command_i(Command::LightEnable2, 1),
+        GuState::Light3 => send_command_i(Command::LightEnable3, 1),
+        GuState::LineSmooth => send_command_i(Command::AntiAliasEnable, 1),
+        GuState::PatchCullFace => send_command_i(Command::PatchCullEnable, 1),
+        GuState::ColorTest => send_command_i(Command::ColorTestEnable, 1),
+        GuState::ColorLogicOp => send_command_i(Command::LogicOpEnable, 1),
+        GuState::FaceNormalReverse => send_command_i(Command::ReverseNormal, 1),
+        GuState::PatchFace => send_command_i(Command::PatchFacing, 1),
+        GuState::Fragment2X => {
             let context = &mut CONTEXTS[CURR_CONTEXT as usize];
             context.fragment_2x = 0x10000;
             send_command_i(Command::TexFunc, 0x10000 | context.texture_function);
@@ -2109,13 +2108,13 @@ pub unsafe fn sceGuEnable(state: State) {
 ///
 /// # Parameters
 ///
-/// - `state`: Which state to disable, one of `State`
+/// - `state`: Which state to disable, one of `GuState`
 #[allow(non_snake_case)]
-pub unsafe fn sceGuDisable(state: State) {
+pub unsafe fn sceGuDisable(state: GuState) {
     match state {
-        State::AlphaTest => send_command_i(Command::AlphaTestEnable, 0),
-        State::DepthTest => send_command_i(Command::ZTestEnable, 0),
-        State::ScissorTest => {
+        GuState::AlphaTest => send_command_i(Command::AlphaTestEnable, 0),
+        GuState::DepthTest => send_command_i(Command::ZTestEnable, 0),
+        GuState::ScissorTest => {
             let context = &mut CONTEXTS[CURR_CONTEXT as usize];
             context.scissor_enable = 0;
             send_command_i(Command::Scissor1, 0);
@@ -2124,25 +2123,25 @@ pub unsafe fn sceGuDisable(state: State) {
                 ((DRAW_BUFFER.height - 1) << 10) | DRAW_BUFFER.width - 1,
             );
         }
-        State::StencilTest => send_command_i(Command::StencilTestEnable, 0),
-        State::Blend => send_command_i(Command::AlphaBlendEnable, 0),
-        State::CullFace => send_command_i(Command::CullFaceEnable, 0),
-        State::Dither => send_command_i(Command::DitherEnable, 0),
-        State::Fog => send_command_i(Command::FogEnable, 0),
-        State::ClipPlanes => send_command_i(Command::DepthClampEnable, 0),
-        State::Texture2D => send_command_i(Command::TextureMapEnable, 0),
-        State::Lighting => send_command_i(Command::LightingEnable, 0),
-        State::Light0 => send_command_i(Command::LightEnable0, 0),
-        State::Light1 => send_command_i(Command::LightEnable1, 0),
-        State::Light2 => send_command_i(Command::LightEnable2, 0),
-        State::Light3 => send_command_i(Command::LightEnable3, 0),
-        State::LineSmooth => send_command_i(Command::AntiAliasEnable, 0),
-        State::PatchCullFace => send_command_i(Command::PatchCullEnable, 0),
-        State::ColorTest => send_command_i(Command::ColorTestEnable, 0),
-        State::ColorLogicOp => send_command_i(Command::LogicOpEnable, 0),
-        State::FaceNormalReverse => send_command_i(Command::ReverseNormal, 0),
-        State::PatchFace => send_command_i(Command::PatchFacing, 0),
-        State::Fragment2X => {
+        GuState::StencilTest => send_command_i(Command::StencilTestEnable, 0),
+        GuState::Blend => send_command_i(Command::AlphaBlendEnable, 0),
+        GuState::CullFace => send_command_i(Command::CullFaceEnable, 0),
+        GuState::Dither => send_command_i(Command::DitherEnable, 0),
+        GuState::Fog => send_command_i(Command::FogEnable, 0),
+        GuState::ClipPlanes => send_command_i(Command::DepthClampEnable, 0),
+        GuState::Texture2D => send_command_i(Command::TextureMapEnable, 0),
+        GuState::Lighting => send_command_i(Command::LightingEnable, 0),
+        GuState::Light0 => send_command_i(Command::LightEnable0, 0),
+        GuState::Light1 => send_command_i(Command::LightEnable1, 0),
+        GuState::Light2 => send_command_i(Command::LightEnable2, 0),
+        GuState::Light3 => send_command_i(Command::LightEnable3, 0),
+        GuState::LineSmooth => send_command_i(Command::AntiAliasEnable, 0),
+        GuState::PatchCullFace => send_command_i(Command::PatchCullEnable, 0),
+        GuState::ColorTest => send_command_i(Command::ColorTestEnable, 0),
+        GuState::ColorLogicOp => send_command_i(Command::LogicOpEnable, 0),
+        GuState::FaceNormalReverse => send_command_i(Command::ReverseNormal, 0),
+        GuState::PatchFace => send_command_i(Command::PatchFacing, 0),
+        GuState::Fragment2X => {
             let context = &mut CONTEXTS[CURR_CONTEXT as usize];
             context.fragment_2x = 0;
             send_command_i(Command::TexFunc, context.texture_function);
@@ -2410,7 +2409,7 @@ pub unsafe fn sceGuColor(color: u32) {
 
 /// Set the color test function
 ///
-/// The color test is only performed while `State::ColorTest` is enabled, e.g.
+/// The color test is only performed while `GuState::ColorTest` is enabled, e.g.
 /// via `sceGuEnable`.
 ///
 /// # Parameters
@@ -2568,7 +2567,7 @@ pub unsafe fn sceGuSpecular(power: f32) {
 
 /// Set the current face-order (for culling)
 ///
-/// This only has effect when culling (`State::CullFace`) is enabled, e.g. via
+/// This only has effect when culling (`GuState::CullFace`) is enabled, e.g. via
 /// `sceGuEnable`.
 ///
 /// # Parameters
@@ -2584,7 +2583,7 @@ pub unsafe fn sceGuFrontFace(order: FrontFaceDirection) {
 
 /// Set color logical operation
 ///
-/// This operation only has effect if `State::ColorLogicOp` is enabled, e.g. via
+/// This operation only has effect if `GuState::ColorLogicOp` is enabled, e.g. via
 /// `sceGuEnable`.
 ///
 /// # Parameters
@@ -2597,7 +2596,7 @@ pub unsafe fn sceGuLogicalOp(op: LogicalOperation) {
 
 /// Set ordered pixel dither matrix
 ///
-/// This dither matrix is only applied if `State::Dither` is enabled, e.g. via
+/// This dither matrix is only applied if `GuState::Dither` is enabled, e.g. via
 /// `sceGuEnable`.
 ///
 /// # Parameters
@@ -3054,7 +3053,7 @@ pub unsafe fn sceGuClutMode(cpsm: ClutPixelFormat, shift: u32, mask: u32, a3: u3
 /// Center the virtual coordinate range:
 ///
 /// ```no_run
-/// # use psp::sys::gu::sceGuOffset;
+/// # use psp::sys::sceGuOffset;
 /// sceGuOffset(2048 - (480 / 2), 2048 - (272 / 2)) {
 /// ```
 ///
@@ -3071,7 +3070,7 @@ pub unsafe fn sceGuOffset(x: u32, y: u32) {
 /// Set what to scissor within the current viewport
 ///
 /// Note that scissoring is only performed if the custom scissoring
-/// (`State::ScissorTest`) is enabled, e.g. via `sceGuEnable`.
+/// (`GuState::ScissorTest`) is enabled, e.g. via `sceGuEnable`.
 ///
 /// # Parameters
 ///
@@ -3102,7 +3101,7 @@ pub unsafe fn sceGuScissor(x: i32, y: i32, w: i32, h: i32) {
 /// Setup a viewport of size (480,272) with origin at (2048,2048)
 ///
 /// ```no_run
-/// # use psp::sys::gu::sceGuViewport;
+/// # use psp::sys::sceGuViewport;
 /// sceGuViewport(2048, 2048, 480, 272);
 /// ```
 ///

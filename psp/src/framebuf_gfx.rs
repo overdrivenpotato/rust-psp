@@ -1,4 +1,4 @@
-use crate::sys::{display, ge};
+use crate::sys;
 use core::convert::TryInto;
 use embedded_graphics::{
     drawable::Pixel,
@@ -14,13 +14,13 @@ pub struct Framebuffer {
 impl Framebuffer {
     pub fn new() -> Self {
         unsafe {
-            display::sceDisplaySetMode(display::DisplayMode::Lcd, 480, 272);
-            let vram_base = (0x4000_0000u32 | ge::sceGeEdramGetAddr() as u32) as *mut u16;
-            display::sceDisplaySetFrameBuf(
+            sys::sceDisplaySetMode(sys::DisplayMode::Lcd, 480, 272);
+            let vram_base = (0x4000_0000u32 | sys::sceGeEdramGetAddr() as u32) as *mut u16;
+            sys::sceDisplaySetFrameBuf(
                 vram_base as *const u8,
                 512,
-                display::DisplayPixelFormat::Psm8888,
-                display::DisplaySetBufSync::NextFrame,
+                sys::DisplayPixelFormat::Psm8888,
+                sys::DisplaySetBufSync::NextFrame,
             );
             Framebuffer { vram_base }
         }

@@ -190,7 +190,7 @@ macro_rules! module {
 
             #[no_mangle]
             extern "C" fn module_start(_argc: isize, _argv: *const *const u8) -> isize {
-                use $crate::sys::kernel::ThreadAttributes;
+                use $crate::sys::ThreadAttributes;
                 use core::ffi::c_void;
 
                 unsafe {
@@ -203,7 +203,7 @@ macro_rules! module {
                         0
                     }
 
-                    let id = $crate::sys::kernel::sceKernelCreateThread(
+                    let id = $crate::sys::sceKernelCreateThread(
                         &b"main_thread\0"[0],
                         main_thread,
                         // default priority of 32.
@@ -214,7 +214,7 @@ macro_rules! module {
                         core::ptr::null_mut(),
                     );
 
-                    $crate::sys::kernel::sceKernelStartThread(id, 0, core::ptr::null_mut());
+                    $crate::sys::sceKernelStartThread(id, 0, core::ptr::null_mut());
                 }
 
                 0
@@ -229,29 +229,29 @@ macro_rules! module {
 /// exit callback if you need this, see the source code of this function.
 pub fn enable_home_button() {
     use core::{ptr, ffi::c_void};
-    use sys::kernel::ThreadAttributes;
+    use sys::ThreadAttributes;
 
     unsafe {
         unsafe extern fn exit_thread(_args: usize, _argp: *mut c_void) -> i32 {
             unsafe extern fn exit_callback(_arg1: i32, _arg2: i32, _arg: *mut c_void) -> i32 {
-                sys::kernel::sceKernelExitGame();
+                sys::sceKernelExitGame();
                 0
             }
 
-            let id = sys::kernel::sceKernelCreateCallback(
+            let id = sys::sceKernelCreateCallback(
                 &b"exit_callback\0"[0],
                 exit_callback,
                 ptr::null_mut(),
             );
 
-            sys::kernel::sceKernelRegisterExitCallback(id);
-            sys::kernel::sceKernelSleepThreadCB();
+            sys::sceKernelRegisterExitCallback(id);
+            sys::sceKernelSleepThreadCB();
 
             0
         }
 
         // Enable the home button.
-        let id = sys::kernel::sceKernelCreateThread(
+        let id = sys::sceKernelCreateThread(
             &b"exit_thread\0"[0],
             exit_thread,
             32,
@@ -260,6 +260,6 @@ pub fn enable_home_button() {
             ptr::null_mut(),
         );
 
-        sys::kernel::sceKernelStartThread(id, 0, ptr::null_mut());
+        sys::sceKernelStartThread(id, 0, ptr::null_mut());
     }
 }

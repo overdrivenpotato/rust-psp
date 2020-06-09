@@ -4,15 +4,10 @@
 use psp::Align16;
 use core::{ptr, ffi::c_void};
 use psp::sys::{
-    gum,
-    types::ScePspFVector3,
-    display::DisplayPixelFormat,
-    gu::{
-        self, Context, SyncMode, SyncBehavior, Primitive, TextureFilter,
-        TextureEffect, TextureColorComponent, FrontFaceDirection, ShadingModel,
-        State, TexturePixelFormat, DepthFunc, VertexType, ClearBuffer,
-        MipmapLevel,
-    },
+    self, ScePspFVector3, DisplayPixelFormat, Context, SyncMode, SyncBehavior,
+    Primitive, TextureFilter, TextureEffect, TextureColorComponent,
+    FrontFaceDirection, ShadingModel, GuState, TexturePixelFormat, DepthFunc,
+    VertexType, ClearBuffer, MipmapLevel,
 };
 
 psp::module!("sample_cube", 1, 1);
@@ -128,81 +123,81 @@ unsafe fn psp_main_inner() {
     let fbp1 = get_static_vram_buffer(BUF_WIDTH, SCR_HEIGHT, TexturePixelFormat::Psm8888);
     let zbp = get_static_vram_buffer(BUF_WIDTH, SCR_HEIGHT, TexturePixelFormat::Psm4444);
 
-    gum::sceGumLoadIdentity();
+    sys::sceGumLoadIdentity();
 
-    gu::sceGuInit();
+    sys::sceGuInit();
 
-    gu::sceGuStart(Context::Direct, &mut LIST.0 as *mut [u32; 0x40000] as *mut _);
-    gu::sceGuDrawBuffer(DisplayPixelFormat::Psm8888, fbp0, BUF_WIDTH);
-    gu::sceGuDispBuffer(SCR_WIDTH, SCR_HEIGHT, fbp1, BUF_WIDTH);
-    gu::sceGuDepthBuffer(zbp, BUF_WIDTH);
-    gu::sceGuOffset(2048 - (SCR_WIDTH as u32 / 2), 2048 - (SCR_HEIGHT as u32 / 2));
-    gu::sceGuViewport(2048, 2048, SCR_WIDTH, SCR_HEIGHT);
-    gu::sceGuDepthRange(65535, 0);
-    gu::sceGuScissor(0, 0, SCR_WIDTH, SCR_HEIGHT);
-    gu::sceGuEnable(State::ScissorTest);
-    gu::sceGuDepthFunc(DepthFunc::GreaterOrEqual);
-    gu::sceGuEnable(State::DepthTest);
-    gu::sceGuFrontFace(FrontFaceDirection::Clockwise);
-    gu::sceGuShadeModel(ShadingModel::Smooth);
-    gu::sceGuEnable(State::CullFace);
-    gu::sceGuEnable(State::Texture2D);
-    gu::sceGuEnable(State::ClipPlanes);
-    gu::sceGuFinish();
-    gu::sceGuSync(SyncMode::Finish, SyncBehavior::Wait);
+    sys::sceGuStart(Context::Direct, &mut LIST.0 as *mut [u32; 0x40000] as *mut _);
+    sys::sceGuDrawBuffer(DisplayPixelFormat::Psm8888, fbp0, BUF_WIDTH);
+    sys::sceGuDispBuffer(SCR_WIDTH, SCR_HEIGHT, fbp1, BUF_WIDTH);
+    sys::sceGuDepthBuffer(zbp, BUF_WIDTH);
+    sys::sceGuOffset(2048 - (SCR_WIDTH as u32 / 2), 2048 - (SCR_HEIGHT as u32 / 2));
+    sys::sceGuViewport(2048, 2048, SCR_WIDTH, SCR_HEIGHT);
+    sys::sceGuDepthRange(65535, 0);
+    sys::sceGuScissor(0, 0, SCR_WIDTH, SCR_HEIGHT);
+    sys::sceGuEnable(GuState::ScissorTest);
+    sys::sceGuDepthFunc(DepthFunc::GreaterOrEqual);
+    sys::sceGuEnable(GuState::DepthTest);
+    sys::sceGuFrontFace(FrontFaceDirection::Clockwise);
+    sys::sceGuShadeModel(ShadingModel::Smooth);
+    sys::sceGuEnable(GuState::CullFace);
+    sys::sceGuEnable(GuState::Texture2D);
+    sys::sceGuEnable(GuState::ClipPlanes);
+    sys::sceGuFinish();
+    sys::sceGuSync(SyncMode::Finish, SyncBehavior::Wait);
 
-    psp::sys::display::sceDisplayWaitVblankStart();
+    psp::sys::sceDisplayWaitVblankStart();
 
-    gu::sceGuDisplay(true);
+    sys::sceGuDisplay(true);
 
     // run sample
 
     let mut val = 0.0;
 
     loop {
-        gu::sceGuStart(Context::Direct, &mut LIST.0 as *mut [u32; 0x40000] as *mut _);
+        sys::sceGuStart(Context::Direct, &mut LIST.0 as *mut [u32; 0x40000] as *mut _);
 
         // clear screen
-        gu::sceGuClearColor(0xff554433);
-        gu::sceGuClearDepth(0);
-        gu::sceGuClear(ClearBuffer::COLOR_BUFFER_BIT | ClearBuffer::DEPTH_BUFFER_BIT);
+        sys::sceGuClearColor(0xff554433);
+        sys::sceGuClearDepth(0);
+        sys::sceGuClear(ClearBuffer::COLOR_BUFFER_BIT | ClearBuffer::DEPTH_BUFFER_BIT);
 
         // setup matrices for cube
 
-        gum::sceGumMatrixMode(gum::Mode::Projection);
-        gum::sceGumLoadIdentity();
-        gum::sceGumPerspective(75.0, 16.0 / 9.0, 0.5, 1000.0);
+        sys::sceGumMatrixMode(sys::Mode::Projection);
+        sys::sceGumLoadIdentity();
+        sys::sceGumPerspective(75.0, 16.0 / 9.0, 0.5, 1000.0);
 
-        gum::sceGumMatrixMode(gum::Mode::View);
-        gum::sceGumLoadIdentity();
+        sys::sceGumMatrixMode(sys::Mode::View);
+        sys::sceGumLoadIdentity();
 
-        gum::sceGumMatrixMode(gum::Mode::Model);
-        gum::sceGumLoadIdentity();
+        sys::sceGumMatrixMode(sys::Mode::Model);
+        sys::sceGumLoadIdentity();
 
         {
             let pos = ScePspFVector3 { x: 0.0, y: 0.0, z: -2.5 };
             let rot = ScePspFVector3 {
-                x: val * 0.79 * (gu::PI / 180.0),
-                y: val * 0.98 * (gu::PI / 180.0),
-                z: val * 1.32 * (gu::PI / 180.0),
+                x: val * 0.79 * (sys::PI / 180.0),
+                y: val * 0.98 * (sys::PI / 180.0),
+                z: val * 1.32 * (sys::PI / 180.0),
             };
 
-            gum::sceGumTranslate(&pos);
-            gum::sceGumRotateXYZ(&rot);
+            sys::sceGumTranslate(&pos);
+            sys::sceGumRotateXYZ(&rot);
         }
 
         // setup texture
 
-        gu::sceGuTexMode(TexturePixelFormat::Psm8888, 0, 0, 0);
-        gu::sceGuTexImage(MipmapLevel::None, 128, 128, 128, &FERRIS as *const _ as *const _);
-        gu::sceGuTexFunc(TextureEffect::Replace, TextureColorComponent::Rgb);
-        gu::sceGuTexFilter(TextureFilter::Linear, TextureFilter::Linear);
-        gu::sceGuTexScale(1.0, 1.0);
-        gu::sceGuTexOffset(0.0, 0.0);
+        sys::sceGuTexMode(TexturePixelFormat::Psm8888, 0, 0, 0);
+        sys::sceGuTexImage(MipmapLevel::None, 128, 128, 128, &FERRIS as *const _ as *const _);
+        sys::sceGuTexFunc(TextureEffect::Replace, TextureColorComponent::Rgb);
+        sys::sceGuTexFilter(TextureFilter::Linear, TextureFilter::Linear);
+        sys::sceGuTexScale(1.0, 1.0);
+        sys::sceGuTexOffset(0.0, 0.0);
 
         // draw cube
 
-        gum::sceGumDrawArray(
+        sys::sceGumDrawArray(
             Primitive::Triangles,
             VertexType::TEXTURE_32BITF | VertexType::VERTEX_32BITF | VertexType::TRANSFORM_3D,
             12 * 3,
@@ -210,15 +205,15 @@ unsafe fn psp_main_inner() {
             &VERTICES as *const Align16<_> as *const _,
         );
 
-        gu::sceGuFinish();
-        gu::sceGuSync(SyncMode::Finish, SyncBehavior::Wait);
+        sys::sceGuFinish();
+        sys::sceGuSync(SyncMode::Finish, SyncBehavior::Wait);
 
-        psp::sys::display::sceDisplayWaitVblankStart();
-        gu::sceGuSwapBuffers();
+        sys::sceDisplayWaitVblankStart();
+        sys::sceGuSwapBuffers();
 
         val += 1.0;
     }
 
-    // gu::sceGuTerm();
-    // psp::sys::kernel::sceKernelExitGame();
+    // sys::sceGuTerm();
+    // psp::sys::sceKernelExitGame();
 }

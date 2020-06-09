@@ -1,5 +1,5 @@
 use core::{ptr, ffi::c_void};
-use crate::sys::display::{self, DisplayPixelFormat};
+use crate::sys::{self, DisplayPixelFormat};
 
 const SCREEN_WIDTH: usize = 480;
 const SCREEN_HEIGHT: usize = 272;
@@ -82,11 +82,11 @@ pub fn screenshot_argb_be() -> alloc::vec::Vec<u32> {
     let mut top_addr: *mut c_void = ptr::null_mut();
 
     unsafe {
-        display::sceDisplayGetFrameBuf(
+        sys::sceDisplayGetFrameBuf(
             &mut top_addr,
             &mut buffer_width,
             &mut pixel_format,
-            display::DisplaySetBufSync::Immediate,
+            sys::DisplaySetBufSync::Immediate,
         );
     }
 
@@ -105,7 +105,7 @@ pub fn screenshot_argb_be() -> alloc::vec::Vec<u32> {
         for y in 0..SCREEN_HEIGHT {
             // BGRA is reversed ARGB. We do this for little-endian based copying.
             let bgra = match pixel_format {
-                display::DisplayPixelFormat::Psm8888 => {
+                sys::DisplayPixelFormat::Psm8888 => {
                     let rgba = unsafe {
                         *(top_addr as *mut u32).add(x + y * buffer_width)
                     };
@@ -113,7 +113,7 @@ pub fn screenshot_argb_be() -> alloc::vec::Vec<u32> {
                     rgba_to_bgra(rgba)
                 },
 
-                display::DisplayPixelFormat::Psm5650 => {
+                sys::DisplayPixelFormat::Psm5650 => {
                     let rgb565 = unsafe {
                         *(top_addr as *mut u16).add(x + y * buffer_width)
                     };
@@ -121,7 +121,7 @@ pub fn screenshot_argb_be() -> alloc::vec::Vec<u32> {
                     rgb565_to_bgra(rgb565)
                 }
 
-                display::DisplayPixelFormat::Psm5551 => {
+                sys::DisplayPixelFormat::Psm5551 => {
                     let rgba5551 = unsafe {
                         *(top_addr as *mut u16).add(x + y * buffer_width)
                     };
@@ -129,7 +129,7 @@ pub fn screenshot_argb_be() -> alloc::vec::Vec<u32> {
                     rgba5551_to_bgra(rgba5551)
                 }
 
-                display::DisplayPixelFormat::Psm4444 => {
+                sys::DisplayPixelFormat::Psm4444 => {
                     let rgba4444 = unsafe {
                         *(top_addr as *mut u16).add(x + y * buffer_width)
                     };

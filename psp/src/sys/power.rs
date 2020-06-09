@@ -1,4 +1,4 @@
-use crate::sys::kernel::SceUid;
+use crate::sys::SceUid;
 
 /// Power callback flags
 #[repr(u32)]

@@ -4,7 +4,7 @@
 #![no_main]
 
 use core::ffi::c_void;
-use psp::sys::{gu::{self, TexturePixelFormat}, display::{self, DisplayPixelFormat}};
+use psp::sys::{self, GuState, TexturePixelFormat, DisplayPixelFormat};
 
 psp::module!("sample_gu_background", 1, 1);
 
@@ -18,39 +18,39 @@ fn psp_main() {
         let fbp1 = get_static_vram_buffer(512, 272, TexturePixelFormat::Psm8888);
         let zbp = get_static_vram_buffer(512, 272, TexturePixelFormat::Psm4444);
 
-        gu::sceGuInit();
-        gu::sceGuStart(
-            gu::Context::Direct,
+        sys::sceGuInit();
+        sys::sceGuStart(
+            sys::Context::Direct,
             &mut LIST as *mut _ as *mut c_void,
         );
-        gu::sceGuDrawBuffer(DisplayPixelFormat::Psm8888, fbp0, 512);
-        gu::sceGuDispBuffer(480, 272, fbp1, 512);
-        gu::sceGuDepthBuffer(zbp, 512);
-        gu::sceGuOffset(2048 - (480/2), 2048 - (272/2));
-        gu::sceGuViewport(2048, 2048, 480, 272);
-        gu::sceGuDepthRange(65535, 0);
-        gu::sceGuScissor(0, 0, 480, 272);
-        gu::sceGuEnable(gu::State::ScissorTest);
-        gu::sceGuFinish();
-        gu::sceGuSync(gu::SyncMode::Finish, gu::SyncBehavior::Wait);
-        psp::sys::display::sceDisplayWaitVblankStart();
-        gu::sceGuDisplay(true);
+        sys::sceGuDrawBuffer(DisplayPixelFormat::Psm8888, fbp0, 512);
+        sys::sceGuDispBuffer(480, 272, fbp1, 512);
+        sys::sceGuDepthBuffer(zbp, 512);
+        sys::sceGuOffset(2048 - (480/2), 2048 - (272/2));
+        sys::sceGuViewport(2048, 2048, 480, 272);
+        sys::sceGuDepthRange(65535, 0);
+        sys::sceGuScissor(0, 0, 480, 272);
+        sys::sceGuEnable(GuState::ScissorTest);
+        sys::sceGuFinish();
+        sys::sceGuSync(sys::SyncMode::Finish, sys::SyncBehavior::Wait);
+        psp::sys::sceDisplayWaitVblankStart();
+        sys::sceGuDisplay(true);
 
         loop {
-            gu::sceGuStart(
-                gu::Context::Direct,
+            sys::sceGuStart(
+                sys::Context::Direct,
                 &mut LIST as *mut _ as *mut c_void
             );
-            gu::sceGuClearColor(0xff554433);
-            gu::sceGuClearDepth(0);
-            gu::sceGuClear(
-                gu::ClearBuffer::COLOR_BUFFER_BIT |
-                gu::ClearBuffer::DEPTH_BUFFER_BIT
+            sys::sceGuClearColor(0xff554433);
+            sys::sceGuClearDepth(0);
+            sys::sceGuClear(
+                sys::ClearBuffer::COLOR_BUFFER_BIT |
+                sys::ClearBuffer::DEPTH_BUFFER_BIT
             );
-            gu::sceGuFinish();
-            gu::sceGuSync(gu::SyncMode::Finish, gu::SyncBehavior::Wait);
-            display::sceDisplayWaitVblankStart();
-            gu::sceGuSwapBuffers();
+            sys::sceGuFinish();
+            sys::sceGuSync(sys::SyncMode::Finish, sys::SyncBehavior::Wait);
+            sys::sceDisplayWaitVblankStart();
+            sys::sceGuSwapBuffers();
         }
     }
 }

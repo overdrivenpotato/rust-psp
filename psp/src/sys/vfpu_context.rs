@@ -2,7 +2,7 @@
 //!
 //! This is similar (but not identical) to the pspvfpu library from PSPSDK.
 
-use crate::sys::types::{ScePspFMatrix4, ScePspFVector4};
+use crate::sys::{ScePspFMatrix4, ScePspFVector4};
 
 const NUM_MATRICES: usize = 8;
 
@@ -28,10 +28,10 @@ pub struct Context {
 impl Context {
     pub fn new() -> Self {
         unsafe {
-            use crate::sys::kernel::{self, ThreadAttributes};
+            use crate::sys::{self, ThreadAttributes};
 
             // TODO: Handle errors.
-            kernel::sceKernelChangeCurrentThreadAttr(0, ThreadAttributes::VFPU);
+            sys::sceKernelChangeCurrentThreadAttr(0, ThreadAttributes::VFPU);
         }
 
         let zero_vector = ScePspFVector4 { x: 0.0, y: 0.0, z: 0.0, w: 0.0 };

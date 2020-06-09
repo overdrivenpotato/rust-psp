@@ -1,8 +1,7 @@
 use core::{mem::MaybeUninit, ffi::c_void};
 use crate::vfpu_asm;
 use crate::sys::{
-    gu,
-    types::{ScePspFMatrix4, ScePspFVector3, ScePspFVector4},
+    self, ScePspFMatrix4, ScePspFVector3, ScePspFVector4,
     vfpu_context::{Context, MatrixSet},
 };
 
@@ -72,44 +71,44 @@ pub const EPSILON: f32 = 0.00001;
 
 #[allow(non_snake_case)]
 pub unsafe fn sceGumDrawArray(
-    prim: gu::Primitive,
-    v_type: gu::VertexType,
+    prim: sys::Primitive,
+    v_type: sys::VertexType,
     count: i32,
     indices: *const c_void,
     vertices: *const c_void,
 ) {
     sceGumUpdateMatrix();
-    gu::sceGuDrawArray(prim, v_type, count, indices, vertices);
+    sys::sceGuDrawArray(prim, v_type, count, indices, vertices);
 }
 
 #[allow(non_snake_case)]
 pub unsafe fn sceGumDrawArrayN(
-    prim: gu::Primitive,
-    v_type: gu::VertexType,
+    prim: sys::Primitive,
+    v_type: sys::VertexType,
     count: i32,
     a3: i32,
     indices: *const c_void,
     vertices: *const c_void,
 ) {
     sceGumUpdateMatrix();
-    gu::sceGuDrawArrayN(prim, v_type, count, a3, indices, vertices);
+    sys::sceGuDrawArrayN(prim, v_type, count, a3, indices, vertices);
 }
 
 #[allow(non_snake_case)]
 pub unsafe fn sceGumDrawBezier(
-    v_type: gu::VertexType,
+    v_type: sys::VertexType,
     u_count: i32,
     v_count: i32,
     indices: *const c_void,
     vertices: *const c_void,
 ) {
     sceGumUpdateMatrix();
-    gu::sceGuDrawBezier(v_type, u_count, v_count, indices, vertices);
+    sys::sceGuDrawBezier(v_type, u_count, v_count, indices, vertices);
 }
 
 #[allow(non_snake_case)]
 pub unsafe fn sceGumDrawSpline(
-    v_type: gu::VertexType,
+    v_type: sys::VertexType,
     u_count: i32,
     v_count: i32,
     u_edge: i32,
@@ -118,7 +117,7 @@ pub unsafe fn sceGumDrawSpline(
     vertices: *const c_void,
 ) {
     sceGumUpdateMatrix();
-    gu::sceGuDrawSpline(v_type, u_count, v_count, u_edge, v_edge, indices, vertices);
+    sys::sceGuDrawSpline(v_type, u_count, v_count, u_edge, v_edge, indices, vertices);
 }
 
 #[allow(non_snake_case)]
@@ -621,14 +620,14 @@ pub unsafe fn sceGumUpdateMatrix() {
     for i in 0..4 {
         if MATRIX_UPDATE[i] != 0 {
             let mode = match i {
-                0 => gu::MatrixMode::Projection,
-                1 => gu::MatrixMode::View,
-                2 => gu::MatrixMode::Model,
-                3 => gu::MatrixMode::Texture,
+                0 => sys::MatrixMode::Projection,
+                1 => sys::MatrixMode::View,
+                2 => sys::MatrixMode::Model,
+                3 => sys::MatrixMode::Texture,
                 _ => core::intrinsics::unreachable(),
             };
 
-            gu::sceGuSetMatrix(mode, &*STACK_DEPTH[i]);
+            sys::sceGuSetMatrix(mode, &*STACK_DEPTH[i]);
 
             MATRIX_UPDATE[i] = 0;
         }

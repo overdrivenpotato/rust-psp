@@ -10,7 +10,7 @@ psp::module!("vfpu_context_test", 1, 1);
 #[inline(never)]
 extern fn psp_main() {
     psp::dprintln!("Testing VFPU context switcher...");
-    
+
     let mut context = Context::new();
 
     unsafe {
@@ -66,7 +66,7 @@ extern fn psp_main() {
             .mips "cvt.w.s $$f0, $$f0";
             .mips "mfc1 $$t0, $$f0";
             .mips "addu $0, $0, $$t0";
-            
+
             : "=r"(out) : : "t0", "f0" : "volatile"
         }
 

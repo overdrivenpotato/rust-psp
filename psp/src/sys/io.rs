@@ -1,5 +1,5 @@
-use crate::sys::kernel::SceUid;
-use crate::sys::rtc::Time;
+use crate::sys::SceUid;
+use crate::sys::Time;
 use crate::eabi::i6;
 use core::ffi::c_void;
 
