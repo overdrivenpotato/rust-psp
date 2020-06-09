@@ -3,7 +3,7 @@ use num_enum::TryFromPrimitive;
 /// PSP Time Structure
 #[repr(C)]
 #[derive(Debug, Copy, Clone, Default)]
-pub struct Time {
+pub struct ScePspDateTime {
     pub year: u16,
     pub month: u16,
     pub day: u16,
@@ -56,25 +56,25 @@ psp_extern! {
     ///
     /// # Parameters
     ///
-    /// - `tm`: pointer to Time struct to receive time
+    /// - `tm`: pointer to `ScePspDateTime` struct to receive time
     /// - `tz`: time zone to adjust to (minutes from UTC)
     ///
     /// # Return Value
     ///
-    ///  0 on success, < 0 on error
-    pub fn sceRtcGetCurrentClock(tm: Time, tz: i32) -> i32;
+    /// 0 on success, < 0 on error
+    pub fn sceRtcGetCurrentClock(tm: *mut ScePspDateTime, tz: i32) -> i32;
 
     #[psp(0xE7C27D1B)]
     /// Get current tick count, adjusted for local time zone
     ///
     /// # Parameters
     ///
-    /// - `tm`: pointer to Time struct to receive time
+    /// - `tm`: pointer to `ScePspDateTime` struct to receive time
     ///
     /// # Return Value
     ///
-    ///  0 on success, < 0 on error
-    pub fn sceRtcGetCurrentClockLocalTime(tm: Time) -> i32;
+    /// 0 on success, < 0 on error
+    pub fn sceRtcGetCurrentClockLocalTime(tm: *mut ScePspDateTime) -> i32;
 
     #[psp(0x34885E0D)]
     /// Convert a UTC-based tickcount into a local time tick count
@@ -99,7 +99,7 @@ psp_extern! {
     ///
     /// # Return Value
     ///
-    ///  0 on success, < 0 on error
+    /// 0 on success, < 0 on error
     pub fn sceRtcConvertLocalTimeToUTC(tick_local: *const u64, tick_utc: *mut u64) -> i32;
 
     #[psp(0x42307A17)]
@@ -111,7 +111,7 @@ psp_extern! {
     ///
     /// # Return Value
     ///
-    ///  1 on leapyear, 0 if not
+    /// 1 on leap year, 0 if not
     pub fn sceRtcIsLeapYear(year: i32) -> i32;
 
     #[psp(0x05EF322C)]
@@ -138,46 +138,46 @@ psp_extern! {
     ///
     /// # Return Value
     ///
-    ///  day of week with 0 representing monday
+    /// Day of week with 0 representing monday
     pub fn sceRtcGetDayOfWeek(year: i32, month: i32, day: i32) -> i32;
 
     #[psp(0x4B1B5E82)]
-    /// Validate pspDate Component Ranges
+    /// Validate `ScePspDateTime` Component Ranges
     ///
     /// # Parameters
     ///
-    /// - `date`: pointer to pspDate struct to be checked
+    /// - `date`: pointer to `ScePspDateTime` struct to be checked
     ///
     /// # Return Value
     ///
-    ///  0 on success, one of ::CheckValidErrors on error
-    pub fn sceRtcCheckValid(date: *const Time) -> i32;
+    /// 0 on success, one of ::CheckValidErrors on error
+    pub fn sceRtcCheckValid(date: *const ScePspDateTime) -> i32;
 
     #[psp(0x7ED29E40)]
-    /// Set a pspTime struct based on ticks
+    /// Set a `ScePspDateTime` struct based on ticks
     ///
     /// # Parameters
     ///
-    /// - `date`: pointer to pspTime struct to set
+    /// - `date`: pointer to `ScePspDateTime` struct to set
     /// - `tick`: pointer to ticks to convert
     ///
     /// # Return Value
     ///
     ///  0 on success, < 0 on error
-    pub fn sceRtcSetTick(date: *mut Time, tick: *const u64) -> i32;
+    pub fn sceRtcSetTick(date: *mut ScePspDateTime, tick: *const u64) -> i32;
 
     #[psp(0x6FF40ACC)]
-    /// Set ticks based on a pspTime struct
+    /// Set ticks based on a `ScePspDateTime` struct
     ///
     /// # Parameters
     ///
-    /// - `date`: pointer to pspTime to convert
+    /// - `date`: pointer to `ScePspDateTime` to convert
     /// - `tick`: pointer to tick to set
     ///
     /// # Return Value
     ///
     /// 0 on success, < 0 on error
-    pub fn sceRtcGetTick(date: *const Time, tick: *mut u64) -> i32;
+    pub fn sceRtcGetTick(date: *const ScePspDateTime, tick: *mut u64) -> i32;
 
     #[psp(0x9ED0AE87)]
     /// Compare two ticks
@@ -204,7 +204,7 @@ psp_extern! {
     /// # Return Value
     ///
     /// 0 on success, < 0 on error
-    pub fn sceRtcTickAddTicks(dest_tick: *mut u64, src_tick: *const u64, num_tick: u64) -> i32;
+    pub fn sceRtcTickAddTicks(dest_tick: *mut u64, src_tick: *const u64, num_ticks: u64) -> i32;
 
     #[psp(0x26D25A5D)]
     /// Add an amount of ms to a tick ticks
@@ -213,12 +213,12 @@ psp_extern! {
     ///
     /// - `dest_tick`: pointer to tick to hold result
     /// - `src_tick`: pointer to source tick
-    /// - `num_tms`: number of ms to add
+    /// - `num_ms`: number of ms to add
     ///
     /// # Return Value
     ///
     /// 0 on success, < 0 on error
-    pub fn sceRtcTickAddMicroseconds(dest_tick: *mut u64, src_tick: *const u64, num_tms: u64) -> i32;
+    pub fn sceRtcTickAddMicroseconds(dest_tick: *mut u64, src_tick: *const u64, num_ms: u64) -> i32;
 
     #[psp(0xF2A4AFE5)]
     /// Add an amount of seconds to a tick ticks
@@ -319,22 +319,22 @@ psp_extern! {
     pub fn sceRtcTickAddYears(dest_tick: *mut u64, src_tick: *const u64, num_years: u64) -> i32;
 
     #[psp(0x3A807CC8)]
-    pub fn sceRtcSetTime_t(date: *mut Time, time: i64) -> i32;
+    pub fn sceRtcSetTime_t(date: *mut ScePspDateTime, time: i64) -> i32;
 
     #[psp(0x27C4594C)]
-    pub fn sceRtcGetTime_t(date: *const Time, time: *mut i64) -> i32;
+    pub fn sceRtcGetTime_t(date: *const ScePspDateTime, time: *mut i64) -> i32;
 
     #[psp(0xF006F264)]
-    pub fn sceRtcSetDosTime(date: *mut Time, time: u32) -> i32;
+    pub fn sceRtcSetDosTime(date: *mut ScePspDateTime, dos_time: u32) -> i32;
 
     #[psp(0x36075567)]
-    pub fn sceRtcGetDosTime(date: *mut Time, time: u32) -> i32;
+    pub fn sceRtcGetDosTime(date: *mut ScePspDateTime, dos_time: u32) -> i32;
 
     #[psp(0x7ACE4C04)]
-    pub fn sceRtcSetWin32FileTime(date: *mut Time, time: *mut u64) -> i32;
+    pub fn sceRtcSetWin32FileTime(date: *mut ScePspDateTime, time: *mut u64) -> i32;
 
     #[psp(0xCF561893)]
-    pub fn sceRtcGetWin32FileTime(date: *mut Time, time: *mut u64) -> i32;
+    pub fn sceRtcGetWin32FileTime(date: *mut ScePspDateTime, time: *mut u64) -> i32;
 
     #[psp(0xDFBC5F16)]
     pub fn sceRtcParseDateTime(dest_tick: *mut u64, date_string: *const u8) -> i32;

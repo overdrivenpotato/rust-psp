@@ -1,5 +1,5 @@
 use crate::sys::SceUid;
-use crate::sys::Time;
+use crate::sys::ScePspDateTime;
 use crate::eabi::i6;
 use core::ffi::c_void;
 
@@ -25,11 +25,11 @@ pub struct Stat {
     /// Size of the file in bytes.
     pub st_size: i64,
     /// Creation time.
-    pub st_ctime: Time,
+    pub st_ctime: ScePspDateTime,
     /// Access time.
-    pub st_atime: Time,
+    pub st_atime: ScePspDateTime,
     /// Modification time.
-    pub st_mtime: Time,
+    pub st_mtime: ScePspDateTime,
     /// Device-specific data.
     pub st_private: [u32; 6usize],
 }
