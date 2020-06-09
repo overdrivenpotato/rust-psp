@@ -1,5 +1,5 @@
 use core::ffi::c_void;
-use crate::eabi::{i5, i6, i7};
+use crate::{sys, eabi::{i5, i6, i7}};
 
 /// A data handle used for various functions.
 ///
@@ -55,7 +55,7 @@ pub struct Ringbuffer {
 
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
-pub struct Au {
+pub struct SceMpegAu {
     /// Presentation timestamp MSB
     pub pts_msb: u32,
     /// Presentation timestamp LSB
@@ -72,11 +72,11 @@ pub struct Au {
 
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
-pub struct AvcMode {
+pub struct SceMpegAvcMode {
     /// Unknown, set to -1
     pub unk0: i32,
     /// Decode pixelformat
-    pub pixel_format: i32,
+    pub pixel_format: sys::DisplayPixelFormat,
 }
 
 psp_extern! {
@@ -283,19 +283,19 @@ psp_extern! {
     ///
     /// - `handle`: Instance handle
     /// - `es_buffer`: prevously allocated Es buffer
-    /// - `au`: will contain pointer to Au
+    /// - `au`: will contain pointer to `SceMpegAu`
     ///
     /// # Return Value
     ///
     /// 0 if success.
-    pub fn sceMpegInitAu(handle: Handle, es_buffer: *mut c_void, au: *mut Au) -> i32;
+    pub fn sceMpegInitAu(handle: Handle, es_buffer: *mut c_void, au: *mut SceMpegAu) -> i32;
 
     #[psp(0xFE246728)]
     /// # Parameters
     ///
     /// - `handle`: Instance handle
     /// - `stream`: associated stream
-    /// - `au`: will contain pointer to Au
+    /// - `au`: will contain pointer to `SceMpegAu`
     /// - `unk`: unknown
     ///
     /// # Return Value
@@ -304,7 +304,7 @@ psp_extern! {
     pub fn sceMpegGetAvcAu(
         handle: Handle,
         stream: Stream,
-        au: *mut Au,
+        au: *mut SceMpegAu,
         unk: *mut i32,
     ) -> i32;
 
@@ -312,18 +312,18 @@ psp_extern! {
     /// # Parameters
     ///
     /// - `handle`: Instance handle
-    /// - `mode`: pointer to AvcMode struct defining the decode mode (pixelformat)
+    /// - `mode`: pointer to `SceMpegAvcMode` struct defining the decode mode (pixelformat)
     ///
     /// # Return Value
     ///
     /// 0 if success.
-    pub fn sceMpegAvcDecodeMode(handle: Handle, mode: *mut AvcMode) -> i32;
+    pub fn sceMpegAvcDecodeMode(handle: Handle, mode: *mut SceMpegAvcMode) -> i32;
 
     #[psp(0x0E3C2E9D, i5)]
     /// # Parameters
     ///
     /// - `handle`: Instance handle
-    /// - `au`: video Au
+    /// - `au`: video `SceMpegAu`
     /// - `iframe_width`: output buffer width, set to 512 if writing to framebuffer
     /// - `buffer`: buffer that will contain the decoded frame
     /// - `init`: will be set to 0 on first call, then 1
@@ -333,7 +333,7 @@ psp_extern! {
     /// 0 if success.
     pub fn sceMpegAvcDecode(
         handle: Handle,
-        au: *mut Au,
+        au: *mut SceMpegAu,
         iframe_width: i32,
         buffer: *mut c_void,
         init: *mut i32,
@@ -362,7 +362,7 @@ psp_extern! {
     ///
     /// - `handle`: Instance handle
     /// - `stream`: associated stream
-    /// - `au`: will contain pointer to Au
+    /// - `au`: will contain pointer to `SceMpegAu`
     /// - `unk`: unknown
     ///
     /// # Return Value
@@ -371,7 +371,7 @@ psp_extern! {
     pub fn sceMpegGetAtracAu(
         handle: Handle,
         stream: Stream,
-        au: *mut Au,
+        au: *mut SceMpegAu,
         unk: *mut c_void,
     ) -> i32;
 
@@ -379,7 +379,7 @@ psp_extern! {
     /// # Parameters
     ///
     /// - `handle`: Instance handle
-    /// - `au`: video Au
+    /// - `au`: video `SceMpegAu`
     /// - `buffer`: buffer that will contain the decoded frame
     /// - `init`: set this to 1 on first call
     ///
@@ -388,7 +388,7 @@ psp_extern! {
     /// 0 if success.
     pub fn sceMpegAtracDecode(
         handle: Handle,
-        au: *mut Au,
+        au: *mut SceMpegAu,
         buffer: *mut c_void,
         init: i32,
     ) -> i32;

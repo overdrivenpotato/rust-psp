@@ -10,7 +10,7 @@ pub const USB_CAM_MIC_DRIVER_NAME: &str = "USBCamMicDriver";
 pub const USB_STOR_DRIVER_NAME: &str = "USBStor_Driver";
 
 bitflags::bitflags! {
-    pub struct State: i32 {
+    pub struct UsbState: i32 {
         const ACTIVATED = 0x200;
         const CONNECTED = 0x020;
         const ESTABLISHED = 0x002;
@@ -91,7 +91,7 @@ psp_extern! {
     /// # Return Value
     ///
     /// USB `State`.
-    pub fn sceUsbGetState() -> State;
+    pub fn sceUsbGetState() -> UsbState;
 
     #[psp(0x112CC951)]
     /// Get state of a specific USB driver

@@ -6,9 +6,9 @@ use core::ffi::c_void;
 /// Describes a single directory entry
 #[repr(C)]
 #[derive(Copy, Clone)]
-pub struct Dirent {
+pub struct SceIoDirent {
     /// File status.
-    pub d_stat: Stat,
+    pub d_stat: SceIoStat,
     /// File name.
     pub d_name: [u8; 256usize],
     /// Device-specific data.
@@ -19,7 +19,7 @@ pub struct Dirent {
 /// Structure to hold the status information about a file
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
-pub struct Stat {
+pub struct SceIoStat {
     pub st_mode: StatMode,
     pub st_attr: StatAttr,
     /// Size of the file in bytes.
@@ -382,7 +382,7 @@ psp_extern! {
     /// # Parameters
     ///
     /// - `fd`: Already opened file descriptor (using sceIoDopen)
-    /// - `dir`: Pointer to an io_dirent_t structure to hold the file information
+    /// - `dir`: Pointer to an `SceIoDirent` structure to hold the file information
     ///
     /// # Return value
     ///
@@ -390,7 +390,7 @@ psp_extern! {
     /// -   0 - No more directory entries left
     /// - > 0 - More directory entired to go
     /// - < 0 - Error
-    pub fn sceIoDread(fd: SceUid, dir: *mut Dirent) -> i32;
+    pub fn sceIoDread(fd: SceUid, dir: *mut SceIoDirent) -> i32;
 
     #[psp(0xEB092469)]
     /// Close an opened directory file descriptor
@@ -470,13 +470,12 @@ psp_extern! {
     /// # Parameters
     ///
     /// - `file`: The path to the file.
-    /// - `stat`: A pointer to an io_stat_t structure.
+    /// - `stat`: A pointer to an `SceIoStat` structure.
     ///
     /// # Return value
     ///
     /// < 0 on error.
-    pub fn sceIoGetstat(file: *const u8, stat: *mut Stat)
-     -> i32;
+    pub fn sceIoGetstat(file: *const u8, stat: *mut SceIoStat) -> i32;
 
     #[psp(0xB8A740F4)]
     /// Change the status of a file.
@@ -484,13 +483,13 @@ psp_extern! {
     /// # Parameters
     ///
     /// - `file`: The path to the file.
-    /// - `stat`: A pointer to an io_stat_t structure.
+    /// - `stat`: A pointer to an `SceIoStat` structure.
     /// - `bits`: Bitmask defining which bits to change.
     ///
     /// # Return value
     ///
     /// < 0 on error.
-    pub fn sceIoChstat(file: *const u8, stat: *mut Stat, bits: i32) -> i32;
+    pub fn sceIoChstat(file: *const u8, stat: *mut SceIoStat, bits: i32) -> i32;
 
     #[psp(0x63632449, i6)]
     /// Perform an ioctl on a device.
@@ -609,6 +608,7 @@ psp_extern! {
 
     #[psp(0xE8BC6571)]
     /// Cancel an asynchronous operation on a file descriptor.
+    ///
     /// # Parameters
     ///
     /// - `fd`: The file descriptor to perform cancel on.
