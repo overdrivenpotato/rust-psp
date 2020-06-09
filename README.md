@@ -1,6 +1,6 @@
 # rust-psp
 
-![PSP Picture](psp-hello-world.jpg)
+![Demo](demo.gif)
 
 A library for building full PSP modules, including both PRX plugins and regular
 homebrew apps.
