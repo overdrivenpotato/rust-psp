@@ -21,39 +21,54 @@ jobs:
   - name: run-tests-for-master
     public: true
     plan:
-      - get: repo
-        resource: master-branch
-        params: { submodules: none }
-        trigger: true
-      - task: build-rust
-        file: repo/ci/concourse/build-rust.yml
-      - task: run-tests
-        file: repo/ci/concourse/run-tests.yml
+      - do:
+        - get: repo
+          resource: master-branch
+          params: { submodules: none }
+          trigger: true
+        - task: build-rust
+          file: repo/ci/concourse/build-rust.yml
+        - task: run-tests
+          file: repo/ci/concourse/run-tests.yml
+        on_failure:
+          put: repo
+          resource: master-branch
+          params:
+            path: repo
+            status: failure
+        on_success:
+          put: repo
+          resource: master-branch
+          params:
+            path: repo
+            status: success
 
   - name: run-tests-for-pr
     public: true
     plan:
-      - get: repo
-        resource: pull-request
-        version: every
-        trigger: true
-      - put: repo
-        resource: pull-request
-        params:
-          path: repo
-          status: pending
-      - task: build-rust
-        file: repo/ci/concourse/build-rust.yml
-      - task: run-tests
-        file: repo/ci/concourse/run-tests.yml
+      - do:
+        - get: repo
+          resource: pull-request
+          version: every
+          trigger: true
+        - put: repo
+          resource: pull-request
+          params:
+            path: repo
+            status: pending
+        - task: build-rust
+          file: repo/ci/concourse/build-rust.yml
+        - task: run-tests
+          file: repo/ci/concourse/run-tests.yml
         on_failure:
           put: repo
           resource: pull-request
           params:
             path: repo
             status: failure
-      - put: repo
-        resource: pull-request
-        params:
-          path: repo
-          status: success
+        on_success:
+          put: repo
+          resource: pull-request
+          params:
+            path: repo
+            status: success
