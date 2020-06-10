@@ -58,10 +58,10 @@ To compile for the PSP, you will need a Rust **nightly** version equal to or
 later than `2020-06-04`. Please install Rust using https://rustup.rs/
 
 Use the following if you are new to Rust. (Feel free to set an override manually
-per-project).
+per-project instead).
 
 ```sh
-$ rustup toolchain add nightly
+$ rustup toolchain add nightly && rustup default nightly
 ```
 
 You also need `cargo-psp` installed:
