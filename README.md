@@ -24,6 +24,7 @@
 psp::module!("sample_module", 1, 1);
 
 fn psp_main() {
+    psp::enable_home_button();
     psp::dprintln!("Hello PSP from rust!");
 }
 ```
@@ -130,6 +131,7 @@ In your `main.rs` file, you need to setup a basic skeleton like so:
 psp::module!("sample_module", 1, 0);
 
 fn psp_main() {
+    psp::enable_home_button();
     psp::dprintln!("Hello PSP from rust!");
 }
 ```
