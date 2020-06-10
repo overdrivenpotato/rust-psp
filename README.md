@@ -1,9 +1,21 @@
-# rust-psp
+<h1 align="center">rust-psp</h1>
 
 <p align="center"><img src="demo.gif" /></p>
-
-A library for building full PSP modules, including both PRX plugins and regular
-homebrew apps.
+<p class="" align="center">
+    <a href="https://ci.mijalkovic.ca/teams/rust-psp/pipelines/rust-psp/jobs/run-tests-for-master/">
+        <img src="https://ci.mijalkovic.ca/api/v1/teams/rust-psp/pipelines/rust-psp/jobs/run-tests-for-master/badge">
+    </a>
+    <a href="https://crates.io/crates/psp">
+        <img src="https://img.shields.io/crates/v/psp.svg?style=flat-square">
+    </a>
+    <a href="https://docs.rs/psp">
+        <img src="https://img.shields.io/badge/docs-latest-blue.svg?style=flat-square">
+    </a>
+</p>
+<p align="center">
+    A library for building full PSP modules, including both PRX plugins and regular
+    homebrew apps.
+</p>
 
 ```rust
 #![no_std]
