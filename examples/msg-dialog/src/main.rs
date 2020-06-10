@@ -4,34 +4,38 @@
 use psp::sys::{
     DialogCommon, MsgDialogParams, MsgDialogMode, MsgDialogPressed,
     SysParamLanguage, DialogButtonAccept, MsgDialogOption, self,
+    DisplayPixelFormat, Context, GuState, DepthFunc, FrontFaceDirection, 
+    ShadingModel, SyncMode, SyncBehavior
 };
 
 use core::ffi::c_void;
 
 psp::module!("sample_module", 1, 1);
 
-
 static mut LIST: psp::Align16<[u32; 262144]> = psp::Align16([0;262144]);
+const SCR_WIDTH: i32 = 480;
+const SCR_HEIGHT: i32 = 272;
+const BUF_WIDTH: i32 = 512;
 
 unsafe fn setup_gu() {
     sys::sceGuInit(); 
-    sys::sceGuStart(sys::Context::Direct, &mut LIST as *mut _ as *mut c_void);
-    sys::sceGuDrawBuffer(sys::DisplayPixelFormat::Psm8888, core::ptr::null_mut(), 512);
-    sys::sceGuDispBuffer(480, 272, 0x88000 as *mut c_void, 512);
-    sys::sceGuDepthBuffer(0x110000 as *mut c_void, 512);
-    sys::sceGuOffset(2048 - (480/2), 2048 - (272/2));
-    sys::sceGuViewport(2048, 2048, 480, 272);
+    sys::sceGuStart(Context::Direct, &mut LIST as *mut _ as *mut c_void);
+    sys::sceGuDrawBuffer(DisplayPixelFormat::Psm8888, core::ptr::null_mut(), BUF_WIDTH);
+    sys::sceGuDispBuffer(SCR_WIDTH, SCR_HEIGHT, 0x88000 as *mut c_void, BUF_WIDTH);
+    sys::sceGuDepthBuffer(0x110000 as *mut c_void, BUF_WIDTH);
+    sys::sceGuOffset(2048 - (SCR_WIDTH as u32 /2), 2048 - (SCR_HEIGHT as u32 /2));
+    sys::sceGuViewport(2048, 2048, SCR_WIDTH, SCR_HEIGHT);
     sys::sceGuDepthRange(0xc350, 0x2710);
-    sys::sceGuScissor(0, 0, 480, 272);
-    sys::sceGuEnable(sys::GuState::ScissorTest);
-    sys::sceGuDepthFunc(sys::DepthFunc::GreaterOrEqual);
-    sys::sceGuEnable(sys::GuState::DepthTest);
-    sys::sceGuFrontFace(sys::FrontFaceDirection::Clockwise);
-    sys::sceGuShadeModel(sys::ShadingModel::Smooth);
-    sys::sceGuEnable(sys::GuState::CullFace);
-    sys::sceGuEnable(sys::GuState::ClipPlanes);
+    sys::sceGuScissor(0, 0, SCR_WIDTH, SCR_HEIGHT);
+    sys::sceGuEnable(GuState::ScissorTest);
+    sys::sceGuDepthFunc(DepthFunc::GreaterOrEqual);
+    sys::sceGuEnable(GuState::DepthTest);
+    sys::sceGuFrontFace(FrontFaceDirection::Clockwise);
+    sys::sceGuShadeModel(ShadingModel::Smooth);
+    sys::sceGuEnable(GuState::CullFace);
+    sys::sceGuEnable(GuState::ClipPlanes);
     sys::sceGuFinish();
-    sys::sceGuSync(sys::SyncMode::Finish, sys::SyncBehavior::Wait);
+    sys::sceGuSync(SyncMode::Finish, SyncBehavior::Wait);
 
     sys::sceDisplayWaitVblankStart();
     sys::sceGuDisplay(true);
