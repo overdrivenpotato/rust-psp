@@ -133,10 +133,6 @@ fn psp_main() {
 Now you can simply run `cargo psp` to build your `EBOOT.PBP` file. You can also
 invoke `cargo psp --release` to create a release build.
 
-*Note that your crate is currently always compiled with `opt-level=3`,
-regardless of whether you are compiling a debug or release build. This is due to
-a bug in this crate, and will soon be fixed in `cargo-psp`*
-
 If you would like to customize your EBOOT with e.g. an icon or new title, you
 can create a `Psp.toml` file in the root of your project. Note that all keys are
 optional:
