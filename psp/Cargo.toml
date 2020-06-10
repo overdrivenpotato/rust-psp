@@ -1,6 +1,9 @@
 [package]
 name = "psp"
 version = "0.0.1"
+description = "A "
+readme = "../README.md"
+license = "MIT"
 authors = [
     "Marko Mijalkovic <marko.mijalkovic97@gmail.com>",
     "Paul Sajna <sajattack@gmail.com>"

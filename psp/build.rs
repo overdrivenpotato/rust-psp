@@ -2,7 +2,8 @@ use std::{env, path::Path};
 
 fn main() {
     println!("cargo:rerun-if-changed=build.rs");
-    
+    println!("cargo:rerun-if-changed=libunwind.a");
+
     // TODO: Do we even need to copy the library over? Maybe we can just link
     // directly from the current directory.
     let out_dir = env::var("OUT_DIR").unwrap();
