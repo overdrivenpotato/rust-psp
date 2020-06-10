@@ -127,7 +127,7 @@ In your `main.rs` file, you need to setup a basic skeleton like so:
 #![no_std]
 #![no_main]
 
-// Create a module named "sample_modules" with version 1.0
+// Create a module named "sample_module" with version 1.0
 psp::module!("sample_module", 1, 0);
 
 fn psp_main() {
