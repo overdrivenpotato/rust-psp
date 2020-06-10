@@ -2,6 +2,7 @@
 name = "cargo-psp"
 version = "0.0.4"
 description = "`cargo build` wrapper for creating Sony PSP executables"
+repository = "https://github.com/overdrivenpotato/rust-psp"
 license = "MIT"
 authors = [
     "Marko Mijalkovic <marko.mijalkovic97@gmail.com>",
