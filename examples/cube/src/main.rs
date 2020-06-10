@@ -164,14 +164,14 @@ unsafe fn psp_main_inner() {
 
         // setup matrices for cube
 
-        sys::sceGumMatrixMode(sys::Mode::Projection);
+        sys::sceGumMatrixMode(sys::MatrixMode::Projection);
         sys::sceGumLoadIdentity();
         sys::sceGumPerspective(75.0, 16.0 / 9.0, 0.5, 1000.0);
 
-        sys::sceGumMatrixMode(sys::Mode::View);
+        sys::sceGumMatrixMode(sys::MatrixMode::View);
         sys::sceGumLoadIdentity();
 
-        sys::sceGumMatrixMode(sys::Mode::Model);
+        sys::sceGumMatrixMode(sys::MatrixMode::Model);
         sys::sceGumLoadIdentity();
 
         {
