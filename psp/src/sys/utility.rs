@@ -264,7 +264,7 @@ pub struct NetconfData {
     pub wifisp: i32,
 }
 
-/// Datatype for sce_utility_get_net_param
+/// Datatype for sceUtilityGetNetParam
 /// since it can return a u32 or a string
 /// we use a union to avoid ugly casting
 #[repr(C)]
@@ -329,7 +329,7 @@ pub struct SavedataListSaveNewData {
     pub title: *mut u8,
 }
 
-/// Structure to hold the parameters for the ::sce_utility_savedata_init_start function.
+/// Structure to hold the parameters for the ::sceUtilitySavedataInitStart function.
 #[repr(C)]
 #[derive(Copy, Clone)]
 pub struct SavedataParam {
@@ -508,7 +508,7 @@ psp_extern! {
     /// # Return Value
     ///
     /// 0 on success
-    pub fn sce_utility_msg_dialog_init_start(
+    pub fn sceUtilityMsgDialogInitStart(
         params: *mut MsgDialogParams,
     ) -> i32;
 
@@ -516,17 +516,17 @@ psp_extern! {
     /// Remove a message dialog currently active.  After calling this
     /// function you need to keep calling GetStatus and Update until
     /// you get a status of 4.
-    pub fn sce_utility_msg_dialog_shutdown_start();
+    pub fn sceUtilityMsgDialogShutdownStart();
 
     #[psp(0x9A1C91D7)]
     /// Get the current status of a message dialog currently active.
     ///
     /// # Return Value
     ///
-    /// 2 if the GUI is visible (you need to call sce_utility_msg_dialog_get_status).
-    /// 3 if the user cancelled the dialog, and you need to call sce_utility_msg_dialog_shutdown_start.
+    /// 2 if the GUI is visible (you need to call sceUtilityMsgDialogGetStatus).
+    /// 3 if the user cancelled the dialog, and you need to call sceUtilityMsgDialogShutdownStart.
     /// 4 if the dialog has been successfully shut down.
-    pub fn sce_utility_msg_dialog_get_status() -> i32;
+    pub fn sceUtilityMsgDialogGetStatus() -> i32;
 
     #[psp(0x95FC253B)]
     /// Refresh the GUI for a message dialog currently active
@@ -534,11 +534,11 @@ psp_extern! {
     /// # Parameters
     ///
     /// - `n`: unknown, pass 1
-    pub fn sce_utility_msg_dialog_update(n: i32);
+    pub fn sceUtilityMsgDialogUpdate(n: i32);
 
     #[psp(0x4928BD96)]
     /// Abort a message dialog currently active
-    pub fn sce_utility_msg_dialog_abort() -> i32;
+    pub fn sceUtilityMsgDialogAbort() -> i32;
 
 
     #[psp(0x4DB1E739)]
@@ -550,7 +550,7 @@ psp_extern! {
     /// # Return Value
     ///
     /// 0 on success, < 0 on error
-    pub fn sce_utility_netconf_init_start(data: *mut NetconfData) -> i32;
+    pub fn sceUtilityNetconfInitStart(data: *mut NetconfData) -> i32;
 
     #[psp(0xF88155F6)]
     /// Shutdown the Network Configuration Dialog Utility
@@ -558,7 +558,7 @@ psp_extern! {
     /// # Return Value
     ///
     /// 0 on success, < 0 on error
-    pub fn sce_utility_netconf_shutdown_start() -> i32;
+    pub fn sceUtilityNetconfShutdownStart() -> i32;
 
     #[psp(0x91E70E35)]
     /// Update the Network Configuration Dialog GUI
@@ -569,7 +569,7 @@ psp_extern! {
     /// # Return Value
     ///
     /// 0 on success, < 0 on error
-    pub fn sce_utility_netconf_update(unknown: i32) -> i32;
+    pub fn sceUtilityNetconfUpdate(unknown: i32) -> i32;
 
     #[psp(0x6332AA39)]
     /// Get the status of a running Network Configuration Dialog
@@ -577,7 +577,7 @@ psp_extern! {
     /// # Return Value
     ///
     /// one of DialogState on success, < 0 on error
-    pub fn sce_utility_netconf_get_status() -> i32;
+    pub fn sceUtilityNetconfGetStatus() -> i32;
 
     #[psp(0x5EEE6548)]
     /// Check existance of a Net Configuration
@@ -588,7 +588,7 @@ psp_extern! {
     /// # Return Value
     ///
     /// 0 on success,
-    pub fn sce_utility_check_net_param(id: i32) -> i32;
+    pub fn sceUtilityCheckNetParam(id: i32) -> i32;
 
     #[psp(0x434D4B3A)]
     /// Get Net Configuration Parameter
@@ -604,7 +604,7 @@ psp_extern! {
     /// # Return Value
     ///
     /// 0 on success,
-    pub fn sce_utility_get_net_param(
+    pub fn sceUtilityGetNetParam(
         conf: i32,
         param: NetParam,
         data: *mut NetData,
@@ -612,7 +612,7 @@ psp_extern! {
 
     #[psp(0x50C4CD57)]
     /// Saves or Load savedata to/from the passed structure
-    /// After having called this continue calling sce_utility_savedata_get_status to
+    /// After having called this continue calling sceUtilitySavedataGetStatus to
     /// check if the operation is completed
     ///
     /// # Parameters
@@ -621,30 +621,30 @@ psp_extern! {
     /// # Return Value
     ///
     /// 0 on success
-    pub fn sce_utility_savedata_init_start(
+    pub fn sceUtilitySavedataInitStart(
         params: *mut SavedataParam,
     ) -> i32;
 
     #[psp(0x8874DBE0)]
     /// Check the current status of the saving/loading/shutdown process
     /// Continue calling this to check current status of the process
-    /// before calling this call also sce_utility_savedata_update
+    /// before calling this call also sceUtilitySavedataUpdate
     /// # Return Value
     ///
     /// - 2 if the process is still being processed.
-    /// - 3 on save/load success, then you can call sce_utility_savedata_shutdown_start.
+    /// - 3 on save/load success, then you can call sceUtilitySavedataShutdownStart.
     /// - 4 on complete shutdown.
-    pub fn sce_utility_savedata_get_status() -> i32;
+    pub fn sceUtilitySavedataGetStatus() -> i32;
 
     #[psp(0x9790B33C)]
     /// Shutdown the savedata utility. after calling this continue calling
-    /// sce_utility_savedata_get_status to check when it has shutdown
+    /// sceUtilitySavedataGetStatus to check when it has shutdown
     ///
     /// # Return Value
     ///
     /// 0 on success
     ///
-    pub fn sce_utility_savedata_shutdown_start() -> i32;
+    pub fn sceUtilitySavedataShutdownStart() -> i32;
 
     #[psp(0xD4B95FFB)]
     /// Refresh status of the savedata function
@@ -652,7 +652,7 @@ psp_extern! {
     /// # Parameters
     ///
     /// - `unknown`: unknown, pass 1
-    pub fn sce_utility_savedata_update(unknown: i32);
+    pub fn sceUtilitySavedataUpdate(unknown: i32);
 
     #[psp(0xC492F751)]
     /// Init the game sharing
@@ -663,24 +663,24 @@ psp_extern! {
     /// # Return Value
     ///
     /// 0 on success, < 0 on error.
-    pub fn sce_utility_game_sharing_init_start(
+    pub fn sceUtilityGameSharingInitStart(
         params: *mut GameSharingParams,
     ) -> i32;
 
     #[psp(0xEFC6F80F)]
     /// Shutdown game sharing.
-    pub fn sce_utility_game_sharing_shutdown_start();
+    pub fn sceUtilityGameSharingShutdownStart();
 
     #[psp(0x946963F3)]
     /// Get the current status of game sharing.
     ///
     /// # Return Value
     ///
-    /// 2 if the GUI is visible (you need to call sce_utility_game_sharing_get_status).
+    /// 2 if the GUI is visible (you need to call sceUtilityGameSharingGetStatus).
     /// 3 if the user cancelled the dialog, and you need to call
-    ///   sce_utility_game_sharing_shutdown_start.
+    ///   sceUtilityGameSharingShutdownStart.
     /// 4 if the dialog has been successfully shut down.
-    pub fn sce_utility_game_sharing_get_status() -> i32;
+    pub fn sceUtilityGameSharingGetStatus() -> i32;
 
     #[psp(0x7853182D)]
     /// Refresh the GUI for game sharing
@@ -688,7 +688,7 @@ psp_extern! {
     /// # Parameters
     ///
     /// - `n`: unknown, pass 1
-    pub fn sce_utility_game_sharing_update(n: i32);
+    pub fn sceUtilityGameSharingUpdate(n: i32);
 
     #[psp(0xCDC3AA41)]
     /// Init the html viewer
@@ -700,13 +700,13 @@ psp_extern! {
     /// # Return Value
     ///
     /// 0 on success, < 0 on error.
-    pub fn sce_utility_html_viewer_init_start(
+    pub fn sceUtilityHtmlViewerInitStart(
         params: *mut HtmlViewerParam,
     ) -> i32;
 
     #[psp(0xF5CE1134)]
     /// Shutdown html viewer.
-    pub fn sce_utility_html_viewer_shutdown_start() -> i32;
+    pub fn sceUtilityHtmlViewerShutdownStart() -> i32;
 
     #[psp(0x05AFB9E4)]
     /// Refresh the GUI for html viewer
@@ -714,18 +714,18 @@ psp_extern! {
     /// # Parameters
     ///
     /// - `n`: unknown, pass 1
-    pub fn sce_utility_html_viewer_update(n: i32) -> i32;
+    pub fn sceUtilityHtmlViewerUpdate(n: i32) -> i32;
 
     #[psp(0xBDA7D894)]
     /// Get the current status of the html viewer.
     ///
     /// # Return Value
     ///
-    /// 2 if the GUI is visible (you need to call sce_utility_html_viewer_get_status).
+    /// 2 if the GUI is visible (you need to call sceUtilityHtmlViewerGetStatus).
     /// 3 if the user cancelled the dialog, and you need to call
-    ///   sce_utility_html_viewer_shutdown_start.
+    ///   sceUtilityHtmlViewerShutdownStart.
     /// 4 if the dialog has been successfully shut down.
-    pub fn sce_utility_html_viewer_get_status() -> i32;
+    pub fn sceUtilityHtmlViewerGetStatus() -> i32;
 
     #[psp(0x45C18506)]
     /// Set Integer System Parameter
@@ -737,7 +737,7 @@ psp_extern! {
     /// # Return Value
     ///
     /// 0 on success, 0x80110103 on failure
-    pub fn sce_utility_set_system_param_int(
+    pub fn sceUtilitySetSystemParamInt(
         id: SystemParamId,
         value: i32,
     ) -> i32;
@@ -752,7 +752,7 @@ psp_extern! {
     /// # Return Value
     ///
     /// 0 on success, 0x80110103 on failure
-    pub fn sce_utility_set_system_param_string(
+    pub fn sceUtilitySetSystemParamString(
         id: SystemParamId,
         str: *const u8,
     ) -> i32;
@@ -767,7 +767,7 @@ psp_extern! {
     /// # Return Value
     ///
     /// 0 on success, 0x80110103 on failure
-    pub fn sce_utility_get_system_param_int(
+    pub fn sceUtilityGetSystemParamInt(
         id: SystemParamId,
         value: *mut i32,
     ) -> i32;
@@ -783,7 +783,7 @@ psp_extern! {
     /// # Return Value
     ///
     /// 0 on success, 0x80110103 on failure
-    pub fn sce_utility_get_system_param_string(
+    pub fn sceUtilityGetSystemParamString(
         id: SystemParamId,
         str: *mut u8,
         len: i32,
@@ -799,17 +799,17 @@ psp_extern! {
     /// # Return Value
     ///
     /// < 0 on error.
-    pub fn sce_utility_osk_init_start(params: *mut OskParams) -> i32;
+    pub fn sceUtilityOskInitStart(params: *mut OskParams) -> i32;
 
     #[psp(0x3DFAEBA9)]
     /// Remove a currently active keyboard. After calling this function you must
     ///
-    /// poll sce_utility_osk_get_status() until it returns None
+    /// poll sceUtilityOskGetStatus() until it returns None
     ///
     /// # Return Value
     ///
     /// < 0 on error.
-    pub fn sce_utility_osk_shutdown_start() -> i32;
+    pub fn sceUtilityOskShutdownStart() -> i32;
 
     #[psp(0x4B85C861)]
     /// Refresh the GUI for a keyboard currently active
@@ -821,7 +821,7 @@ psp_extern! {
     /// # Return Value
     ///
     /// < 0 on error.
-    pub fn sce_utility_osk_update(n: i32) -> i32;
+    pub fn sceUtilityOskUpdate(n: i32) -> i32;
 
     #[psp(0xF3F76017)]
     /// Get the status of a on-screen keyboard currently active.
@@ -829,7 +829,7 @@ psp_extern! {
     /// # Return Value
     ///
     /// the current status of the keyboard. See ::DialogState for details.
-    pub fn sce_utility_osk_get_status() -> i32;
+    pub fn sceUtilityOskGetStatus() -> i32;
 
     #[psp(0x1579a159)]
     /// Load a network module (PRX) from user mode.
@@ -843,7 +843,7 @@ psp_extern! {
     /// # Return Value
     ///
     /// 0 on success, < 0 on error
-    pub fn sce_utility_load_net_module(module: NetModule) -> i32;
+    pub fn sceUtilityLoadNetModule(module: NetModule) -> i32;
 
     #[psp(0x64d50c56)]
     /// Unload a network module (PRX) from user mode.
@@ -855,7 +855,7 @@ psp_extern! {
     /// # Return Value
     ///
     /// 0 on success, < 0 on error
-    pub fn sce_utility_unload_net_module(module: NetModule) -> i32;
+    pub fn sceUtilityUnloadNetModule(module: NetModule) -> i32;
 
     #[psp(0xC629AF26)]
     /// Load an audio/video module (PRX) from user mode.
@@ -868,7 +868,7 @@ psp_extern! {
     /// # Return Value
     ///
     /// 0 on success, < 0 on error
-    pub fn sce_utility_load_av_module(module: AvModule) -> i32;
+    pub fn sceUtilityLoadAvModule(module: AvModule) -> i32;
 
     #[psp(0xF7D8D092)]
     /// Unload an audio/video module (PRX) from user mode.
@@ -880,7 +880,7 @@ psp_extern! {
     /// # Return Value
     ///
     /// 0 on success, < 0 on error
-    pub fn sce_utility_unload_av_module(module: AvModule) -> i32;
+    pub fn sceUtilityUnloadAvModule(module: AvModule) -> i32;
 
     #[psp(0x0D5BC6D2)]
     /// Load a usb module (PRX) from user mode.
@@ -892,7 +892,7 @@ psp_extern! {
     /// # Return Value
     ///
     /// 0 on success, < 0 on error
-    pub fn sce_utility_load_usb_module(module: UsbModule) -> i32;
+    pub fn sceUtilityLoadUsbModule(module: UsbModule) -> i32;
 
     #[psp(0xF64910F0)]
     /// Unload a usb module (PRX) from user mode.
@@ -904,7 +904,7 @@ psp_extern! {
     /// # Return Value
     ///
     /// 0 on success, < 0 on error
-    pub fn sce_utility_unload_usb_module(module: UsbModule) -> i32;
+    pub fn sceUtilityUnloadUsbModule(module: UsbModule) -> i32;
 
     #[psp(0x2A2B3DE0)]
     /// Load a module (PRX) from user mode.
@@ -916,7 +916,7 @@ psp_extern! {
     /// # Return Value
     ///
     /// 0 on success, < 0 on error
-    pub fn sce_utility_load_module(module: Module) -> i32;
+    pub fn sceUtilityLoadModule(module: Module) -> i32;
 
     #[psp(0xE49BFE92)]
     /// Unload a module (PRX) from user mode.
@@ -928,7 +928,7 @@ psp_extern! {
     /// # Return Value
     ///
     /// 0 on success, < 0 on error
-    pub fn sce_utility_unload_module(module: Module) -> i32;
+    pub fn sceUtilityUnloadModule(module: Module) -> i32;
 
 }
 
@@ -949,7 +949,7 @@ sys_lib! {
     /// # Return Value
     ///
     /// 0 on success
-    pub fn sce_utility_create_net_param(conf: i32) -> i32;
+    pub fn sceUtilityCreateNetParam(conf: i32) -> i32;
 
     #[psp(0xFC4516F3)]
     /// Sets a network parameter
@@ -966,7 +966,7 @@ sys_lib! {
     /// # Return Value
     ///
     /// 0 on success
-    pub fn sce_utility_set_net_param(
+    pub fn sceUtilitySetNetParam(
         param: NetParam,
         val: *const c_void,
     ) -> i32;
@@ -982,7 +982,7 @@ sys_lib! {
     /// # Return Value
     ///
     /// 0 on success
-    pub fn sce_utility_copy_net_param(
+    pub fn sceUtilityCopyNetParam(
         src: i32,
         dest: i32,
     ) -> i32;
@@ -997,6 +997,6 @@ sys_lib! {
     /// # Return Value
     ///
     /// 0 on success
-    pub fn sce_utility_delete_net_param(conf: i32) -> i32;
+    pub fn sceUtilityDeleteNetParam(conf: i32) -> i32;
 
 }

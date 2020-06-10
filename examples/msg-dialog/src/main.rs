@@ -20,13 +20,13 @@ fn psp_main() {
     static mut LIST: psp::Align16<[u32; 262144]> = psp::Align16([0;262144]);
 
     unsafe {
-        gu::sce_gu_init(); 
-        gu::sce_gu_start(gu::Context::Direct, &mut LIST as *mut _ as *mut c_void);
-        gu::sce_gu_draw_buffer(display::DisplayPixelFormat::Psm8888, core::ptr::null_mut(), 512);
-        gu::sce_gu_finish();
-        gu::sce_gu_sync(gu::SyncMode::Finish, gu::SyncBehavior::Wait);
-        display::sce_display_wait_vblank_start();
-        gu::sce_gu_display(true);
+        gu::sceGuInit(); 
+        gu::sceGuStart(gu::Context::Direct, &mut LIST as *mut _ as *mut c_void);
+        gu::sceGuDrawBuffer(display::DisplayPixelFormat::Psm8888, core::ptr::null_mut(), 512);
+        gu::sceGuFinish();
+        gu::sceGuSync(gu::SyncMode::Finish, gu::SyncBehavior::Wait);
+        display::sceDisplayWaitVblankStart();
+        gu::sceGuDisplay(true);
     }
 
     let dialog_size = core::mem::size_of::<MsgDialogParams>();
@@ -56,20 +56,20 @@ fn psp_main() {
     };
 
     unsafe {
-        utility::sce_utility_msg_dialog_init_start(
+        utility::sceUtilityMsgDialogInitStart(
             &mut msg_dialog as *mut MsgDialogParams
         );
     }
 
     loop {
-        let status = unsafe {utility::sce_utility_msg_dialog_get_status()};
+        let status = unsafe {utility::sceUtilityMsgDialogGetStatus()};
         match status {
-            2 => unsafe{utility::sce_utility_msg_dialog_update(1)},
-            3 => unsafe{utility::sce_utility_msg_dialog_shutdown_start()},
+            2 => unsafe{utility::sceUtilityMsgDialogUpdate(1)},
+            3 => unsafe{utility::sceUtilityMsgDialogShutdownStart()},
             0 => {break},
             _ => (),
         }
-        unsafe {display::sce_display_wait_vblank_start();}
+        unsafe {display::sceDisplayWaitVblankStart();}
     }
-    unsafe { kernel::sce_kernel_exit_game(); }
+    unsafe { kernel::sceKernelExitGame(); }
 }
