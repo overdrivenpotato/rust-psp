@@ -2,18 +2,18 @@ use core::{mem, ffi::c_void, ptr::null_mut};
 use num_enum::TryFromPrimitive;
 use crate::sys::{
     self,
-    ge::{GeContext, GeListArgs, Command, GeListState, GeBreakParam},
+    ge::{GeContext, GeListArgs, GeCommand, GeListState, GeBreakParam},
     kernel::SceUid,
     display::DisplayPixelFormat,
     types::{ScePspFMatrix4, ScePspFVector3, ScePspIMatrix4, ScePspIVector4},
 };
 
-pub const PI: f32 = 3.141593;
+pub const GU_PI: f32 = 3.141593;
 
 /// Primitive types
 #[repr(u32)]
 #[derive(Copy, Clone, Debug)]
-pub enum Primitive {
+pub enum GuPrimitive {
     /// Single pixel points (1 vertex per primitive)
     Points = 0,
     /// Single pixel lines (2 vertices per primitive)
@@ -268,7 +268,7 @@ pub enum TextureProjectionMapMode {
 
 /// Wrap Mode
 #[repr(u32)]
-pub enum WrapMode {
+pub enum GuTexWrapMode {
     /// The texture repeats after crossing the border
     Repeat = 0,
 
@@ -517,7 +517,7 @@ pub enum LightType {
 /// Contexts
 #[repr(u32)]
 #[derive(Copy, Clone, Debug)]
-pub enum Context {
+pub enum GuContextType {
     Direct = 0,
     Call = 1,
     Send = 2,
@@ -525,7 +525,7 @@ pub enum Context {
 
 /// List Queue Mode
 #[repr(u32)]
-pub enum QueueMode {
+pub enum GuQueueMode {
     /// Place list last in the queue, so it executes in-order
     Tail = 0,
     /// Place list first in queue so that it executes as soon as possible
@@ -534,14 +534,14 @@ pub enum QueueMode {
 
 /// Sync mode
 #[repr(u32)]
-pub enum SyncMode {
+pub enum GuSyncMode {
     /// Wait until the last sceGuFinish command is reached.
     Finish = 0,
     /// Wait until the last (?) signal is executed.
     Signal = 1,
     /// Wait until all commands currently in list are executed.
     Done = 2,
-    /// Wait for the currently executed display list (`Context::Direct`).
+    /// Wait for the currently executed display list (`GuContextType::Direct`).
     List = 3,
     /// Wait for the last send list.
     Send = 4,
@@ -549,7 +549,7 @@ pub enum SyncMode {
 
 /// Sync Behavior
 #[repr(u32)]
-pub enum SyncBehavior {
+pub enum GuSyncBehavior {
     /// Wait for the GE list to be completed.
     Wait = 0,
     /// Just peek at the current state.
@@ -558,7 +558,7 @@ pub enum SyncBehavior {
 
 /// GU Callback ID
 #[repr(u32)]
-pub enum CallbackId {
+pub enum GuCallbackId {
     /// Called when `sceGuSignal` is used.
     Signal = 1,
 
@@ -624,7 +624,7 @@ struct Settings {
 struct GuDisplayList {
     start: *mut u32,
     current: *mut u32,
-    parent_context: Context,
+    parent_context: GuContextType,
 }
 
 struct GuContext {
@@ -659,36 +659,36 @@ struct GuDrawBuffer {
 
 struct GuLightSettings {
     /// Light type
-    type_: Command,
+    type_: GeCommand,
     /// X position
-    xpos: Command,
+    xpos: GeCommand,
     /// Y position
-    ypos: Command,
+    ypos: GeCommand,
     /// Z position
-    zpos: Command,
+    zpos: GeCommand,
     /// X direction
-    xdir: Command,
+    xdir: GeCommand,
     /// Y direction
-    ydir: Command,
+    ydir: GeCommand,
     /// Z direction
-    zdir: Command,
+    zdir: GeCommand,
 
     /// Ambient color
-    ambient: Command,
+    ambient: GeCommand,
     /// Diffuse color
-    diffuse: Command,
+    diffuse: GeCommand,
     /// Specular color
-    specular: Command,
+    specular: GeCommand,
     /// Constant attenuation
-    constant: Command,
+    constant: GeCommand,
     /// Linear attenuation
-    linear: Command,
+    linear: GeCommand,
     /// Quadratic attenuation
-    quadratic: Command,
+    quadratic: GeCommand,
     /// Light exponent
-    exponent: Command,
+    exponent: GeCommand,
     /// Light cutoff
-    cutoff: Command,
+    cutoff: GeCommand,
 }
 
 static mut CURRENT_FRAME: u32 = 0;
@@ -697,7 +697,7 @@ static mut CONTEXTS: [GuContext; 3] = [
         list: GuDisplayList {
             start: null_mut(),
             current: null_mut(),
-            parent_context: Context::Direct,
+            parent_context: GuContextType::Direct,
         },
         scissor_enable: 0,
         scissor_start: [0, 0],
@@ -719,7 +719,7 @@ static mut CONTEXTS: [GuContext; 3] = [
         list: GuDisplayList {
             start: null_mut(),
             current: null_mut(),
-            parent_context: Context::Direct,
+            parent_context: GuContextType::Direct,
         },
         scissor_enable: 0,
         scissor_start: [0, 0],
@@ -741,7 +741,7 @@ static mut CONTEXTS: [GuContext; 3] = [
         list: GuDisplayList {
             start: null_mut(),
             current: null_mut(),
-            parent_context: Context::Direct,
+            parent_context: GuContextType::Direct,
         },
         scissor_enable: 0,
         scissor_start: [0, 0],
@@ -779,7 +779,7 @@ static mut SETTINGS: Settings = Settings {
 };
 
 static mut LIST: *mut GuDisplayList = null_mut();
-static mut CURR_CONTEXT: Context = Context::Direct;
+static mut CURR_CONTEXT: GuContextType = GuContextType::Direct;
 static mut INIT: i32 = 0;
 static mut DISPLAY_ON: bool = false;
 static mut CALL_MODE: i32 = 0;
@@ -801,90 +801,90 @@ static mut OBJECT_STACK_DEPTH: i32 = 0;
 
 const LIGHT_COMMANDS: [GuLightSettings; 4] = [
     GuLightSettings {
-        type_: Command::LightType0,
-        xpos: Command::Light0X,
-        ypos: Command::Light0Y,
-        zpos: Command::Light0Z,
-        xdir: Command::Light0DirectionX,
-        ydir: Command::Light0DirectionY,
-        zdir: Command::Light0DirectionZ,
-        ambient: Command::Light0Ambient,
-        diffuse: Command::Light0Diffuse,
-        specular: Command::Light0Specular,
-        constant: Command::Light0ConstantAtten,
-        linear: Command::Light0LinearAtten,
-        quadratic: Command::Light0QuadtraticAtten,
-        exponent: Command::Light0ExponentAtten,
-        cutoff: Command::Light0CutoffAtten,
+        type_: GeCommand::LightType0,
+        xpos: GeCommand::Light0X,
+        ypos: GeCommand::Light0Y,
+        zpos: GeCommand::Light0Z,
+        xdir: GeCommand::Light0DirectionX,
+        ydir: GeCommand::Light0DirectionY,
+        zdir: GeCommand::Light0DirectionZ,
+        ambient: GeCommand::Light0Ambient,
+        diffuse: GeCommand::Light0Diffuse,
+        specular: GeCommand::Light0Specular,
+        constant: GeCommand::Light0ConstantAtten,
+        linear: GeCommand::Light0LinearAtten,
+        quadratic: GeCommand::Light0QuadtraticAtten,
+        exponent: GeCommand::Light0ExponentAtten,
+        cutoff: GeCommand::Light0CutoffAtten,
     },
     GuLightSettings {
-        type_: Command::LightType1,
-        xpos: Command::Light1X,
-        ypos: Command::Light1Y,
-        zpos: Command::Light1Z,
-        xdir: Command::Light1DirectionX,
-        ydir: Command::Light1DirectionY,
-        zdir: Command::Light1DirectionZ,
-        ambient: Command::Light1Ambient,
-        diffuse: Command::Light1Diffuse,
-        specular: Command::Light1Specular,
-        constant: Command::Light1ConstantAtten,
-        linear: Command::Light1LinearAtten,
-        quadratic: Command::Light1QuadtraticAtten,
-        exponent: Command::Light1ExponentAtten,
-        cutoff: Command::Light1CutoffAtten,
+        type_: GeCommand::LightType1,
+        xpos: GeCommand::Light1X,
+        ypos: GeCommand::Light1Y,
+        zpos: GeCommand::Light1Z,
+        xdir: GeCommand::Light1DirectionX,
+        ydir: GeCommand::Light1DirectionY,
+        zdir: GeCommand::Light1DirectionZ,
+        ambient: GeCommand::Light1Ambient,
+        diffuse: GeCommand::Light1Diffuse,
+        specular: GeCommand::Light1Specular,
+        constant: GeCommand::Light1ConstantAtten,
+        linear: GeCommand::Light1LinearAtten,
+        quadratic: GeCommand::Light1QuadtraticAtten,
+        exponent: GeCommand::Light1ExponentAtten,
+        cutoff: GeCommand::Light1CutoffAtten,
     },
     GuLightSettings {
-        type_: Command::LightType2,
-        xpos: Command::Light2X,
-        ypos: Command::Light2Y,
-        zpos: Command::Light2Z,
-        xdir: Command::Light2DirectionX,
-        ydir: Command::Light2DirectionY,
-        zdir: Command::Light2DirectionZ,
-        ambient: Command::Light2Ambient,
-        diffuse: Command::Light2Diffuse,
-        specular: Command::Light2Specular,
-        constant: Command::Light2ConstantAtten,
-        linear: Command::Light2LinearAtten,
-        quadratic: Command::Light2QuadtraticAtten,
-        exponent: Command::Light2ExponentAtten,
-        cutoff: Command::Light2CutoffAtten,
+        type_: GeCommand::LightType2,
+        xpos: GeCommand::Light2X,
+        ypos: GeCommand::Light2Y,
+        zpos: GeCommand::Light2Z,
+        xdir: GeCommand::Light2DirectionX,
+        ydir: GeCommand::Light2DirectionY,
+        zdir: GeCommand::Light2DirectionZ,
+        ambient: GeCommand::Light2Ambient,
+        diffuse: GeCommand::Light2Diffuse,
+        specular: GeCommand::Light2Specular,
+        constant: GeCommand::Light2ConstantAtten,
+        linear: GeCommand::Light2LinearAtten,
+        quadratic: GeCommand::Light2QuadtraticAtten,
+        exponent: GeCommand::Light2ExponentAtten,
+        cutoff: GeCommand::Light2CutoffAtten,
     },
     GuLightSettings {
-        type_: Command::LightType3,
-        xpos: Command::Light3X,
-        ypos: Command::Light3Y,
-        zpos: Command::Light3Z,
-        xdir: Command::Light3DirectionX,
-        ydir: Command::Light3DirectionY,
-        zdir: Command::Light3DirectionZ,
-        ambient: Command::Light3Ambient,
-        diffuse: Command::Light3Diffuse,
-        specular: Command::Light3Specular,
-        constant: Command::Light3ConstantAtten,
-        linear: Command::Light3LinearAtten,
-        quadratic: Command::Light3QuadtraticAtten,
-        exponent: Command::Light3ExponentAtten,
-        cutoff: Command::Light3CutoffAtten,
+        type_: GeCommand::LightType3,
+        xpos: GeCommand::Light3X,
+        ypos: GeCommand::Light3Y,
+        zpos: GeCommand::Light3Z,
+        xdir: GeCommand::Light3DirectionX,
+        ydir: GeCommand::Light3DirectionY,
+        zdir: GeCommand::Light3DirectionZ,
+        ambient: GeCommand::Light3Ambient,
+        diffuse: GeCommand::Light3Diffuse,
+        specular: GeCommand::Light3Specular,
+        constant: GeCommand::Light3ConstantAtten,
+        linear: GeCommand::Light3LinearAtten,
+        quadratic: GeCommand::Light3QuadtraticAtten,
+        exponent: GeCommand::Light3ExponentAtten,
+        cutoff: GeCommand::Light3CutoffAtten,
     },
 ];
 
 #[inline]
-unsafe fn send_command_i(cmd: Command, argument: i32) {
+unsafe fn send_command_i(cmd: GeCommand, argument: i32) {
     (*(*LIST).current) = ((cmd as u32) << 24) | (argument as u32 & 0xffffff);
     (*LIST).current = (*LIST).current.add(1);
 }
 
 #[inline]
-unsafe fn send_command_f(cmd: Command, argument: f32) {
+unsafe fn send_command_f(cmd: GeCommand, argument: f32) {
     send_command_i(cmd, (core::mem::transmute::<_, u32>(argument) >> 8) as i32);
 }
 
 #[inline]
-unsafe fn send_command_i_stall(cmd: Command, argument: i32) {
+unsafe fn send_command_i_stall(cmd: GeCommand, argument: i32) {
     send_command_i(cmd, argument);
-    if let (Context::Direct, 0) = (CURR_CONTEXT, OBJECT_STACK_DEPTH) {
+    if let (GuContextType::Direct, 0) = (CURR_CONTEXT, OBJECT_STACK_DEPTH) {
         crate::sys::sceGeListUpdateStallAddr(
             GE_LIST_EXECUTED[0],
             (*LIST).current as *mut c_void,
@@ -892,12 +892,12 @@ unsafe fn send_command_i_stall(cmd: Command, argument: i32) {
     }
 }
 
-pub unsafe fn draw_region(x: i32, y: i32, width: i32, height: i32) {
-    send_command_i(Command::Region1, (y << 10) | x);
-    send_command_i(Command::Region2, (((y + height) - 1) << 10) | ((x + width) - 1));
+unsafe fn draw_region(x: i32, y: i32, width: i32, height: i32) {
+    send_command_i(GeCommand::Region1, (y << 10) | x);
+    send_command_i(GeCommand::Region2, (((y + height) - 1) << 10) | ((x + width) - 1));
 }
 
-pub unsafe fn reset_values() {
+unsafe fn reset_values() {
     INIT = 0;
     STATES = 0;
     CURRENT_FRAME = 0;
@@ -993,8 +993,8 @@ pub unsafe fn sceGuDepthBuffer(zbp: *mut c_void, zbw: i32) {
         DRAW_BUFFER.depth_width = zbw;
     }
 
-    send_command_i(Command::ZBufPtr, zbp as i32 & 0xffffff);
-    send_command_i(Command::ZBufWidth, (((zbp as u32 & 0xff000000) >> 8) | zbw as u32) as i32);
+    send_command_i(GeCommand::ZBufPtr, zbp as i32 & 0xffffff);
+    send_command_i(GeCommand::ZBufWidth, (((zbp as u32 & 0xff000000) >> 8) | zbw as u32) as i32);
 }
 
 /// Set display buffer parameters
@@ -1057,16 +1057,16 @@ pub unsafe fn sceGuDrawBuffer(psm: DisplayPixelFormat, fbp: *mut c_void, fbw: i3
         DRAW_BUFFER.depth_width = fbw;
     }
 
-    send_command_i(Command::FramebufPixFormat, psm as i32);
-    send_command_i(Command::FrameBufPtr, DRAW_BUFFER.frame_buffer as i32 & 0xffffff);
+    send_command_i(GeCommand::FramebufPixFormat, psm as i32);
+    send_command_i(GeCommand::FrameBufPtr, DRAW_BUFFER.frame_buffer as i32 & 0xffffff);
     send_command_i(
-        Command::FrameBufWidth,
+        GeCommand::FrameBufWidth,
         ((DRAW_BUFFER.frame_buffer as u32 & 0xff000000) >> 8) as i32
             | DRAW_BUFFER.frame_width as i32,
     );
-    send_command_i(Command::ZBufPtr, DRAW_BUFFER.depth_buffer as i32 & 0xffffff);
+    send_command_i(GeCommand::ZBufPtr, DRAW_BUFFER.depth_buffer as i32 & 0xffffff);
     send_command_i(
-        Command::ZBufWidth,
+        GeCommand::ZBufWidth,
         ((DRAW_BUFFER.depth_buffer as u32 & 0xff000000) >> 8) as i32
             | DRAW_BUFFER.depth_width as i32,
     );
@@ -1081,9 +1081,9 @@ pub unsafe fn sceGuDrawBuffer(psm: DisplayPixelFormat, fbp: *mut c_void, fbw: i3
 /// - `fbw`: Frame buffer width (block aligned)
 #[allow(non_snake_case)]
 pub unsafe fn sceGuDrawBufferList(psm: DisplayPixelFormat, fbp: *mut c_void, fbw: i32) {
-    send_command_i(Command::FramebufPixFormat, psm as i32);
-    send_command_i(Command::FrameBufPtr, fbp as i32 & 0xffffff);
-    send_command_i(Command::FrameBufWidth, ((fbp as u32 & 0xff000000) >> 8) as i32 | fbw);
+    send_command_i(GeCommand::FramebufPixFormat, psm as i32);
+    send_command_i(GeCommand::FrameBufPtr, fbp as i32 & 0xffffff);
+    send_command_i(GeCommand::FrameBufWidth, ((fbp as u32 & 0xff000000) >> 8) as i32 | fbw);
 }
 
 /// Turn display on or off
@@ -1126,7 +1126,7 @@ pub unsafe fn sceGuDisplay(state: bool) -> bool {
 /// - `function`: Depth test function to use
 #[allow(non_snake_case)]
 pub unsafe fn sceGuDepthFunc(function: DepthFunc) {
-    send_command_i(Command::ZTest, function as i32);
+    send_command_i(GeCommand::ZTest, function as i32);
 }
 
 /// Mask depth buffer writes
@@ -1137,7 +1137,7 @@ pub unsafe fn sceGuDepthFunc(function: DepthFunc) {
 // TODO: Use bool instead?
 #[allow(non_snake_case)]
 pub unsafe fn sceGuDepthMask(mask: i32) {
-    send_command_i(Command::ZWriteDisable, mask);
+    send_command_i(GeCommand::ZWriteDisable, mask);
 }
 
 #[allow(non_snake_case)]
@@ -1167,8 +1167,8 @@ pub unsafe fn sceGuDepthRange(mut near: i32, mut far: i32) {
     context.near_plane = near;
     context.far_plane = far;
 
-    send_command_f(Command::ViewportZScale, z - near as f32);
-    send_command_f(Command::ViewportZCenter, z + context.depth_offset as f32);
+    send_command_f(GeCommand::ViewportZScale, z - near as f32);
+    send_command_f(GeCommand::ViewportZCenter, z + context.depth_offset as f32);
 
     if near > far {
         let temp = near;
@@ -1176,8 +1176,8 @@ pub unsafe fn sceGuDepthRange(mut near: i32, mut far: i32) {
         far = temp;
     }
 
-    send_command_i(Command::MinZ, near);
-    send_command_i(Command::MaxZ, far);
+    send_command_i(GeCommand::MinZ, near);
+    send_command_i(GeCommand::MaxZ, far);
 }
 
 #[allow(non_snake_case)]
@@ -1188,9 +1188,9 @@ pub unsafe fn sceGuFog(near: f32, far: f32, color: u32) {
         distance = 1.0 / distance;
     }
 
-    send_command_i(Command::FogColor, (color & 0xffffff) as i32);
-    send_command_f(Command::Fog1, far);
-    send_command_f(Command::Fog2, distance);
+    send_command_i(GeCommand::FogColor, (color & 0xffffff) as i32);
+    send_command_f(GeCommand::Fog1, far);
+    send_command_f(GeCommand::Fog2, distance);
 }
 
 /// Initalize the GU system
@@ -1198,230 +1198,230 @@ pub unsafe fn sceGuFog(near: f32, far: f32, color: u32) {
 /// This function MUST be called as the first function, otherwise state is undetermined.
 #[allow(non_snake_case)]
 pub unsafe fn sceGuInit() {
-    const INIT_COMMANDS: [Command; 223] = [
-        Command::Vaddr,
-        Command::Iaddr,
-        Command::Base,
-        Command::VertexType,
-        Command::OffsetAddr,
-        Command::Region1,
-        Command::Region2,
-        Command::LightingEnable,
-        Command::LightEnable0,
-        Command::LightEnable1,
-        Command::LightEnable2,
-        Command::LightEnable3,
-        Command::DepthClampEnable,
-        Command::CullFaceEnable,
-        Command::TextureMapEnable,
-        Command::FogEnable,
-        Command::DitherEnable,
-        Command::AlphaBlendEnable,
-        Command::AlphaTestEnable,
-        Command::ZTestEnable,
-        Command::StencilTestEnable,
-        Command::AntiAliasEnable,
-        Command::PatchCullEnable,
-        Command::ColorTestEnable,
-        Command::LogicOpEnable,
-        Command::BoneMatrixNumber,
-        Command::BoneMatrixData,
-        Command::MorphWeight0,
-        Command::MorphWeight1,
-        Command::MorphWeight2,
-        Command::MorphWeight3,
-        Command::MorphWeight4,
-        Command::MorphWeight5,
-        Command::MorphWeight6,
-        Command::MorphWeight7,
-        Command::PatchDivision,
-        Command::PatchPrimitive,
-        Command::PatchFacing,
-        Command::WorldMatrixNumber,
-        Command::WorldMatrixData,
-        Command::ViewMatrixNumber,
-        Command::ViewMatrixData,
-        Command::ProjMatrixNumber,
-        Command::ProjMatrixData,
-        Command::TGenMatrixNumber,
-        Command::TGenMatrixData,
-        Command::ViewportXScale,
-        Command::ViewportYScale,
-        Command::ViewportZScale,
-        Command::ViewportXCenter,
-        Command::ViewportYCenter,
-        Command::ViewportZCenter,
-        Command::TexScaleU,
-        Command::TexScaleV,
-        Command::TexOffsetU,
-        Command::TexOffsetV,
-        Command::OffsetX,
-        Command::OffsetY,
-        Command::ShadeMode,
-        Command::ReverseNormal,
-        Command::MaterialUpdate,
-        Command::MaterialEmissive,
-        Command::MaterialAmbient,
-        Command::MaterialDiffuse,
-        Command::MaterialSpecular,
-        Command::MaterialAlpha,
-        Command::MaterialSpecularCoef,
-        Command::AmbientColor,
-        Command::AmbientAlpha,
-        Command::LightMode,
-        Command::LightType0,
-        Command::LightType1,
-        Command::LightType2,
-        Command::LightType3,
-        Command::Light0X,
-        Command::Light0Y,
-        Command::Light0Z,
-        Command::Light1X,
-        Command::Light1Y,
-        Command::Light1Z,
-        Command::Light2X,
-        Command::Light2Y,
-        Command::Light2Z,
-        Command::Light3X,
-        Command::Light3Y,
-        Command::Light3Z,
-        Command::Light0DirectionX,
-        Command::Light0DirectionY,
-        Command::Light0DirectionZ,
-        Command::Light1DirectionX,
-        Command::Light1DirectionY,
-        Command::Light1DirectionZ,
-        Command::Light2DirectionX,
-        Command::Light2DirectionY,
-        Command::Light2DirectionZ,
-        Command::Light3DirectionX,
-        Command::Light3DirectionY,
-        Command::Light3DirectionZ,
-        Command::Light0ConstantAtten,
-        Command::Light0LinearAtten,
-        Command::Light0QuadtraticAtten,
-        Command::Light1ConstantAtten,
-        Command::Light1LinearAtten,
-        Command::Light1QuadtraticAtten,
-        Command::Light2ConstantAtten,
-        Command::Light2LinearAtten,
-        Command::Light2QuadtraticAtten,
-        Command::Light3ConstantAtten,
-        Command::Light3LinearAtten,
-        Command::Light3QuadtraticAtten,
-        Command::Light0ExponentAtten,
-        Command::Light1ExponentAtten,
-        Command::Light2ExponentAtten,
-        Command::Light3ExponentAtten,
-        Command::Light0CutoffAtten,
-        Command::Light1CutoffAtten,
-        Command::Light2CutoffAtten,
-        Command::Light3CutoffAtten,
-        Command::Light0Ambient,
-        Command::Light0Diffuse,
-        Command::Light0Specular,
-        Command::Light1Ambient,
-        Command::Light1Diffuse,
-        Command::Light1Specular,
-        Command::Light2Ambient,
-        Command::Light2Diffuse,
-        Command::Light2Specular,
-        Command::Light3Ambient,
-        Command::Light3Diffuse,
-        Command::Light3Specular,
-        Command::Cull,
-        Command::FrameBufPtr,
-        Command::FrameBufWidth,
-        Command::ZBufPtr,
-        Command::ZBufWidth,
-        Command::TexAddr0,
-        Command::TexAddr1,
-        Command::TexAddr2,
-        Command::TexAddr3,
-        Command::TexAddr4,
-        Command::TexAddr5,
-        Command::TexAddr6,
-        Command::TexAddr7,
-        Command::TexBufWidth0,
-        Command::TexBufWidth1,
-        Command::TexBufWidth2,
-        Command::TexBufWidth3,
-        Command::TexBufWidth4,
-        Command::TexBufWidth5,
-        Command::TexBufWidth6,
-        Command::TexBufWidth7,
-        Command::ClutAddr,
-        Command::ClutAddrUpper,
-        Command::TransferSrc,
-        Command::TransferSrcW,
-        Command::TransferDst,
-        Command::TransferDstW,
-        Command::TexSize0,
-        Command::TexSize1,
-        Command::TexSize2,
-        Command::TexSize3,
-        Command::TexSize4,
-        Command::TexSize5,
-        Command::TexSize6,
-        Command::TexSize7,
-        Command::TexMapMode,
-        Command::TexShadeLs,
-        Command::TexMode,
-        Command::TexFormat,
-        Command::LoadClut,
-        Command::ClutFormat,
-        Command::TexFilter,
-        Command::TexWrap,
-        Command::TexLevel,
-        Command::TexFunc,
-        Command::TexEnvColor,
-        Command::TexFlush,
-        Command::TexSync,
-        Command::Fog1,
-        Command::Fog2,
-        Command::FogColor,
-        Command::TexLodSlope,
-        Command::FramebufPixFormat,
-        Command::ClearMode,
-        Command::Scissor1,
-        Command::Scissor2,
-        Command::MinZ,
-        Command::MaxZ,
-        Command::ColorTest,
-        Command::ColorRef,
-        Command::ColorTestmask,
-        Command::AlphaTest,
-        Command::StencilTest,
-        Command::StencilOp,
-        Command::ZTest,
-        Command::BlendMode,
-        Command::BlendFixedA,
-        Command::BlendFixedB,
-        Command::Dith0,
-        Command::Dith1,
-        Command::Dith2,
-        Command::Dith3,
-        Command::LogicOp,
-        Command::ZWriteDisable,
-        Command::MaskRgb,
-        Command::MaskAlpha,
-        Command::TransferSrcPos,
-        Command::TransferDstPos,
-        Command::TransferSize,
-        Command::Vscx,
-        Command::Vscy,
-        Command::Vscz,
-        Command::Vtcs,
-        Command::Vtct,
-        Command::Vtcq,
-        Command::Vcv,
-        Command::Vap,
-        Command::Vfc,
-        Command::Vscv,
-        Command::Finish,
-        Command::End,
-        Command::Nop,
-        Command::Nop,
+    const INIT_COMMANDS: [GeCommand; 223] = [
+        GeCommand::Vaddr,
+        GeCommand::Iaddr,
+        GeCommand::Base,
+        GeCommand::VertexType,
+        GeCommand::OffsetAddr,
+        GeCommand::Region1,
+        GeCommand::Region2,
+        GeCommand::LightingEnable,
+        GeCommand::LightEnable0,
+        GeCommand::LightEnable1,
+        GeCommand::LightEnable2,
+        GeCommand::LightEnable3,
+        GeCommand::DepthClampEnable,
+        GeCommand::CullFaceEnable,
+        GeCommand::TextureMapEnable,
+        GeCommand::FogEnable,
+        GeCommand::DitherEnable,
+        GeCommand::AlphaBlendEnable,
+        GeCommand::AlphaTestEnable,
+        GeCommand::ZTestEnable,
+        GeCommand::StencilTestEnable,
+        GeCommand::AntiAliasEnable,
+        GeCommand::PatchCullEnable,
+        GeCommand::ColorTestEnable,
+        GeCommand::LogicOpEnable,
+        GeCommand::BoneMatrixNumber,
+        GeCommand::BoneMatrixData,
+        GeCommand::MorphWeight0,
+        GeCommand::MorphWeight1,
+        GeCommand::MorphWeight2,
+        GeCommand::MorphWeight3,
+        GeCommand::MorphWeight4,
+        GeCommand::MorphWeight5,
+        GeCommand::MorphWeight6,
+        GeCommand::MorphWeight7,
+        GeCommand::PatchDivision,
+        GeCommand::PatchPrimitive,
+        GeCommand::PatchFacing,
+        GeCommand::WorldMatrixNumber,
+        GeCommand::WorldMatrixData,
+        GeCommand::ViewMatrixNumber,
+        GeCommand::ViewMatrixData,
+        GeCommand::ProjMatrixNumber,
+        GeCommand::ProjMatrixData,
+        GeCommand::TGenMatrixNumber,
+        GeCommand::TGenMatrixData,
+        GeCommand::ViewportXScale,
+        GeCommand::ViewportYScale,
+        GeCommand::ViewportZScale,
+        GeCommand::ViewportXCenter,
+        GeCommand::ViewportYCenter,
+        GeCommand::ViewportZCenter,
+        GeCommand::TexScaleU,
+        GeCommand::TexScaleV,
+        GeCommand::TexOffsetU,
+        GeCommand::TexOffsetV,
+        GeCommand::OffsetX,
+        GeCommand::OffsetY,
+        GeCommand::ShadeMode,
+        GeCommand::ReverseNormal,
+        GeCommand::MaterialUpdate,
+        GeCommand::MaterialEmissive,
+        GeCommand::MaterialAmbient,
+        GeCommand::MaterialDiffuse,
+        GeCommand::MaterialSpecular,
+        GeCommand::MaterialAlpha,
+        GeCommand::MaterialSpecularCoef,
+        GeCommand::AmbientColor,
+        GeCommand::AmbientAlpha,
+        GeCommand::LightMode,
+        GeCommand::LightType0,
+        GeCommand::LightType1,
+        GeCommand::LightType2,
+        GeCommand::LightType3,
+        GeCommand::Light0X,
+        GeCommand::Light0Y,
+        GeCommand::Light0Z,
+        GeCommand::Light1X,
+        GeCommand::Light1Y,
+        GeCommand::Light1Z,
+        GeCommand::Light2X,
+        GeCommand::Light2Y,
+        GeCommand::Light2Z,
+        GeCommand::Light3X,
+        GeCommand::Light3Y,
+        GeCommand::Light3Z,
+        GeCommand::Light0DirectionX,
+        GeCommand::Light0DirectionY,
+        GeCommand::Light0DirectionZ,
+        GeCommand::Light1DirectionX,
+        GeCommand::Light1DirectionY,
+        GeCommand::Light1DirectionZ,
+        GeCommand::Light2DirectionX,
+        GeCommand::Light2DirectionY,
+        GeCommand::Light2DirectionZ,
+        GeCommand::Light3DirectionX,
+        GeCommand::Light3DirectionY,
+        GeCommand::Light3DirectionZ,
+        GeCommand::Light0ConstantAtten,
+        GeCommand::Light0LinearAtten,
+        GeCommand::Light0QuadtraticAtten,
+        GeCommand::Light1ConstantAtten,
+        GeCommand::Light1LinearAtten,
+        GeCommand::Light1QuadtraticAtten,
+        GeCommand::Light2ConstantAtten,
+        GeCommand::Light2LinearAtten,
+        GeCommand::Light2QuadtraticAtten,
+        GeCommand::Light3ConstantAtten,
+        GeCommand::Light3LinearAtten,
+        GeCommand::Light3QuadtraticAtten,
+        GeCommand::Light0ExponentAtten,
+        GeCommand::Light1ExponentAtten,
+        GeCommand::Light2ExponentAtten,
+        GeCommand::Light3ExponentAtten,
+        GeCommand::Light0CutoffAtten,
+        GeCommand::Light1CutoffAtten,
+        GeCommand::Light2CutoffAtten,
+        GeCommand::Light3CutoffAtten,
+        GeCommand::Light0Ambient,
+        GeCommand::Light0Diffuse,
+        GeCommand::Light0Specular,
+        GeCommand::Light1Ambient,
+        GeCommand::Light1Diffuse,
+        GeCommand::Light1Specular,
+        GeCommand::Light2Ambient,
+        GeCommand::Light2Diffuse,
+        GeCommand::Light2Specular,
+        GeCommand::Light3Ambient,
+        GeCommand::Light3Diffuse,
+        GeCommand::Light3Specular,
+        GeCommand::Cull,
+        GeCommand::FrameBufPtr,
+        GeCommand::FrameBufWidth,
+        GeCommand::ZBufPtr,
+        GeCommand::ZBufWidth,
+        GeCommand::TexAddr0,
+        GeCommand::TexAddr1,
+        GeCommand::TexAddr2,
+        GeCommand::TexAddr3,
+        GeCommand::TexAddr4,
+        GeCommand::TexAddr5,
+        GeCommand::TexAddr6,
+        GeCommand::TexAddr7,
+        GeCommand::TexBufWidth0,
+        GeCommand::TexBufWidth1,
+        GeCommand::TexBufWidth2,
+        GeCommand::TexBufWidth3,
+        GeCommand::TexBufWidth4,
+        GeCommand::TexBufWidth5,
+        GeCommand::TexBufWidth6,
+        GeCommand::TexBufWidth7,
+        GeCommand::ClutAddr,
+        GeCommand::ClutAddrUpper,
+        GeCommand::TransferSrc,
+        GeCommand::TransferSrcW,
+        GeCommand::TransferDst,
+        GeCommand::TransferDstW,
+        GeCommand::TexSize0,
+        GeCommand::TexSize1,
+        GeCommand::TexSize2,
+        GeCommand::TexSize3,
+        GeCommand::TexSize4,
+        GeCommand::TexSize5,
+        GeCommand::TexSize6,
+        GeCommand::TexSize7,
+        GeCommand::TexMapMode,
+        GeCommand::TexShadeLs,
+        GeCommand::TexMode,
+        GeCommand::TexFormat,
+        GeCommand::LoadClut,
+        GeCommand::ClutFormat,
+        GeCommand::TexFilter,
+        GeCommand::TexWrap,
+        GeCommand::TexLevel,
+        GeCommand::TexFunc,
+        GeCommand::TexEnvColor,
+        GeCommand::TexFlush,
+        GeCommand::TexSync,
+        GeCommand::Fog1,
+        GeCommand::Fog2,
+        GeCommand::FogColor,
+        GeCommand::TexLodSlope,
+        GeCommand::FramebufPixFormat,
+        GeCommand::ClearMode,
+        GeCommand::Scissor1,
+        GeCommand::Scissor2,
+        GeCommand::MinZ,
+        GeCommand::MaxZ,
+        GeCommand::ColorTest,
+        GeCommand::ColorRef,
+        GeCommand::ColorTestmask,
+        GeCommand::AlphaTest,
+        GeCommand::StencilTest,
+        GeCommand::StencilOp,
+        GeCommand::ZTest,
+        GeCommand::BlendMode,
+        GeCommand::BlendFixedA,
+        GeCommand::BlendFixedB,
+        GeCommand::Dith0,
+        GeCommand::Dith1,
+        GeCommand::Dith2,
+        GeCommand::Dith3,
+        GeCommand::LogicOp,
+        GeCommand::ZWriteDisable,
+        GeCommand::MaskRgb,
+        GeCommand::MaskAlpha,
+        GeCommand::TransferSrcPos,
+        GeCommand::TransferDstPos,
+        GeCommand::TransferSize,
+        GeCommand::Vscx,
+        GeCommand::Vscy,
+        GeCommand::Vscz,
+        GeCommand::Vtcs,
+        GeCommand::Vtct,
+        GeCommand::Vtcq,
+        GeCommand::Vcv,
+        GeCommand::Vap,
+        GeCommand::Vfc,
+        GeCommand::Vscv,
+        GeCommand::Finish,
+        GeCommand::End,
+        GeCommand::Nop,
+        GeCommand::Nop,
     ];
 
     static INIT_LIST: crate::Align16<[u32; 223]> = crate::Align16({
@@ -1508,18 +1508,18 @@ pub unsafe fn sceGuContinue() {
 /// The old callback handler
 #[allow(non_snake_case)]
 pub unsafe fn sceGuSetCallback(
-    signal: CallbackId,
+    signal: GuCallbackId,
     callback: GuCallback,
 ) -> GuCallback {
     let old_callback;
 
     match signal {
-        CallbackId::Signal => {
+        GuCallbackId::Signal => {
             old_callback = SETTINGS.sig;
             SETTINGS.sig = callback;
         }
 
-        CallbackId::Finish => {
+        GuCallbackId::Finish => {
             old_callback = SETTINGS.fin;
             SETTINGS.fin = callback;
         }
@@ -1537,15 +1537,15 @@ pub unsafe fn sceGuSetCallback(
 /// - `signal`: Signal to trigger
 #[allow(non_snake_case)]
 pub unsafe fn sceGuSignal(behavior: SignalBehavior, signal: i32) {
-    send_command_i(Command::Signal, ((signal & 0xff) << 16) | (behavior as i32 & 0xffff));
-    send_command_i(Command::End, 0);
+    send_command_i(GeCommand::Signal, ((signal & 0xff) << 16) | (behavior as i32 & 0xffff));
+    send_command_i(GeCommand::End, 0);
 
     if signal == 3 {
-        send_command_i(Command::Finish, 0);
-        send_command_i(Command::End, 0);
+        send_command_i(GeCommand::Finish, 0);
+        send_command_i(GeCommand::End, 0);
     }
 
-    send_command_i_stall(Command::Nop, 0);
+    send_command_i_stall(GeCommand::Nop, 0);
 }
 
 /// Send raw float command to the GE
@@ -1557,7 +1557,7 @@ pub unsafe fn sceGuSignal(behavior: SignalBehavior, signal: i32) {
 /// - `cmd`: Which command to send
 /// - `argument`: Argument to pass along
 #[allow(non_snake_case)]
-pub unsafe fn sceGuSendCommandf(cmd: Command, argument: f32) {
+pub unsafe fn sceGuSendCommandf(cmd: GeCommand, argument: f32) {
     send_command_f(cmd, argument);
 }
 
@@ -1570,7 +1570,7 @@ pub unsafe fn sceGuSendCommandf(cmd: Command, argument: f32) {
 /// - `cmd`: Which command to send
 /// - `argument`: Argument to pass along
 #[allow(non_snake_case)]
-pub unsafe fn sceGuSendCommandi(cmd: Command, argument: i32) {
+pub unsafe fn sceGuSendCommandi(cmd: GeCommand, argument: i32) {
     send_command_i(cmd, argument);
 }
 
@@ -1606,7 +1606,7 @@ pub unsafe fn sceGuGetMemory(mut size: i32) -> *mut c_void {
 
     (*LIST).current = new_ptr;
 
-    if let Context::Direct = CURR_CONTEXT {
+    if let GuContextType::Direct = CURR_CONTEXT {
         crate::sys::sceGeListUpdateStallAddr(GE_LIST_EXECUTED[0], new_ptr as *mut _);
     }
 
@@ -1622,7 +1622,7 @@ pub unsafe fn sceGuGetMemory(mut size: i32) -> *mut c_void {
 /// - `cid`: Context Type
 /// - `list`: Pointer to display-list (16 byte aligned)
 #[allow(non_snake_case)]
-pub unsafe fn sceGuStart(context_type: Context, list: *mut c_void) {
+pub unsafe fn sceGuStart(context_type: GuContextType, list: *mut c_void) {
     let mut context = &mut CONTEXTS[context_type as usize];
     let local_list = ((list as u32) | 0x4000_0000) as *mut u32;
 
@@ -1635,7 +1635,7 @@ pub unsafe fn sceGuStart(context_type: Context, list: *mut c_void) {
     // store current context
     CURR_CONTEXT = context_type;
 
-    if let Context::Direct = context_type {
+    if let GuContextType::Direct = context_type {
         GE_LIST_EXECUTED[0] = crate::sys::sceGeListEnQueue(
             local_list as *mut c_void,
             local_list as *mut c_void,
@@ -1666,11 +1666,11 @@ pub unsafe fn sceGuStart(context_type: Context, list: *mut c_void) {
         INIT = 1;
     }
 
-    if let Context::Direct = CURR_CONTEXT {
+    if let GuContextType::Direct = CURR_CONTEXT {
         if DRAW_BUFFER.frame_width != 0 {
-            send_command_i(Command::FrameBufPtr, DRAW_BUFFER.frame_buffer as i32 & 0xffffff);
+            send_command_i(GeCommand::FrameBufPtr, DRAW_BUFFER.frame_buffer as i32 & 0xffffff);
             send_command_i(
-                Command::FrameBufWidth,
+                GeCommand::FrameBufWidth,
                 ((DRAW_BUFFER.frame_buffer as u32 & 0xff00_0000) >> 8) as i32
                     | (DRAW_BUFFER.frame_width as i32),
             );
@@ -1695,18 +1695,18 @@ pub unsafe fn sceGuStart(context_type: Context, list: *mut c_void) {
 #[allow(non_snake_case)]
 pub unsafe fn sceGuFinish() -> i32 {
     match CURR_CONTEXT {
-        Context::Direct | Context::Send => {
-            send_command_i(Command::Finish, 0);
-            send_command_i_stall(Command::End, 0);
+        GuContextType::Direct | GuContextType::Send => {
+            send_command_i(GeCommand::Finish, 0);
+            send_command_i_stall(GeCommand::End, 0);
         }
 
-        Context::Call => {
+        GuContextType::Call => {
             if CALL_MODE == 1 {
-                send_command_i(Command::Signal, 0x120000);
-                send_command_i(Command::End, 0);
-                send_command_i_stall(Command::Nop, 0);
+                send_command_i(GeCommand::Signal, 0x120000);
+                send_command_i(GeCommand::End, 0);
+                send_command_i_stall(GeCommand::Nop, 0);
             } else {
-                send_command_i(Command::Ret, 0);
+                send_command_i(GeCommand::Ret, 0);
             }
         }
     }
@@ -1736,18 +1736,18 @@ pub unsafe fn sceGuFinish() -> i32 {
 #[allow(non_snake_case)]
 pub unsafe fn sceGuFinishId(id: u32) -> i32 {
     match CURR_CONTEXT {
-        Context::Direct | Context::Send => {
-            send_command_i(Command::Finish, (id & 0xffff) as i32);
-            send_command_i_stall(Command::End, 0);
+        GuContextType::Direct | GuContextType::Send => {
+            send_command_i(GeCommand::Finish, (id & 0xffff) as i32);
+            send_command_i_stall(GeCommand::End, 0);
         }
 
-        Context::Call => {
+        GuContextType::Call => {
             if CALL_MODE == 1 {
-                send_command_i(Command::Signal, 0x120000);
-                send_command_i(Command::End, 0);
-                send_command_i_stall(Command::Nop, 0);
+                send_command_i(GeCommand::Signal, 0x120000);
+                send_command_i(GeCommand::End, 0);
+                send_command_i_stall(GeCommand::Nop, 0);
             } else {
-                send_command_i(Command::Ret, 0);
+                send_command_i(GeCommand::Ret, 0);
             }
         }
     }
@@ -1770,12 +1770,12 @@ pub unsafe fn sceGuCallList(list: *const c_void) {
     let list_addr = list as u32;
 
     if CALL_MODE == 1 {
-        send_command_i(Command::Signal, (list_addr >> 16) as i32 | 0x110000);
-        send_command_i(Command::End, list_addr as i32 & 0xffff);
-        send_command_i_stall(Command::Nop, 0);
+        send_command_i(GeCommand::Signal, (list_addr >> 16) as i32 | 0x110000);
+        send_command_i(GeCommand::End, list_addr as i32 & 0xffff);
+        send_command_i_stall(GeCommand::Nop, 0);
     } else {
-        send_command_i(Command::Base, (list_addr >> 8) as i32 & 0xf0000);
-        send_command_i_stall(Command::Call, list_addr as i32 & 0xffffff);
+        send_command_i(GeCommand::Base, (list_addr >> 8) as i32 & 0xf0000);
+        send_command_i_stall(GeCommand::Call, list_addr as i32 & 0xffffff);
     }
 }
 
@@ -1809,7 +1809,7 @@ pub unsafe fn sceGuCheckList() -> i32 {
 /// - `list`: List to send
 /// - `context`: Temporary storage for the GE context
 #[allow(non_snake_case)]
-pub unsafe fn sceGuSendList(mode: QueueMode, list: *const c_void, context: *mut GeContext) {
+pub unsafe fn sceGuSendList(mode: GuQueueMode, list: *const c_void, context: *mut GeContext) {
     SETTINGS.signal_offset = 0;
 
     let mut args = GeListArgs::default();
@@ -1819,7 +1819,7 @@ pub unsafe fn sceGuSendList(mode: QueueMode, list: *const c_void, context: *mut 
     let callback = SETTINGS.ge_callback_id;
 
     let list_id = match mode {
-        QueueMode::Head => {
+        GuQueueMode::Head => {
             crate::sys::sceGeListEnQueueHead(
                 list,
                 null_mut(),
@@ -1828,7 +1828,7 @@ pub unsafe fn sceGuSendList(mode: QueueMode, list: *const c_void, context: *mut 
             )
         }
 
-        QueueMode::Tail => {
+        GuQueueMode::Tail => {
             crate::sys::sceGeListEnQueue(list, null_mut(), callback as i32, &mut args)
         }
     };
@@ -1871,18 +1871,18 @@ pub unsafe fn sceGuSwapBuffers() -> *mut c_void {
 ///
 /// # Parameters
 ///
-/// - `mode`: What to wait for, one of `SyncMode`
-/// - `behavior`: How to sync, one of `SyncBehavior`
+/// - `mode`: What to wait for, one of `GuSyncMode`
+/// - `behavior`: How to sync, one of `GuSyncBehavior`
 ///
 /// # Return Value
 ///
 /// Unknown at this time. GeListState?
 #[allow(non_snake_case)]
-pub unsafe fn sceGuSync(mode: SyncMode, behavior: SyncBehavior) -> GeListState {
+pub unsafe fn sceGuSync(mode: GuSyncMode, behavior: GuSyncBehavior) -> GeListState {
     match mode {
-        SyncMode::Finish => crate::sys::sceGeDrawSync(behavior as i32),
-        SyncMode::List => crate::sys::sceGeListSync(GE_LIST_EXECUTED[0], behavior as i32),
-        SyncMode::Send => crate::sys::sceGeListSync(GE_LIST_EXECUTED[1], behavior as i32),
+        GuSyncMode::Finish => crate::sys::sceGeDrawSync(behavior as i32),
+        GuSyncMode::List => crate::sys::sceGeListSync(GE_LIST_EXECUTED[0], behavior as i32),
+        GuSyncMode::Send => crate::sys::sceGeListSync(GE_LIST_EXECUTED[1], behavior as i32),
         _ => GeListState::Done,
     }
 }
@@ -1911,27 +1911,27 @@ pub unsafe fn sceGuSync(mode: SyncMode, behavior: SyncBehavior) -> GeListState {
 /// - `vertices`: Pointer to a vertex-list
 #[allow(non_snake_case)]
 pub unsafe fn sceGuDrawArray(
-    prim: Primitive,
+    prim: GuPrimitive,
     vtype: VertexType,
     count: i32,
     indices: *const c_void,
     vertices: *const c_void,
 ) {
     if !vtype.is_empty() {
-        send_command_i(Command::VertexType, vtype.bits());
+        send_command_i(GeCommand::VertexType, vtype.bits());
     }
 
     if !indices.is_null() {
-        send_command_i(Command::Base, (indices as u32 >> 8) as i32 & 0xf0000);
-        send_command_i(Command::Iaddr, indices as i32 & 0xffffff);
+        send_command_i(GeCommand::Base, (indices as u32 >> 8) as i32 & 0xf0000);
+        send_command_i(GeCommand::Iaddr, indices as i32 & 0xffffff);
     }
 
     if !vertices.is_null() {
-        send_command_i(Command::Base, (vertices as u32 >> 8) as i32 & 0xf0000);
-        send_command_i(Command::Vaddr, vertices as i32 & 0xffffff);
+        send_command_i(GeCommand::Base, (vertices as u32 >> 8) as i32 & 0xf0000);
+        send_command_i(GeCommand::Vaddr, vertices as i32 & 0xffffff);
     }
 
-    send_command_i_stall(Command::Prim, ((prim as i32) << 16) | count);
+    send_command_i_stall(GeCommand::Prim, ((prim as i32) << 16) | count);
 }
 
 /// Begin conditional rendering of object
@@ -1954,28 +1954,28 @@ pub unsafe fn sceGuBeginObject(
     vertices: *const c_void,
 ) {
     if vtype != 0 {
-        send_command_i(Command::VertexType, vtype);
+        send_command_i(GeCommand::VertexType, vtype);
     }
 
     if !indices.is_null() {
-        send_command_i(Command::Base, (indices as u32 >> 8) as i32 & 0xf0000);
-        send_command_i(Command::Iaddr, indices as i32 & 0xffffff);
+        send_command_i(GeCommand::Base, (indices as u32 >> 8) as i32 & 0xf0000);
+        send_command_i(GeCommand::Iaddr, indices as i32 & 0xffffff);
     }
 
     if !vertices.is_null() {
-        send_command_i(Command::Base, (vertices as u32 >> 8) as i32 & 0xf0000);
-        send_command_i(Command::Vaddr, vertices as i32 & 0xffffff);
+        send_command_i(GeCommand::Base, (vertices as u32 >> 8) as i32 & 0xf0000);
+        send_command_i(GeCommand::Vaddr, vertices as i32 & 0xffffff);
     }
 
-    send_command_i(Command::BoundingBox, count);
+    send_command_i(GeCommand::BoundingBox, count);
 
     // Store start to new object
     (*OBJECT_STACK.offset(OBJECT_STACK_DEPTH as isize)) = (*LIST).current;
     OBJECT_STACK_DEPTH += 1;
 
     // Dummy commands, overwritten in `sceGuEndObject`
-    send_command_i(Command::Base, 0);
-    send_command_i(Command::BJump, 0);
+    send_command_i(GeCommand::Base, 0);
+    send_command_i(GeCommand::BJump, 0);
 }
 
 /// End conditional rendering of object
@@ -1986,8 +1986,8 @@ pub unsafe fn sceGuEndObject() {
     let current = (*LIST).current;
     (*LIST).current = *OBJECT_STACK.offset(OBJECT_STACK_DEPTH as isize - 1);
 
-    send_command_i(Command::Base, (current as u32 >> 8) as i32 & 0xf0000);
-    send_command_i(Command::BJump, current as i32 & 0xffffff);
+    send_command_i(GeCommand::Base, (current as u32 >> 8) as i32 & 0xf0000);
+    send_command_i(GeCommand::BJump, current as i32 & 0xffffff);
     (*LIST).current = current;
     OBJECT_STACK_DEPTH -= 1;
 }
@@ -2064,39 +2064,39 @@ pub unsafe fn sceGuGetAllStatus() -> i32 {
 #[allow(non_snake_case)]
 pub unsafe fn sceGuEnable(state: GuState) {
     match state {
-        GuState::AlphaTest => send_command_i(Command::AlphaTestEnable, 1),
-        GuState::DepthTest => send_command_i(Command::ZTestEnable, 1),
+        GuState::AlphaTest => send_command_i(GeCommand::AlphaTestEnable, 1),
+        GuState::DepthTest => send_command_i(GeCommand::ZTestEnable, 1),
         GuState::ScissorTest => {
             let context = &mut CONTEXTS[CURR_CONTEXT as usize];
             context.scissor_enable = 1;
             send_command_i(
-                Command::Scissor1,
+                GeCommand::Scissor1,
                 (context.scissor_start[1] << 10) | context.scissor_start[0],
             );
-            send_command_i(Command::Scissor2, (context.scissor_end[1] << 10) | context.scissor_end[0]);
+            send_command_i(GeCommand::Scissor2, (context.scissor_end[1] << 10) | context.scissor_end[0]);
         }
-        GuState::StencilTest => send_command_i(Command::StencilTestEnable, 1),
-        GuState::Blend => send_command_i(Command::AlphaBlendEnable, 1),
-        GuState::CullFace => send_command_i(Command::CullFaceEnable, 1),
-        GuState::Dither => send_command_i(Command::DitherEnable, 1),
-        GuState::Fog => send_command_i(Command::FogEnable, 1),
-        GuState::ClipPlanes => send_command_i(Command::DepthClampEnable, 1),
-        GuState::Texture2D => send_command_i(Command::TextureMapEnable, 1),
-        GuState::Lighting => send_command_i(Command::LightingEnable, 1),
-        GuState::Light0 => send_command_i(Command::LightEnable0, 1),
-        GuState::Light1 => send_command_i(Command::LightEnable1, 1),
-        GuState::Light2 => send_command_i(Command::LightEnable2, 1),
-        GuState::Light3 => send_command_i(Command::LightEnable3, 1),
-        GuState::LineSmooth => send_command_i(Command::AntiAliasEnable, 1),
-        GuState::PatchCullFace => send_command_i(Command::PatchCullEnable, 1),
-        GuState::ColorTest => send_command_i(Command::ColorTestEnable, 1),
-        GuState::ColorLogicOp => send_command_i(Command::LogicOpEnable, 1),
-        GuState::FaceNormalReverse => send_command_i(Command::ReverseNormal, 1),
-        GuState::PatchFace => send_command_i(Command::PatchFacing, 1),
+        GuState::StencilTest => send_command_i(GeCommand::StencilTestEnable, 1),
+        GuState::Blend => send_command_i(GeCommand::AlphaBlendEnable, 1),
+        GuState::CullFace => send_command_i(GeCommand::CullFaceEnable, 1),
+        GuState::Dither => send_command_i(GeCommand::DitherEnable, 1),
+        GuState::Fog => send_command_i(GeCommand::FogEnable, 1),
+        GuState::ClipPlanes => send_command_i(GeCommand::DepthClampEnable, 1),
+        GuState::Texture2D => send_command_i(GeCommand::TextureMapEnable, 1),
+        GuState::Lighting => send_command_i(GeCommand::LightingEnable, 1),
+        GuState::Light0 => send_command_i(GeCommand::LightEnable0, 1),
+        GuState::Light1 => send_command_i(GeCommand::LightEnable1, 1),
+        GuState::Light2 => send_command_i(GeCommand::LightEnable2, 1),
+        GuState::Light3 => send_command_i(GeCommand::LightEnable3, 1),
+        GuState::LineSmooth => send_command_i(GeCommand::AntiAliasEnable, 1),
+        GuState::PatchCullFace => send_command_i(GeCommand::PatchCullEnable, 1),
+        GuState::ColorTest => send_command_i(GeCommand::ColorTestEnable, 1),
+        GuState::ColorLogicOp => send_command_i(GeCommand::LogicOpEnable, 1),
+        GuState::FaceNormalReverse => send_command_i(GeCommand::ReverseNormal, 1),
+        GuState::PatchFace => send_command_i(GeCommand::PatchFacing, 1),
         GuState::Fragment2X => {
             let context = &mut CONTEXTS[CURR_CONTEXT as usize];
             context.fragment_2x = 0x10000;
-            send_command_i(Command::TexFunc, 0x10000 | context.texture_function);
+            send_command_i(GeCommand::TexFunc, 0x10000 | context.texture_function);
         }
     }
 
@@ -2113,39 +2113,39 @@ pub unsafe fn sceGuEnable(state: GuState) {
 #[allow(non_snake_case)]
 pub unsafe fn sceGuDisable(state: GuState) {
     match state {
-        GuState::AlphaTest => send_command_i(Command::AlphaTestEnable, 0),
-        GuState::DepthTest => send_command_i(Command::ZTestEnable, 0),
+        GuState::AlphaTest => send_command_i(GeCommand::AlphaTestEnable, 0),
+        GuState::DepthTest => send_command_i(GeCommand::ZTestEnable, 0),
         GuState::ScissorTest => {
             let context = &mut CONTEXTS[CURR_CONTEXT as usize];
             context.scissor_enable = 0;
-            send_command_i(Command::Scissor1, 0);
+            send_command_i(GeCommand::Scissor1, 0);
             send_command_i(
-                Command::Scissor2,
+                GeCommand::Scissor2,
                 ((DRAW_BUFFER.height - 1) << 10) | DRAW_BUFFER.width - 1,
             );
         }
-        GuState::StencilTest => send_command_i(Command::StencilTestEnable, 0),
-        GuState::Blend => send_command_i(Command::AlphaBlendEnable, 0),
-        GuState::CullFace => send_command_i(Command::CullFaceEnable, 0),
-        GuState::Dither => send_command_i(Command::DitherEnable, 0),
-        GuState::Fog => send_command_i(Command::FogEnable, 0),
-        GuState::ClipPlanes => send_command_i(Command::DepthClampEnable, 0),
-        GuState::Texture2D => send_command_i(Command::TextureMapEnable, 0),
-        GuState::Lighting => send_command_i(Command::LightingEnable, 0),
-        GuState::Light0 => send_command_i(Command::LightEnable0, 0),
-        GuState::Light1 => send_command_i(Command::LightEnable1, 0),
-        GuState::Light2 => send_command_i(Command::LightEnable2, 0),
-        GuState::Light3 => send_command_i(Command::LightEnable3, 0),
-        GuState::LineSmooth => send_command_i(Command::AntiAliasEnable, 0),
-        GuState::PatchCullFace => send_command_i(Command::PatchCullEnable, 0),
-        GuState::ColorTest => send_command_i(Command::ColorTestEnable, 0),
-        GuState::ColorLogicOp => send_command_i(Command::LogicOpEnable, 0),
-        GuState::FaceNormalReverse => send_command_i(Command::ReverseNormal, 0),
-        GuState::PatchFace => send_command_i(Command::PatchFacing, 0),
+        GuState::StencilTest => send_command_i(GeCommand::StencilTestEnable, 0),
+        GuState::Blend => send_command_i(GeCommand::AlphaBlendEnable, 0),
+        GuState::CullFace => send_command_i(GeCommand::CullFaceEnable, 0),
+        GuState::Dither => send_command_i(GeCommand::DitherEnable, 0),
+        GuState::Fog => send_command_i(GeCommand::FogEnable, 0),
+        GuState::ClipPlanes => send_command_i(GeCommand::DepthClampEnable, 0),
+        GuState::Texture2D => send_command_i(GeCommand::TextureMapEnable, 0),
+        GuState::Lighting => send_command_i(GeCommand::LightingEnable, 0),
+        GuState::Light0 => send_command_i(GeCommand::LightEnable0, 0),
+        GuState::Light1 => send_command_i(GeCommand::LightEnable1, 0),
+        GuState::Light2 => send_command_i(GeCommand::LightEnable2, 0),
+        GuState::Light3 => send_command_i(GeCommand::LightEnable3, 0),
+        GuState::LineSmooth => send_command_i(GeCommand::AntiAliasEnable, 0),
+        GuState::PatchCullFace => send_command_i(GeCommand::PatchCullEnable, 0),
+        GuState::ColorTest => send_command_i(GeCommand::ColorTestEnable, 0),
+        GuState::ColorLogicOp => send_command_i(GeCommand::LogicOpEnable, 0),
+        GuState::FaceNormalReverse => send_command_i(GeCommand::ReverseNormal, 0),
+        GuState::PatchFace => send_command_i(GeCommand::PatchFacing, 0),
         GuState::Fragment2X => {
             let context = &mut CONTEXTS[CURR_CONTEXT as usize];
             context.fragment_2x = 0;
-            send_command_i(Command::TexFunc, context.texture_function);
+            send_command_i(GeCommand::TexFunc, context.texture_function);
         }
     }
 
@@ -2239,7 +2239,7 @@ pub unsafe fn sceGuLightColor(light: i32, component: LightComponent, color: u32)
 /// - `mode`: Light mode to use
 #[allow(non_snake_case)]
 pub unsafe fn sceGuLightMode(mode: LightMode) {
-    send_command_i(Command::LightMode, mode as i32);
+    send_command_i(GeCommand::LightMode, mode as i32);
 }
 
 /// Set spotlight parameters
@@ -2336,20 +2336,20 @@ pub unsafe fn sceGuClear(flags: ClearBuffer) {
         );
 
         send_command_i(
-            Command::ClearMode,
+            GeCommand::ClearMode,
             (relevant_flags.bits() << 8) as i32 | 0x01,
         );
     }
 
     sceGuDrawArray(
-        Primitive::Sprites,
+        GuPrimitive::Sprites,
         VertexType::COLOR_8888 | VertexType::VERTEX_16BIT | VertexType::TRANSFORM_2D,
         count,
         null_mut(),
         vertices as *mut c_void,
     );
 
-    send_command_i(Command::ClearMode, 0);
+    send_command_i(GeCommand::ClearMode, 0);
 }
 
 /// Set the current clear-color
@@ -2391,8 +2391,8 @@ pub unsafe fn sceGuClearStencil(stencil: u32) {
 /// - `mask`: Which bits to filter against writes
 #[allow(non_snake_case)]
 pub unsafe fn sceGuPixelMask(mask: u32) {
-    send_command_i(Command::MaskRgb, mask as i32 & 0xffffff);
-    send_command_i(Command::MaskAlpha, (mask >> 24) as i32);
+    send_command_i(GeCommand::MaskRgb, mask as i32 & 0xffffff);
+    send_command_i(GeCommand::MaskAlpha, (mask >> 24) as i32);
 }
 
 /// Set current primitive color
@@ -2420,9 +2420,9 @@ pub unsafe fn sceGuColor(color: u32) {
 /// - `mask`: Mask ANDed against both source and destination when testing
 #[allow(non_snake_case)]
 pub unsafe fn sceGuColorFunc(func: ColorFunc, color: u32, mask: u32) {
-    send_command_i(Command::ColorTest, func as i32 & 0x03);
-    send_command_i(Command::ColorRef, color as i32 & 0xffffff);
-    send_command_i(Command::ColorTestmask, mask as i32);
+    send_command_i(GeCommand::ColorTest, func as i32 & 0x03);
+    send_command_i(GeCommand::ColorRef, color as i32 & 0xffffff);
+    send_command_i(GeCommand::ColorTestmask, mask as i32);
 }
 
 /// Set which color components the material will receive
@@ -2432,7 +2432,7 @@ pub unsafe fn sceGuColorFunc(func: ColorFunc, color: u32, mask: u32) {
 /// - `components`: Which component(s) to receive
 #[allow(non_snake_case)]
 pub unsafe fn sceGuColorMaterial(components: LightComponent) {
-    send_command_i(Command::MaterialUpdate, components.bits() as i32);
+    send_command_i(GeCommand::MaterialUpdate, components.bits() as i32);
 }
 
 /// Set the alpha test parameters
@@ -2445,19 +2445,19 @@ pub unsafe fn sceGuColorMaterial(components: LightComponent) {
 #[allow(non_snake_case)]
 pub unsafe fn sceGuAlphaFunc(func: AlphaFunc, value: i32, mask: i32) {
     let arg = func as i32 | ((value & 0xff) << 8) | ((mask & 0xff) << 16);
-    send_command_i(Command::AlphaTest, arg);
+    send_command_i(GeCommand::AlphaTest, arg);
 }
 
 #[allow(non_snake_case)]
 pub unsafe fn sceGuAmbient(color: u32) {
-    send_command_i(Command::AmbientColor, color as i32 & 0xffffff);
-    send_command_i(Command::AmbientAlpha, (color >> 24) as i32);
+    send_command_i(GeCommand::AmbientColor, color as i32 & 0xffffff);
+    send_command_i(GeCommand::AmbientAlpha, (color >> 24) as i32);
 }
 
 #[allow(non_snake_case)]
 pub unsafe fn sceGuAmbientColor(color: u32) {
-    send_command_i(Command::MaterialAmbient, color as i32 & 0xffffff);
-    send_command_i(Command::MaterialAlpha, (color >> 24) as i32);
+    send_command_i(GeCommand::MaterialAmbient, color as i32 & 0xffffff);
+    send_command_i(GeCommand::MaterialAlpha, (color >> 24) as i32);
 }
 
 /// Set the blending mode
@@ -2480,11 +2480,11 @@ pub unsafe fn sceGuBlendFunc(
     dest_fix: u32,
 ) {
     send_command_i(
-        Command::BlendMode,
+        GeCommand::BlendMode,
         src as i32 | ((dest as i32) << 4) | ((op as i32) << 8),
     );
-    send_command_i(Command::BlendFixedA, src_fix as i32 & 0xffffff);
-    send_command_i(Command::BlendFixedB, dest_fix as i32 & 0xffffff);
+    send_command_i(GeCommand::BlendFixedA, src_fix as i32 & 0xffffff);
+    send_command_i(GeCommand::BlendFixedB, dest_fix as i32 & 0xffffff);
 }
 
 /// Set current primitive color, for specific light components.
@@ -2496,26 +2496,26 @@ pub unsafe fn sceGuBlendFunc(
 #[allow(non_snake_case)]
 pub unsafe fn sceGuMaterial(components: LightComponent, color: u32) {
     if components.intersects(LightComponent::AMBIENT) {
-        send_command_i(Command::MaterialAmbient, color as i32 & 0xffffff);
-        send_command_i(Command::MaterialAlpha, (color >> 24) as i32);
+        send_command_i(GeCommand::MaterialAmbient, color as i32 & 0xffffff);
+        send_command_i(GeCommand::MaterialAlpha, (color >> 24) as i32);
     }
 
     if components.intersects(LightComponent::DIFFUSE) {
-        send_command_i(Command::MaterialDiffuse, color as i32 & 0xffffff);
+        send_command_i(GeCommand::MaterialDiffuse, color as i32 & 0xffffff);
     }
 
     if components.intersects(LightComponent::SPECULAR) {
-        send_command_i(Command::MaterialSpecular, color as i32 & 0xffffff);
+        send_command_i(GeCommand::MaterialSpecular, color as i32 & 0xffffff);
     }
 }
 
 // TODO: Needs documentation.
 #[allow(non_snake_case)]
 pub unsafe fn sceGuModelColor(emissive: u32, ambient: u32, diffuse: u32, specular: u32) {
-    send_command_i(Command::MaterialEmissive, emissive as i32 & 0xffffff);
-    send_command_i(Command::MaterialAmbient, ambient as i32 & 0xffffff);
-    send_command_i(Command::MaterialDiffuse, diffuse as i32 & 0xffffff);
-    send_command_i(Command::MaterialSpecular, specular as i32 & 0xffffff);
+    send_command_i(GeCommand::MaterialEmissive, emissive as i32 & 0xffffff);
+    send_command_i(GeCommand::MaterialAmbient, ambient as i32 & 0xffffff);
+    send_command_i(GeCommand::MaterialDiffuse, diffuse as i32 & 0xffffff);
+    send_command_i(GeCommand::MaterialSpecular, specular as i32 & 0xffffff);
 }
 
 /// Set stencil function and reference value for stencil testing
@@ -2529,7 +2529,7 @@ pub unsafe fn sceGuModelColor(emissive: u32, ambient: u32, diffuse: u32, specula
 #[allow(non_snake_case)]
 pub unsafe fn sceGuStencilFunc(func: StencilFunc, ref_: i32, mask: i32) {
     send_command_i(
-        Command::StencilTest,
+        GeCommand::StencilTest,
         func as i32 | ((ref_ as i32 & 0xff) << 8) | ((mask as i32 & 0xff) << 16),
     );
 }
@@ -2551,7 +2551,7 @@ pub unsafe fn sceGuStencilOp(
     zpass: StencilOperation,
 ) {
     send_command_i(
-        Command::StencilOp,
+        GeCommand::StencilOp,
         fail as i32 | ((zfail as i32) << 8) | ((zpass as i32) << 16),
     );
 }
@@ -2563,7 +2563,7 @@ pub unsafe fn sceGuStencilOp(
 /// - `power`: Specular power
 #[allow(non_snake_case)]
 pub unsafe fn sceGuSpecular(power: f32) {
-    send_command_f(Command::MaterialSpecularCoef, power);
+    send_command_f(GeCommand::MaterialSpecularCoef, power);
 }
 
 /// Set the current face-order (for culling)
@@ -2577,8 +2577,8 @@ pub unsafe fn sceGuSpecular(power: f32) {
 #[allow(non_snake_case)]
 pub unsafe fn sceGuFrontFace(order: FrontFaceDirection) {
     match order {
-        FrontFaceDirection::CounterClockwise => send_command_i(Command::Cull, 0),
-        FrontFaceDirection::Clockwise => send_command_i(Command::Cull, 1),
+        FrontFaceDirection::CounterClockwise => send_command_i(GeCommand::Cull, 0),
+        FrontFaceDirection::Clockwise => send_command_i(GeCommand::Cull, 1),
     }
 }
 
@@ -2592,7 +2592,7 @@ pub unsafe fn sceGuFrontFace(order: FrontFaceDirection) {
 /// - `op`: Operation to execute
 #[allow(non_snake_case)]
 pub unsafe fn sceGuLogicalOp(op: LogicalOperation) {
-    send_command_i(Command::LogicOp, op as i32 & 0x0f);
+    send_command_i(GeCommand::LogicOp, op as i32 & 0x0f);
 }
 
 /// Set ordered pixel dither matrix
@@ -2606,7 +2606,7 @@ pub unsafe fn sceGuLogicalOp(op: LogicalOperation) {
 #[allow(non_snake_case)]
 pub unsafe fn sceGuSetDither(matrix: &ScePspIMatrix4) {
     send_command_i(
-        Command::Dith0,
+        GeCommand::Dith0,
         (matrix.x.x & 0x0f)
         | ((matrix.x.y & 0x0f) << 4)
         | ((matrix.x.z & 0x0f) << 8)
@@ -2614,7 +2614,7 @@ pub unsafe fn sceGuSetDither(matrix: &ScePspIMatrix4) {
     );
 
     send_command_i(
-        Command::Dith1,
+        GeCommand::Dith1,
         (matrix.y.x & 0x0f)
         | ((matrix.y.y & 0x0f) << 4)
         | ((matrix.y.z & 0x0f) << 8)
@@ -2622,7 +2622,7 @@ pub unsafe fn sceGuSetDither(matrix: &ScePspIMatrix4) {
     );
 
     send_command_i(
-        Command::Dith2,
+        GeCommand::Dith2,
         (matrix.z.x & 0x0f)
         | ((matrix.z.y & 0x0f) << 4)
         | ((matrix.z.z & 0x0f) << 8)
@@ -2630,7 +2630,7 @@ pub unsafe fn sceGuSetDither(matrix: &ScePspIMatrix4) {
     );
 
     send_command_i(
-        Command::Dith3,
+        GeCommand::Dith3,
         (matrix.w.x & 0x0f)
         | ((matrix.w.y & 0x0f) << 4)
         | ((matrix.w.z & 0x0f) << 8)
@@ -2646,8 +2646,8 @@ pub unsafe fn sceGuSetDither(matrix: &ScePspIMatrix4) {
 #[allow(non_snake_case)]
 pub unsafe fn sceGuShadeModel(mode: ShadingModel) {
     match mode {
-        ShadingModel::Smooth => send_command_i(Command::ShadeMode, 1),
-        ShadingModel::Flat => send_command_i(Command::ShadeMode, 0),
+        ShadingModel::Smooth => send_command_i(GeCommand::ShadeMode, 1),
+        ShadingModel::Flat => send_command_i(GeCommand::ShadeMode, 0),
     }
 }
 
@@ -2685,20 +2685,20 @@ pub unsafe fn sceGuCopyImage(
     destw: i32,
     dest: *mut c_void,
 ) {
-    send_command_i(Command::TransferSrc, (src as i32) & 0xffffff);
+    send_command_i(GeCommand::TransferSrc, (src as i32) & 0xffffff);
     send_command_i(
-        Command::TransferSrcW,
+        GeCommand::TransferSrcW,
         (((src as u32) & 0xff000000) >> 8) as i32 | srcw,
     );
-    send_command_i(Command::TransferSrcPos, (sy << 10) | sx);
-    send_command_i(Command::TransferDst, (dest as i32) & 0xffffff);
+    send_command_i(GeCommand::TransferSrcPos, (sy << 10) | sx);
+    send_command_i(GeCommand::TransferDst, (dest as i32) & 0xffffff);
     send_command_i(
-        Command::TransferDstW,
+        GeCommand::TransferDstW,
         (((dest as u32) & 0xff000000) >> 8) as i32 | destw,
     );
-    send_command_i(Command::TransferDstPos, (dy << 10) | dx);
+    send_command_i(GeCommand::TransferDstPos, (dy << 10) | dx);
     send_command_i(
-        Command::TransferSize,
+        GeCommand::TransferSize,
         ((height as i32 - 1) << 10) | (width - 1),
     );
 
@@ -2708,7 +2708,7 @@ pub unsafe fn sceGuCopyImage(
         0
     };
 
-    send_command_i(Command::TransferStart, is_32_bit_texel);
+    send_command_i(GeCommand::TransferStart, is_32_bit_texel);
 }
 
 /// Specify the texture environment color
@@ -2722,7 +2722,7 @@ pub unsafe fn sceGuCopyImage(
 /// - `color`: Constant color (0x00BBGGRR)
 #[allow(non_snake_case)]
 pub unsafe fn sceGuTexEnvColor(color: u32) {
-    send_command_i(Command::TexEnvColor, color as i32 & 0xffffff);
+    send_command_i(GeCommand::TexEnvColor, color as i32 & 0xffffff);
 }
 
 /// Set how the texture is filtered
@@ -2733,7 +2733,7 @@ pub unsafe fn sceGuTexEnvColor(color: u32) {
 /// - `mag`: Magnifying filter
 #[allow(non_snake_case)]
 pub unsafe fn sceGuTexFilter(min: TextureFilter, mag: TextureFilter) {
-    send_command_i(Command::TexFilter, ((mag as i32) << 8) | (min as i32));
+    send_command_i(GeCommand::TexFilter, ((mag as i32) << 8) | (min as i32));
 }
 
 /// Flush texture page-cache
@@ -2742,7 +2742,7 @@ pub unsafe fn sceGuTexFilter(min: TextureFilter, mag: TextureFilter) {
 /// cache.
 #[allow(non_snake_case)]
 pub unsafe fn sceGuTexFlush() {
-    send_command_f(Command::TexFlush, 0.0);
+    send_command_f(GeCommand::TexFlush, 0.0);
 }
 
 /// Set how textures are applied
@@ -2756,7 +2756,7 @@ pub unsafe fn sceGuTexFunc(tfx: TextureEffect, tcc: TextureColorComponent) {
     let context = &mut CONTEXTS[CURR_CONTEXT as usize];
     context.texture_function = (((tcc as u32) << 8) | (tfx as u32)) as i32;
     send_command_i(
-        Command::TexFunc,
+        GeCommand::TexFunc,
         (((tcc as u32) << 8) | (tfx as u32) | context.fragment_2x as u32) as i32,
     );
 }
@@ -2805,37 +2805,37 @@ pub unsafe fn sceGuTexFunc(tfx: TextureEffect, tcc: TextureColorComponent) {
 pub unsafe fn sceGuTexImage(mipmap: MipmapLevel, width: i32, height: i32, tbw: i32, tbp: *const c_void) {
     use core::intrinsics::ctlz;
 
-    const TBP_CMD_TBL: [Command; 8] = [
-        Command::TexAddr0,
-        Command::TexAddr1,
-        Command::TexAddr2,
-        Command::TexAddr3,
-        Command::TexAddr4,
-        Command::TexAddr5,
-        Command::TexAddr6,
-        Command::TexAddr7,
+    const TBP_CMD_TBL: [GeCommand; 8] = [
+        GeCommand::TexAddr0,
+        GeCommand::TexAddr1,
+        GeCommand::TexAddr2,
+        GeCommand::TexAddr3,
+        GeCommand::TexAddr4,
+        GeCommand::TexAddr5,
+        GeCommand::TexAddr6,
+        GeCommand::TexAddr7,
     ];
 
-    const TBW_CMD_TBL: [Command; 8] = [
-        Command::TexBufWidth0,
-        Command::TexBufWidth1,
-        Command::TexBufWidth2,
-        Command::TexBufWidth3,
-        Command::TexBufWidth4,
-        Command::TexBufWidth5,
-        Command::TexBufWidth6,
-        Command::TexBufWidth7,
+    const TBW_CMD_TBL: [GeCommand; 8] = [
+        GeCommand::TexBufWidth0,
+        GeCommand::TexBufWidth1,
+        GeCommand::TexBufWidth2,
+        GeCommand::TexBufWidth3,
+        GeCommand::TexBufWidth4,
+        GeCommand::TexBufWidth5,
+        GeCommand::TexBufWidth6,
+        GeCommand::TexBufWidth7,
     ];
 
-    const TSIZE_CMD_TBL: [Command; 8] = [
-        Command::TexSize0,
-        Command::TexSize1,
-        Command::TexSize2,
-        Command::TexSize3,
-        Command::TexSize4,
-        Command::TexSize5,
-        Command::TexSize6,
-        Command::TexSize7,
+    const TSIZE_CMD_TBL: [GeCommand; 8] = [
+        GeCommand::TexSize0,
+        GeCommand::TexSize1,
+        GeCommand::TexSize2,
+        GeCommand::TexSize3,
+        GeCommand::TexSize4,
+        GeCommand::TexSize5,
+        GeCommand::TexSize6,
+        GeCommand::TexSize7,
     ];
 
     send_command_i(
@@ -2878,7 +2878,7 @@ pub unsafe fn sceGuTexLevelMode(mode: TextureLevelMode, bias: f32) {
         offset = -128;
     }
 
-    send_command_i(Command::TexLevel, ((offset as i32) << 16) | mode as i32);
+    send_command_i(GeCommand::TexLevel, ((offset as i32) << 16) | mode as i32);
 }
 
 /// Set the texture-mapping mode
@@ -2893,10 +2893,10 @@ pub unsafe fn sceGuTexMapMode(mode: TextureMapMode, a1: u32, a2: u32) {
     let context = &mut CONTEXTS[CURR_CONTEXT as usize];
     context.texture_map_mode = mode;
     send_command_i(
-        Command::TexMapMode,
+        GeCommand::TexMapMode,
         ((context.texture_proj_map_mode as i32) << 8) | mode as i32,
     );
-    send_command_i(Command::TexShadeLs, ((a2 << 8) | (a1 & 0x03)) as i32);
+    send_command_i(GeCommand::TexShadeLs, ((a2 << 8) | (a1 & 0x03)) as i32);
 }
 
 /// Set texture-mode parameters
@@ -2915,11 +2915,11 @@ pub unsafe fn sceGuTexMode(tpsm: TexturePixelFormat, maxmips: i32, a2: i32, swiz
     CONTEXTS[CURR_CONTEXT as usize].texture_mode = tpsm;
 
     send_command_i(
-        Command::TexMode,
+        GeCommand::TexMode,
         (maxmips << 16) | (a2 << 8) | swizzle,
     );
 
-    send_command_i(Command::TexFormat, tpsm as i32);
+    send_command_i(GeCommand::TexFormat, tpsm as i32);
     sceGuTexFlush();
 }
 
@@ -2936,8 +2936,8 @@ pub unsafe fn sceGuTexMode(tpsm: TexturePixelFormat, maxmips: i32, a2: i32, swiz
 /// - `v`: Offset to add to the V coordinate
 #[allow(non_snake_case)]
 pub unsafe fn sceGuTexOffset(u: f32, v: f32) {
-    send_command_f(Command::TexOffsetU, u);
-    send_command_f(Command::TexOffsetV, v);
+    send_command_f(GeCommand::TexOffsetU, u);
+    send_command_f(GeCommand::TexOffsetV, v);
 }
 
 /// Set texture projection-map mode
@@ -2950,7 +2950,7 @@ pub unsafe fn sceGuTexProjMapMode(mode: TextureProjectionMapMode) {
     let context = &mut CONTEXTS[CURR_CONTEXT as usize];
     context.texture_proj_map_mode = mode;
     send_command_i(
-        Command::TexMapMode,
+        GeCommand::TexMapMode,
         ((mode as i32) << 8) | context.texture_map_mode as i32,
     );
 }
@@ -2968,13 +2968,13 @@ pub unsafe fn sceGuTexProjMapMode(mode: TextureProjectionMapMode) {
 /// - `v`: Scalar to multiply V coordinate with
 #[allow(non_snake_case)]
 pub unsafe fn sceGuTexScale(u: f32, v: f32) {
-    send_command_f(Command::TexScaleU, u);
-    send_command_f(Command::TexScaleV, v);
+    send_command_f(GeCommand::TexScaleU, u);
+    send_command_f(GeCommand::TexScaleV, v);
 }
 
 #[allow(non_snake_case)]
 pub unsafe fn sceGuTexSlope(slope: f32) {
-    send_command_f(Command::TexLodSlope, slope);
+    send_command_f(GeCommand::TexLodSlope, slope);
 }
 
 /// Synchronize rendering pipeline with image upload.
@@ -2983,7 +2983,7 @@ pub unsafe fn sceGuTexSlope(slope: f32) {
 /// `sceGuCopyImage` has completed.
 #[allow(non_snake_case)]
 pub unsafe fn sceGuTexSync() {
-    send_command_i(Command::TexSync, 0);
+    send_command_i(GeCommand::TexSync, 0);
 }
 
 /// Set if the texture should repeat or clamp
@@ -2995,8 +2995,8 @@ pub unsafe fn sceGuTexSync() {
 /// - `u`: Wrap-mode for the U direction
 /// - `v`: Wrap-mode for the V direction
 #[allow(non_snake_case)]
-pub unsafe fn sceGuTexWrap(u: WrapMode, v: WrapMode) {
-    send_command_i(Command::TexWrap, ((v as i32) << 8) | u as i32);
+pub unsafe fn sceGuTexWrap(u: GuTexWrapMode, v: GuTexWrapMode) {
+    send_command_i(GeCommand::TexWrap, ((v as i32) << 8) | u as i32);
 }
 
 /// Upload CLUT (Color Lookup Table)
@@ -3011,9 +3011,9 @@ pub unsafe fn sceGuTexWrap(u: WrapMode, v: WrapMode) {
 /// - `cbp`: Pointer to palette (16 byte aligned)
 #[allow(non_snake_case)]
 pub unsafe fn sceGuClutLoad(num_blocks: i32, cbp: *const c_void) {
-    send_command_i(Command::ClutAddr, (cbp as i32) & 0xffffff);
-    send_command_i(Command::ClutAddrUpper, ((cbp as u32) >> 8) as i32 & 0xf0000);
-    send_command_i(Command::LoadClut, num_blocks);
+    send_command_i(GeCommand::ClutAddr, (cbp as i32) & 0xffffff);
+    send_command_i(GeCommand::ClutAddrUpper, ((cbp as u32) >> 8) as i32 & 0xf0000);
+    send_command_i(GeCommand::LoadClut, num_blocks);
 }
 
 /// CLUT palette pixel formats.
@@ -3042,7 +3042,7 @@ pub enum ClutPixelFormat {
 #[allow(non_snake_case)]
 pub unsafe fn sceGuClutMode(cpsm: ClutPixelFormat, shift: u32, mask: u32, a3: u32) {
     let arg = ((cpsm as u32) | (shift << 2) | (mask << 8) | (a3 << 16)) as i32;
-    send_command_i(Command::ClutFormat, arg);
+    send_command_i(GeCommand::ClutFormat, arg);
 }
 
 /// Set virtual coordinate offset
@@ -3065,8 +3065,8 @@ pub unsafe fn sceGuClutMode(cpsm: ClutPixelFormat, shift: u32, mask: u32, a3: u3
 /// - `y`: Offset (0-4095)
 #[allow(non_snake_case)]
 pub unsafe fn sceGuOffset(x: u32, y: u32) {
-    send_command_i(Command::OffsetX, (x << 4) as i32);
-    send_command_i(Command::OffsetY, (y << 4) as i32);
+    send_command_i(GeCommand::OffsetX, (x << 4) as i32);
+    send_command_i(GeCommand::OffsetY, (y << 4) as i32);
 }
 
 /// Set what to scissor within the current viewport
@@ -3089,10 +3089,10 @@ pub unsafe fn sceGuScissor(x: i32, y: i32, w: i32, h: i32) {
 
     if context.scissor_enable != 0 {
         send_command_i(
-            Command::Scissor1,
+            GeCommand::Scissor1,
             (context.scissor_start[1] << 10) | context.scissor_start[0],
         );
-        send_command_i(Command::Scissor2, (context.scissor_end[1] << 10) | context.scissor_end[0]);
+        send_command_i(GeCommand::Scissor2, (context.scissor_end[1] << 10) | context.scissor_end[0]);
     }
 }
 
@@ -3115,10 +3115,10 @@ pub unsafe fn sceGuScissor(x: i32, y: i32, w: i32, h: i32) {
 /// - `height`: Height of viewport
 #[allow(non_snake_case)]
 pub unsafe fn sceGuViewport(cx: i32, cy: i32, width: i32, height: i32) {
-    send_command_f(Command::ViewportXScale, (width >> 1) as f32);
-    send_command_f(Command::ViewportYScale, ((-height) >> 1) as f32);
-    send_command_f(Command::ViewportXCenter, cx as f32);
-    send_command_f(Command::ViewportYCenter, cy as f32);
+    send_command_f(GeCommand::ViewportXScale, (width >> 1) as f32);
+    send_command_f(GeCommand::ViewportYScale, ((-height) >> 1) as f32);
+    send_command_f(GeCommand::ViewportXCenter, cx as f32);
+    send_command_f(GeCommand::ViewportYCenter, cy as f32);
 }
 
 /// Draw bezier surface
@@ -3139,20 +3139,20 @@ pub unsafe fn sceGuDrawBezier(
     vertices: *const c_void,
 ) {
     if !v_type.is_empty() {
-        send_command_i(Command::VertexType, v_type.bits());
+        send_command_i(GeCommand::VertexType, v_type.bits());
     }
 
     if !indices.is_null() {
-        send_command_i(Command::Base, ((indices as u32) >> 8) as i32 & 0xf0000);
-        send_command_i(Command::Iaddr, (indices as i32) & 0xffffff);
+        send_command_i(GeCommand::Base, ((indices as u32) >> 8) as i32 & 0xf0000);
+        send_command_i(GeCommand::Iaddr, (indices as i32) & 0xffffff);
     }
 
     if !vertices.is_null() {
-        send_command_i(Command::Base, ((vertices as u32) >> 8) as i32 & 0xf0000);
-        send_command_i(Command::Vaddr, (vertices as i32) & 0xffffff);
+        send_command_i(GeCommand::Base, ((vertices as u32) >> 8) as i32 & 0xf0000);
+        send_command_i(GeCommand::Vaddr, (vertices as i32) & 0xffffff);
     }
 
-    send_command_i(Command::Bezier, (v_count << 8) | u_count);
+    send_command_i(GeCommand::Bezier, (v_count << 8) | u_count);
 }
 
 /// Set dividing for patches (beziers and splines)
@@ -3163,12 +3163,12 @@ pub unsafe fn sceGuDrawBezier(
 /// - `vlevel`: Number of division on v direction
 #[allow(non_snake_case)]
 pub unsafe fn sceGuPatchDivide(ulevel: u32, vlevel: u32) {
-    send_command_i(Command::PatchDivision, ((vlevel << 8) | ulevel) as i32);
+    send_command_i(GeCommand::PatchDivision, ((vlevel << 8) | ulevel) as i32);
 }
 
 #[allow(non_snake_case)]
 pub unsafe fn sceGuPatchFrontFace(a0: u32) {
-    send_command_i(Command::PatchFacing, a0 as i32);
+    send_command_i(GeCommand::PatchFacing, a0 as i32);
 }
 
 /// Set primitive for patches (beziers and splines)
@@ -3179,9 +3179,9 @@ pub unsafe fn sceGuPatchFrontFace(a0: u32) {
 #[allow(non_snake_case)]
 pub unsafe fn sceGuPatchPrim(prim: PatchPrimitive) {
     match prim {
-        PatchPrimitive::Points => send_command_i(Command::PatchPrimitive, 2),
-        PatchPrimitive::LineStrip => send_command_i(Command::PatchPrimitive, 1),
-        PatchPrimitive::TriangleStrip => send_command_i(Command::PatchPrimitive, 0),
+        PatchPrimitive::Points => send_command_i(GeCommand::PatchPrimitive, 2),
+        PatchPrimitive::LineStrip => send_command_i(GeCommand::PatchPrimitive, 1),
+        PatchPrimitive::TriangleStrip => send_command_i(GeCommand::PatchPrimitive, 0),
     }
 }
 
@@ -3196,21 +3196,21 @@ pub unsafe fn sceGuDrawSpline(
     vertices: *const c_void,
 ) {
     if !v_type.is_empty() {
-        send_command_i(Command::VertexType, v_type.bits());
+        send_command_i(GeCommand::VertexType, v_type.bits());
     }
 
     if !indices.is_null() {
-        send_command_i(Command::Base, ((indices as u32) >> 8) as i32 & 0xf0000);
-        send_command_i(Command::Iaddr, (indices as i32) & 0xffffff);
+        send_command_i(GeCommand::Base, ((indices as u32) >> 8) as i32 & 0xf0000);
+        send_command_i(GeCommand::Iaddr, (indices as i32) & 0xffffff);
     }
 
     if !vertices.is_null() {
-        send_command_i(Command::Base, ((vertices as u32) >> 8) as i32 & 0xf0000);
-        send_command_i(Command::Vaddr, (vertices as i32) & 0xffffff);
+        send_command_i(GeCommand::Base, ((vertices as u32) >> 8) as i32 & 0xf0000);
+        send_command_i(GeCommand::Vaddr, (vertices as i32) & 0xffffff);
     }
 
     send_command_i(
-        Command::Spline,
+        GeCommand::Spline,
         (v_edge << 18) | (u_edge << 16) | (v_count << 8) | u_count,
     );
 }
@@ -3227,35 +3227,35 @@ pub unsafe fn sceGuSetMatrix(type_: MatrixMode, matrix: &ScePspFMatrix4) {
 
     match type_ {
         MatrixMode::Projection => {
-            send_command_f(Command::ProjMatrixNumber, 0.0);
+            send_command_f(GeCommand::ProjMatrixNumber, 0.0);
             for i in 0..16 {
-                send_command_f(Command::ProjMatrixData, *fmatrix.offset(i));
+                send_command_f(GeCommand::ProjMatrixData, *fmatrix.offset(i));
             }
         }
 
         MatrixMode::View => {
-            send_command_f(Command::ViewMatrixNumber, 0.0);
+            send_command_f(GeCommand::ViewMatrixNumber, 0.0);
             for i in 0..4 {
                 for j in 0..3 {
-                    send_command_f(Command::ViewMatrixData, *fmatrix.offset(j + i * 4));
+                    send_command_f(GeCommand::ViewMatrixData, *fmatrix.offset(j + i * 4));
                 }
             }
         }
 
         MatrixMode::Model => {
-            send_command_f(Command::WorldMatrixNumber, 0.0);
+            send_command_f(GeCommand::WorldMatrixNumber, 0.0);
             for i in 0..4 {
                 for j in 0..3 {
-                    send_command_f(Command::WorldMatrixData, *fmatrix.offset(j + i * 4));
+                    send_command_f(GeCommand::WorldMatrixData, *fmatrix.offset(j + i * 4));
                 }
             }
         }
 
         MatrixMode::Texture => {
-            send_command_f(Command::TGenMatrixNumber, 0.0);
+            send_command_f(GeCommand::TGenMatrixNumber, 0.0);
             for i in 0..4 {
                 for j in 0..3 {
-                    send_command_f(Command::TGenMatrixData, *fmatrix.offset(j + i * 4));
+                    send_command_f(GeCommand::TGenMatrixData, *fmatrix.offset(j + i * 4));
                 }
             }
         }
@@ -3278,23 +3278,23 @@ pub unsafe fn sceGuSetMatrix(type_: MatrixMode, matrix: &ScePspFMatrix4) {
 /// - `matrix`: Matrix to set
 #[allow(non_snake_case)]
 pub unsafe fn sceGuBoneMatrix(index: u32, matrix: &ScePspFMatrix4) {
-    send_command_i(Command::BoneMatrixNumber, index as i32 * 12); // 3 * 4 matrix
+    send_command_i(GeCommand::BoneMatrixNumber, index as i32 * 12); // 3 * 4 matrix
 
-    send_command_f(Command::BoneMatrixData, matrix.x.x);
-    send_command_f(Command::BoneMatrixData, matrix.x.y);
-    send_command_f(Command::BoneMatrixData, matrix.x.z);
+    send_command_f(GeCommand::BoneMatrixData, matrix.x.x);
+    send_command_f(GeCommand::BoneMatrixData, matrix.x.y);
+    send_command_f(GeCommand::BoneMatrixData, matrix.x.z);
 
-    send_command_f(Command::BoneMatrixData, matrix.y.x);
-    send_command_f(Command::BoneMatrixData, matrix.y.y);
-    send_command_f(Command::BoneMatrixData, matrix.y.z);
+    send_command_f(GeCommand::BoneMatrixData, matrix.y.x);
+    send_command_f(GeCommand::BoneMatrixData, matrix.y.y);
+    send_command_f(GeCommand::BoneMatrixData, matrix.y.z);
 
-    send_command_f(Command::BoneMatrixData, matrix.z.x);
-    send_command_f(Command::BoneMatrixData, matrix.z.y);
-    send_command_f(Command::BoneMatrixData, matrix.z.z);
+    send_command_f(GeCommand::BoneMatrixData, matrix.z.x);
+    send_command_f(GeCommand::BoneMatrixData, matrix.z.y);
+    send_command_f(GeCommand::BoneMatrixData, matrix.z.z);
 
-    send_command_f(Command::BoneMatrixData, matrix.w.x);
-    send_command_f(Command::BoneMatrixData, matrix.w.y);
-    send_command_f(Command::BoneMatrixData, matrix.w.z);
+    send_command_f(GeCommand::BoneMatrixData, matrix.w.x);
+    send_command_f(GeCommand::BoneMatrixData, matrix.w.y);
+    send_command_f(GeCommand::BoneMatrixData, matrix.w.z);
 }
 
 /// Specify morph weight entry
@@ -3313,14 +3313,14 @@ pub unsafe fn sceGuBoneMatrix(index: u32, matrix: &ScePspFMatrix4) {
 #[allow(non_snake_case)]
 pub unsafe fn sceGuMorphWeight(index: i32, weight: f32) {
     let cmd = match index {
-        0 => Command::MorphWeight0,
-        1 => Command::MorphWeight1,
-        2 => Command::MorphWeight2,
-        3 => Command::MorphWeight3,
-        4 => Command::MorphWeight4,
-        5 => Command::MorphWeight5,
-        6 => Command::MorphWeight6,
-        7 => Command::MorphWeight7,
+        0 => GeCommand::MorphWeight0,
+        1 => GeCommand::MorphWeight1,
+        2 => GeCommand::MorphWeight2,
+        3 => GeCommand::MorphWeight3,
+        4 => GeCommand::MorphWeight4,
+        5 => GeCommand::MorphWeight5,
+        6 => GeCommand::MorphWeight6,
+        7 => GeCommand::MorphWeight7,
         _ => core::intrinsics::unreachable(),
     };
 
@@ -3329,7 +3329,7 @@ pub unsafe fn sceGuMorphWeight(index: i32, weight: f32) {
 
 #[allow(non_snake_case)]
 pub unsafe fn sceGuDrawArrayN(
-    primitive_type: Primitive,
+    primitive_type: GuPrimitive,
     v_type: VertexType,
     count: i32,
     a3: i32,
@@ -3337,25 +3337,25 @@ pub unsafe fn sceGuDrawArrayN(
     vertices: *const c_void,
 ) {
     if !v_type.is_empty() {
-        send_command_i(Command::VertexType, v_type.bits());
+        send_command_i(GeCommand::VertexType, v_type.bits());
     }
 
     if !indices.is_null() {
-        send_command_i(Command::Base, ((indices as u32) >> 8) as i32 & 0xf0000);
-        send_command_i(Command::Iaddr, indices as i32 & 0xffffff);
+        send_command_i(GeCommand::Base, ((indices as u32) >> 8) as i32 & 0xf0000);
+        send_command_i(GeCommand::Iaddr, indices as i32 & 0xffffff);
     }
 
     if !vertices.is_null() {
-        send_command_i(Command::Base, ((vertices as u32) >> 8) as i32 & 0xf0000);
-        send_command_i(Command::Vaddr, vertices as i32 & 0xffffff);
+        send_command_i(GeCommand::Base, ((vertices as u32) >> 8) as i32 & 0xf0000);
+        send_command_i(GeCommand::Vaddr, vertices as i32 & 0xffffff);
     }
 
     if a3 > 0 {
         // PSPSDK: TODO: not sure about this loop, might be off. review
         for _ in 1..a3 {
-            send_command_i(Command::Prim, ((primitive_type as i32) << 16) | count);
+            send_command_i(GeCommand::Prim, ((primitive_type as i32) << 16) | count);
         }
 
-        send_command_i_stall(Command::Prim, ((primitive_type as i32) << 16) | count);
+        send_command_i_stall(GeCommand::Prim, ((primitive_type as i32) << 16) | count);
     }
 }

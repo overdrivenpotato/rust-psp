@@ -1,13 +1,13 @@
 use core::ffi::c_void;
 
-pub const VOLUME_MAX: u32 = 0x8000;
-pub const CHANNEL_MAX: u32 = 8;
-pub const NEXT_CHANNEL: i32 = -1;
-pub const SAMPLE_MIN: u32 = 64;
-pub const SAMPLE_MAX: u32 = 65472;
+pub const AUDIO_VOLUME_MAX: u32 = 0x8000;
+pub const AUDIO_CHANNEL_MAX: u32 = 8;
+pub const AUDIO_NEXT_CHANNEL: i32 = -1;
+pub const AUDIO_SAMPLE_MIN: u32 = 64;
+pub const AUDIO_SAMPLE_MAX: u32 = 65472;
 
 #[repr(u32)]
-pub enum Format {
+pub enum AudioFormat {
     /// Channel set to stereo output
     Stereo = 0,
     /// Channel set to mono output
@@ -31,7 +31,7 @@ pub struct AudioInputParams {
 }
 
 #[repr(i32)]
-pub enum OutputFrequency {
+pub enum AudioOutputFrequency {
     Khz48 = 48000,
     Khz44_1 = 44100,
     Khz32 = 32000,
@@ -44,14 +44,14 @@ pub enum OutputFrequency {
 }
 
 #[repr(i32)]
-pub enum InputFrequency {
+pub enum AudioInputFrequency {
     Khz44_1 = 44100,
     Khz22_05 = 22050,
     Khz11_025 = 11025,
 }
 
 /// Make the given sample count a multiple of 64.
-pub const fn sample_align(sample_count:i32) -> i32 {
+pub const fn audio_sample_align(sample_count:i32) -> i32 {
     (sample_count + 63) & !63
 }
 
@@ -66,16 +66,18 @@ psp_extern! {
     /// # Parameters
     ///
     /// - `channel`: Use a value between 0-7 to reserve a specific channel. Pass
-    ///   `NEXT_CHANNEL` to get the first available channel.
+    ///   `AUDIO_NEXT_CHANNEL` to get the first available channel.
     /// - `sample_count`: The number of samples that can be output on the channel
-    ///   per output call. It must be a value between SAMPLE_MIN and SAMPLE_MAX,
-    ///   and it must be aligned to 64 bytes. Use `sample_align()` to align it.
-    /// - `format`: The output format to use for the channel. One of Format.
+    ///   per output call. It must be a value between `AUDIO_SAMPLE_MIN` and
+    ///   `AUDIO_SAMPLE_MAX`, and it must be aligned to 64 bytes. Use
+    ///   `audio_sample_align()` to align it.
+    /// - `format`: The output format to use for the channel. One of `AudioFormat`.
     ///
     /// # Return value
     ///
     /// The channel number on success, or <0 on error.
-    pub fn sceAudioChReserve(channel: i32, sample_count: i32, format: i32) -> i32;
+    pub fn sceAudioChReserve(channel: i32, sample_count: i32, format: AudioFormat) -> i32;
+
     #[psp(0x6FC46853)]
     /// Release a hardware output channel.
     ///
@@ -191,12 +193,12 @@ psp_extern! {
     /// # Parameters
     ///
     /// - `channel`: The channel number.
-    /// - `format`: One of Format.
+    /// - `format`: One of `AudioFormat`.
     ///
     /// # Return value
     ///
     /// 0 on success, < 0 on error.
-    pub fn sceAudioChangeChannelConfig(channel: i32, format: i32) -> i32;
+    pub fn sceAudioChangeChannelConfig(channel: i32, format: AudioFormat) -> i32;
 
     #[psp(0xB7E1D8E7)]
     /// Change the volume of a channel
@@ -271,13 +273,13 @@ psp_extern! {
     /// # Parameters
     ///
     /// - `sample_count`: The number of samples to output in one output call (min 17, max 4111).
-    /// - `freq`: One of OutputFrequency.
+    /// - `freq`: One of `AudioOutputFrequency`.
     /// - `channels`: Number of channels. Pass 2 (stereo).
     ///
     /// # Return value
     ///
     /// 0 on success, <0 on error.
-    pub fn sceAudioSRCChReserve(sample_count: i32, freq: OutputFrequency, channels: i32) -> i32;
+    pub fn sceAudioSRCChReserve(sample_count: i32, freq: AudioOutputFrequency, channels: i32) -> i32;
 
     #[psp(0x5C37C0AE)]
     /// Release the audio output
@@ -332,13 +334,13 @@ psp_extern! {
     /// # Parameters
     ///
     /// - `sample_count`: Number of samples.
-    /// - `freq`: One of InputFrequency.
+    /// - `freq`: One of `AudioInputFrequency`.
     /// - `buf`: Pointer to where the audio data will be stored.
     ///
     /// # Return value
     ///
     /// 0 on success, <0 on error.
-    pub fn sceAudioInputBlocking(sample_count: i32, freq: InputFrequency, buf: *mut c_void);
+    pub fn sceAudioInputBlocking(sample_count: i32, freq: AudioInputFrequency, buf: *mut c_void);
 
     #[psp(0x6D4BEC68)]
     /// Perform audio input
@@ -346,13 +348,13 @@ psp_extern! {
     /// # Parameters
     ///
     /// - `sample_count`: Number of samples.
-    /// - `freq`: One of InputFrequency.
+    /// - `freq`: One of `AudioInputFrequency`.
     /// - `buf`: Pointer to where the audio data will be stored.
     ///
     /// # Return value
     ///
     /// 0 on success, <0 on error.
-    pub fn sceAudioInput(sample_count: i32, freq: InputFrequency, buf: *mut c_void);
+    pub fn sceAudioInput(sample_count: i32, freq: AudioInputFrequency, buf: *mut c_void);
 
     #[psp(0xA708C6A6)]
     /// Get the number of samples that were acquired

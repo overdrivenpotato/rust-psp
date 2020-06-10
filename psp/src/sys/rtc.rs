@@ -16,7 +16,7 @@ pub struct ScePspDateTime {
 /// Errors
 #[repr(i32)]
 #[derive(Eq, PartialEq, TryFromPrimitive)]
-pub enum CheckValidError {
+pub enum RtcCheckValidError {
     InvalidYear = -1,
     InvalidMonth = -2,
     InvalidDay = -3,
@@ -150,7 +150,7 @@ psp_extern! {
     ///
     /// # Return Value
     ///
-    /// 0 on success, one of ::CheckValidErrors on error
+    /// 0 on success, one of `RtcCheckValidError` on error
     pub fn sceRtcCheckValid(date: *const ScePspDateTime) -> i32;
 
     #[psp(0x7ED29E40)]

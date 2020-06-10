@@ -57,11 +57,11 @@ unsafe fn get_context_unchecked() -> &'static mut Context {
     }
 }
 
-pub const EPSILON: f32 = 0.00001;
+const EPSILON: f32 = 0.00001;
 
 #[allow(non_snake_case)]
 pub unsafe fn sceGumDrawArray(
-    prim: sys::Primitive,
+    prim: sys::GuPrimitive,
     v_type: sys::VertexType,
     count: i32,
     indices: *const c_void,
@@ -73,7 +73,7 @@ pub unsafe fn sceGumDrawArray(
 
 #[allow(non_snake_case)]
 pub unsafe fn sceGumDrawArrayN(
-    prim: sys::Primitive,
+    prim: sys::GuPrimitive,
     v_type: sys::VertexType,
     count: i32,
     a3: i32,

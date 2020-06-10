@@ -80,7 +80,7 @@ pub enum GeListState {
 
 #[repr(u8)]
 #[derive(Copy, Clone, Debug)]
-pub enum Command {
+pub enum GeCommand {
     Nop = 0,
     Vaddr = 0x1,
     Iaddr = 0x2,

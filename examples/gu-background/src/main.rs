@@ -20,7 +20,7 @@ fn psp_main() {
 
         sys::sceGuInit();
         sys::sceGuStart(
-            sys::Context::Direct,
+            sys::GuContextType::Direct,
             &mut LIST as *mut _ as *mut c_void,
         );
         sys::sceGuDrawBuffer(DisplayPixelFormat::Psm8888, fbp0, 512);
@@ -32,13 +32,13 @@ fn psp_main() {
         sys::sceGuScissor(0, 0, 480, 272);
         sys::sceGuEnable(GuState::ScissorTest);
         sys::sceGuFinish();
-        sys::sceGuSync(sys::SyncMode::Finish, sys::SyncBehavior::Wait);
-        psp::sys::sceDisplayWaitVblankStart();
+        sys::sceGuSync(sys::GuSyncMode::Finish, sys::GuSyncBehavior::Wait);
+        sys::sceDisplayWaitVblankStart();
         sys::sceGuDisplay(true);
 
         loop {
             sys::sceGuStart(
-                sys::Context::Direct,
+                sys::GuContextType::Direct,
                 &mut LIST as *mut _ as *mut c_void
             );
             sys::sceGuClearColor(0xff554433);
@@ -48,7 +48,7 @@ fn psp_main() {
                 sys::ClearBuffer::DEPTH_BUFFER_BIT
             );
             sys::sceGuFinish();
-            sys::sceGuSync(sys::SyncMode::Finish, sys::SyncBehavior::Wait);
+            sys::sceGuSync(sys::GuSyncMode::Finish, sys::GuSyncBehavior::Wait);
             sys::sceDisplayWaitVblankStart();
             sys::sceGuSwapBuffers();
         }

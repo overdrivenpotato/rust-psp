@@ -89,7 +89,10 @@ bitflags::bitflags! {
 #[repr(u32)]
 /// Permission value for the sceIoAssign function
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
-pub enum AssignPerms { RdWr = 0, RdOnly = 1, }
+pub enum IoAssignPerms {
+    RdWr = 0,
+    RdOnly = 1,
+}
 
 #[repr(u32)]
 pub enum IoWhence {
@@ -114,7 +117,7 @@ bitflags::bitflags! {
 }
 
 /// Octal unix permissions
-pub type Permissions = i32;
+pub type IoPermissions = i32;
 
 psp_extern! {
     #![name = "IoFileMgrForUser"]
@@ -133,7 +136,7 @@ psp_extern! {
     /// # Return value
     ///
     /// A non-negative integer is a valid fd, anything else an error
-    pub fn sceIoOpen(file: *const u8, flags: IoOpenFlags, permissions: Permissions) -> SceUid;
+    pub fn sceIoOpen(file: *const u8, flags: IoOpenFlags, permissions: IoPermissions) -> SceUid;
 
     #[psp(0x89AA9906)]
     /// Open or create a file for reading or writing (asynchronous)
@@ -150,7 +153,7 @@ psp_extern! {
     pub fn sceIoOpenAsync(
         file: *const u8,
         flags: IoOpenFlags,
-        permissions: Permissions
+        permissions: IoPermissions
     ) -> SceUid;
 
     #[psp(0x810C4BC3)]
@@ -323,7 +326,7 @@ psp_extern! {
     /// # Return value
     ///
     /// Returns the value 0 if its succesful otherwise -1
-    pub fn sceIoMkdir(dir: *const u8, mode: Permissions) -> i32;
+    pub fn sceIoMkdir(dir: *const u8, mode: IoPermissions) -> i32;
 
     #[psp(0x1117C65F)]
     /// Remove a directory file
@@ -432,7 +435,7 @@ psp_extern! {
     /// - `dev1`: The device name to assign.
     /// - `dev2`: The block device to assign from.
     /// - `dev3`: The filesystem device to mape the block device to dev1
-    /// - `mode`: Read/Write mode. One of AssignPerms.
+    /// - `mode`: Read/Write mode. One of `IoAssignPerms`.
     /// - `unk1`: Unknown, set to NULL.
     /// - `unk2`: Unknown, set to 0.
     ///
@@ -443,7 +446,7 @@ psp_extern! {
         dev1: *const u8,
         dev2: *const u8,
         dev3: *const u8,
-        mode: AssignPerms,
+        mode: IoAssignPerms,
         unk1: *mut c_void,
         unk2: i32
     ) -> i32;

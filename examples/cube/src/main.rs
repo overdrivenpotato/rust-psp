@@ -1,11 +1,11 @@
 #![no_std]
 #![no_main]
 
+use core::{ptr, ffi::c_void, f32::consts::PI};
 use psp::Align16;
-use core::{ptr, ffi::c_void};
 use psp::sys::{
-    self, ScePspFVector3, DisplayPixelFormat, Context, SyncMode, SyncBehavior,
-    Primitive, TextureFilter, TextureEffect, TextureColorComponent,
+    self, ScePspFVector3, DisplayPixelFormat, GuContextType, GuSyncMode, GuSyncBehavior,
+    GuPrimitive, TextureFilter, TextureEffect, TextureColorComponent,
     FrontFaceDirection, ShadingModel, GuState, TexturePixelFormat, DepthFunc,
     VertexType, ClearBuffer, MipmapLevel,
 };
@@ -127,7 +127,7 @@ unsafe fn psp_main_inner() {
 
     sys::sceGuInit();
 
-    sys::sceGuStart(Context::Direct, &mut LIST.0 as *mut [u32; 0x40000] as *mut _);
+    sys::sceGuStart(GuContextType::Direct, &mut LIST.0 as *mut [u32; 0x40000] as *mut _);
     sys::sceGuDrawBuffer(DisplayPixelFormat::Psm8888, fbp0, BUF_WIDTH);
     sys::sceGuDispBuffer(SCR_WIDTH, SCR_HEIGHT, fbp1, BUF_WIDTH);
     sys::sceGuDepthBuffer(zbp, BUF_WIDTH);
@@ -144,7 +144,7 @@ unsafe fn psp_main_inner() {
     sys::sceGuEnable(GuState::Texture2D);
     sys::sceGuEnable(GuState::ClipPlanes);
     sys::sceGuFinish();
-    sys::sceGuSync(SyncMode::Finish, SyncBehavior::Wait);
+    sys::sceGuSync(GuSyncMode::Finish, GuSyncBehavior::Wait);
 
     psp::sys::sceDisplayWaitVblankStart();
 
@@ -155,7 +155,7 @@ unsafe fn psp_main_inner() {
     let mut val = 0.0;
 
     loop {
-        sys::sceGuStart(Context::Direct, &mut LIST.0 as *mut [u32; 0x40000] as *mut _);
+        sys::sceGuStart(GuContextType::Direct, &mut LIST.0 as *mut [u32; 0x40000] as *mut _);
 
         // clear screen
         sys::sceGuClearColor(0xff554433);
@@ -177,9 +177,9 @@ unsafe fn psp_main_inner() {
         {
             let pos = ScePspFVector3 { x: 0.0, y: 0.0, z: -2.5 };
             let rot = ScePspFVector3 {
-                x: val * 0.79 * (sys::PI / 180.0),
-                y: val * 0.98 * (sys::PI / 180.0),
-                z: val * 1.32 * (sys::PI / 180.0),
+                x: val * 0.79 * (PI / 180.0),
+                y: val * 0.98 * (PI / 180.0),
+                z: val * 1.32 * (PI / 180.0),
             };
 
             sys::sceGumTranslate(&pos);
@@ -198,7 +198,7 @@ unsafe fn psp_main_inner() {
         // draw cube
 
         sys::sceGumDrawArray(
-            Primitive::Triangles,
+            GuPrimitive::Triangles,
             VertexType::TEXTURE_32BITF | VertexType::VERTEX_32BITF | VertexType::TRANSFORM_3D,
             12 * 3,
             ptr::null_mut(),
@@ -206,7 +206,7 @@ unsafe fn psp_main_inner() {
         );
 
         sys::sceGuFinish();
-        sys::sceGuSync(SyncMode::Finish, SyncBehavior::Wait);
+        sys::sceGuSync(GuSyncMode::Finish, GuSyncBehavior::Wait);
 
         sys::sceDisplayWaitVblankStart();
         sys::sceGuSwapBuffers();
