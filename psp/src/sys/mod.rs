@@ -116,3 +116,70 @@ pub struct SceStubLibraryEntry {
 }
 
 unsafe impl Sync for SceStubLibraryEntry {}
+
+#[repr(C, packed)]
+pub struct SceModuleInfo {
+    pub mod_attribute: u16,
+    pub mod_version: [u8; 2],
+    pub mod_name: [u8; 27],
+    pub terminal: u8,
+    pub gp_value: *const u8,
+    pub ent_top: *const u8,
+    pub ent_end: *const u8,
+    pub stub_top: *const u8,
+    pub stub_end: *const u8,
+}
+
+unsafe impl Sync for SceModuleInfo {}
+
+impl SceModuleInfo {
+    #[doc(hidden)]
+    pub const fn name(s: &str) -> [u8; 27] {
+        let bytes = s.as_bytes();
+        let mut result = [0; 27];
+
+        let mut i = 0;
+        while i < bytes.len() {
+            result[i] = bytes[i];
+
+            i += 1;
+        }
+
+        result
+    }
+}
+
+#[repr(C, packed)]
+pub struct SceLibraryEntry {
+    pub name: *const u8,
+    pub version: (u8, u8),
+    pub attribute: SceLibAttr,
+    pub entry_len: u8,
+    pub var_count: u8,
+    pub func_count: u16,
+    pub entry_table: *const SceLibraryEntryTable,
+}
+
+unsafe impl Sync for SceLibraryEntry {}
+
+bitflags::bitflags! {
+    // https://github.com/uofw/uofw/blob/f099b78dc0937df4e7346e2e417b63f471f8a3af/include/loadcore.h#L152
+    pub struct SceLibAttr: u16 {
+        const SCE_LIB_NO_SPECIAL_ATTR = 0;
+        const SCE_LIB_AUTO_EXPORT = 0x1;
+        const SCE_LIB_WEAK_EXPORT = 0x2;
+        const SCE_LIB_NOLINK_EXPORT = 0x4;
+        const SCE_LIB_WEAK_IMPORT = 0x8;
+        const SCE_LIB_SYSCALL_EXPORT = 0x4000;
+        const SCE_LIB_IS_SYSLIB = 0x8000;
+    }
+}
+
+pub struct SceLibraryEntryTable {
+    pub module_start_nid: u32,
+    pub module_info_nid: u32,
+    pub module_start: unsafe extern "C" fn(isize, *const *const u8) -> isize,
+    pub module_info: *const SceModuleInfo,
+}
+
+unsafe impl Sync for SceLibraryEntryTable {}

@@ -5,6 +5,7 @@
 use crate::sys;
 use core::fmt;
 
+/// Like `println!`, but prints to the PSP screen.
 #[macro_export]
 macro_rules! dprintln {
     ($($arg:tt)*) => {
@@ -13,6 +14,7 @@ macro_rules! dprintln {
     }
 }
 
+/// Like `print!`, but prints to the PSP screen.
 #[macro_export]
 macro_rules! dprint {
     ($($arg:tt)*) => {

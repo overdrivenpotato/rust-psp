@@ -1,3 +1,5 @@
+//! Panic support for the PSP.
+
 // Most of the code here is lifted from `rustc/src/libstd/panicking.rs`. It has
 // been adapted to run on the PSP.
 
@@ -187,7 +189,7 @@ pub fn catch_unwind<R, F: FnOnce() -> R>(f: F) -> Result<R, Box<dyn Any + Send>>
 /// These symbols and functions should not actually be used. `libunwind`,
 /// however, requires them to be present so that it can link.
 // TODO: Patch these out of libunwind instead.
-pub mod libunwind_shims {
+mod libunwind_shims {
     #[no_mangle]
     unsafe extern "C" fn fprintf(_stream: *const u8, _format: *const u8, ...) -> isize {
         -1
