@@ -44,13 +44,13 @@ implementations of graphics functions, and the addition of missing libraries.
 - [x] `panic = "unwind"` support
 - [x] Macro-based VFPU assembler
 - [x] Full 3D graphics support (faster than PSPSDK in some cases!)
-- [x] No dependency on PSPSDK
+- [x] No dependency on PSPSDK / PSPToolchain
 - [ ] Reach full parity with user mode support in PSPSDK
 - [ ] Add support for creating kernel mode modules
 - [ ] Port definitions to `libc` crate
 - [ ] Add `std` support
 - [ ] Automatically sign EBOOT.PBP files to run on unmodified PSPs
-- [ ] Implement / reverse all libraries missing from PSPSDK
+- [ ] Implement / reverse undiscovered libraries
 
 ## Dependencies
 
@@ -73,9 +73,9 @@ $ cargo install cargo-psp
 ## Running Examples
 
 Enter one of the example directories, `examples/hello-world` for instance, and
-run `cargo psp --release`.
+run `cargo psp`.
 
-This will create an `EBOOT.PBP` file under `target/mipsel-sony-psp/release/`
+This will create an `EBOOT.PBP` file under `target/mipsel-sony-psp/debug/`
 
 Assuming you have a PSP with custom firmware installed, you can simply copy this
 file into a new directory under `PSP/GAME` on your memory stick, and it will
@@ -98,7 +98,7 @@ If you don't have a PSP with CFW installed, you can manually sign the PRX using
 
 If you have the PSPSDK installed and have built a working copy PSPLink manually,
 you can also use `psplink` and `pspsh` to run the `.prx` under
-`target/mipsel-sony-psp/release` if you prefer. Refer to the installation and
+`target/mipsel-sony-psp/debug/` if you prefer. Refer to the installation and
 usage guides for those programs.
 
 ### Debugging
@@ -116,23 +116,17 @@ as a git dependency:
 psp = { git = "https://github.com/overdrivenpotato/rust-psp" }
 ```
 
-Now you can simply run `cargo psp --release` to build your `EBOOT.PBP` file. The
-executable **must** be built with `--release` due to a bug in this crate, or it
-will not work as expected. *This should be fixed soon.*
+Now you can simply run `cargo psp` to build your `EBOOT.PBP` file. You can also
+invoke `cargo psp --release` to create a release build.
+
+*Note that your crate is currently always compiled with `opt-level=3`,
+regardless of whether you are compiling a debug or release build. This is due to
+a bug in this crate, and will soon be fixed in `cargo-psp`*
 
 ## Known Bugs
 
-This crate **breaks** on debug builds. Likely due to a bug in EABI interop.
-
-This can be worked around by enabling optimization for debug builds
-
-```toml
-# Cargo.toml
-
-[profile.dev]
-opt-level="z"
-```
-or simply building with `--release`, like the examples.
+This crate **breaks** on builds with `opt-level=0`. Likely due to a bug in EABI
+interop. `cargo-psp` patches over this by passing `-C opt-level=3`.
 
 ## `error[E0460]: found possibly newer version of crate ...`
 

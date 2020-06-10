@@ -135,6 +135,10 @@ fn main() {
 
     fs::write("Xargo.toml", xargo_toml).unwrap();
 
+    // FIXME: This is a workaround. This should eventually be removed.
+    let rustflags = env::var("RUSTFLAGS").unwrap_or("".into())
+        + " -C link-dead-code -C opt-level=3";
+
     let mut process = Command::new("cargo-psp")
         // Relaunch as xargo wrapper.
         .env(SUBPROCESS_ENV_VAR, "1")
@@ -142,8 +146,7 @@ fn main() {
         .arg("--target")
         .arg("mipsel-sony-psp")
         .args(args)
-        // TODO: merge with parent process value
-        .env("RUSTFLAGS", "-C link-dead-code")
+        .env("RUSTFLAGS", rustflags)
         .stdin(Stdio::inherit())
         .stdout(Stdio::piped())
         .stderr(Stdio::inherit())
