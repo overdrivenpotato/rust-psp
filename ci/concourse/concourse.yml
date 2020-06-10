@@ -30,18 +30,6 @@ jobs:
           file: repo/ci/concourse/build-rust.yml
         - task: run-tests
           file: repo/ci/concourse/run-tests.yml
-        on_failure:
-          put: repo
-          resource: master-branch
-          params:
-            path: repo
-            status: failure
-        on_success:
-          put: repo
-          resource: master-branch
-          params:
-            path: repo
-            status: success
 
   - name: run-tests-for-pr
     public: true
