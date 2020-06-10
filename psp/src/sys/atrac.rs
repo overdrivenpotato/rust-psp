@@ -3,7 +3,7 @@ use crate::eabi::i5;
 
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
-pub struct PspBufferInfo {
+pub struct Atrac3BufferInfo {
     pub puc_write_position_first_buf: *mut u8,
     pub ui_writable_byte_first_buf: u32,
     pub ui_min_write_byte_first_buf: u32,
@@ -193,7 +193,7 @@ psp_extern! {
     pub fn sceAtracGetBufferInfoForReseting(
         atrac_id: i32,
         ui_sample: u32,
-        pbuffer_info: *mut PspBufferInfo,
+        pbuffer_info: *mut Atrac3BufferInfo,
     ) -> i32;
 
     #[psp(0x31668BAA)]

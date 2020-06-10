@@ -15,7 +15,7 @@ pub enum Format {
 }
 
 #[repr(C)]
-pub struct InputParams {
+pub struct AudioInputParams {
     /// Unknown. Pass 0
     pub unknown1: i32,
     pub gain: i32,
@@ -319,12 +319,12 @@ psp_extern! {
     ///
     /// # Parameters
     ///
-    /// - `params`: A pointer to an InputParams struct.
+    /// - `params`: A pointer to an `AudioInputParams` struct.
     ///
     /// # Return value
     ///
     /// 0 on success, <0 on error.
-    pub fn sceAudioInputInitEx(params: *mut InputParams) -> i32;
+    pub fn sceAudioInputInitEx(params: *mut AudioInputParams) -> i32;
 
     #[psp(0x086E5895)]
     /// Perform audio input (blocking)

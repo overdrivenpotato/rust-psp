@@ -3,7 +3,7 @@ use core::ffi::c_void;
 /// A structure used for initializing a handle in `sceMp3ReserveMp3Handle`.
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
-pub struct InitArg {
+pub struct SceMp3InitArg {
     /// Stream start position
     pub mp3_stream_start: u32,
     /// Unknown - set to 0
@@ -34,14 +34,14 @@ psp_extern! {
     #[psp(0x07EC321A)]
     /// # Parameters
     ///
-    /// - `args`: Pointer to `InitArg` structure
+    /// - `args`: Pointer to `SceMp3InitArg` structure
     ///
     /// # Return Value
     ///
     /// Raw MP3 handle on success, < 0 on error. Construct a `Handle` instance
     /// from this value to use the other functions in this module.
     // TODO: Investigate adding `Result` support to `psp_extern!`.
-    pub fn sceMp3ReserveMp3Handle(args: *mut InitArg) -> i32;
+    pub fn sceMp3ReserveMp3Handle(args: *mut SceMp3InitArg) -> i32;
 
     #[psp(0xF5478233)]
     /// # Parameters

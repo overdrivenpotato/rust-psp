@@ -22,13 +22,13 @@ impl Handle {
 pub struct Stream(*mut c_void);
 
 /// Ringbuffer callback.
-pub type RingbufferCb = Option<
+pub type SceMpegRingbufferCb = Option<
     unsafe extern "C" fn(data: *mut c_void, num_packets: i32, param: *mut c_void) -> i32,
 >;
 
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
-pub struct Ringbuffer {
+pub struct SceMpegRingbuffer {
     /// Packets
     pub packets: i32,
     /// Unknown
@@ -42,7 +42,7 @@ pub struct Ringbuffer {
     /// Pointer to data
     pub data: *mut c_void,
     /// Ringbuffer callback
-    pub callback: RingbufferCb,
+    pub callback: SceMpegRingbufferCb,
     /// Callback param
     pub cb_param: *mut c_void,
     /// Unknown
@@ -106,7 +106,7 @@ psp_extern! {
     #[psp(0x37295ED8, i6)]
     /// # Parameters
     ///
-    /// - `ringbuffer`: pointer to a sceMpegRingbuffer struct
+    /// - `ringbuffer`: pointer to a `SceMpegRingbuffer` struct
     /// - `packets`: number of packets in the ringbuffer
     /// - `data`: pointer to allocated memory
     /// - `size`: size of allocated memory, shoud be `sceMpegRingbufferQueryMemSize`(iPackets)
@@ -117,42 +117,42 @@ psp_extern! {
     ///
     /// 0 if success.
     pub fn sceMpegRingbufferConstruct(
-        ringbuffer: *mut Ringbuffer,
+        ringbuffer: *mut SceMpegRingbuffer,
         packets: i32,
         data: *mut c_void,
         size: i32,
-        callback: RingbufferCb,
+        callback: SceMpegRingbufferCb,
         cb_param: *mut c_void,
     ) -> i32;
 
     #[psp(0x13407F13)]
     /// # Parameters
     ///
-    /// - `ringbuffer`: pointer to a sceMpegRingbuffer struct
-    pub fn sceMpegRingbufferDestruct(ringbuffer: *mut Ringbuffer);
+    /// - `ringbuffer`: pointer to a `SceMpegRingbuffer` struct
+    pub fn sceMpegRingbufferDestruct(ringbuffer: *mut SceMpegRingbuffer);
 
     #[psp(0xB5F6DC87)]
     /// # Parameters
     ///
-    /// - `ringbuffer`: pointer to a sceMpegRingbuffer struct
+    /// - `ringbuffer`: pointer to a `SceMpegRingbuffer` struct
     ///
     /// # Return Value
     ///
     /// < 0 if error else number of free packets in the ringbuffer.
-    pub fn sceMpegRingbufferAvailableSize(ringbuffer: *mut Ringbuffer) -> i32;
+    pub fn sceMpegRingbufferAvailableSize(ringbuffer: *mut SceMpegRingbuffer) -> i32;
 
     #[psp(0xB240A59E)]
     /// # Parameters
     ///
-    /// - `ringbuffer`: pointer to a sceMpegRingbuffer struct
+    /// - `ringbuffer`: pointer to a `SceMpegRingbuffer` struct
     /// - `num_packets`: num packets to put into the ringbuffer
-    /// - `available`: free packets in the ringbuffer, should be sceMpegRingbufferAvailableSize()
+    /// - `available`: free packets in the ringbuffer, should be `sceMpegRingbufferAvailableSize()`
     ///
     /// # Return Value
     ///
     /// < 0 if error else number of packets.
     pub fn sceMpegRingbufferPut(
-        ringbuffer: *mut Ringbuffer,
+        ringbuffer: *mut SceMpegRingbuffer,
         num_packets: i32,
         available: i32,
     ) -> i32;
@@ -185,7 +185,7 @@ psp_extern! {
         handle: Handle,
         data: *mut c_void,
         size: i32,
-        ringbuffer: *mut Ringbuffer,
+        ringbuffer: *mut SceMpegRingbuffer,
         frame_width: i32,
         unk1: i32,
         unk2: i32,

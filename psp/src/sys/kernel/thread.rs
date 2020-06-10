@@ -205,8 +205,8 @@ pub struct SceKernelEventFlagInfo {
 
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
-pub struct EventFlagOptParam {
-    /// Size of the `EventFlagOptParam` structure?
+pub struct SceKernelEventFlagOptParam {
+    /// Size of the `SceKernelEventFlagOptParam` structure?
     pub size: usize,
 }
 
@@ -964,7 +964,7 @@ psp_extern! {
         name: *const u8,
         attr: EventFlagAttributes,
         bits: i32,
-        opt: *mut EventFlagOptParam,
+        opt: *mut SceKernelEventFlagOptParam,
     ) -> SceUid;
 
     #[psp(0x1FB15A32)]

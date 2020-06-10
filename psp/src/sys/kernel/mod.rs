@@ -140,7 +140,7 @@ pub struct Timezone {
 /// Type to hold a sha1 context
 #[repr(C)]
 #[derive(Copy, Clone)]
-pub struct Sha1Context {
+pub struct SceKernelUtilsSha1Context {
     pub h: [u32; 5usize],
     pub us_remains: u16,
     pub us_computed: u16,
@@ -151,7 +151,7 @@ pub struct Sha1Context {
 /// Structure for holding a mersenne twister context
 #[repr(C)]
 #[derive(Copy, Clone)]
-pub struct Mt19937Context {
+pub struct SceKernelUtilsMt19937Context {
     pub count: u32,
     pub state: [u32; 624usize],
 }
@@ -159,7 +159,7 @@ pub struct Mt19937Context {
 /// Structure to hold the MD5 context
 #[repr(C)]
 #[derive(Copy, Clone)]
-pub struct Md5Context {
+pub struct SceKernelUtilsMd5Context {
     pub h: [u32; 4usize],
     pub pad: u32,
     pub us_remains: u16,
@@ -239,7 +239,7 @@ psp_extern! {
     ///
     /// < 0 on error.
     pub fn sceKernelUtilsMt19937Init(
-        ctx: *mut Mt19937Context,
+        ctx: *mut SceKernelUtilsMt19937Context,
         seed: u32,
     ) -> i32;
 
@@ -252,7 +252,7 @@ psp_extern! {
     /// # Return Value
     ///
     /// A pseudo random number (between 0 and MAX_INT).
-    pub fn sceKernelUtilsMt19937UInt(ctx: *mut Mt19937Context) -> u32;
+    pub fn sceKernelUtilsMt19937UInt(ctx: *mut SceKernelUtilsMt19937Context) -> u32;
 
     #[psp(0xC8186A58)]
     /// Function to perform an MD5 digest of a data block.
@@ -282,7 +282,7 @@ psp_extern! {
     /// # Return Value
     ///
     /// < 0 on error.
-    pub fn sceKernelUtilsMd5BlockInit(ctx: *mut Md5Context) -> i32;
+    pub fn sceKernelUtilsMd5BlockInit(ctx: *mut SceKernelUtilsMd5Context) -> i32;
 
     #[psp(0x61E1E525)]
     /// Function to update the MD5 digest with a block of data.
@@ -297,7 +297,7 @@ psp_extern! {
     ///
     /// < 0 on error.
     pub fn sceKernelUtilsMd5BlockUpdate(
-        ctx: *mut Md5Context,
+        ctx: *mut SceKernelUtilsMd5Context,
         data: *mut u8,
         size: u32,
     ) -> i32;
@@ -314,7 +314,7 @@ psp_extern! {
     ///
     /// < 0 on error.
     pub fn sceKernelUtilsMd5BlockResult(
-        ctx: *mut Md5Context,
+        ctx: *mut SceKernelUtilsMd5Context,
         digest: *mut u8,
     ) -> i32;
 
@@ -347,7 +347,7 @@ psp_extern! {
     ///
     /// < 0 on error.
     pub fn sceKernelUtilsSha1BlockInit(
-        ctx: *mut Sha1Context,
+        ctx: *mut SceKernelUtilsSha1Context,
     ) -> i32;
 
     #[psp(0x346F6DA8)]
@@ -363,7 +363,7 @@ psp_extern! {
     ///
     /// < 0 on error.
     pub fn sceKernelUtilsSha1BlockUpdate(
-        ctx: *mut Sha1Context,
+        ctx: *mut SceKernelUtilsSha1Context,
         data: *mut u8,
         size: u32,
     ) -> i32;
@@ -380,7 +380,7 @@ psp_extern! {
     ///
     /// < 0 on error.
     pub fn sceKernelUtilsSha1BlockResult(
-        ctx: *mut Sha1Context,
+        ctx: *mut SceKernelUtilsSha1Context,
         digest: *mut u8,
     ) -> i32;
 }
