@@ -4,9 +4,6 @@
 use psp::sys::{
     DialogCommon, MsgDialogParams, MsgDialogMode, MsgDialogPressed,
     SysParamLanguage, DialogButtonAccept, MsgDialogOption, self,
-    kernel,
-    display,
-    gu,
 };
 
 use core::ffi::c_void;
@@ -19,10 +16,10 @@ fn psp_main() {
 
     unsafe {
         sys::sceGuInit(); 
-        sys::sceGuStart(gu::Context::Direct, &mut LIST as *mut _ as *mut c_void);
+        sys::sceGuStart(sys::Context::Direct, &mut LIST as *mut _ as *mut c_void);
         sys::sceGuDrawBuffer(sys::DisplayPixelFormat::Psm8888, core::ptr::null_mut(), 512);
         sys::sceGuFinish();
-        sys::sceGuSync(gu::SyncMode::Finish, gu::SyncBehavior::Wait);
+        sys::sceGuSync(sys::SyncMode::Finish, sys::SyncBehavior::Wait);
         sys::sceDisplayWaitVblankStart();
         sys::sceGuDisplay(true);
     }
@@ -67,7 +64,7 @@ fn psp_main() {
             0 => {break},
             _ => (),
         }
-        unsafe {sys::::sceDisplayWaitVblankStart();}
+        unsafe {sys::sceDisplayWaitVblankStart();}
     }
     unsafe { sys::sceKernelExitGame(); }
 }

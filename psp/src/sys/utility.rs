@@ -932,7 +932,7 @@ psp_extern! {
 
 }
 
-sys_lib! {
+psp_extern! {
     #![name = "sceUtility_netparam_internal"]
     #![flags = 0x4001]
     #![version = (0x00, 0x00)]
