@@ -116,12 +116,39 @@ as a git dependency:
 psp = { git = "https://github.com/overdrivenpotato/rust-psp" }
 ```
 
+In your `main.rs` file, you need to setup a basic skeleton like so:
+
+```rust
+#![no_std]
+#![no_main]
+
+// Create a module named "sample_modules" with version 1.0
+psp::module!("sample_module", 1, 0);
+
+fn psp_main() {
+    psp::dprintln!("Hello PSP from rust!");
+}
+```
+
 Now you can simply run `cargo psp` to build your `EBOOT.PBP` file. You can also
 invoke `cargo psp --release` to create a release build.
 
 *Note that your crate is currently always compiled with `opt-level=3`,
 regardless of whether you are compiling a debug or release build. This is due to
 a bug in this crate, and will soon be fixed in `cargo-psp`*
+
+If you would like to customize your EBOOT with e.g. an icon or new title, you
+can create a `Psp.toml` file in the root of your project. Note that all keys are
+optional:
+
+```toml
+title = "XMB title"
+xmb_icon_png = "path/to/24bit_144x80_image.png"
+xmb_background_png = "path/to/24bit_480x272_background.png"
+xmb_music_at3 = "path/to/ATRAC3_audio.at3"
+```
+
+More options can be found in the schema defintion [here](/cargo-psp/src/main.rs#L11-L91).
 
 ## Known Bugs
 
