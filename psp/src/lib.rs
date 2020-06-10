@@ -36,8 +36,8 @@ pub use screenshot::*;
 mod benchmark;
 pub use benchmark::*;
 
-#[cfg(feature="emb-gfx")]
-pub mod framebuf_gfx;
+#[cfg(feature="embedded-graphics")]
+pub mod embedded_graphics;
 
 #[repr(align(16))]
 pub struct Align16<T>(pub T);

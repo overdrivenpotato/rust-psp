@@ -10,13 +10,13 @@ use embedded_graphics::style::PrimitiveStyleBuilder;
 use embedded_graphics::style::TextStyleBuilder;
 use tinybmp::Bmp;
 
-use psp::framebuf_gfx;
+use psp::embedded_graphics::Framebuffer;
 
 psp::module!("sample_emb_gfx", 1, 1);
 
 fn psp_main() {
     psp::enable_home_button();
-    let mut disp = framebuf_gfx::Framebuffer::new();
+    let mut disp = Framebuffer::new();
 
     let style = PrimitiveStyleBuilder::new()
         .fill_color(Rgb888::BLACK)

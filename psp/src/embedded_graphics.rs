@@ -1,3 +1,5 @@
+//! Interop between the `psp` crate and the 2D `embedded-graphics` crate.
+
 use crate::sys;
 use core::convert::TryInto;
 use embedded_graphics::{
