@@ -1,7 +1,7 @@
 use cargo_metadata::MetadataCommand;
 use std::{
-    env, fs,
-    io::ErrorKind,
+    env, fs, thread,
+    io::{self, ErrorKind, Read, Write},
     process::{self, Command, Stdio},
 };
 
@@ -97,6 +97,18 @@ fn main() {
         return xargo::main_inner(xargo::XargoMode::Build);
     }
 
+    // Ensure there is no `Xargo.toml` file already.
+    match fs::metadata("Xargo.toml") {
+        Err(e) if e.kind() == ErrorKind::NotFound => {},
+        Err(e) => panic!("{}", e),
+        Ok(_) => {
+            println!("Found Xargo.toml file.");
+            println!("Please remove this to coninue, as it interferes with `cargo-psp`.");
+
+            process::exit(1);
+        }
+    }
+
     let config = match fs::read(CONFIG_NAME) {
         Ok(bytes) => match toml::from_slice(&bytes) {
             Ok(config) => config,
@@ -114,10 +126,18 @@ fn main() {
     // Skip `cargo psp`
     let args = env::args().skip(2);
 
-    let command = Command::new("cargo-psp")
+    let xargo_toml = "\
+        [target.mipsel-sony-psp.dependencies.core]\n\
+        [target.mipsel-sony-psp.dependencies.alloc]\n\
+        [target.mipsel-sony-psp.dependencies.panic_unwind]\n\
+        stage = 1\n\
+    ";
+
+    fs::write("Xargo.toml", xargo_toml).unwrap();
+
+    let mut process = Command::new("cargo-psp")
         // Relaunch as xargo wrapper.
         .env(SUBPROCESS_ENV_VAR, "1")
-
         .arg("build")
         .arg("--target")
         .arg("mipsel-sony-psp")
@@ -125,18 +145,44 @@ fn main() {
         // TODO: merge with parent process value
         .env("RUSTFLAGS", "-C link-dead-code")
         .stdin(Stdio::inherit())
-        .stdout(Stdio::inherit())
+        .stdout(Stdio::piped())
         .stderr(Stdio::inherit())
-        .output()
-        .unwrap_or_else(|e| {
-            println!("Failed to run `xargo`: {}", e);
-            println!("Try running `cargo install xargo` and re-run this command");
+        .spawn()
+        .unwrap();
 
-            process::exit(1);
-        });
+    let xargo_stdout = process.stdout.take();
 
-    if !command.status.success() {
-        let code = match command.status.code() {
+    // This is a pretty big hack. We wait until `xargo` starts printing and then
+    // remove the toml. Then we have to manually pipe the output to our stdout.
+    //
+    // Ideally we could just set `XARGO_TOML_PATH` to some temporary file.
+    thread::spawn(move || {
+        let mut xargo_stdout = xargo_stdout.unwrap();
+        let mut stdout = io::stdout();
+        let mut removed_xargo_toml = false;
+        let mut buf = vec![0; 8192];
+
+        loop {
+            let bytes = xargo_stdout.read(&mut buf).unwrap();
+
+            if !removed_xargo_toml {
+                fs::remove_file("Xargo.toml").unwrap();
+                removed_xargo_toml = true;
+            }
+
+            if bytes == 0 {
+                break
+            }
+
+            stdout.write_all(&buf[0..bytes]).unwrap();
+        }
+    });
+
+
+    let status = process.wait().unwrap();
+
+    if !status.success() {
+        let code = match status.code() {
             Some(i) => i,
             None => 1,
         };

@@ -104,15 +104,6 @@ as a git dependency:
 psp = { git = "https://github.com/overdrivenpotato/rust-psp" }
 ```
 
-You will also need a `Xargo.toml` file in the root of your project like so:
-
-```toml
-[target.mipsel-sony-psp.dependencies.core]
-[target.mipsel-sony-psp.dependencies.alloc]
-[target.mipsel-sony-psp.dependencies.panic_unwind]
-stage = 1
-```
-
 Now you can simply run `cargo psp --release` to build your `EBOOT.PBP` file. The
 executable **must** be built with `--release` due to a bug in this crate, or it
 will not work as expected. *This should be fixed soon.*
