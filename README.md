@@ -89,6 +89,10 @@ show up in your XMB menu.
             └── EBOOT.PBP
 ```
 
+If you do not have a PSP, we recommend using the [PPSSPP emulator](http://ppsspp.org).
+Note that graphics code is very sensitive so if you're writing graphics code we
+recommend developing on real hardware. PPSSPP is more relaxed in some aspects.
+
 ### Advanced usage: `PRXEncrypter`
 
 If you don't have a PSP with CFW installed, you can manually sign the PRX using
