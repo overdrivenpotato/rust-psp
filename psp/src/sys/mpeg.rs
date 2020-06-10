@@ -3,13 +3,13 @@ use crate::{sys, eabi::{i5, i6, i7}};
 
 /// A data handle used for various functions.
 ///
-/// This struct can be created with the `Handle::null()` method, and initialized
+/// This struct can be created with the `SceMpeg::null()` method, and initialized
 /// via `sceMpegCreate`.
 #[repr(C)]
 #[derive(Copy, Clone, Debug)]
-pub struct Handle(*mut *mut c_void);
+pub struct SceMpeg(*mut *mut c_void);
 
-impl Handle {
+impl SceMpeg {
     /// Create a null handle, which needs to be initialized with `sceMpegCreate`.
     pub fn null() -> Self {
         Self(core::ptr::null_mut())
@@ -19,7 +19,7 @@ impl Handle {
 /// Internal structure. Passed around but never created manually.
 #[repr(C)]
 #[derive(Copy, Clone, Debug)]
-pub struct Stream(*mut c_void);
+pub struct SceMpegStream(*mut c_void);
 
 /// Ringbuffer callback.
 pub type SceMpegRingbufferCb = Option<
@@ -182,7 +182,7 @@ psp_extern! {
     ///
     /// 0 if success.
     pub fn sceMpegCreate(
-        handle: Handle,
+        handle: SceMpeg,
         data: *mut c_void,
         size: i32,
         ringbuffer: *mut SceMpegRingbuffer,
@@ -195,7 +195,7 @@ psp_extern! {
     /// # Parameters
     ///
     /// - `handle`: Instance handle
-    pub fn sceMpegDelete(handle: Handle);
+    pub fn sceMpegDelete(handle: SceMpeg);
 
     #[psp(0x21FF80E4)]
     /// # Parameters
@@ -208,7 +208,7 @@ psp_extern! {
     ///
     /// 0 if success.
     pub fn sceMpegQueryStreamOffset(
-        handle: Handle,
+        handle: SceMpeg,
         buffer: *mut c_void,
         offset: *mut i32,
     ) -> i32;
@@ -235,32 +235,32 @@ psp_extern! {
     ///
     /// 0 if error.
     pub fn sceMpegRegistStream(
-        handle: Handle,
+        handle: SceMpeg,
         stream_id: i32,
         unk: i32,
-    ) -> Stream;
+    ) -> SceMpegStream;
 
     #[psp(0x591A4AA2)]
     /// # Parameters
     ///
     /// - `handle`: Instance handle
     /// - `stream`: pointer to stream
-    pub fn sceMpegUnRegistStream(handle: Handle, stream: Stream);
+    pub fn sceMpegUnRegistStream(handle: SceMpeg, stream: SceMpegStream);
 
     #[psp(0x707B7629)]
     /// # Return Value
     ///
     /// 0 if success.
-    pub fn sceMpegFlushAllStream(handle: Handle) -> i32;
+    pub fn sceMpegFlushAllStream(handle: SceMpeg) -> i32;
 
     #[psp(0xA780CF7E)]
     /// # Return Value
     ///
     /// 0 if error else pointer to buffer.
-    pub fn sceMpegMallocAvcEsBuf(handle: Handle) -> *mut c_void;
+    pub fn sceMpegMallocAvcEsBuf(handle: SceMpeg) -> *mut c_void;
 
     #[psp(0xCEB870B1)]
-    pub fn sceMpegFreeAvcEsBuf(handle: Handle, buf: *mut c_void);
+    pub fn sceMpegFreeAvcEsBuf(handle: SceMpeg, buf: *mut c_void);
 
     #[psp(0xF8DCB679)]
     /// # Parameters
@@ -273,7 +273,7 @@ psp_extern! {
     ///
     /// 0 if success.
     pub fn sceMpegQueryAtracEsSize(
-        handle: Handle,
+        handle: SceMpeg,
         es_size: *mut i32,
         out_size: *mut i32,
     ) -> i32;
@@ -288,7 +288,7 @@ psp_extern! {
     /// # Return Value
     ///
     /// 0 if success.
-    pub fn sceMpegInitAu(handle: Handle, es_buffer: *mut c_void, au: *mut SceMpegAu) -> i32;
+    pub fn sceMpegInitAu(handle: SceMpeg, es_buffer: *mut c_void, au: *mut SceMpegAu) -> i32;
 
     #[psp(0xFE246728)]
     /// # Parameters
@@ -302,8 +302,8 @@ psp_extern! {
     ///
     /// 0 if success.
     pub fn sceMpegGetAvcAu(
-        handle: Handle,
-        stream: Stream,
+        handle: SceMpeg,
+        stream: SceMpegStream,
         au: *mut SceMpegAu,
         unk: *mut i32,
     ) -> i32;
@@ -317,7 +317,7 @@ psp_extern! {
     /// # Return Value
     ///
     /// 0 if success.
-    pub fn sceMpegAvcDecodeMode(handle: Handle, mode: *mut SceMpegAvcMode) -> i32;
+    pub fn sceMpegAvcDecodeMode(handle: SceMpeg, mode: *mut SceMpegAvcMode) -> i32;
 
     #[psp(0x0E3C2E9D, i5)]
     /// # Parameters
@@ -332,7 +332,7 @@ psp_extern! {
     ///
     /// 0 if success.
     pub fn sceMpegAvcDecode(
-        handle: Handle,
+        handle: SceMpeg,
         au: *mut SceMpegAu,
         iframe_width: i32,
         buffer: *mut c_void,
@@ -351,7 +351,7 @@ psp_extern! {
     ///
     /// 0 if success.
     pub fn sceMpegAvcDecodeStop(
-        handle: Handle,
+        handle: SceMpeg,
         frame_width: i32,
         buffer: *mut c_void,
         status: *mut i32,
@@ -369,8 +369,8 @@ psp_extern! {
     ///
     /// 0 if success.
     pub fn sceMpegGetAtracAu(
-        handle: Handle,
-        stream: Stream,
+        handle: SceMpeg,
+        stream: SceMpegStream,
         au: *mut SceMpegAu,
         unk: *mut c_void,
     ) -> i32;
@@ -387,7 +387,7 @@ psp_extern! {
     ///
     /// 0 if success.
     pub fn sceMpegAtracDecode(
-        handle: Handle,
+        handle: SceMpeg,
         au: *mut SceMpegAu,
         buffer: *mut c_void,
         init: i32,

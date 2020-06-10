@@ -72,6 +72,7 @@ pub enum GuState {
 
 /// Matrix modes
 #[repr(u32)]
+#[derive(Copy, Clone, Debug)]
 pub enum MatrixMode {
     Projection = 0,
     View = 1,

@@ -5,7 +5,7 @@ bitflags::bitflags! {
     ///
     /// Home, Note, Screen, VolUp, VolDown, Disc, WlanUp, Remote, and MS can only be
     /// read in kernel mode.
-    pub struct PspCtrlButtons: u32 {
+    pub struct CtrlButtons: u32 {
         /// Select button.
         const SELECT = 0x000001;
         /// Start button.
@@ -55,7 +55,7 @@ bitflags::bitflags! {
 
 /// Controller mode.
 #[repr(u32)]
-pub enum PspCtrlMode {
+pub enum CtrlMode {
     /// Digital.
     Digital = 0,
     /// Analog.
@@ -67,8 +67,8 @@ pub enum PspCtrlMode {
 pub struct SceCtrlData {
     /// The current read frame.
     pub timestamp: u32,
-    /// Bit mask containing zero or more of `PspCtrlButtons`.
-    pub buttons: u32,
+    /// Bit mask containing zero or more of `CtrlButtons`.
+    pub buttons: CtrlButtons,
     /// Analogue stick, X axis.
     pub lx: u8,
     /// Analogue stick, Y axis.
@@ -119,12 +119,12 @@ psp_extern! {
     ///
     /// # Parameters
     ///
-    /// - `mode`: One of PspCtrlMode.
+    /// - `mode`: One of `CtrlMode`.
     ///
     /// # Return Value
     ///
     /// The previous mode.
-    pub fn sceCtrlSetSamplingMode(mode: i32) -> i32;
+    pub fn sceCtrlSetSamplingMode(mode: CtrlMode) -> i32;
 
     #[psp(0xDA6B76A1)]
     /// Get the current controller mode.

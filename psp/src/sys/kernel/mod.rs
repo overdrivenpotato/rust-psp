@@ -125,14 +125,14 @@ psp_extern! {
 
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
-pub struct TimeVal {
+pub struct timeval {
     pub tv_sec: i32,
     pub tv_usec: i32,
 }
 
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
-pub struct Timezone {
+pub struct timezone {
     pub tz_minutes_west: i32,
     pub tz_dst_time: i32,
 }
@@ -184,8 +184,7 @@ psp_extern! {
 
     #[psp(0x71EC4271)]
     /// Get the current time of time and time zone information
-    pub fn sceKernelLibcGettimeofday(tp: *mut TimeVal, tzp: *mut Timezone)
-        -> i32;
+    pub fn sceKernelLibcGettimeofday(tp: *mut timeval, tzp: *mut timezone) -> i32;
 
     #[psp(0x79D1C3FA)]
     /// Write back the data cache to memory

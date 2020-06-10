@@ -1,22 +1,12 @@
 use core::{mem::MaybeUninit, ffi::c_void};
 use crate::vfpu_asm;
 use crate::sys::{
-    self, ScePspFMatrix4, ScePspFVector3, ScePspFVector4,
+    self, ScePspFMatrix4, ScePspFVector3, ScePspFVector4, MatrixMode,
     vfpu_context::{Context, MatrixSet},
 };
 
 // TODO: Change all register names in `llvm_asm` to register numbers. Fixes
 // assembler bug.
-
-// TODO: Replace this with the definiton in `gu` once merged.
-#[repr(i32)]
-#[derive(Copy, Debug, Clone)]
-pub enum Mode {
-    Projection = 0,
-    View = 1,
-    Model = 2,
-    Texture = 3,
-}
 
 static mut MATRIX_STACK: [[ScePspFMatrix4; 32]; 4] = {
     let zero_vector = ScePspFVector4 { x: 0.0, y: 0.0, z: 0.0, w: 0.0 };
@@ -46,16 +36,16 @@ static mut MATRIX_UPDATE: [i32; 4] = [0, 0, 0, 0];
 static mut CURRENT_MATRIX_UPDATE: i32 = 0;
 
 static mut CURRENT_MATRIX: *mut ScePspFMatrix4 = unsafe {
-    &mut MATRIX_STACK[Mode::Projection as usize][0]
+    &mut MATRIX_STACK[MatrixMode::Projection as usize][0]
 };
 
-static mut CURRENT_MODE: Mode = Mode::Projection;
+static mut CURRENT_MODE: MatrixMode = MatrixMode::Projection;
 static mut STACK_DEPTH: [*mut ScePspFMatrix4; 4] = unsafe {
     [
-        &mut MATRIX_STACK[Mode::Projection as usize][0],
-        &mut MATRIX_STACK[Mode::View as usize][0],
-        &mut MATRIX_STACK[Mode::Model as usize][0],
-        &mut MATRIX_STACK[Mode::Texture as usize][0],
+        &mut MATRIX_STACK[MatrixMode::Projection as usize][0],
+        &mut MATRIX_STACK[MatrixMode::View as usize][0],
+        &mut MATRIX_STACK[MatrixMode::Model as usize][0],
+        &mut MATRIX_STACK[MatrixMode::Texture as usize][0],
     ]
 };
 
@@ -235,7 +225,7 @@ pub unsafe fn sceGumLookAt(eye: &ScePspFVector3, center: &ScePspFVector3, up: &S
 ///
 /// - `mode`: Matrix mode to use
 #[allow(non_snake_case)]
-pub unsafe fn sceGumMatrixMode(mode: Mode) {
+pub unsafe fn sceGumMatrixMode(mode: MatrixMode) {
     get_context_unchecked().prepare(MatrixSet::VMAT3, MatrixSet::empty());
 
     vfpu_asm!(
@@ -620,10 +610,10 @@ pub unsafe fn sceGumUpdateMatrix() {
     for i in 0..4 {
         if MATRIX_UPDATE[i] != 0 {
             let mode = match i {
-                0 => sys::MatrixMode::Projection,
-                1 => sys::MatrixMode::View,
-                2 => sys::MatrixMode::Model,
-                3 => sys::MatrixMode::Texture,
+                0 => MatrixMode::Projection,
+                1 => MatrixMode::View,
+                2 => MatrixMode::Model,
+                3 => MatrixMode::Texture,
                 _ => core::intrinsics::unreachable(),
             };
 

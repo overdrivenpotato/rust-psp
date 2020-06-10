@@ -20,8 +20,8 @@ pub struct SceIoDirent {
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct SceIoStat {
-    pub st_mode: StatMode,
-    pub st_attr: StatAttr,
+    pub st_mode: IoStatMode,
+    pub st_attr: IoStatAttr,
     /// Size of the file in bytes.
     pub st_size: i64,
     /// Creation time.
@@ -35,7 +35,7 @@ pub struct SceIoStat {
 }
 
 bitflags::bitflags! {
-    pub struct StatMode: i32 {
+    pub struct IoStatMode: i32 {
         /// Symbolic Link
         const IFLNK = 0x4000;
         /// Directory
@@ -70,7 +70,7 @@ bitflags::bitflags! {
 }
 
 bitflags::bitflags! {
-    pub struct StatAttr: u32 {
+    pub struct IoStatAttr: u32 {
         /// Symlink
         const IFLNK = 0x0008;
         /// Directory
@@ -92,14 +92,14 @@ bitflags::bitflags! {
 pub enum AssignPerms { RdWr = 0, RdOnly = 1, }
 
 #[repr(u32)]
-pub enum Whence {
+pub enum IoWhence {
     Set = 0,
     Cur = 1,
-    END = 2,
+    End = 2,
 }
 
 bitflags::bitflags! {
-    pub struct OpenFlags: i32 {
+    pub struct IoOpenFlags: i32 {
         const RD_ONLY = 0x0001;
         const WR_ONLY = 0x0002;
         const RD_WR = 0x0003;
@@ -133,7 +133,7 @@ psp_extern! {
     /// # Return value
     ///
     /// A non-negative integer is a valid fd, anything else an error
-    pub fn sceIoOpen(file: *const u8, flags: OpenFlags, permissions: Permissions) -> SceUid;
+    pub fn sceIoOpen(file: *const u8, flags: IoOpenFlags, permissions: Permissions) -> SceUid;
 
     #[psp(0x89AA9906)]
     /// Open or create a file for reading or writing (asynchronous)
@@ -149,7 +149,7 @@ psp_extern! {
     /// A non-negative integer is a valid fd, anything else an error
     pub fn sceIoOpenAsync(
         file: *const u8,
-        flags: OpenFlags,
+        flags: IoOpenFlags,
         permissions: Permissions
     ) -> SceUid;
 
@@ -244,14 +244,14 @@ psp_extern! {
     ///
     /// - `fd`: Opened file descriptor with which to seek
     /// - `offset`: Relative offset from the start position given by whence
-    /// - `whence`: Set to `Whence::Set` to seek from the start of the file,
-    ///   `Whence::Cur` seek from the current position and `Whence::End` to seek
+    /// - `whence`: Set to `IoWhence::Set` to seek from the start of the file,
+    ///   `IoWhence::Cur` seek from the current position and `IoWhence::End` to seek
     ///   from the end.
     ///
     /// # Return value
     ///
     /// The position in the file after the seek.
-    pub fn sceIoLseek(fd: SceUid, offset: i64, whence: Whence) -> i64;
+    pub fn sceIoLseek(fd: SceUid, offset: i64, whence: IoWhence) -> i64;
 
     #[psp(0x71B19E77)]
     /// Reposition read/write file descriptor offset (asynchronous)
@@ -260,15 +260,14 @@ psp_extern! {
     ///
     /// - `fd`: Opened file descriptor with which to seek
     /// - `offset`: Relative offset from the start position given by whence
-    /// - `whence`: Set to `Whence::Set` to seek from the start of the file,
-    ///   `Whence::Cur` seek from the current position and Whence::End to seek
+    /// - `whence`: Set to `IoWhence::Set` to seek from the start of the file,
+    ///   `IoWhence::Cur` seek from the current position and IoWhence::End to seek
     ///   from the end.
     ///
     /// # Return value
     ///
     /// < 0 on error. Actual value should be passed returned by the ::sceIoWaitAsync call.
-    pub fn sceIoLseekAsync(fd: SceUid, offset: i64, whence: Whence)
-     -> i32;
+    pub fn sceIoLseekAsync(fd: SceUid, offset: i64, whence: IoWhence) -> i32;
 
     #[psp(0x68963324)]
     /// Reposition read/write file descriptor offset (32bit mode)
@@ -277,15 +276,14 @@ psp_extern! {
     ///
     /// - `fd`: Opened file descriptor with which to seek
     /// - `offset`: Relative offset from the start position given by whence
-    /// - `whence`: Set to `Whence::Set` to seek from the start of the file,
-    ///   `Whence::Cur` seek from the current position and Whence::End to seek
+    /// - `whence`: Set to `IoWhence::Set` to seek from the start of the file,
+    ///   `IoWhence::Cur` seek from the current position and IoWhence::End to seek
     ///   from the end.
     ///
     /// # Return value
     ///
     /// The position in the file after the seek.
-    pub fn sceIoLseek32(fd: SceUid, offset: i32, whence: Whence)
-     -> i32;
+    pub fn sceIoLseek32(fd: SceUid, offset: i32, whence: IoWhence) -> i32;
 
     #[psp(0x1B385D8F)]
     /// Reposition read/write file descriptor offset (32bit mode, asynchronous)
@@ -294,14 +292,13 @@ psp_extern! {
     ///
     /// - `fd`: Opened file descriptor with which to seek
     /// - `offset`: Relative offset from the start position given by whence
-    /// - `whence`: Set to Whence::Set to seek from the start of the file, Whence::Cur
-    ///   seek from the current position and Whence::End to seek from the end.
+    /// - `whence`: Set to IoWhence::Set to seek from the start of the file, IoWhence::Cur
+    ///   seek from the current position and IoWhence::End to seek from the end.
     ///
     /// # Return value
     ///
     /// < 0 on error.
-    pub fn sceIoLseek32Async(fd: SceUid, offset: i32, whence: Whence)
-     -> i32;
+    pub fn sceIoLseek32Async(fd: SceUid, offset: i32, whence: IoWhence) -> i32;
 
     #[psp(0xF27A9C51)]
     /// Remove directory entry
@@ -361,8 +358,7 @@ psp_extern! {
     /// # Return value
     ///
     /// < 0 on error.
-    pub fn sceIoRename(oldname: *const u8, newname: *const u8)
-     -> i32;
+    pub fn sceIoRename(oldname: *const u8, newname: *const u8) -> i32;
 
     #[psp(0xB29DDF9C)]
     /// Open a directory

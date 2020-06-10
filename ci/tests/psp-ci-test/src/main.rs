@@ -21,8 +21,8 @@ fn init_tests() -> SceUid {
     unsafe {
         let fd = psp::sys::sceIoOpen(
             buf as *const u8,
-            psp::sys::OpenFlags::CREAT |
-            psp::sys::OpenFlags::RD_WR, 0o777
+            psp::sys::IoOpenFlags::CREAT |
+            psp::sys::IoOpenFlags::RD_WR, 0o777
         );
         return fd
     }
@@ -58,8 +58,8 @@ fn test_screenshot() {
     unsafe {
         let fd = psp::sys::sceIoOpen(
             b"host0:/psp-ci-test.bmp\0" as *const u8,
-            psp::sys::OpenFlags::CREAT |
-            psp::sys::OpenFlags::RD_WR, 0o777
+            psp::sys::IoOpenFlags::CREAT |
+            psp::sys::IoOpenFlags::RD_WR, 0o777
         );
         psp::sys::sceIoWrite(
             fd,

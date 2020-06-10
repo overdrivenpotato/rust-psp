@@ -1,42 +1,43 @@
 use crate::sys::SceUid;
 
-/// Power callback flags
-#[repr(u32)]
-pub enum Callback {
-    /// Indicates the power switch it pushed, putting the unit into suspend mode
-    PowerSwitch = 0x80000000,
+bitflags::bitflags! {
+    /// Power callback flags
+    pub struct PowerInfo: u32 {
+        /// Indicates the power switch it pushed, putting the unit into suspend mode
+        const POWER_SWITCH = 0x80000000;
 
-    /// Indicates the hold switch is on
-    HoldSwitch = 0x40000000,
+        /// Indicates the hold switch is on
+        const HOLD_SWITCH = 0x40000000;
 
-    /// Indicates the PSP has gone to standby (screen off)
-    Standby = 0x00080000,
+        /// Indicates the PSP has gone to standby (screen off)
+        const STANDBY = 0x00080000;
 
-    /// Indicates the resume process is complete. (Only triggered when another even happens)
-    ResumeComplete = 0x00040000,
+        /// Indicates the resume process is complete. (Only triggered when another even happens)
+        const RESUME_COMPLETE = 0x00040000;
 
-    /// Indicates the unit is resuming from suspend mode.
-    Resuming = 0x00020000,
+        /// Indicates the unit is resuming from suspend mode.
+        const RESUMING = 0x00020000;
 
-    /// Indicates the unit is suspending - occurs due to inactivity
-    Suspending = 0x00010000,
+        /// Indicates the unit is suspending - occurs due to inactivity
+        const SUSPENDING = 0x00010000;
 
-    /// Indicates the unit is plugged into an AC outlet
-    AcPower = 0x00001000,
+        /// Indicates the unit is plugged into an AC outlet
+        const AC_POWER = 0x00001000;
 
-    /// Indicates the battery charge level is low
-    BatteryLow = 0x00000100,
+        /// Indicates the battery charge level is low
+        const BATTERY_LOW = 0x00000100;
 
-    /// Indicates there is a battery present
-    BatteryExist = 0x00000080,
+        /// Indicates there is a battery present
+        const BATTERY_EXIST = 0x00000080;
 
-    /// Indicates the unit is relying on a battery for power (instead of AC adapter)
-    BatteryPower = 0x0000007F
+        /// Indicates the unit is relying on a battery for power (instead of AC adapter)
+        const BATTERY_POWER = 0x0000007;
+    }
 }
 
 /// Power tick flags
 #[repr(u32)]
-pub enum Tick {
+pub enum PowerTick {
     /// All
     All = 0,
     /// Suspend
@@ -44,6 +45,14 @@ pub enum Tick {
     /// Display
     Display = 6,
 }
+
+/// Power Callback Function Definition
+///
+/// # Parameters
+///
+/// `unknown`: Unknown function, appears to cycle between 1,2 and 3
+/// `power_info`: Combination of `PowerInfo` flags
+pub type PowerCallback = extern fn (unknown: i32, power_info: PowerInfo);
 
 psp_extern! {
     #![name = "scePower"]
@@ -252,12 +261,12 @@ psp_extern! {
     ///
     /// # Parameters
     ///
-    /// t - Either All, Suspend, or Display
+    /// `t`: Either All, Suspend, or Display
     ///
     /// # Return Value
     ///
     /// Return 0 on success, < 0 on error.
-    pub fn scePowerTick(t: Tick) -> i32;
+    pub fn scePowerTick(t: PowerTick) -> i32;
 
     #[psp(0xEDC13FE5)]
     /// Get Idle Timer
