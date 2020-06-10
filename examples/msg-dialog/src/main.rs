@@ -2,10 +2,8 @@
 #![no_main]
 
 use psp::sys::{
-    utility::{
-        DialogCommon, MsgDialogParams, MsgDialogMode, MsgDialogPressed,
-        SysParamLanguage, DialogButtonAccept, MsgDialogOption, self,
-    },
+    DialogCommon, MsgDialogParams, MsgDialogMode, MsgDialogPressed,
+    SysParamLanguage, DialogButtonAccept, MsgDialogOption, self,
     kernel,
     display,
     gu,
@@ -20,13 +18,13 @@ fn psp_main() {
     static mut LIST: psp::Align16<[u32; 262144]> = psp::Align16([0;262144]);
 
     unsafe {
-        gu::sceGuInit(); 
-        gu::sceGuStart(gu::Context::Direct, &mut LIST as *mut _ as *mut c_void);
-        gu::sceGuDrawBuffer(display::DisplayPixelFormat::Psm8888, core::ptr::null_mut(), 512);
-        gu::sceGuFinish();
-        gu::sceGuSync(gu::SyncMode::Finish, gu::SyncBehavior::Wait);
-        display::sceDisplayWaitVblankStart();
-        gu::sceGuDisplay(true);
+        sys::sceGuInit(); 
+        sys::sceGuStart(gu::Context::Direct, &mut LIST as *mut _ as *mut c_void);
+        sys::sceGuDrawBuffer(sys::DisplayPixelFormat::Psm8888, core::ptr::null_mut(), 512);
+        sys::sceGuFinish();
+        sys::sceGuSync(gu::SyncMode::Finish, gu::SyncBehavior::Wait);
+        sys::sceDisplayWaitVblankStart();
+        sys::sceGuDisplay(true);
     }
 
     let dialog_size = core::mem::size_of::<MsgDialogParams>();
@@ -56,20 +54,20 @@ fn psp_main() {
     };
 
     unsafe {
-        utility::sceUtilityMsgDialogInitStart(
+        sys::sceUtilityMsgDialogInitStart(
             &mut msg_dialog as *mut MsgDialogParams
         );
     }
 
     loop {
-        let status = unsafe {utility::sceUtilityMsgDialogGetStatus()};
+        let status = unsafe {sys::sceUtilityMsgDialogGetStatus()};
         match status {
-            2 => unsafe{utility::sceUtilityMsgDialogUpdate(1)},
-            3 => unsafe{utility::sceUtilityMsgDialogShutdownStart()},
+            2 => unsafe{sys::sceUtilityMsgDialogUpdate(1)},
+            3 => unsafe{sys::sceUtilityMsgDialogShutdownStart()},
             0 => {break},
             _ => (),
         }
-        unsafe {display::sceDisplayWaitVblankStart();}
+        unsafe {sys::::sceDisplayWaitVblankStart();}
     }
-    unsafe { kernel::sceKernelExitGame(); }
+    unsafe { sys::sceKernelExitGame(); }
 }
