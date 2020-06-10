@@ -90,7 +90,13 @@ struct PspConfig {
     updater_version: Option<String>,
 }
 
+const SUBPROCESS_ENV_VAR: &str = "__CARGO_PSP_RUN_XARGO";
+
 fn main() {
+    if env::var(SUBPROCESS_ENV_VAR).is_ok() {
+        return xargo::main_inner(xargo::XargoMode::Build);
+    }
+
     let config = match fs::read(CONFIG_NAME) {
         Ok(bytes) => match toml::from_slice(&bytes) {
             Ok(config) => config,
@@ -108,7 +114,10 @@ fn main() {
     // Skip `cargo psp`
     let args = env::args().skip(2);
 
-    let command = Command::new("xargo")
+    let command = Command::new("cargo-psp")
+        // Relaunch as xargo wrapper.
+        .env(SUBPROCESS_ENV_VAR, "1")
+
         .arg("build")
         .arg("--target")
         .arg("mipsel-sony-psp")

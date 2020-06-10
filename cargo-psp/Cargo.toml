@@ -24,6 +24,7 @@ clap = "2.33.1"
 goblin = "0.2.3"
 scroll = "0.10.1"
 cargo_metadata = "0.10.0"
+xargo = "0.3.20"
 
 serde = "1.0.111"
 serde_derive = "1.0.111"

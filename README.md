@@ -52,11 +52,10 @@ per-project).
 $ rustup toolchain add nightly
 ```
 
-You also need `xargo` and `cargo-psp` installed. (`xargo` version must be
-relatively recent).
+You also need `cargo-psp` installed:
 
 ```sh
-$ cargo install cargo-psp xargo
+$ cargo install cargo-psp
 ```
 
 ## Running Examples
