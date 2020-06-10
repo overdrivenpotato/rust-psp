@@ -23,7 +23,7 @@
 extern crate alloc;
 extern crate panic_unwind;
 
-#[macro_use] mod debug;
+#[macro_use] #[doc(hidden)] pub mod debug;
 #[macro_use] mod vfpu;
 mod eabi;
 mod alloc_impl;
