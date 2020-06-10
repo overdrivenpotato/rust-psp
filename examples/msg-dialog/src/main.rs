@@ -10,13 +10,15 @@ use core::ffi::c_void;
 
 psp::module!("sample_module", 1, 1);
 
+
+static mut LIST: psp::Align16<[u32; 262144]> = psp::Align16([0;262144]);
+
 unsafe fn setup_gu() {
-    static mut LIST: psp::Align16<[u32; 262144]> = psp::Align16([0;262144]);
     sys::sceGuInit(); 
     sys::sceGuStart(sys::Context::Direct, &mut LIST as *mut _ as *mut c_void);
     sys::sceGuDrawBuffer(sys::DisplayPixelFormat::Psm8888, core::ptr::null_mut(), 512);
-    sys::sceGuDispBuffer(480, 272, &mut 0x88000 as *mut _ as *mut c_void, 512);
-    sys::sceGuDepthBuffer(&mut 0x110000 as *mut _ as *mut c_void, 512);
+    sys::sceGuDispBuffer(480, 272, 0x88000 as *mut c_void, 512);
+    sys::sceGuDepthBuffer(0x110000 as *mut c_void, 512);
     sys::sceGuOffset(2048 - (480/2), 2048 - (272/2));
     sys::sceGuViewport(2048, 2048, 480, 272);
     sys::sceGuDepthRange(0xc350, 0x2710);
@@ -28,9 +30,6 @@ unsafe fn setup_gu() {
     sys::sceGuShadeModel(sys::ShadingModel::Smooth);
     sys::sceGuEnable(sys::GuState::CullFace);
     sys::sceGuEnable(sys::GuState::ClipPlanes);
-    sys::sceGuClearColor(0xff554433);
-    sys::sceGuClearDepth(0);
-    sys::sceGuClear(sys::ClearBuffer::COLOR_BUFFER_BIT | sys::ClearBuffer::DEPTH_BUFFER_BIT);
     sys::sceGuFinish();
     sys::sceGuSync(sys::SyncMode::Finish, sys::SyncBehavior::Wait);
 
@@ -86,6 +85,9 @@ fn psp_main() {
             _ => (),
         }
         unsafe {
+            sys::sceGuStart(sys::Context::Direct, &mut LIST as *mut _ as *mut c_void);
+            sys::sceGuFinish();
+            sys::sceGuSync(sys::SyncMode::Finish, sys::SyncBehavior::Wait);
             sys::sceDisplayWaitVblankStart();
             sys::sceGuSwapBuffers();
         }
