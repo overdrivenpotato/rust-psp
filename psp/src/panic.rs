@@ -189,6 +189,7 @@ pub fn catch_unwind<R, F: FnOnce() -> R>(f: F) -> Result<R, Box<dyn Any + Send>>
 /// These symbols and functions should not actually be used. `libunwind`,
 /// however, requires them to be present so that it can link.
 // TODO: Patch these out of libunwind instead.
+#[cfg(target_os = "psp")]
 mod libunwind_shims {
     #[no_mangle]
     unsafe extern "C" fn fprintf(_stream: *const u8, _format: *const u8, ...) -> isize {

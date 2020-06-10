@@ -42,6 +42,7 @@ pub mod embedded_graphics;
 #[repr(align(16))]
 pub struct Align16<T>(pub T);
 
+#[cfg(target_os = "psp")]
 global_asm!(
     r#"
         .section .lib.ent.top, "a", @progbits

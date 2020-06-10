@@ -2863,6 +2863,7 @@ pub unsafe fn sceGuTexImage(mipmap: MipmapLevel, width: i32, height: i32, tbw: i
 pub unsafe fn sceGuTexLevelMode(mode: TextureLevelMode, bias: f32) {
     // Linker error if this is not here.
     #[no_mangle]
+    #[cfg(target_os = "psp")]
     unsafe extern fn truncf(mut x: f32) -> f32 {
         llvm_asm!("cvt.w.s $0, $0" : "+f"(x));
         x

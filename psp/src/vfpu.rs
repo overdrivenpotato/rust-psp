@@ -30,38 +30,60 @@ macro_rules! vfpu_asm {
                 )?
             )?
         )?
-    ) => {
-        llvm_asm!(
-            concat!(
-                ".set push\n",
-                ".set noreorder\n",
-                ".align 2\n",
+    ) => {{
+        #[cfg(target_os = "psp")]
+        {
+            llvm_asm!(
+                concat!(
+                    ".set push\n",
+                    ".set noreorder\n",
+                    ".align 2\n",
+                    $(
+                        $($crate::instruction!($opcode $($arg $(($base))?),*))?
+                        $($crate::instruction!(mips $asm))?
+
+                        , "\n"
+                    ),*,
+                    ".set pop"
+                )
+
                 $(
-                    $($crate::instruction!($opcode $($arg $(($base))?),*))?
-                    $($crate::instruction!(mips $asm))?
-
-                    , "\n"
-                ),*,
-                ".set pop"
-            )
-
-            $(
-                : $($out_constraint ($out_expr)),*
-
-                $(
-                    :$($in_constraint ($in_expr)),*
+                    : $($out_constraint ($out_expr)),*
 
                     $(
-                        : $($clobber),*
+                        :$($in_constraint ($in_expr)),*
 
                         $(
-                            : $($option),*
+                            : $($clobber),*
+
+                            $(
+                                : $($option),*
+                            )?
                         )?
                     )?
                 )?
+            );
+        }
+
+        #[cfg(not(target_os = "psp"))]
+        {
+            $(
+                $(let _ = $out_expr;)*
+
+                $(
+                    $(let _ = $in_expr;)*
+                )?
             )?
-        );
-    }
+
+            // Fixes many warnings if we extract this into a sub-function
+            #[inline(always)]
+            fn die() {
+                panic!("tried running vfpu_asm on a non-PSP platform");
+            }
+
+            die();
+        }
+    }}
 }
 
 // The instruction encodings here were mainly obtained from the following link:

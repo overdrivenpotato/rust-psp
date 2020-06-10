@@ -26,6 +26,7 @@ extern {
 // aligned according to normal structure rules (after promotion and structure
 // return pointer insertion). The locations within the stack frame used for
 // arguments are called the home locations.
+#[cfg(target_os = "psp")]
 global_asm!(
     r#"
         .section .text
