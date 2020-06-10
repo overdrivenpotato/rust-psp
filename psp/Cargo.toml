@@ -1,8 +1,9 @@
 [package]
 name = "psp"
-version = "0.0.1"
-description = "A "
+version = "0.0.2"
+description = "A library for building full PSP modules, including both PRX plugins and regular homebrew apps."
 readme = "../README.md"
+repository = "https://github.com/overdrivenpotato/rust-psp"
 license = "MIT"
 authors = [
     "Marko Mijalkovic <marko.mijalkovic97@gmail.com>",
