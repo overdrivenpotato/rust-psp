@@ -54,10 +54,10 @@ implementations of graphics functions, and the addition of missing libraries.
 
 ## Dependencies
 
-To compile for the PSP, you will need a rust **nightly** version equal to or
+To compile for the PSP, you will need a Rust **nightly** version equal to or
 later than `2020-06-04`. Please install Rust using https://rustup.rs/
 
-Use the following if you are new to rust. (Feel free to set an override manually
+Use the following if you are new to Rust. (Feel free to set an override manually
 per-project).
 
 ```sh
@@ -103,17 +103,17 @@ usage guides for those programs.
 
 ### Debugging
 
-`psp-gdb` is currently too old to support printing rust types. `rust-lldb` may
+`psp-gdb` is currently too old to support printing Rust types. `rust-lldb` may
 be possible but it has not be experimented with yet.
 
 ## Usage
 
-To use the `psp` crate in your own rust programs, add it to `Cargo.toml`
-as a git dependency:
+To use the `psp` crate in your own Rust programs, add it to `Cargo.toml` like
+any other dependency:
 
 ```toml
 [dependencies]
-psp = { git = "https://github.com/overdrivenpotato/rust-psp" }
+psp = "x.y.z"
 ```
 
 In your `main.rs` file, you need to setup a basic skeleton like so:
