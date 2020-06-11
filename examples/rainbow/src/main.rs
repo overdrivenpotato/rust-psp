@@ -2,25 +2,24 @@
 #![no_main]
 
 use psp::sys;
+use psp::{SCREEN_WIDTH, SCREEN_HEIGHT, BUF_WIDTH};
 
 psp::module!("sample_module", 1, 1);
 
-const BUFFER_WIDTH: usize = 512;
-const DISPLAY_HEIGHT: usize = 272;
-const DISPLAY_WIDTH: usize = 480;
+
 static mut VRAM: *mut u32 = 0x4000_0000 as *mut u32;
 
 fn psp_main() {
     psp::enable_home_button();
     unsafe {
-        sys::sceDisplaySetMode(sys::DisplayMode::Lcd, DISPLAY_WIDTH, DISPLAY_HEIGHT);
+        sys::sceDisplaySetMode(sys::DisplayMode::Lcd, SCREEN_WIDTH as usize, SCREEN_HEIGHT as usize);
 
         // Cache-through address
         VRAM = (0x4000_0000u32 | sys::sceGeEdramGetAddr() as u32) as *mut u32;
 
         sys::sceDisplaySetFrameBuf(
             VRAM as *const u8,
-            BUFFER_WIDTH,
+            BUF_WIDTH as usize,
             sys::DisplayPixelFormat::Psm8888,
             sys::DisplaySetBufSync::NextFrame,
         );
@@ -30,8 +29,8 @@ fn psp_main() {
             for pos in 0..255  {
                 let color = wheel(pos);
 
-                for i in 0..(BUFFER_WIDTH * DISPLAY_HEIGHT) {
-                    *VRAM.add(i) = color;
+                for i in 0..(BUF_WIDTH * SCREEN_HEIGHT) {
+                    *VRAM.add(i as usize) = color;
                 }
             }
         }

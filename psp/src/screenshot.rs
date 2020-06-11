@@ -1,12 +1,11 @@
 use core::{ptr, ffi::c_void};
 use crate::sys::{self, DisplayPixelFormat};
+use crate::{SCREEN_WIDTH, SCREEN_HEIGHT};
 
-const SCREEN_WIDTH: usize = 480;
-const SCREEN_HEIGHT: usize = 272;
 // RGBA
 const BYTES_PER_PIXEL: usize = 4;
 
-const NUM_PIXELS: usize = SCREEN_WIDTH * SCREEN_HEIGHT;
+const NUM_PIXELS: usize = (SCREEN_WIDTH * SCREEN_HEIGHT) as usize;
 
 #[repr(C, packed)]
 struct BmpHeader {
@@ -107,7 +106,7 @@ pub fn screenshot_argb_be() -> alloc::vec::Vec<u32> {
             let bgra = match pixel_format {
                 sys::DisplayPixelFormat::Psm8888 => {
                     let rgba = unsafe {
-                        *(top_addr as *mut u32).add(x + y * buffer_width)
+                        *(top_addr as *mut u32).add(x as usize + y as usize * buffer_width)
                     };
 
                     rgba_to_bgra(rgba)
@@ -115,7 +114,7 @@ pub fn screenshot_argb_be() -> alloc::vec::Vec<u32> {
 
                 sys::DisplayPixelFormat::Psm5650 => {
                     let rgb565 = unsafe {
-                        *(top_addr as *mut u16).add(x + y * buffer_width)
+                        *(top_addr as *mut u16).add(x as usize + y as usize * buffer_width)
                     };
 
                     rgb565_to_bgra(rgb565)
@@ -123,7 +122,7 @@ pub fn screenshot_argb_be() -> alloc::vec::Vec<u32> {
 
                 sys::DisplayPixelFormat::Psm5551 => {
                     let rgba5551 = unsafe {
-                        *(top_addr as *mut u16).add(x + y * buffer_width)
+                        *(top_addr as *mut u16).add(x as usize + y as usize * buffer_width)
                     };
 
                     rgba5551_to_bgra(rgba5551)
@@ -131,7 +130,7 @@ pub fn screenshot_argb_be() -> alloc::vec::Vec<u32> {
 
                 sys::DisplayPixelFormat::Psm4444 => {
                     let rgba4444 = unsafe {
-                        *(top_addr as *mut u16).add(x + y * buffer_width)
+                        *(top_addr as *mut u16).add(x as usize + y as usize * buffer_width)
                     };
 
                     rgba4444_to_bgra(rgba4444)
@@ -140,7 +139,7 @@ pub fn screenshot_argb_be() -> alloc::vec::Vec<u32> {
 
             // Display buffer is flipped upside down.
             let y_inv = SCREEN_HEIGHT - y - 1;
-            screenshot_buffer[x + y_inv * SCREEN_WIDTH] = bgra;
+            screenshot_buffer[x as usize + y_inv as usize * SCREEN_WIDTH as usize] = bgra;
         }
     }
 

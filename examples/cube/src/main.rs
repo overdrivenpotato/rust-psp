@@ -3,6 +3,7 @@
 
 use core::{ptr, ffi::c_void, f32::consts::PI};
 use psp::Align16;
+use psp::{BUF_WIDTH, SCREEN_WIDTH, SCREEN_HEIGHT};
 use psp::sys::{
     self, ScePspFVector3, DisplayPixelFormat, GuContextType, GuSyncMode, GuSyncBehavior,
     GuPrimitive, TextureFilter, TextureEffect, TextureColorComponent,
@@ -79,11 +80,7 @@ static VERTICES: Align16<[Vertex; 12 * 3]> = Align16([
     Vertex { u: 0.0, v: 1.0, x:  1.0, y: -1.0, z: -1.0}, // 5
 ]);
 
-const BUF_WIDTH: i32 = 512;
-const SCR_WIDTH: i32 = 480;
-const SCR_HEIGHT: i32 = 272;
-
-fn get_memory_size(width: i32, height: i32, psm: TexturePixelFormat) -> i32 {
+fn get_memory_size(width: u32, height: u32, psm: TexturePixelFormat) -> u32 {
     match psm {
         TexturePixelFormat::PsmT4 => (width * height) >> 1,
         TexturePixelFormat::PsmT8 => width * height,
@@ -101,8 +98,8 @@ fn get_memory_size(width: i32, height: i32, psm: TexturePixelFormat) -> i32 {
     }
 }
 
-unsafe fn get_static_vram_buffer(width: i32, height: i32, psm: TexturePixelFormat) -> *mut c_void {
-    static mut STATIC_OFFSET: i32 = 0;
+unsafe fn get_static_vram_buffer(width: u32, height: u32, psm: TexturePixelFormat) -> *mut c_void {
+    static mut STATIC_OFFSET: u32 = 0;
 
     let mem_size = get_memory_size(width, height, psm);
     let result = STATIC_OFFSET as *mut _;
@@ -119,22 +116,22 @@ fn psp_main() {
 unsafe fn psp_main_inner() {
     psp::enable_home_button();
 
-    let fbp0 = get_static_vram_buffer(BUF_WIDTH, SCR_HEIGHT, TexturePixelFormat::Psm8888);
-    let fbp1 = get_static_vram_buffer(BUF_WIDTH, SCR_HEIGHT, TexturePixelFormat::Psm8888);
-    let zbp = get_static_vram_buffer(BUF_WIDTH, SCR_HEIGHT, TexturePixelFormat::Psm4444);
+    let fbp0 = get_static_vram_buffer(BUF_WIDTH, SCREEN_HEIGHT, TexturePixelFormat::Psm8888);
+    let fbp1 = get_static_vram_buffer(BUF_WIDTH, SCREEN_HEIGHT, TexturePixelFormat::Psm8888);
+    let zbp = get_static_vram_buffer(BUF_WIDTH, SCREEN_HEIGHT, TexturePixelFormat::Psm4444);
 
     sys::sceGumLoadIdentity();
 
     sys::sceGuInit();
 
     sys::sceGuStart(GuContextType::Direct, &mut LIST.0 as *mut [u32; 0x40000] as *mut _);
-    sys::sceGuDrawBuffer(DisplayPixelFormat::Psm8888, fbp0, BUF_WIDTH);
-    sys::sceGuDispBuffer(SCR_WIDTH, SCR_HEIGHT, fbp1, BUF_WIDTH);
-    sys::sceGuDepthBuffer(zbp, BUF_WIDTH);
-    sys::sceGuOffset(2048 - (SCR_WIDTH as u32 / 2), 2048 - (SCR_HEIGHT as u32 / 2));
-    sys::sceGuViewport(2048, 2048, SCR_WIDTH, SCR_HEIGHT);
+    sys::sceGuDrawBuffer(DisplayPixelFormat::Psm8888, fbp0, BUF_WIDTH as i32);
+    sys::sceGuDispBuffer(SCREEN_WIDTH as i32, SCREEN_HEIGHT as i32, fbp1, BUF_WIDTH as i32);
+    sys::sceGuDepthBuffer(zbp, BUF_WIDTH as i32);
+    sys::sceGuOffset(2048 - (SCREEN_WIDTH / 2), 2048 - (SCREEN_HEIGHT / 2));
+    sys::sceGuViewport(2048, 2048, SCREEN_WIDTH as i32, SCREEN_HEIGHT as i32);
     sys::sceGuDepthRange(65535, 0);
-    sys::sceGuScissor(0, 0, SCR_WIDTH, SCR_HEIGHT);
+    sys::sceGuScissor(0, 0, SCREEN_WIDTH as i32, SCREEN_HEIGHT as i32);
     sys::sceGuEnable(GuState::ScissorTest);
     sys::sceGuDepthFunc(DepthFunc::GreaterOrEqual);
     sys::sceGuEnable(GuState::DepthTest);
