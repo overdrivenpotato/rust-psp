@@ -332,7 +332,7 @@ pub struct SavedataListSaveNewData {
 /// Structure to hold the parameters for the ::sceUtilitySavedataInitStart function.
 #[repr(C)]
 #[derive(Copy, Clone)]
-pub struct SavedataParam {
+pub struct SceUtilitySavedataParam {
     pub base: DialogCommon,
     pub mode: SavedataMode,
     pub unknown1: i32,
