@@ -622,7 +622,7 @@ psp_extern! {
     ///
     /// 0 on success
     pub fn sceUtilitySavedataInitStart(
-        params: *mut SavedataParam,
+        params: *mut SceUtilitySaveDataParam,
     ) -> i32;
 
     #[psp(0x8874DBE0)]
