@@ -75,17 +75,13 @@ psp_extern! {
     ///
     /// # Parameters
     ///
-    /// `partitionid` - The UID of the partition to allocate from.
-    ///
-    /// `name` - Name assigned to the new block.
-    ///
-    /// `type` - Specifies how the block is allocated within the partition. One
-    ///          of `SysMemBlockTypes`.
-    ///
-    /// `size` - Size of the memory block, in bytes.
-    ///
-    /// `addr` - If type is PSP_SMEM_Addr, then addr specifies the lowest address
-    ///          allocate the block from.
+    /// - `partition`: The UID of the partition to allocate from.
+    /// - `name`: Name assigned to the new block.
+    /// - `type`: Specifies how the block is allocated within the partition. One
+    ///           of `SysMemBlockTypes`.
+    /// - `size`: Size of the memory block, in bytes.
+    /// - `addr`: If type is `Addr`, then addr specifies the lowest address
+    ///           allocate the block from.
     ///
     /// # Return value
     ///
@@ -121,6 +117,61 @@ psp_extern! {
     ///
     /// ? on success, less than 0 on error.
     pub fn sceKernelFreePartitionMemory(blockid: SceUid) -> i32;
+
+    #[psp(0xF919F628)]
+    /// Get the total amount of free memory.
+    ///
+    /// # Return Value
+    ///
+    /// The total amount of free memory, in bytes.
+    pub fn sceKernelTotalFreeMemSize() -> usize;
+
+    #[psp(0xA291F107)]
+    /// Get the size of the largest free memory block.
+    ///
+    /// # Return Value
+    ///
+    /// The size of the largest free memory block, in bytes.
+    pub fn sceKernelMaxFreeMemSize() -> usize;
+
+    #[psp(0x3FC9AE6A)]
+    /// Get the firmware version.
+    ///
+    /// # Return Value
+    ///
+    /// The firmware version.
+    ///
+    /// - `0x01000300` on v1.00 unit,
+    /// - `0x01050001` on v1.50 unit,
+    /// - `0x01050100` on v1.51 unit,
+    /// - `0x01050200` on v1.52 unit,
+    /// - `0x02000010` on v2.00/v2.01 unit,
+    /// - `0x02050010` on v2.50 unit,
+    /// - `0x02060010` on v2.60 unit,
+    /// - `0x02070010` on v2.70 unit,
+    /// - `0x02070110` on v2.71 unit.
+    pub fn sceKernelDevkitVersion() -> u32;
+
+    #[psp(0x7591C7DB)]
+    /// Set the version of the SDK with which the caller was compiled.
+    ///
+    /// Version numbers are the same as for `sceKernelDevkitVersion`.
+    ///
+    /// # Return Value
+    ///
+    /// 0 on success, < 0 on error.
+    pub fn sceKernelSetCompiledSdkVersion(version: u32) -> i32;
+
+    #[psp(0xFC114573)]
+    /// Get the SDK version set with `sceKernelSetCompiledSdkVersion`.
+    ///
+    /// # Return Value
+    ///
+    /// Version number, or 0 if unset.
+    pub fn sceKernelGetCompiledSdkVersion() -> u32;
+
+    // TODO: sceKernelPrintf cannot be implemented yet as this macro does not
+    // yet support vararg functions.
 }
 
 #[repr(C)]
