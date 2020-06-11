@@ -36,6 +36,9 @@ pub use screenshot::*;
 mod benchmark;
 pub use benchmark::*;
 
+mod constants;
+pub use constants::*;
+
 #[cfg(feature="embedded-graphics")]
 pub mod embedded_graphics;
 
