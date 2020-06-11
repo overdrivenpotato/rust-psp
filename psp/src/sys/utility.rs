@@ -3,7 +3,7 @@ use num_enum::TryFromPrimitive;
 
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
-pub struct DialogCommon {
+pub struct UtilityDialogCommon {
     /// Size of the structure
     pub size: u32,
     /// Language
@@ -25,14 +25,14 @@ pub struct DialogCommon {
 
 #[repr(u32)]
 #[derive(Debug, Clone, Copy)]
-pub enum MsgDialogMode {
+pub enum UtilityMsgDialogMode {
     Error,
     Text,
 }
 
 #[repr(u32)]
 #[derive(Debug, Clone, Copy)]
-pub enum MsgDialogPressed {
+pub enum UtilityMsgDialogPressed {
     Unknown1,
     Yes,
     No,
@@ -41,14 +41,14 @@ pub enum MsgDialogPressed {
 
 #[repr(u32)]
 #[derive(Debug, Clone, Copy)]
-pub enum DialogButtonAccept {
+pub enum UtilityDialogButtonAccept {
     Circle,
     Cross
 }
 
 #[repr(u32)]
 #[derive(Debug, Clone, Copy)]
-pub enum OskInputLanguage {
+pub enum sceUtilityOskInputLanguage {
     Default_,
     Japanese,
     English,
@@ -66,7 +66,7 @@ pub enum OskInputLanguage {
 
 #[repr(u32)]
 #[derive(Debug, Clone, Copy, TryFromPrimitive)]
-pub enum SysParamLanguage {
+pub enum SystemParamLanguage {
     Japanese,
     English,
     French,
@@ -96,7 +96,7 @@ pub enum SystemParamId {
 
 #[repr(u32)]
 #[derive(Debug, Clone, Copy, TryFromPrimitive)]
-pub enum AdhocChannel {
+pub enum SystemParamAdhocChannel {
     ChannelAutomatic = 0,
     Channel1 = 1,
     Channel6 = 6,
@@ -105,14 +105,14 @@ pub enum AdhocChannel {
 
 #[repr(u32)] 
 #[derive(Debug, Clone, Copy, TryFromPrimitive)]
-pub enum WlanPowerSaveState {
+pub enum SystemParamWlanPowerSaveState {
     Off,
     On,
 }
 
 #[repr(u32)]
 #[derive(Debug, Clone, Copy, TryFromPrimitive)]
-pub enum DateFormat {
+pub enum SystemParamDateFormat {
     YYYYMMDD,
     MMDDYYYY,
     DDMMYYY,
@@ -120,14 +120,14 @@ pub enum DateFormat {
 
 #[repr(u32)]
 #[derive(Debug, Clone, Copy, TryFromPrimitive)] 
-pub enum TimeFormat {
+pub enum SystemParamTimeFormat {
     Hour24,
     Hour12,
 }
 
 #[repr(u32)]
 #[derive(Debug, Clone, Copy, TryFromPrimitive)]
-pub enum DaylightSavings {
+pub enum SystemParamDaylightSavings {
     Std,
     Dst,
 }
@@ -221,7 +221,7 @@ pub enum NetParam {
 }
 
 bitflags::bitflags! {
-    pub struct MsgDialogOption: i32 {
+    pub struct UtilityMsgDialogOption: i32 {
         const ERROR = 0;
         const TEXT = 1;
         const YES_NO_BUTTONS = 0x10;
@@ -232,7 +232,7 @@ bitflags::bitflags! {
 /// Structure to hold the parameters for a message dialog
 #[repr(C)]
 #[derive(Copy, Clone)]
-pub struct MsgDialogParams {
+pub struct UtilityMsgDialogParams {
     pub base: DialogCommon,
     pub unknown: i32,
     pub mode: MsgDialogMode,
@@ -245,14 +245,14 @@ pub struct MsgDialogParams {
 
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
-pub struct NetconfAdhoc {
+pub struct UtilityNetconfAdhoc {
     pub name: [u8; 8usize],
     pub timeout: u32,
 }
 
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
-pub struct NetconfData {
+pub struct UtilityNetconfData {
     pub base: DialogCommon,
     pub action: i32,
     /// One of NetconfActions
@@ -269,14 +269,14 @@ pub struct NetconfData {
 /// we use a union to avoid ugly casting
 #[repr(C)]
 #[derive(Copy, Clone)]
-pub union NetData {
+pub union UtilityNetData {
     pub as_uint: u32,
     pub as_string: [u8; 128usize],
 }
 
 #[repr(u32)]
 #[derive(Debug, Copy, Clone)]
-pub enum SavedataMode {
+pub enum UtilitySavedataMode {
     AutoLoad,
     AutoSave,
     Load,
@@ -289,7 +289,7 @@ pub enum SavedataMode {
 
 #[repr(u32)]
 #[derive(Debug, Copy, Clone)]
-pub enum SavedataFocus {
+pub enum UtilitySavedataFocus {
     Unknown1,
     FirstList,
     LastList,
@@ -305,7 +305,7 @@ pub enum SavedataFocus {
 ///data, it contains what the VSH and standard load screen shows
 #[repr(C)]
 #[derive(Copy, Clone)]
-pub struct SavedataSFOParam {
+pub struct UtilitySavedataSFOParam {
     pub title: [u8; 128usize],
     pub savedata_title: [u8; 128usize],
     pub detail: [u8; 1024usize],
@@ -315,7 +315,7 @@ pub struct SavedataSFOParam {
 
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
-pub struct SavedataFileData {
+pub struct UtilitySavedataFileData {
     pub buf: *mut c_void,
     pub buf_size: usize,
     pub size: usize,
@@ -324,7 +324,7 @@ pub struct SavedataFileData {
 
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
-pub struct SavedataListSaveNewData {
+pub struct UtilitySavedataListSaveNewData {
     pub icon0: SavedataFileData,
     pub title: *mut u8,
 }
@@ -367,14 +367,14 @@ pub struct SceUtilitySavedataParam {
 
 #[repr(u32)]
 #[derive(Debug, Copy, Clone)]
-pub enum GameSharingMode {
+pub enum UtilityGameSharingMode {
     Single = 1,
     Multiple
 }
 
 #[repr(u32)]
 #[derive(Debug, Copy, Clone)]
-pub enum GameSharingDataType {
+pub enum UtilityGameSharingDataType {
     File = 1,
     Memory
 }
@@ -382,7 +382,7 @@ pub enum GameSharingDataType {
 /// Structure to hold the parameters for Game Sharing
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
-pub struct GameSharingParams {
+pub struct UtilityGameSharingParams {
     pub base: DialogCommon,
     pub unknown1: i32,
     pub unknown2: i32,
@@ -400,7 +400,7 @@ pub struct GameSharingParams {
 
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
-pub struct HtmlViewerParam {
+pub struct UtilityHtmlViewerParam {
     pub base: DialogCommon,
     /// Pointer to the memory pool to be used
     pub memaddr: *mut c_void,
@@ -449,7 +449,7 @@ pub struct HtmlViewerParam {
 /// OSK Field data
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
-pub struct OskData {
+pub struct SceUtilityOskData {
     /// Unknown. Pass 0.
     pub unk_00: i32,
     /// Unknown. Pass 0.
@@ -481,7 +481,7 @@ pub struct OskData {
 /// OSK parameters
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
-pub struct OskParams {
+pub struct SceUtilityOskParams {
     pub base: DialogCommon,
     /// Number of input fields
     pub datacount: i32,
