@@ -26,7 +26,9 @@ pub struct UtilityDialogCommon {
 #[repr(u32)]
 #[derive(Debug, Clone, Copy)]
 pub enum UtilityMsgDialogMode {
+    /// Error message
     Error,
+    /// String message
     Text,
 }
 
@@ -43,13 +45,13 @@ pub enum UtilityMsgDialogPressed {
 #[derive(Debug, Clone, Copy)]
 pub enum UtilityDialogButtonAccept {
     Circle,
-    Cross
+    Cross,
 }
 
 #[repr(u32)]
 #[derive(Debug, Clone, Copy)]
 pub enum SceUtilityOskInputLanguage {
-    Default_,
+    Default,
     Japanese,
     English,
     French,
@@ -60,8 +62,45 @@ pub enum SceUtilityOskInputLanguage {
     Portugese,
     Russian,
     Korean,
-    ChineseTraditional,
-    ChineseSimplified
+}
+
+#[repr(u32)]
+#[derive(Debug, Clone, Copy)]
+pub enum SceUtilityOskInputType {
+    All,
+    LatinDigit,
+    LatinSymbol,
+    LatinLowercase = 4,
+    LatinUppercase = 8,
+    JapaneseDigit = 0x100,
+    JapaneseSymbol = 0x200,
+    JapaneseLowercase = 0x400,
+    JapaneseUppercase = 0x800,
+    JapaneseHiragana = 0x1000,
+    JapaneseHalfWidthKatakana = 0x2000,
+    JapaneseKatakana = 0x4000,
+    JapaneseKanji = 0x8000,
+    RussianLowercase = 0x10000,
+    RussianUppercase = 0x20000,
+    Korean = 0x40000,
+    Url = 0x80000,
+}
+
+#[derive(Debug, Clone, Copy)]
+pub enum SceUtilityOskState {
+    None,
+    Initializing,
+    Initialized,
+    Visible,
+    Quit,
+    Finished,
+}
+
+#[derive(Debug, Clone, Copy)]
+pub enum SceUtilityOskResult {
+    Unchanged,
+    Cancelled,
+    Changed,
 }
 
 #[repr(u32)]
@@ -78,11 +117,16 @@ pub enum SystemParamLanguage {
     Russian,
     Korean,
     ChineseTraditional,
-    ChineseSimplified
+    ChineseSimplified,
 }
 
 #[repr(u32)]
 #[derive(Debug, Clone, Copy)]
+/// #9 seems to be Region or maybe X/O button swap.
+/// It doesn't exist on JAP v1.0
+/// is 1 on NA v1.5s
+/// is 0 on JAP v1.5s
+/// is read-only
 pub enum SystemParamId {
     StringNickname = 1,
     AdhocChannel,
@@ -92,6 +136,7 @@ pub enum SystemParamId {
     Timezone,
     DaylightSavings,
     Language,
+    Unknown,
 }
 
 #[repr(u32)]
@@ -100,10 +145,10 @@ pub enum SystemParamAdhocChannel {
     ChannelAutomatic = 0,
     Channel1 = 1,
     Channel6 = 6,
-    Channel11 = 11
+    Channel11 = 11,
 }
 
-#[repr(u32)] 
+#[repr(u32)]
 #[derive(Debug, Clone, Copy, TryFromPrimitive)]
 pub enum SystemParamWlanPowerSaveState {
     Off,
@@ -115,11 +160,11 @@ pub enum SystemParamWlanPowerSaveState {
 pub enum SystemParamDateFormat {
     YYYYMMDD,
     MMDDYYYY,
-    DDMMYYY,
+    DDMMYYYY,
 }
 
 #[repr(u32)]
-#[derive(Debug, Clone, Copy, TryFromPrimitive)] 
+#[derive(Debug, Clone, Copy, TryFromPrimitive)]
 pub enum SystemParamTimeFormat {
     Hour24,
     Hour12,
@@ -137,12 +182,14 @@ pub enum SystemParamDaylightSavings {
 pub enum AvModule {
     AvCodec,
     SasCore,
+    /// Requires AvCodec loading first
     Atrac3Plus,
+    /// Requires AvCodec loading first
     MpegBase,
     Mp3,
     Vaudio,
     Aac,
-    G729
+    G729,
 }
 
 #[repr(u32)]
@@ -174,7 +221,7 @@ pub enum Module {
     NpMatching2,
     NpDrm = 0x500,
 
-    Irda = 0x600
+    Irda = 0x600,
 }
 
 #[repr(u32)]
@@ -192,39 +239,72 @@ pub enum NetModule {
 #[derive(Debug, Clone, Copy)]
 pub enum UsbModule {
     UsbPspCm = 1,
+    UsbAcc,
+    /// Requires UsbAcc loading first
     UsbMic,
+    /// Requires UsbAcc loading first
     UsbCam,
+    /// Requires UsbAcc loading first
     UsbGps,
 }
 
 #[repr(u32)]
 #[derive(Debug, Clone, Copy)]
 pub enum NetParam {
+    /// c-style string
     Name,
+    /// c-style string
     Ssid,
+    /// i32
     Secure,
+    /// c-style string
     WepKey,
+    /// i32
     IsStaticIp,
+    /// c-style string
     Ip,
+    /// c-style string
     NetMask,
+    /// c-style string
     Route,
+    /// i32
     ManualDns,
+    /// c-style string
     PrimaryDns,
+    /// c-style string
     SecondaryDns,
+    /// c-style string
     ProxyUser,
+    /// c-style string
     ProxyPass,
+    /// i32
     UseProxy,
+    /// c-style string
     ProxyServer,
+    /// i32
     ProxyPort,
+    /// i32
     Unknown1,
+    /// i32
     Unknown2,
+}
+
+#[derive(Debug, Copy, Clone)]
+pub enum UtilityNetconfAction {
+    ConnectAP,
+    DisplayStatus,
+    ConnectAdhoc,
 }
 
 bitflags::bitflags! {
     pub struct UtilityMsgDialogOption: i32 {
+        /// Error message (why two flags?)
         const ERROR = 0;
+        /// Text message (why two flags?)
         const TEXT = 1;
+        /// Yes/No buttons instead of cancel
         const YES_NO_BUTTONS = 0x10;
+        /// Default position 'No', if not set will default to 'Yes'
         const DEFAULT_NO = 0x100;
     }
 }
@@ -254,13 +334,13 @@ pub struct UtilityNetconfAdhoc {
 #[derive(Debug, Copy, Clone)]
 pub struct UtilityNetconfData {
     pub base: UtilityDialogCommon,
-    pub action: i32,
     /// One of NetconfActions
+    pub action: UtilityNetconfAction,
     pub adhocparam: *mut UtilityNetconfAdhoc,
-    pub hotspot: i32,
     /// Set to 1 to allow connections with the 'Internet Browser' option set to 'Start' (ie. hotspot connection)
-    pub hotspot_connected: i32,
+    pub hotspot: i32,
     /// Will be set to 1 when connected to a hotspot style connection
+    pub hotspot_connected: i32,
     pub wifisp: i32,
 }
 
@@ -291,14 +371,19 @@ pub enum UtilitySavedataMode {
 #[derive(Debug, Copy, Clone)]
 pub enum UtilitySavedataFocus {
     Unknown1,
+    /// First in list
     FirstList,
+    /// Last in list
     LastList,
+    /// Most recent date
     Latest,
     Oldest,
     Unknown2,
     Unknown3,
+    /// First empty slot
     FirstEmpty,
-    LastEmpty
+    /// Last empty slot
+    LastEmpty,
 }
 
 /// title, savedataTitle, detail: parts of the unencrypted SFO
@@ -318,6 +403,7 @@ pub struct UtilitySavedataSFOParam {
 pub struct UtilitySavedataFileData {
     pub buf: *mut c_void,
     pub buf_size: usize,
+    // why are there two sizes?
     pub size: usize,
     pub unknown: i32,
 }
@@ -363,20 +449,28 @@ pub struct SceUtilitySavedataParam {
     pub focus: UtilitySavedataFocus,
     /// unknown2: ?
     pub unknown2: [i32; 4usize],
+    /// encrypt/decrypt key for save with firmware >= 2.00
+    pub key: [u8; 16],
+    /// ? firmware >= 2.00
+    pub unknown3: [u8; 20],
 }
 
 #[repr(u32)]
 #[derive(Debug, Copy, Clone)]
 pub enum UtilityGameSharingMode {
+    /// Single send
     Single = 1,
-    Multiple
+    /// Up to 4 simulataneous sends
+    Multiple,
 }
 
 #[repr(u32)]
 #[derive(Debug, Copy, Clone)]
 pub enum UtilityGameSharingDataType {
+    /// EBOOT is a file
     File = 1,
-    Memory
+    /// EBOOT is in memory
+    Memory,
 }
 
 /// Structure to hold the parameters for Game Sharing
@@ -384,17 +478,28 @@ pub enum UtilityGameSharingDataType {
 #[derive(Debug, Copy, Clone)]
 pub struct UtilityGameSharingParams {
     pub base: UtilityDialogCommon,
+    /// Set to 0
     pub unknown1: i32,
+    /// Set to 0
     pub unknown2: i32,
     pub name: [u8; 8usize],
+    /// Set to 0
     pub unknown3: i32,
+    /// Set to 0
     pub unknown4: i32,
+    /// Set to 0
     pub unknown5: i32,
+    /// Return value
     pub result: i32,
+    /// File path if UtilityGamesharingDataType::File specified
     pub filepath: *mut u8,
+    /// Send mode. One of ::UtilityGameSharingMode
     pub mode: UtilityGameSharingMode,
+    /// Data type. One of ::UtilityGameSharingDataType
     pub datatype: UtilityGameSharingDataType,
+    /// Pointer to the EBOOT data in memory
     pub data: *mut c_void,
+    /// Size of the EBOOT data in memory
     pub datasize: u32,
 }
 
@@ -414,10 +519,10 @@ pub struct UtilityHtmlViewerParam {
     pub initialurl: *mut u8,
     /// Number of tabs (maximum of 3)
     pub numtabs: u32,
-    /// One of ::HtmlViewerInterfaceModes
-    pub interfacemode: u32,
-    /// Values from ::HtmlViewerOptions. Bitwise OR together
-    pub options: u32,
+    /// One of ::UtilityHtmlViewerInterfaceModes
+    pub interfacemode: UtilityHtmlViewerInterfaceMode,
+    /// Values from ::UtilityHtmlViewerOption. Bitwise OR together
+    pub options: UtilityHtmlViewerOption,
     /// Directory to be used for downloading
     pub dldirname: *mut u8,
     /// Filename to be used for downloading
@@ -426,24 +531,99 @@ pub struct UtilityHtmlViewerParam {
     pub uldirname: *mut u8,
     /// Filename to be used for uploading
     pub ulfilename: *mut u8,
-    /// One of ::HtmlViewerCookieModes
-    pub cookiemode: u32,
+    /// One of ::UtilityHtmlViewerCookieMode
+    pub cookiemode: UtilityHtmlViewerCookieMode,
     /// Unknown. Pass 0
     pub unknown3: u32,
     /// URL to set the home page to
     pub homeurl: *mut u8,
-    /// One of ::HtmlViewerTextSizes
-    pub textsize: u32,
-    /// One of ::HtmlViewerDisplayModes
-    pub displaymode: u32,
-    /// One of ::HtmlViewerConnectModes
+    /// One of ::UtilityHtmlViewerTextSize
+    pub textsize: UtilityHtmlViewerTextSize,
+    /// One of ::UtilityHtmlViewerDisplayMode
+    pub displaymode: UtilityHtmlViewerDisplayMode,
+    /// One of ::UtilityHtmlViewerConnectMode
     pub connectmode: u32,
-    /// One of ::HtmlViewerDisconnectModes
+    /// One of ::UtilityHtmlViewerDisconnectMode
     pub disconnectmode: u32,
     /// The maximum amount of memory the browser used
     pub memused: u32,
     /// Unknown. Pass 0
     pub unknown4: [i32; 10usize],
+}
+
+#[repr(u32)]
+#[derive(Debug, Clone, Copy)]
+pub enum UtilityHtmlViewerInterfaceMode {
+    /// Full user interface
+    Full,
+    /// Limited user interface
+    Limited,
+    /// No user interface
+    None,
+}
+
+#[repr(u32)]
+#[derive(Debug, Clone, Copy)]
+pub enum UtilityHtmlViewerCookieMode {
+    /// Disable accepting cookies
+    Disabled = 0,
+    /// Enable accepting cookies
+    Enabled,
+    /// Confirm accepting a cookie every time
+    Confirm,
+    /// Use the system default for accepting cookies
+    Default,
+}
+
+#[repr(u32)]
+#[derive(Debug, Clone, Copy)]
+pub enum UtilityHtmlViewerTextSize {
+    /// Large text size
+    Large,
+    /// Normal text size
+    Normal,
+    /// Small text size
+    Small,
+}
+
+#[repr(u32)]
+#[derive(Debug, Clone, Copy)]
+pub enum UtilityHtmlViewerDisplayMode {
+    /// Normal display
+    Normal,
+    /// Fit display
+    Fit,
+    /// Smart fit display
+    SmartFit,
+}
+
+bitflags::bitflags! {
+    pub struct UtilityHtmlViewerOption: u32 {
+        /// Open SCE net start page
+    const OPEN_SCE_START_PAGE  = 0x000001;
+    /// Disable startup limitations
+    const DISABLE_STARTUP_LIMITS = 0x000002;
+    /// Disable exit confirmation dialog
+    const DISABLE_EXIT_DIALOG = 0x000004;
+    /// Disable cursor
+    const DISABLE_CURSOR = 0x000008;
+    /// Disable download completion confirmation dialog
+    const DISABLE_DOWNLOAD_COMPLETE_DIALOG = 0x000010;
+    /// Disable download confirmation dialog
+    const DISABLE_DOWNLOAD_START_DIALOG = 0x000020;
+    /// Disable save destination confirmation dialog
+    const DISABLE_DOWNLOAD_DESTINATION_DIALOG = 0x000040;
+    /// Disable modification of the download destination
+    const LOCK_DOWNLOAD_DESTINATION_DIALOG= 0x000080;
+    /// Disable tab display
+    const DISABLE_TAB_DISPLAY = 0x000100;
+    /// Hold analog controller when HOLD button is down
+    const ENABLE_ANALOG_HOLD = 0x000200;
+    /// Enable Flash Player
+    const ENABLE_FLASH = 0x000400;
+    /// Disable L/R triggers for back/forward
+    const DISABLE_LRTRIGGER = 0x000800;
+    }
 }
 
 /// OSK Field data
@@ -454,12 +634,12 @@ pub struct SceUtilityOskData {
     pub unk_00: i32,
     /// Unknown. Pass 0.
     pub unk_04: i32,
-    /// One of ::OskInputLanguage
+    /// One of ::SceUtilityOskInputLanguage
     pub language: SceUtilityOskInputLanguage,
     /// Unknown. Pass 0.
     pub unk_12: i32,
-    /// One or more of ::OskInputType (types that are selectable by pressing SELECT)
-    pub inputtype: i32,
+    /// One or more of ::SceUtilityOskInputType (types that are selectable by pressing SELECT)
+    pub inputtype: SceUtilityOskInputType,
     /// Number of lines
     pub lines: i32,
     /// Unknown. Pass 0.
@@ -472,8 +652,8 @@ pub struct SceUtilityOskData {
     pub outtextlength: i32,
     /// Pointer to the output text
     pub outtext: *mut u16,
-    /// Result. One of ::OskResult
-    pub result: i32,
+    /// Result. One of ::SceUtilityOskResult
+    pub result: SceUtilityOskResult,
     /// The max text that can be input
     pub outtextlimit: i32,
 }
@@ -487,12 +667,11 @@ pub struct SceUtilityOskParams {
     pub datacount: i32,
     /// Pointer to the start of the data for the input fields
     pub data: *mut SceUtilityOskData,
-    /// The local OSK state, one of ::OskState
-    pub state: i32,
+    /// The local OSK state, one of ::SceUtilityOskState
+    pub state: SceUtilityOskState,
     /// Unknown. Pass 0
     pub unk_60: i32,
 }
-
 
 psp_extern! {
     #![name = "sceUtility"]
@@ -953,9 +1132,9 @@ psp_extern! {
 
     #[psp(0xFC4516F3)]
     /// Sets a network parameter
-    /// 
+    ///
     /// # Note
-    /// 
+    ///
     /// This sets only to configuration 0
     ///
     /// # Parameters
