@@ -341,6 +341,7 @@ pub struct UtilityNetconfData {
     pub hotspot: i32,
     /// Will be set to 1 when connected to a hotspot style connection
     pub hotspot_connected: i32,
+    /// Set to 1 to allow connections to Wifi service providers (WISP)
     pub wifisp: i32,
 }
 
@@ -542,9 +543,9 @@ pub struct UtilityHtmlViewerParam {
     /// One of ::UtilityHtmlViewerDisplayMode
     pub displaymode: UtilityHtmlViewerDisplayMode,
     /// One of ::UtilityHtmlViewerConnectMode
-    pub connectmode: u32,
+    pub connectmode: UtilityHtmlViewerConnectMode,
     /// One of ::UtilityHtmlViewerDisconnectMode
-    pub disconnectmode: u32,
+    pub disconnectmode: UtilityHtmlViewerDisconnectMode,
     /// The maximum amount of memory the browser used
     pub memused: u32,
     /// Unknown. Pass 0
@@ -595,6 +596,28 @@ pub enum UtilityHtmlViewerDisplayMode {
     Fit,
     /// Smart fit display
     SmartFit,
+}
+
+#[repr(u32)]
+#[derive(Debug, Clone, Copy)]
+pub enum UtilityHtmlViewerConnectMode {
+    /// Auto connect to the last used connection
+    Last,
+    /// Manually select the connection (once)
+    ManualOnce,
+    /// Manually select the connection (every time)
+    ManualAll,
+}
+
+#[repr(u32)]
+#[derive(Debug, Clone, Copy)]
+pub enum UtilityHtmlViewerDisconnectMode {
+    /// Enable automatic disconnect
+    Enable,
+    /// Disable automatic disconnect
+    Disable,
+    /// Confirm disconnection
+    Confirm,
 }
 
 bitflags::bitflags! {
