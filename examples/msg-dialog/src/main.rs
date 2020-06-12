@@ -2,8 +2,9 @@
 #![no_main]
 
 use psp::sys::{
-    DialogCommon, MsgDialogParams, MsgDialogMode, MsgDialogPressed,
-    SysParamLanguage, DialogButtonAccept, MsgDialogOption, self,
+    UtilityDialogCommon, UtilityMsgDialogParams, UtilityMsgDialogMode, 
+    UtilityMsgDialogPressed, SystemParamLanguage, UtilityDialogButtonAccept, 
+    UtilityMsgDialogOption, self,
     DisplayPixelFormat, Context, GuState, DepthFunc, FrontFaceDirection, 
     ShadingModel, SyncMode, SyncBehavior
 };
@@ -48,11 +49,11 @@ fn psp_main() {
         setup_gu();
     }
 
-    let dialog_size = core::mem::size_of::<MsgDialogParams>();
-    let base = DialogCommon {
+    let dialog_size = core::mem::size_of::<UtilityMsgDialogParams>();
+    let base = UtilityDialogCommon {
         size: dialog_size as u32,
-        language: SysParamLanguage::English, 
-        button_accept: DialogButtonAccept::Cross, // X to accept 
+        language: SystemParamLanguage::English, 
+        button_accept: UtilityDialogButtonAccept::Cross, // X to accept 
         graphics_thread: 0x11, // magic number stolen from pspsdk example
         access_thread: 0x13,
         font_thread: 0x12,
@@ -64,19 +65,19 @@ fn psp_main() {
     let mut msg: [u8; 512] = [0u8; 512];
     msg[..40].copy_from_slice(b"Hello from a Rust-created PSP Msg Dialog");
 
-    let mut msg_dialog = MsgDialogParams {
+    let mut msg_dialog = UtilityMsgDialogParams {
         base,
         unknown: 0,
-        mode: MsgDialogMode::Text,
+        mode: UtilityMsgDialogMode::Text,
         error_value: 0,
         message: msg,
-        options: MsgDialogOption::TEXT,
-        button_pressed: MsgDialogPressed::Unknown1,
+        options: UtilityMsgDialogOption::TEXT,
+        button_pressed: UtilityMsgDialogPressed::Unknown1,
     };
 
     unsafe {
         sys::sceUtilityMsgDialogInitStart(
-            &mut msg_dialog as *mut MsgDialogParams
+            &mut msg_dialog as *mut UtilityMsgDialogParams
         );
     }
 

@@ -7,9 +7,9 @@ pub struct UtilityDialogCommon {
     /// Size of the structure
     pub size: u32,
     /// Language
-    pub language: SysParamLanguage,
+    pub language: SystemParamLanguage,
     /// Which button accepts the dialog
-    pub button_accept: DialogButtonAccept,
+    pub button_accept: UtilityDialogButtonAccept,
     /// Graphics thread priority
     pub graphics_thread: i32,
     /// Access/fileio thread priority (SceJobThread)
@@ -48,7 +48,7 @@ pub enum UtilityDialogButtonAccept {
 
 #[repr(u32)]
 #[derive(Debug, Clone, Copy)]
-pub enum sceUtilityOskInputLanguage {
+pub enum SceUtilityOskInputLanguage {
     Default_,
     Japanese,
     English,
@@ -233,14 +233,14 @@ bitflags::bitflags! {
 #[repr(C)]
 #[derive(Copy, Clone)]
 pub struct UtilityMsgDialogParams {
-    pub base: DialogCommon,
+    pub base: UtilityDialogCommon,
     pub unknown: i32,
-    pub mode: MsgDialogMode,
+    pub mode: UtilityMsgDialogMode,
     pub error_value: u32,
     /// The message to display (may contain embedded linefeeds)
     pub message: [u8; 512usize],
-    pub options: MsgDialogOption,
-    pub button_pressed: MsgDialogPressed,
+    pub options: UtilityMsgDialogOption,
+    pub button_pressed: UtilityMsgDialogPressed,
 }
 
 #[repr(C)]
@@ -253,10 +253,10 @@ pub struct UtilityNetconfAdhoc {
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct UtilityNetconfData {
-    pub base: DialogCommon,
+    pub base: UtilityDialogCommon,
     pub action: i32,
     /// One of NetconfActions
-    pub adhocparam: *mut NetconfAdhoc,
+    pub adhocparam: *mut UtilityNetconfAdhoc,
     pub hotspot: i32,
     /// Set to 1 to allow connections with the 'Internet Browser' option set to 'Start' (ie. hotspot connection)
     pub hotspot_connected: i32,
@@ -325,7 +325,7 @@ pub struct UtilitySavedataFileData {
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct UtilitySavedataListSaveNewData {
-    pub icon0: SavedataFileData,
+    pub icon0: UtilitySavedataFileData,
     pub title: *mut u8,
 }
 
@@ -333,8 +333,8 @@ pub struct UtilitySavedataListSaveNewData {
 #[repr(C)]
 #[derive(Copy, Clone)]
 pub struct SceUtilitySavedataParam {
-    pub base: DialogCommon,
-    pub mode: SavedataMode,
+    pub base: UtilityDialogCommon,
+    pub mode: UtilitySavedataMode,
     pub unknown1: i32,
     pub overwrite: i32,
     /// gameName: name used from the game for saves, equal for all saves
@@ -352,15 +352,15 @@ pub struct SceUtilitySavedataParam {
     /// size of allocated space to dataBuf
     pub data_buf_size: usize,
     pub data_size: usize,
-    pub sfo_param: SavedataSFOParam,
-    pub icon0_file_data: SavedataFileData,
-    pub icon1_file_data: SavedataFileData,
-    pub pic1_file_data: SavedataFileData,
-    pub snd0_file_data: SavedataFileData,
+    pub sfo_param: UtilitySavedataSFOParam,
+    pub icon0_file_data: UtilitySavedataFileData,
+    pub icon1_file_data: UtilitySavedataFileData,
+    pub pic1_file_data: UtilitySavedataFileData,
+    pub snd0_file_data: UtilitySavedataFileData,
     /// Pointer to an SavedataListSaveNewData structure
-    pub new_data: *mut SavedataListSaveNewData,
+    pub new_data: *mut UtilitySavedataListSaveNewData,
     /// Initial focus for lists
-    pub focus: SavedataFocus,
+    pub focus: UtilitySavedataFocus,
     /// unknown2: ?
     pub unknown2: [i32; 4usize],
 }
@@ -383,7 +383,7 @@ pub enum UtilityGameSharingDataType {
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct UtilityGameSharingParams {
-    pub base: DialogCommon,
+    pub base: UtilityDialogCommon,
     pub unknown1: i32,
     pub unknown2: i32,
     pub name: [u8; 8usize],
@@ -392,8 +392,8 @@ pub struct UtilityGameSharingParams {
     pub unknown5: i32,
     pub result: i32,
     pub filepath: *mut u8,
-    pub mode: GameSharingMode,
-    pub datatype: GameSharingDataType,
+    pub mode: UtilityGameSharingMode,
+    pub datatype: UtilityGameSharingDataType,
     pub data: *mut c_void,
     pub datasize: u32,
 }
@@ -401,7 +401,7 @@ pub struct UtilityGameSharingParams {
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct UtilityHtmlViewerParam {
-    pub base: DialogCommon,
+    pub base: UtilityDialogCommon,
     /// Pointer to the memory pool to be used
     pub memaddr: *mut c_void,
     /// Size of the memory pool
@@ -455,7 +455,7 @@ pub struct SceUtilityOskData {
     /// Unknown. Pass 0.
     pub unk_04: i32,
     /// One of ::OskInputLanguage
-    pub language: OskInputLanguage,
+    pub language: SceUtilityOskInputLanguage,
     /// Unknown. Pass 0.
     pub unk_12: i32,
     /// One or more of ::OskInputType (types that are selectable by pressing SELECT)
@@ -482,11 +482,11 @@ pub struct SceUtilityOskData {
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct SceUtilityOskParams {
-    pub base: DialogCommon,
+    pub base: UtilityDialogCommon,
     /// Number of input fields
     pub datacount: i32,
     /// Pointer to the start of the data for the input fields
-    pub data: *mut OskData,
+    pub data: *mut SceUtilityOskData,
     /// The local OSK state, one of ::OskState
     pub state: i32,
     /// Unknown. Pass 0
@@ -509,7 +509,7 @@ psp_extern! {
     ///
     /// 0 on success
     pub fn sceUtilityMsgDialogInitStart(
-        params: *mut MsgDialogParams,
+        params: *mut UtilityMsgDialogParams,
     ) -> i32;
 
     #[psp(0x67AF3428)]
@@ -550,7 +550,7 @@ psp_extern! {
     /// # Return Value
     ///
     /// 0 on success, < 0 on error
-    pub fn sceUtilityNetconfInitStart(data: *mut NetconfData) -> i32;
+    pub fn sceUtilityNetconfInitStart(data: *mut UtilityNetconfData) -> i32;
 
     #[psp(0xF88155F6)]
     /// Shutdown the Network Configuration Dialog Utility
@@ -607,7 +607,7 @@ psp_extern! {
     pub fn sceUtilityGetNetParam(
         conf: i32,
         param: NetParam,
-        data: *mut NetData,
+        data: *mut UtilityNetData,
     ) -> i32;
 
     #[psp(0x50C4CD57)]
@@ -664,7 +664,7 @@ psp_extern! {
     ///
     /// 0 on success, < 0 on error.
     pub fn sceUtilityGameSharingInitStart(
-        params: *mut GameSharingParams,
+        params: *mut UtilityGameSharingParams,
     ) -> i32;
 
     #[psp(0xEFC6F80F)]
@@ -701,7 +701,7 @@ psp_extern! {
     ///
     /// 0 on success, < 0 on error.
     pub fn sceUtilityHtmlViewerInitStart(
-        params: *mut HtmlViewerParam,
+        params: *mut UtilityHtmlViewerParam,
     ) -> i32;
 
     #[psp(0xF5CE1134)]
@@ -799,7 +799,7 @@ psp_extern! {
     /// # Return Value
     ///
     /// < 0 on error.
-    pub fn sceUtilityOskInitStart(params: *mut OskParams) -> i32;
+    pub fn sceUtilityOskInitStart(params: *mut SceUtilityOskParams) -> i32;
 
     #[psp(0x3DFAEBA9)]
     /// Remove a currently active keyboard. After calling this function you must
