@@ -96,6 +96,9 @@ pub use openpsid::*;
 mod utility;
 pub use utility::*;
 
+mod net;
+pub use net::*;
+
 // These are not found (likely because this was tested in user mode on a PSP-2000).
 // pub mod sircs;
 // pub mod video;

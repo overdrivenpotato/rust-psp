@@ -20,6 +20,9 @@ header() {
             s/::std::os::raw::c_uchar/u8/g
             s/::std::os::raw::c_ulong/u32/g
             s/::std::os::raw::c_long/i32/g
+            s/::std::os::raw::c_ushort/u16/g
+            s/::std::os::raw::c_short/i16/g
+            s/::std::option::Option/Option/g
 
             s/uint/u32/g
 
