@@ -1,0 +1,8 @@
+[package]
+name = "psp-msg-dialog"
+version = "0.1.0"
+authors = ["Marko Mijalkovic <marko.mijalkovic97@gmail.com>"]
+edition = "2018"
+
+[dependencies]
+psp = { path = "../../psp" }
