@@ -7,8 +7,5 @@ edition = "2018"
 [dependencies]
 psp = { path = "../../psp", features = ["embedded-graphics"] }
 embedded-graphics = "0.6.2"
-lvgl = { path = "/home/paul/projects/rust/lvgl-rs/lvgl" }
-lvgl-sys = { path = "/home/paul/projects/rust/lvgl-rs/lvgl-sys" }
-
-[profile.release]
-debug=true
+lvgl = "0.2.0"
+lvgl-sys = "0.2.0" 
