@@ -1481,9 +1481,6 @@ psp_extern! {
 
 }
 
-pub type SceULong64 = u64;
-pub type SceBool = i32;
-
 #[repr(u32)]
 #[derive(Debug, Copy, Clone)]
 pub enum HttpMethod {
@@ -1510,10 +1507,10 @@ pub type HttpPasswordCB = Option<
         realm: *const u8,
         username: *mut u8,
         password: *mut u8,
-        need_entity: SceBool,
+        need_entity: i32,
         entity_body: *mut *mut u8,
         entity_size: *mut usize,
-        save: *mut SceBool,
+        save: *mut i32,
     ) -> i32,
 >;
 
@@ -1636,7 +1633,7 @@ psp_extern! {
         connection_id: i32,
         method: HttpMethod,
         path: *mut u8,
-        content_length: SceULong64,
+        content_length: u64,
     ) -> i32;
 
     #[psp(0xB509B09E)]
@@ -1655,7 +1652,7 @@ psp_extern! {
         connection_id: i32,
         method: HttpMethod,
         url: *mut u8,
-        content_length: SceULong64,
+        content_length: u64,
     ) -> i32;
 
     #[psp(0xA5512E01)]
@@ -1726,7 +1723,7 @@ psp_extern! {
     /// 0 on success, < 0 on error.
     pub fn sceHttpGetcontent_length(
         request_id: i32,
-        content_length: *mut SceULong64,
+        content_length: *mut u64,
     ) -> i32;
 
     #[psp(0x4CC7D78F)]
