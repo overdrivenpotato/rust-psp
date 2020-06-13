@@ -82,19 +82,26 @@ extern "C" {
 #[no_mangle]
 fn strcmp(cs: *const u8, ct: *const u8) -> i32
 {
+
     let mut c1: u8;
     let mut c2: u8;
 
+    unsafe {
+        c1 = *cs;
+        c2 = *ct;
+    }
+
     loop {
-        unsafe {
-            c1 = *cs.add(1);
-            c2 = *ct.add(1);
-        }
         if c1 != c2 {
             return if c1 < c2 { -1 } else { 1 };
         }
         if c1 == 0 {
             break;
+        }
+
+        unsafe { 
+            c1 = *cs.add(1);
+            c2 = *ct.add(1);
         }
     }
     return 0;
