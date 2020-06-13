@@ -3,7 +3,7 @@
 
 use lvgl;
 use lvgl::style::Style;
-use lvgl::widgets::{Label, LabelAlign, Btn};
+use lvgl::widgets::{Label, LabelAlign};
 use lvgl::{Align, Color, Part, State, Widget, UI};
 use lvgl_sys;
 use core::time::Duration;

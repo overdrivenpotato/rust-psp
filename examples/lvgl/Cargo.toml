@@ -9,7 +9,6 @@ psp = { path = "../../psp", features = ["embedded-graphics"] }
 embedded-graphics = "0.6.2"
 lvgl = { path = "/home/paul/projects/rust/lvgl-rs/lvgl" }
 lvgl-sys = { path = "/home/paul/projects/rust/lvgl-rs/lvgl-sys" }
-tinybmp = { version = "0.2.2", features = ["graphics"] }
 
 [profile.release]
 debug=true
