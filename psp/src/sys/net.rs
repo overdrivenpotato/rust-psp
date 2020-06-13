@@ -111,14 +111,14 @@ psp_extern! {
 
 }
 
-/// Product structure
+/// Adhoc ID structure
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
-pub struct productStruct {
+pub struct SceNetAdhocctlAdhocId {
     /// Unknown, set to 0, other values used are 1 and 2. Not sure on what they represent
     pub unknown: i32,
-    /// The product ID string
-    pub product: [u8; 9usize],
+    /// The adhoc ID string
+    pub adhoc_id: [u8; 9usize],
     pub unk: [u8; 3usize],
 }
 /// Peer info structure
@@ -188,7 +188,7 @@ psp_extern! {
     ///
     /// - `stacksize`: Stack size of the adhocctl thread. Set to 0x2000
     /// - `priority`: Priority of the adhocctl thread. Set to 0x30
-    /// - `product`: Pass a filled in ::productStruct
+    /// - `adhoc_id`: Pass a filled in ::SceNetAdhocctlAdhocId
     ///
     /// # Return Value
     ///
@@ -196,7 +196,7 @@ psp_extern! {
     pub fn sceNetAdhocctlInit(
         stacksize: i32,
         priority: i32,
-        product: *mut productStruct,
+        adhoc_id: *mut SceNetAdhocctlAdhocId,
     ) -> i32;
 
     #[psp(0x9D689E13)]
@@ -268,12 +268,12 @@ psp_extern! {
     ///
     /// # Parameters
     ///
-    /// - `product`: A pointer to a  ::productStruct
+    /// - `id`: A pointer to a  ::SceNetAdhocctlAdhocId
     ///
     /// # Return Value
     ///
     /// 0 on success, < 0 on error.
-    pub fn sceNetAdhocctlGetAdhocId(product: *mut productStruct) -> i32;
+    pub fn sceNetAdhocctlGetAdhocId(id: *mut SceNetAdhocctlAdhocId) -> i32;
 
     #[psp(0xA5C055CE)]
     /// Connect to the Adhoc control game mode (as a host)
