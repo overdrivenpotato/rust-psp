@@ -42,6 +42,9 @@ pub use constants::*;
 #[cfg(feature="embedded-graphics")]
 pub mod embedded_graphics;
 
+#[cfg(feature="rand_core")]
+pub mod rand;
+
 #[repr(align(16))]
 pub struct Align16<T>(pub T);
 
