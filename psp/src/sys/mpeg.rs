@@ -5,7 +5,7 @@ use crate::{sys, eabi::{i5, i6, i7}};
 ///
 /// This struct can be created with the `SceMpeg::null()` method, and initialized
 /// via `sceMpegCreate`.
-#[repr(C)]
+#[repr(transparent)]
 #[derive(Copy, Clone, Debug)]
 pub struct SceMpeg(*mut *mut c_void);
 
@@ -17,7 +17,7 @@ impl SceMpeg {
 }
 
 /// Internal structure. Passed around but never created manually.
-#[repr(C)]
+#[repr(transparent)]
 #[derive(Copy, Clone, Debug)]
 pub struct SceMpegStream(*mut c_void);
 

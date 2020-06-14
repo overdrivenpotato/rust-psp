@@ -30,7 +30,7 @@ psp_extern! {
 }
 
 /// UIDs are used to describe many different kernel objects.
-#[repr(C)]
+#[repr(transparent)]
 #[derive(Debug, Copy, Clone)]
 pub struct SceUid(pub i32);
 

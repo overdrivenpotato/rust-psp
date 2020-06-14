@@ -91,12 +91,7 @@ macro_rules! psp_extern {
     // Generate body with default ABI.
     (__BODY $name:ident ($($arg:ident : $arg_ty:ty),*) $(-> $ret:ty)?) => {
         expr! {
-            // For some reason, the default "C" ABI does not work with the
-            // function stub. It works *most* of the time but certain functions
-            // end up taking an extra argument before the first, seemingly the
-            // stack pointer. Interpreting it as a "Rust" function seems to work
-            // for now, though ideally we could just write "o32".
-            extern "Rust" {
+            extern {
                 fn [< __ $name _stub >]($($arg : $arg_ty),*) $(-> $ret)?;
             }
 

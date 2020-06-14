@@ -5,7 +5,7 @@ pub const SYSTEM_REGISTRY: [u8; 7] = *b"/system";
 pub const REG_KEYNAME_SIZE: u32 = 27;
 
 /// Typedef for a registry handle.
-#[repr(C)]
+#[repr(transparent)]
 pub struct Handle(u32);
 
 /// Struct used to open a registry.
