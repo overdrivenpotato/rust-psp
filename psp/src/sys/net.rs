@@ -478,9 +478,9 @@ psp_extern! {
 /// PTP status structure
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
-pub struct ptpStatStruct {
+pub struct SceNetAdhocPtpStat {
     /// Pointer to next PTP structure in list
-    pub next: *mut ptpStatStruct,
+    pub next: *mut SceNetAdhocPtpStat,
     /// ptp ID
     pub ptp_id: i32,
     /// MAC address
@@ -496,8 +496,19 @@ pub struct ptpStatStruct {
     /// Bytes received
     pub rcvd_data: u32,
     /// Unknown
-    pub unk1: i32,
+    pub state: ScePspnetAdhocPtpState,
 }
+
+#[repr(u32)]
+#[derive(Debug, Clone, Copy)]
+pub enum ScePspnetAdhocPtpState {
+    Closed,
+    Listen,
+    SynSent,
+    SynReceived,
+    Established,
+}
+
 /// PDP status structure
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
@@ -895,14 +906,14 @@ psp_extern! {
     /// # Parameters
     ///
     /// - `size`: Pointer to the size of the stat array (e.g 20 for one structure)
-    /// - `stat`: Pointer to a list of ::ptpStatStruct structures.
+    /// - `stat`: Pointer to a list of ::SceNetAdhocPtpStat structures.
     ///
     /// # Return Value
     ///
     /// 0 on success, < 0 on error
     pub fn sceNetAdhocGetPtpStat(
         size: *mut i32,
-        stat: *mut ptpStatStruct,
+        stat: *mut SceNetAdhocPtpStat,
     ) -> i32;
 
 }
