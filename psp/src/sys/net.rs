@@ -512,9 +512,9 @@ pub enum ScePspnetAdhocPtpState {
 /// PDP status structure
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
-pub struct pdpStatStruct {
+pub struct SceNetAdhocPdpStat {
     /// Pointer to next PDP structure in list
-    pub next: *mut pdpStatStruct,
+    pub next: *mut SceNetAdhocPdpStat,
     /// pdp ID
     pub pdp_id: i32,
     /// MAC address
@@ -640,14 +640,14 @@ psp_extern! {
     /// # Parameters
     ///
     /// - `size`: Pointer to the size of the stat array (e.g 20 for one structure)
-    /// - `stat`: Pointer to a list of ::pdpStatStruct structures.
+    /// - `stat`: Pointer to a list of ::SceNetAdhocPdpStat structures.
     ///
     /// # Return Value
     ///
     /// 0 on success, < 0 on error
     pub fn sceNetAdhocGetPdpStat(
         size: *mut i32,
-        stat: *mut pdpStatStruct,
+        stat: *mut SceNetAdhocPdpStat,
     ) -> i32;
 
     #[psp(0x7F75C338)]
