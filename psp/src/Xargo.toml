@@ -1,4 +1,0 @@
-[target.mipsel-sony-psp.dependencies.core]
-[target.mipsel-sony-psp.dependencies.alloc]
-[target.mipsel-sony-psp.dependencies.panic_unwind]
-stage = 1

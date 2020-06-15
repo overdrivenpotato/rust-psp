@@ -71,7 +71,8 @@ fn psp_main() {
     loop {
         unsafe {
             psp::sys::sceDisplayWaitVblankStart();
+            disp.flush();
         }
-        disp.update();
     }
+    //disp.destroy();
 }

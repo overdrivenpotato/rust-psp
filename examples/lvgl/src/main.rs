@@ -2,7 +2,7 @@
 #![no_main]
 
 use core::time::Duration;
-use psp::embedded_graphics::Framebuffer;
+use psp::embedded_graphics::PspDisplay;
 
 use lvgl;
 use lvgl::{UI, Color, State, Widget, Part, Animation};
@@ -14,7 +14,7 @@ psp::module!("sample_lvgl", 1, 1);
 #[no_mangle]
 fn psp_main() {
     psp::enable_home_button();
-    let mut disp = Framebuffer::new();
+    let mut disp = PspDisplay::new();
 
     let mut ui = UI::init().unwrap();
 
@@ -48,14 +48,12 @@ fn psp_main() {
     bar.set_pos(205, 100).unwrap();
     bar.set_range(0, 100).unwrap();
     bar.set_anim_time(1000).unwrap();
-    bar.set_value(100, Animation::OFF).unwrap();
-    ui.tick_inc(Duration::from_micros(16667));
+    bar.set_value(100, Animation::ON).unwrap();
 
-    let avg_dur = psp::benchmark(||{
+    loop {
+        unsafe { psp::sys::sceDisplayWaitVblankStart(); }
+        ui.tick_inc(Duration::from_micros(16667));
         ui.task_handler();
-        //unsafe {
-            //psp::sys::sceDisplayWaitVblankStart();
-        //}
-    }, 1);
-    psp::dprintln!("{:?}", avg_dur);
+        disp.flush();
+    }
 }

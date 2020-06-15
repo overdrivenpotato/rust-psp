@@ -2,14 +2,13 @@
 
 use crate::sys;
 use crate::{SCREEN_WIDTH, SCREEN_HEIGHT, BUF_WIDTH};
-use core::mem;
 use core::ffi::c_void;
-use core::convert::{TryFrom, TryInto};
+use core::convert::TryFrom;
 use alloc::boxed::Box;
 use embedded_graphics::{
     drawable::Pixel,
     geometry::Size,
-    pixelcolor::{Rgb888, RgbColor},
+    pixelcolor::Rgb888,
     pixelcolor::raw::{RawU24, RawData},
     geometry::Point,
     DrawTarget,
@@ -19,7 +18,6 @@ pub struct PspDisplay {
     buf: Box<[u32; 512*512]>,
     size: Size,
 }
-
 
 #[repr(C, align(4))]
 struct Vertex {
@@ -31,9 +29,9 @@ struct Vertex {
 }
 
 static mut LIST: crate::Align16<[u32; 0x40000]> = crate::Align16([0; 0x40000]);
-static vertices: crate::Align16<[Vertex; 2]> = crate::Align16([
+static VERTICES: crate::Align16<[Vertex; 2]> = crate::Align16([
     Vertex { u: 0.0, v: 0.0, x: 0.0, y: 0.0, z: 0.0},
-    Vertex { u: 0.9375, v: 0.53125 , x: 480.0, y: 272.0, z: 1.0},
+    Vertex { u: 0.9375, v: 0.53125 , x: SCREEN_WIDTH as f32, y: SCREEN_HEIGHT as f32, z: 1.0},
 ]);
 static mut VRAM: *mut u32 = 0x4000_0000 as *mut u32;
 
@@ -77,18 +75,12 @@ impl PspDisplay {
             sys::sceGuScissor(0, 0, SCREEN_WIDTH as i32, SCREEN_HEIGHT as i32);
             sys::sceGuEnable(sys::GuState::ScissorTest);
 
-            //sys::sceGuDepthFunc(sys::DepthFunc::GreaterOrEqual);
-            //sys::sceGuEnable(sys::GuState::DepthTest);
-            //sys::sceGuFrontFace(sys::FrontFaceDirection::Clockwise);
-            //sys::sceGuShadeModel(sys::ShadingModel::Smooth);
-            //sys::sceGuEnable(sys::GuState::CullFace);
             sys::sceGuEnable(sys::GuState::Texture2D);
             sys::sceGuEnable(sys::GuState::ClipPlanes);
 
             // setup matrices
             sys::sceGumMatrixMode(sys::MatrixMode::Projection);
             sys::sceGumLoadIdentity();
-            ////sys::sceGumPerspective(75.0, 16.0 / 9.0, 0.5, 1000.0);
             sys::sceGumOrtho(0.0, 480.0, 272.0, 0.0, -30.0, 30.0);
 
             sys::sceGumMatrixMode(sys::MatrixMode::View);
@@ -102,8 +94,6 @@ impl PspDisplay {
             sys::sceGuTexFunc(sys::TextureEffect::Replace, sys::TextureColorComponent::Rgb);
             sys::sceGuTexFilter(sys::TextureFilter::Linear, sys::TextureFilter::Linear);
             sys::sceGuTexWrap(sys::GuTexWrapMode::Clamp, sys::GuTexWrapMode::Clamp);
-            //sys::sceGuTexScale(1.0, 1.0);
-            //sys::sceGuTexOffset(0.0, 0.0);
 
             sys::sceGuFinish();
             sys::sceGuSync(sys::GuSyncMode::Finish, sys::GuSyncBehavior::Wait);
@@ -111,7 +101,6 @@ impl PspDisplay {
 
             Self { buf, size }
         }
-
     }
 
     #[inline]
@@ -125,8 +114,7 @@ impl PspDisplay {
         None
     }
 
-    pub fn update(&mut self) {
-
+    pub fn flush(&mut self) {
         unsafe {
             sys::sceGuStart(sys::GuContextType::Direct, &mut LIST.0 as *mut [u32; 0x40000] as *mut _);
 
@@ -144,7 +132,7 @@ impl PspDisplay {
                 sys::VertexType::TEXTURE_32BITF | sys::VertexType::VERTEX_32BITF | sys::VertexType::TRANSFORM_3D,
                 2,
                 core::ptr::null_mut(),
-                &vertices as *const crate::Align16<_> as *const _,
+                &VERTICES as *const crate::Align16<_> as *const _
             );
 
             sys::sceGuFinish();
@@ -152,7 +140,14 @@ impl PspDisplay {
             sys::sceGuSwapBuffers();
         }
     }
+
+    pub fn destroy(self) {
+        unsafe {
+            sys::sceGuTerm();
+        }
+    }
 }
+
 
 impl DrawTarget<Rgb888> for PspDisplay {
     type Error = core::convert::Infallible;
@@ -218,4 +213,3 @@ unsafe fn get_static_vram_buffer(width: u32, height: u32, psm: sys::TexturePixel
 
     result
 }
-
