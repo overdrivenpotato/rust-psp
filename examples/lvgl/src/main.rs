@@ -48,13 +48,14 @@ fn psp_main() {
     bar.set_pos(205, 100).unwrap();
     bar.set_range(0, 100).unwrap();
     bar.set_anim_time(1000).unwrap();
-    bar.set_value(100, Animation::ON).unwrap();
+    bar.set_value(100, Animation::OFF).unwrap();
+    ui.tick_inc(Duration::from_micros(16667));
 
-    loop {
-        ui.tick_inc(Duration::from_micros(16667));
+    let avg_dur = psp::benchmark(||{
         ui.task_handler();
-        unsafe {
-            psp::sys::sceDisplayWaitVblankStart();
-        }
-    }
+        //unsafe {
+            //psp::sys::sceDisplayWaitVblankStart();
+        //}
+    }, 1);
+    psp::dprintln!("{:?}", avg_dur);
 }
