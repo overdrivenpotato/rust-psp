@@ -1427,6 +1427,9 @@ psp_extern! {
 
 }
 
+pub type socklen_t = u32;
+pub type sockaddr = u32;
+
 psp_extern! {
     #![name = "sceNetInet"]
     #![flags = 0x0009]
@@ -1437,6 +1440,106 @@ psp_extern! {
 
     #[psp(0xA9ED66B9)]
     pub fn sceNetInetTerm() -> i32;
+
+    #[psp(0xDB094E1B)]
+    pub fn sceNetInetAccept(
+        s: i32,
+        addr: *mut sockaddr,
+        addrlen: *mut socklen_t,
+    ) -> i32;
+
+    #[psp(0x1A33F9AE)]
+    pub fn sceNetInetBind(
+        s: i32,
+        my_addr: *const sockaddr,
+        addrlen: socklen_t,
+    ) -> i32;
+
+    #[psp(0x410B34AA)]
+    pub fn sceNetInetConnect(
+        s: i32,
+        serv_addr: *const sockaddr,
+        addrlen: socklen_t,
+    ) -> i32;
+
+    #[psp(0x4A114C7C)]
+    pub fn sceNetInetGetsockopt(
+        s: i32,
+        level: i32,
+        optname: i32,
+        optval: *mut c_void,
+        optlen: *mut socklen_t,
+    ) -> i32;
+
+    #[psp(0xD10A1A7A)]
+    pub fn sceNetInetListen(
+        s: i32,
+        backlog: i32,
+    ) -> i32;
+
+    #[psp(0xCDA85C99)]
+    pub fn sceNetInetRecv(
+        s: i32,
+        buf: *mut c_void,
+        len: usize,
+        flags: i32,
+    ) -> usize;
+
+    #[psp(0xC91142E4)]
+    pub fn sceNetInetRecvfrom(
+        s: i32,
+        buf: *mut c_void,
+        flags: usize,
+        arg1: i32,
+        from: *mut sockaddr,
+        from_len: *mut socklen_t,
+    ) -> usize;
+
+    #[psp(0x7AA671BC)]
+    pub fn sceNetInetSend(
+        s: i32,
+        buf: *const c_void,
+        len: usize,
+        flags: i32,
+    ) -> usize;
+
+    #[psp(0x05038FC7)]
+    pub fn sceNetInetSendto(
+        s: i32,
+        buf: *const c_void,
+        len: usize,
+        flags: i32,
+        to: *const sockaddr,
+        to_len: socklen_t,
+    ) -> usize;
+
+    #[psp(0x2FE71FE7)]
+    pub fn sceNetInetSetsockopt(
+        s: i32,
+        level: i32,
+        opt_name: i32,
+        opt_val: *const c_void,
+        opt_len: socklen_t,
+    ) -> i32;
+
+    #[psp(0x4CFE4E56)]
+    pub fn sceNetInetShutdown(
+        s: i32,
+        how: i32,
+    ) -> i32;
+
+    #[psp(0x8B7B220F)]
+    pub fn sceNetInetSocket(
+        domain: i32,
+        type_: i32,
+        protocol: i32,
+    ) -> i32;
+
+    #[psp(0x8D7284EA)]
+    pub fn sceNetInetClose(s: i32) -> i32;
+
+    #[psp(0xFBABE411)]
+    pub fn sceNetInetGetErrno() -> i32;
 
 }
 
