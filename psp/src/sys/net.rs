@@ -1445,30 +1445,30 @@ psp_extern! {
     pub fn sceNetInetAccept(
         s: i32,
         addr: *mut sockaddr,
-        addrlen: *mut socklen_t,
+        addr_len: *mut socklen_t,
     ) -> i32;
 
     #[psp(0x1A33F9AE)]
     pub fn sceNetInetBind(
         s: i32,
         my_addr: *const sockaddr,
-        addrlen: socklen_t,
+        addr_len: socklen_t,
     ) -> i32;
 
     #[psp(0x410B34AA)]
     pub fn sceNetInetConnect(
         s: i32,
         serv_addr: *const sockaddr,
-        addrlen: socklen_t,
+        addr_len: socklen_t,
     ) -> i32;
 
     #[psp(0x4A114C7C)]
     pub fn sceNetInetGetsockopt(
         s: i32,
         level: i32,
-        optname: i32,
-        optval: *mut c_void,
-        optlen: *mut socklen_t,
+        opt_name: i32,
+        opt_val: *mut c_void,
+        optl_en: *mut socklen_t,
     ) -> i32;
 
     #[psp(0xD10A1A7A)]
