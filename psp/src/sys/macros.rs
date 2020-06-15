@@ -183,7 +183,8 @@ macro_rules! psp_extern {
         $(
             $(#[$attr])*
             #[allow(non_snake_case)]
-            pub unsafe fn $name($($arg : $arg_ty),*) $(-> $ret)? {
+            #[no_mangle]
+            pub unsafe extern fn $name($($arg : $arg_ty),*) $(-> $ret)? {
                 #[cfg(target_os = "psp")]
                 {
                     psp_extern!(
