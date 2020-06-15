@@ -572,7 +572,7 @@ psp_extern! {
     ///
     /// # Parameters
     ///
-    /// - `intno`: The interrupt number to register.
+    /// - `int_no`: The interrupt number to register.
     /// - `no`: The sub interrupt handler number (user controlled)
     /// - `handler`: The interrupt handler
     /// - `arg`: An argument passed to the interrupt handler
@@ -581,7 +581,7 @@ psp_extern! {
     ///
     /// < 0 on error.
     pub fn sceKernelRegisterSubIntrHandler(
-        intno: i32,
+        int_no: i32,
         no: i32,
         handler: *mut c_void,
         arg: *mut c_void,
@@ -592,14 +592,14 @@ psp_extern! {
     ///
     /// # Parameters
     ///
-    /// - `intno`: The interrupt number to register.
+    /// - `int_no`: The interrupt number to register.
     /// - `no`: The sub interrupt handler number
     ///
     /// # Return Value
     ///
     /// < 0 on error.
     pub fn sceKernelReleaseSubIntrHandler(
-        intno: i32,
+        int_no: i32,
         no: i32,
     ) -> i32;
 
@@ -608,14 +608,14 @@ psp_extern! {
     ///
     /// # Parameters
     ///
-    /// - `intno`: The sub interrupt to enable.
+    /// - `int_no`: The sub interrupt to enable.
     /// - `no`: The sub interrupt handler number
     ///
     /// # Return Value
     ///
     /// < 0 on error.
     pub fn sceKernelEnableSubIntr(
-        intno: i32,
+        int_no: i32,
         no: i32,
     ) -> i32;
 
@@ -624,14 +624,14 @@ psp_extern! {
     ///
     /// # Parameters
     ///
-    /// - `intno`: The sub interrupt to disable.
+    /// - `int_no`: The sub interrupt to disable.
     /// - `no`: The sub interrupt handler number
     ///
     /// # Return Value
     ///
     /// < 0 on error.
     pub fn sceKernelDisableSubIntr(
-        intno: i32,
+        int_no: i32,
         no: i32,
     ) -> i32;
 
@@ -697,20 +697,20 @@ psp_extern! {
 #[derive(Debug, Copy, Clone)]
 pub struct SceKernelLMOption {
     pub size: usize,
-    pub mpidtext: SceUid,
-    pub mpiddata: SceUid,
+    pub m_pid_text: SceUid,
+    pub m_pid_data: SceUid,
     pub flags: u32,
     pub position: u8,
     pub access: u8,
-    pub creserved: [u8; 2usize],
+    pub c_reserved: [u8; 2usize],
 }
 
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct SceKernelSMOption {
     pub size: usize,
-    pub mpidstack: SceUid,
-    pub stacksize: usize,
+    pub m_pid_stack: SceUid,
+    pub stack_size: usize,
     pub priority: i32,
     pub attribute: u32,
 }
@@ -719,10 +719,10 @@ pub struct SceKernelSMOption {
 #[derive(Debug, Copy, Clone)]
 pub struct SceKernelModuleInfo {
     pub size: usize,
-    pub nsegment: u8,
+    pub n_segment: u8,
     pub reserved: [u8; 3usize],
-    pub segmentaddr: [i32; 4usize],
-    pub segmentsize: [i32; 4usize],
+    pub segment_addr: [i32; 4usize],
+    pub segment_size: [i32; 4usize],
     pub entry_addr: u32,
     pub gp_value: u32,
     pub text_addr: u32,
@@ -808,7 +808,7 @@ psp_extern! {
     ///
     /// # Parameters
     ///
-    /// - `bufsize`: Size (in bytes) of the buffer pointed to by buf.
+    /// - `buf_size`: Size (in bytes) of the buffer pointed to by buf.
     /// - `buf`: Pointer to a buffer containing the module to load. The buffer
     ///          must reside at an address that is a multiple of 64 bytes.
     /// - `flags`: Unused, always 0.
@@ -818,7 +818,7 @@ psp_extern! {
     ///
     /// The UID of the loaded module on success, otherwise one of `KernelErrorCodes`.
     pub fn sceKernelLoadModuleBufferUsbWlan(
-        bufsize: usize,
+        buf_size: usize,
         buf: *mut c_void,
         flags: i32,
         option: *mut SceKernelLMOption,
@@ -829,8 +829,8 @@ psp_extern! {
     ///
     /// # Parameters
     ///
-    /// - `modid`: The ID of the module returned from `sceKernelLoadModule*`.
-    /// - `argsize`: Length of the args.
+    /// - `mod_id`: The ID of the module returned from `sceKernelLoadModule*`.
+    /// - `arg_size`: Length of the args.
     /// - `argp`: A pointer to the arguments to the module.
     /// - `status`: Returns the status of the start.
     /// - `option`: Pointer to an optional `SceKernelSMOption` structure.
@@ -839,8 +839,8 @@ psp_extern! {
     ///
     /// ??? on success, otherwise one of `KernelErrorCodes`.
     pub fn sceKernelStartModule(
-        modid: SceUid,
-        argsize: usize,
+        mod_id: SceUid,
+        arg_size: usize,
         argp: *mut c_void,
         status: *mut i32,
         option: *mut SceKernelSMOption,
@@ -851,8 +851,8 @@ psp_extern! {
     ///
     /// # Parameters
     ///
-    /// - `modid`: The UID of the module to stop.
-    /// - `argsize`: The length of the arguments pointed to by argp.
+    /// - `mod_id`: The UID of the module to stop.
+    /// - `arg_size`: The length of the arguments pointed to by argp.
     /// - `argp`: Pointer to arguments to pass to the module's `module_stop` routine.
     /// - `status`: Return value of the module's `module_stop` routine.
     /// - `option`: Pointer to an optional `SceKernelSMOption` structure.
@@ -861,8 +861,8 @@ psp_extern! {
     ///
     /// ??? on success, otherwise one of `KernelErrorCodes`.
     pub fn sceKernelStopModule(
-        modid: SceUid,
-        argsize: usize,
+        mod_id: SceUid,
+        arg_size: usize,
         argp: *mut c_void,
         status: *mut i32,
         option: *mut SceKernelSMOption,
@@ -873,12 +873,12 @@ psp_extern! {
     ///
     /// # Parameters
     ///
-    /// - `modid`: The UID of the module to unload.
+    /// - `mod_id`: The UID of the module to unload.
     ///
     /// # Return Value
     ///
     /// ??? on success, otherwise one of `KernelErrorCodes`.
-    pub fn sceKernelUnloadModule(modid: SceUid) -> i32;
+    pub fn sceKernelUnloadModule(mod_id: SceUid) -> i32;
 
     #[psp(0xD675EBB8)]
     /// Stop and unload the current module.
@@ -886,7 +886,7 @@ psp_extern! {
     /// # Parameters
     ///
     /// - `unknown`: Unknown (I've seen 1 passed).
-    /// - `argsize`: Size (in bytes) of the arguments that will be passed to `module_stop`.
+    /// - `arg_size`: Size (in bytes) of the arguments that will be passed to `module_stop`.
     /// - `argp`: Pointer to arguments that will be passed to `module_stop`.
     ///
     /// # Return Value
@@ -894,7 +894,7 @@ psp_extern! {
     /// ??? on success, otherwise one of `KernelErrorCodes`.
     pub fn sceKernelSelfStopUnloadModule(
         unknown: i32,
-        argsize: usize,
+        arg_size: usize,
         argp: *mut c_void,
     ) -> i32;
 
@@ -903,7 +903,7 @@ psp_extern! {
     ///
     /// # Parameters
     ///
-    /// - `argsize`: Size (in bytes) of the arguments that will be passed to `module_stop`.
+    /// - `arg_size`: Size (in bytes) of the arguments that will be passed to `module_stop`.
     /// - `argp`: Poitner to arguments that will be passed to `module_stop`.
     /// - `status`: Return value from `module_stop`.
     /// - `option`: Pointer to an optional `SceKernelSMOption` structure.
@@ -912,7 +912,7 @@ psp_extern! {
     ///
     /// ??? on success, otherwise one of `KernelErrorCodes`.
     pub fn sceKernelStopUnloadSelfModule(
-        argsize: usize,
+        arg_size: usize,
         argp: *mut c_void,
         status: *mut i32,
         option: *mut SceKernelSMOption,
@@ -929,14 +929,14 @@ psp_extern! {
     ///
     /// # Parameters
     ///
-    /// - `modid`: The UID of the loaded module.
+    /// - `mod_id`: The UID of the loaded module.
     /// - `info`: Pointer to a `SceKernelModuleInfo` structure.
     ///
     /// # Return Value
     ///
     /// 0 on success, otherwise one of `KernelErrorCodes`.
     pub fn sceKernelQueryModuleInfo(
-        modid: SceUid,
+        mod_id: SceUid,
         info: *mut SceKernelModuleInfo,
     ) -> i32;
 
@@ -948,17 +948,17 @@ psp_extern! {
     ///
     /// # Parameters
     ///
-    /// - `readbuf`: Buffer to store the module list.
-    /// - `readbufsize`: Number of elements in the readbuffer.
-    /// - `idcount`: Returns the number of module ids
+    /// - `read_buf`: Buffer to store the module list.
+    /// - `read_buf_size`: Number of elements in the readbuffer.
+    /// - `id_count`: Returns the number of module ids
     ///
     /// # Return Value
     ///
     /// >= 0 on success
     pub fn sceKernelGetModuleIdList(
-        readbuf: *mut SceUid,
-        readbufsize: i32,
-        idcount: *mut i32,
+        read_buf: *mut SceUid,
+        read_buf_size: i32,
+        id_count: *mut i32,
     ) -> i32;
 }
 
