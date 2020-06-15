@@ -4,7 +4,6 @@ use crate::sys;
 use crate::{SCREEN_WIDTH, SCREEN_HEIGHT, BUF_WIDTH};
 use core::ffi::c_void;
 use core::convert::TryFrom;
-use alloc::boxed::Box;
 use embedded_graphics::{
     drawable::Pixel,
     geometry::Size,
@@ -15,7 +14,7 @@ use embedded_graphics::{
 };
 
 pub struct PspDisplay {
-    buf: Box<[u32; 512*512]>,
+    buf: *mut u32,
     size: Size,
 }
 
@@ -39,7 +38,6 @@ impl PspDisplay {
     pub fn new() -> Self {
         unsafe {
             let size = Size::new(480, 272);
-            let buf = Box::new([0u32; 512*512]);
 
             sys::sceDisplaySetMode(sys::DisplayMode::Lcd, SCREEN_WIDTH as usize, SCREEN_HEIGHT as usize);
 
@@ -57,6 +55,8 @@ impl PspDisplay {
             let fbp0 = get_static_vram_buffer(BUF_WIDTH, SCREEN_HEIGHT, sys::TexturePixelFormat::Psm8888);
             let fbp1 = get_static_vram_buffer(BUF_WIDTH, SCREEN_HEIGHT, sys::TexturePixelFormat::Psm8888);
             let zbp = get_static_vram_buffer(BUF_WIDTH, SCREEN_HEIGHT, sys::TexturePixelFormat::Psm4444);
+
+            let buf = (0x4400_0000 as *mut u8).add(get_static_vram_buffer(512, 512, sys::TexturePixelFormat::Psm8888) as usize) as *mut u32;
 
             sys::sceGumLoadIdentity();
             sys::sceGuInit();
@@ -118,10 +118,9 @@ impl PspDisplay {
         unsafe {
             sys::sceGuStart(sys::GuContextType::Direct, &mut LIST.0 as *mut [u32; 0x40000] as *mut _);
 
-            sys::sceGuTexImage(sys::MipmapLevel::None, 512, 512, 512, self.buf.as_ptr() as *const c_void);
+            sys::sceGuTexImage(sys::MipmapLevel::None, 512, 512, 512, self.buf as *const c_void);
 
             // draw buffer
-
             sys::sceGumDrawArray(
                 sys::GuPrimitive::Sprites,
                 sys::VertexType::TEXTURE_32BITF | sys::VertexType::VERTEX_32BITF | sys::VertexType::TRANSFORM_3D,
@@ -150,7 +149,9 @@ impl DrawTarget<Rgb888> for PspDisplay {
     fn draw_pixel(&mut self, pixel: Pixel<Rgb888>) -> Result<(), Self::Error> {
         let Pixel(point, color) = pixel;
         if let Some(index) = self.point_to_index(point) {
-            self.buf[index] = rgba_to_bgra(RawU24::from(color).into_inner());
+            unsafe {
+                *self.buf.add(index) = rgba_to_bgra(RawU24::from(color).into_inner());
+            }
         }
         Ok(())
     }
@@ -161,7 +162,9 @@ impl DrawTarget<Rgb888> for PspDisplay {
     {
         for Pixel(point, color) in pixels.into_iter() {
             if let Some(index) = self.point_to_index(point) {
-                self.buf[index] = rgba_to_bgra(RawU24::from(color).into_inner());
+                unsafe {
+                    *self.buf.add(index) = rgba_to_bgra(RawU24::from(color).into_inner());
+                }
             }
         }
 
