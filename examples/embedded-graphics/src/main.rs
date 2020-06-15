@@ -18,13 +18,9 @@ fn psp_main() {
     psp::enable_home_button();
     let mut disp = PspDisplay::new();
 
-    let style = PrimitiveStyleBuilder::new()
-        .fill_color(Rgb888::BLACK)
-        .build();
-    let black_backdrop = Rectangle::new(Point::new(0, 0), Point::new(480, 272)).into_styled(style);
-    black_backdrop.draw(&mut disp).unwrap();
+    disp.clear(RgbColor::BLACK).unwrap();
 
-    // draw ferris
+    //draw ferris
     let bmp = Bmp::from_slice(include_bytes!("../assets/ferris.bmp")).unwrap();
     let image: Image<Bmp, _> = Image::new(&bmp, Point::zero());
     image.draw(&mut disp).unwrap();

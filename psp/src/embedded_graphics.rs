@@ -118,11 +118,6 @@ impl PspDisplay {
         unsafe {
             sys::sceGuStart(sys::GuContextType::Direct, &mut LIST.0 as *mut [u32; 0x40000] as *mut _);
 
-            // clear screen
-            sys::sceGuClearColor(0x00000000);
-            sys::sceGuClearDepth(0);
-            sys::sceGuClear(sys::ClearBuffer::COLOR_BUFFER_BIT | sys::ClearBuffer::DEPTH_BUFFER_BIT);
-
             sys::sceGuTexImage(sys::MipmapLevel::None, 512, 512, 512, self.buf.as_ptr() as *const c_void);
 
             // draw buffer
@@ -170,6 +165,20 @@ impl DrawTarget<Rgb888> for PspDisplay {
             }
         }
 
+        Ok(())
+    }
+
+    fn clear(&mut self, color: Rgb888) -> Result<(), Self::Error> {
+        unsafe {
+
+            sys::sceGuStart(sys::GuContextType::Direct, &mut LIST.0 as *mut [u32; 0x40000] as *mut _);
+            sys::sceGuClearColor(rgba_to_bgra(RawU24::from(color).into_inner()));
+            sys::sceGuClearDepth(0);
+            sys::sceGuClear(sys::ClearBuffer::COLOR_BUFFER_BIT | sys::ClearBuffer::DEPTH_BUFFER_BIT);
+            sys::sceGuFinish();
+            sys::sceGuSync(sys::GuSyncMode::Finish, sys::GuSyncBehavior::Wait);
+            sys::sceGuSwapBuffers();
+        }
         Ok(())
     }
 

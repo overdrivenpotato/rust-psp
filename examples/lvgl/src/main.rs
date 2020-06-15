@@ -18,7 +18,6 @@ fn psp_main() {
 
     let mut ui = UI::init().unwrap();
 
-
     // Implement and register your display:
     let display_driver = lvgl::DisplayDriver::new(&mut disp);
     ui.disp_drv_register(display_driver);
@@ -52,7 +51,7 @@ fn psp_main() {
 
     loop {
         unsafe { psp::sys::sceDisplayWaitVblankStart(); }
-        ui.tick_inc(Duration::from_micros(16667));
+        ui.tick_inc(Duration::from_millis(16));
         ui.task_handler();
         disp.flush();
     }
