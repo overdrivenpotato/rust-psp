@@ -175,6 +175,7 @@ impl DrawTarget<Rgb888> for PspDisplay {
         unsafe {
 
             sys::sceGuStart(sys::GuContextType::Direct, &mut LIST.0 as *mut [u32; 0x40000] as *mut _);
+            sys::sceGuDrawBufferList(sys::DisplayPixelFormat::Psm8888, self.buf as *mut c_void, 512);
             sys::sceGuClearColor(rgba_to_bgra(RawU24::from(color).into_inner()));
             sys::sceGuClearDepth(0);
             sys::sceGuClear(sys::ClearBuffer::COLOR_BUFFER_BIT | sys::ClearBuffer::DEPTH_BUFFER_BIT);
