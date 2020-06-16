@@ -87,7 +87,7 @@ bitflags::bitflags! {
 bitflags::bitflags!{
     /// Event flag creation attributes.
     pub struct EventFlagAttributes: u32 {
-	/// Allow the event flag to be waited upon by multiple threads.
+        /// Allow the event flag to be waited upon by multiple threads.
         const WAIT_MULTIPLE = 0x200;
     }
 }

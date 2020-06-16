@@ -259,8 +259,7 @@ psp_extern! {
     #![version = (0x00, 0x00)]
 
     #[psp(0x27CC57F0)]
-    /// Get the time in seconds since the epoc (1st Jan 1970)
-    ///
+    /// Get the time in seconds since the epoch (1st Jan 1970)
     pub fn sceKernelLibcTime(t: *mut i32) -> i32;
 
     #[psp(0x91E4F6A7)]

@@ -103,7 +103,7 @@ pub use net::*;
 
 // These are not found (likely because this was tested in user mode on a PSP-2000).
 // pub mod sircs;
-// pub mod video;
+// pub mod codec;
 // TODO: Add kernel module support to this crate.
 // pub mod nand;
 

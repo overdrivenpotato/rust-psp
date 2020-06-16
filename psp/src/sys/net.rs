@@ -1732,7 +1732,7 @@ psp_extern! {
     /// # Return Value
     ///
     /// 0 on success, < 0 on error.
-    pub fn sceHttpGetcontent_length(
+    pub fn sceHttpGetContentLength(
         request_id: i32,
         content_length: *mut u64,
     ) -> i32;
@@ -1747,7 +1747,7 @@ psp_extern! {
     /// # Return Value
     ///
     /// 0 on success, < 0 on error.
-    pub fn sceHttpGetstatus_code(
+    pub fn sceHttpGetStatusCode(
         request_id: i32,
         status_code: *mut i32,
     ) -> i32;
