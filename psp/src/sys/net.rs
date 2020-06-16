@@ -1430,7 +1430,7 @@ psp_extern! {
 #[allow(non_camel_case_types)]
 pub type socklen_t = u32;
 #[repr(C)]
-pub struct sockaddr(u32);
+pub struct sockaddr(pub u32);
 
 psp_extern! {
     #![name = "sceNetInet"]
@@ -2163,7 +2163,7 @@ psp_extern! {
 }
 
 #[repr(C)]
-pub struct in_addr(u32);
+pub struct in_addr(pub u32);
 
 psp_extern! {
     #![name = "sceNetResolver"]
