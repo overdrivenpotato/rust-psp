@@ -1428,7 +1428,8 @@ psp_extern! {
 }
 
 pub type socklen_t = u32;
-pub type sockaddr = u32;
+#[repr(C)]
+struct sockaddr(u32);
 
 psp_extern! {
     #![name = "sceNetInet"]
@@ -2160,7 +2161,8 @@ psp_extern! {
 
 }
 
-pub type NetInAddr = u32;
+#[repr(C)]
+struct in_addr(u32);
 
 psp_extern! {
     #![name = "sceNetResolver"]
