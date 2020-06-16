@@ -108,6 +108,14 @@ psp_extern! {
     /// Number of vertical blank pulses up to now
     pub fn sceDisplayGetVcount() -> u32;
 
+    #[psp(0x36CDFADE)]
+    /// Wait for vertical blank
+    pub fn sceDisplayWaitVblank() -> i32;
+
+    #[psp(0x8EB9EC49)]
+    /// Wait for vertical blank with callback
+    pub fn sceDisplayWaitVblankCB() -> i32;
+
     #[psp(0x984C27E7)]
     /// Wait for vertical blank start
     pub fn sceDisplayWaitVblankStart() -> i32;

@@ -393,3 +393,71 @@ psp_extern! {
         init: i32,
     ) -> i32;
 }
+
+#[repr(C)]
+#[repr(align(64))]
+#[derive(Copy, Clone)]
+pub struct SceMpegLLI {
+    pub src: *mut c_void,
+    pub dst: *mut c_void,
+    pub next: *mut c_void,
+    pub size: i32,
+}
+
+#[repr(C)]
+#[repr(align(64))]
+#[derive(Copy, Clone)]
+pub struct SceMpegYCrCbBuffer {
+    pub frame_buffer_height16: i32,
+    pub frame_buffer_width16: i32,
+    /// Set to 0.
+    pub unknown: i32,
+    /// Set to 1.
+    pub unknown2: i32,
+
+    // Pointer to YBuffer (in VME EDRAM?)
+    pub y_buffer: *mut c_void,
+    // Pointer to YBuffer + framebufferwidth*(frameheight/32)
+    pub y_buffer2: *mut c_void,
+    // Pointer to CrBuffer (in VME EDRAM?)
+    pub cr_buffer: *mut c_void,
+    // Pointer to CbBuffer (in VME EDRAM?)
+    pub cb_buffer: *mut c_void,
+    // Pointer to CrBuffer + (framebufferwidth/2)*(frameheight/64)
+    pub cr_buffer2: *mut c_void,
+    // Pointer to CbBuffer + (framebufferwidth/2)*(frameheight/64)
+    pub cb_buffer2: *mut c_void,
+
+    pub frame_height: i32,
+    pub frame_width: i32,
+    pub frame_buffer_width: i32,
+    pub unknown3: [i32; 11usize],
+}
+
+psp_extern! {
+    #![name = "sceMpegbase"]
+    #![flags = 0x0009]
+    #![version = (0x00, 0x00)]
+
+    #[psp(0xBE45C284)]
+    pub fn sceMpegBaseYCrCbCopyVme(
+        yuv_buffer: *mut c_void,
+        buffer: *mut i32,
+        type_: i32,
+    ) -> i32;
+
+    #[psp(0x492B5E4B)]
+    pub fn sceMpegBaseCscInit(width: i32) -> i32;
+
+    #[psp(0xCE8EB837)]
+    pub fn sceMpegBaseCscVme(
+        rgb_buffer: *mut c_void,
+        rgb_buffer2: *mut c_void,
+        width: i32,
+        y_cr_cb_buffer: *mut SceMpegYCrCbBuffer,
+    ) -> i32;
+
+    #[psp(0xBEA18F91)]
+    /// Unknown real function name.
+    pub fn sceMpegbase_BEA18F91(lli: *mut SceMpegLLI) -> i32;
+}
