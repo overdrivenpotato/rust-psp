@@ -1427,9 +1427,10 @@ psp_extern! {
 
 }
 
+#[allow(non_camel_case_types)]
 pub type socklen_t = u32;
 #[repr(C)]
-struct sockaddr(u32);
+pub struct sockaddr(u32);
 
 psp_extern! {
     #![name = "sceNetInet"]
@@ -2162,7 +2163,7 @@ psp_extern! {
 }
 
 #[repr(C)]
-struct in_addr(u32);
+pub struct in_addr(u32);
 
 psp_extern! {
     #![name = "sceNetResolver"]
@@ -2214,7 +2215,7 @@ psp_extern! {
     ///
     /// - `rid`: Resolver id
     /// - `hostname`: Name to resolve
-    /// - `addr`: Pointer to NetInAddr structure to receive the address
+    /// - `addr`: Pointer to in_addr structure to receive the address
     /// - `timeout`: Number of seconds before timeout
     /// - `retry`: Number of retires
     ///
@@ -2224,7 +2225,7 @@ psp_extern! {
     pub fn sceNetResolverStartNtoA(
         rid: i32,
         hostname: *const u8,
-        addr: *mut NetInAddr,
+        addr: *mut in_addr,
         timeout: u32,
         retry: i32,
     ) -> i32;
@@ -2246,7 +2247,7 @@ psp_extern! {
     /// 0 on success, < 0 on error
     pub fn sceNetResolverStartAtoN(
         rid: i32,
-        addr: *const NetInAddr,
+        addr: *const in_addr,
         hostname: *mut u8,
         hostname_len: u32,
         timeout: u32,
