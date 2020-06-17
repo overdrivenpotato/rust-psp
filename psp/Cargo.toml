@@ -12,6 +12,14 @@ authors = [
 edition = "2018"
 build = "build.rs"
 
+[lib]
+crate-type = ["lib", "staticlib"]
+
+[features]
+# Compile this library as a stub provider. Useful to compile this as a static
+# library for other projects.
+stub-only = []
+
 [dependencies]
 paste = "0.1.12"
 bitflags = "1.2.1"

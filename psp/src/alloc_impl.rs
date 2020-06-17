@@ -58,6 +58,7 @@ static ALLOC: SystemAlloc = SystemAlloc;
 fn aeh(_: Layout) -> ! { loop {} }
 
 #[no_mangle]
+#[cfg(not(feature = "stub-only"))]
 unsafe extern fn memset(ptr: *mut u8, value: u32, num: usize) -> *mut u8 {
     for i in 0..num {
         *ptr.add(i) = value as u8;
@@ -67,6 +68,7 @@ unsafe extern fn memset(ptr: *mut u8, value: u32, num: usize) -> *mut u8 {
 }
 
 #[no_mangle]
+#[cfg(not(feature = "stub-only"))]
 unsafe extern fn memcpy(dst: *mut u8, src: *const u8, num: isize) -> *mut u8 {
     for i in 0..num {
         *dst.offset(i) = *src.offset(i);
@@ -76,6 +78,7 @@ unsafe extern fn memcpy(dst: *mut u8, src: *const u8, num: isize) -> *mut u8 {
 }
 
 #[no_mangle]
+#[cfg(not(feature = "stub-only"))]
 unsafe extern fn memcmp(ptr1: *mut u8, ptr2: *mut u8, num: isize) -> i32 {
     for i in 0..num {
         let diff = ptr1.offset(i) as i32 - ptr2.offset(i) as i32;
@@ -89,6 +92,7 @@ unsafe extern fn memcmp(ptr1: *mut u8, ptr2: *mut u8, num: isize) -> i32 {
 }
 
 #[no_mangle]
+#[cfg(not(feature = "stub-only"))]
 unsafe extern fn memmove(dst: *mut u8, src: *mut u8, num: isize) -> *mut u8 {
     if dst < src {
         for i in 0..num {

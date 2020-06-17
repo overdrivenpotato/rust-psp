@@ -12,7 +12,8 @@
 )]
 
 // For unwinding support
-#![feature(std_internals, panic_info_message, panic_internals, unwind_attributes, panic_unwind)]
+#![feature(std_internals, panic_info_message, panic_internals, unwind_attributes)]
+#![cfg_attr(not(feature = "stub-only"), feature(panic_unwind))]
 
 // For the `const_generics` feature.
 #![allow(incomplete_features)]
@@ -20,24 +21,33 @@
 #![no_std]
 
 #[macro_use] extern crate paste;
-extern crate alloc;
-extern crate panic_unwind;
+#[cfg(not(feature = "stub-only"))] extern crate alloc;
+#[cfg(not(feature = "stub-only"))] extern crate panic_unwind;
 
-#[macro_use] #[doc(hidden)] pub mod debug;
+#[macro_use]
+#[doc(hidden)]
+#[cfg(not(feature = "stub-only"))]
+pub mod debug;
+
 #[macro_use] mod vfpu;
 mod eabi;
-mod alloc_impl;
-pub mod panic;
 pub mod sys;
 
-mod screenshot;
-pub use screenshot::*;
+#[cfg(not(feature = "stub-only"))] mod alloc_impl;
+#[cfg(not(feature = "stub-only"))] pub mod panic;
 
-mod benchmark;
-pub use benchmark::*;
+#[cfg(not(feature = "stub-only"))] mod screenshot;
+#[cfg(not(feature = "stub-only"))] pub use screenshot::*;
 
-mod constants;
-pub use constants::*;
+#[cfg(not(feature = "stub-only"))] mod benchmark;
+#[cfg(not(feature = "stub-only"))] pub use benchmark::*;
+
+#[cfg(not(feature = "stub-only"))] mod constants;
+#[cfg(not(feature = "stub-only"))] pub use constants::*;
+
+#[cfg(feature = "stub-only")]
+#[panic_handler]
+fn panic(_: &core::panic::PanicInfo) -> ! { loop {} }
 
 #[cfg(feature="embedded-graphics")]
 pub mod embedded_graphics;
