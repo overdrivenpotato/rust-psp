@@ -4,31 +4,31 @@ psp_extern! {
     #![version = (0x00, 0x11)]
 
     #[psp(0xC01EC829)]
-    pub unsafe fn sceVideocodecOpen(
+    pub fn sceVideocodecOpen(
         buffer: *mut u32,
         type_: i32,
     ) -> i32;
 
     #[psp(0x2D31F5B1)]
-    pub unsafe fn sceVideocodecGetEDRAM(
+    pub fn sceVideocodecGetEDRAM(
         buffer: *mut u32,
         type_: i32,
     ) -> i32;
 
     #[psp(0x17099F0A)]
-    pub unsafe fn sceVideocodecInit(
+    pub fn sceVideocodecInit(
         buffer: *mut u32,
         type_: i32,
     ) -> i32;
 
     #[psp(0xDBA273FA)]
-    pub unsafe fn sceVideocodecDecode(
+    pub fn sceVideocodecDecode(
         buffer: *mut u32,
         type_: i32,
     ) -> i32;
 
     #[psp(0x4F160BF4)]
-    pub unsafe fn sceVideocodecReleaseEDRAM(buffer: *mut u32) -> i32;
+    pub fn sceVideocodecReleaseEDRAM(buffer: *mut u32) -> i32;
 }
 
 pub enum AudioCodec {
@@ -46,25 +46,25 @@ psp_extern! {
     #[psp(0x9D3F790C)]
     pub fn sceAudiocodecCheckNeedMem(
         buffer: *mut u32,
-        type: i32,
+        type_: i32,
     ) -> i32;
 
     #[psp(0x5B37EB1D)]
     pub fn sceAudiocodecInit(
         buffer: *mut u32,
-        type: i32,
+        type_: i32,
     ) -> i32;
 
     #[psp(0x70A703F8)]
     pub fn sceAudiocodecDecode(
         buffer: *mut u32,
-        type: i32,
+        type_: i32,
     ) -> i32;
 
     #[psp(0x3A20A200)]
     pub fn sceAudiocodecGetEDRAM(
         buffer: *mut u32,
-        type: i32,
+        type_: i32,
     ) -> i32;
 
     #[psp(0x29681260)]
