@@ -60,7 +60,8 @@ unsafe fn get_context_unchecked() -> &'static mut Context {
 const EPSILON: f32 = 0.00001;
 
 #[allow(non_snake_case)]
-pub unsafe fn sceGumDrawArray(
+#[no_mangle]
+pub unsafe extern "C" fn sceGumDrawArray(
     prim: sys::GuPrimitive,
     v_type: sys::VertexType,
     count: i32,
@@ -72,7 +73,8 @@ pub unsafe fn sceGumDrawArray(
 }
 
 #[allow(non_snake_case)]
-pub unsafe fn sceGumDrawArrayN(
+#[no_mangle]
+pub unsafe extern "C" fn sceGumDrawArrayN(
     prim: sys::GuPrimitive,
     v_type: sys::VertexType,
     count: i32,
@@ -85,7 +87,8 @@ pub unsafe fn sceGumDrawArrayN(
 }
 
 #[allow(non_snake_case)]
-pub unsafe fn sceGumDrawBezier(
+#[no_mangle]
+pub unsafe extern "C" fn sceGumDrawBezier(
     v_type: sys::VertexType,
     u_count: i32,
     v_count: i32,
@@ -97,7 +100,8 @@ pub unsafe fn sceGumDrawBezier(
 }
 
 #[allow(non_snake_case)]
-pub unsafe fn sceGumDrawSpline(
+#[no_mangle]
+pub unsafe extern "C" fn sceGumDrawSpline(
     v_type: sys::VertexType,
     u_count: i32,
     v_count: i32,
@@ -111,7 +115,8 @@ pub unsafe fn sceGumDrawSpline(
 }
 
 #[allow(non_snake_case)]
-pub unsafe fn sceGumFastInverse() {
+#[no_mangle]
+pub unsafe extern "C" fn sceGumFastInverse() {
     get_context_unchecked().prepare(MatrixSet::VMAT3, MatrixSet::VMAT0 | MatrixSet::VMAT1);
 
     vfpu_asm!(
@@ -128,7 +133,8 @@ pub unsafe fn sceGumFastInverse() {
 }
 
 #[allow(non_snake_case)]
-pub unsafe fn sceGumFullInverse() {
+#[no_mangle]
+pub unsafe extern "C" fn sceGumFullInverse() {
     let mut t = MaybeUninit::uninit();
 
     get_context_unchecked().prepare(MatrixSet::VMAT3, MatrixSet::VMAT0 | MatrixSet::VMAT1);
@@ -165,7 +171,8 @@ pub unsafe fn sceGumFullInverse() {
 /// [0 0 0 1]
 /// ```
 #[allow(non_snake_case)]
-pub unsafe fn sceGumLoadIdentity() {
+#[no_mangle]
+pub unsafe extern "C" fn sceGumLoadIdentity() {
     VFPU_CONTEXT
         .get_or_insert_with(Context::new)
         .prepare(MatrixSet::VMAT3, MatrixSet::empty());
@@ -181,7 +188,8 @@ pub unsafe fn sceGumLoadIdentity() {
 ///
 /// - `m`: Matrix to load into stack
 #[allow(non_snake_case)]
-pub unsafe fn sceGumLoadMatrix(m: &ScePspFMatrix4) {
+#[no_mangle]
+pub unsafe extern "C" fn sceGumLoadMatrix(m: &ScePspFMatrix4) {
     VFPU_CONTEXT
         .get_or_insert_with(Context::new)
         .prepare(MatrixSet::VMAT3, MatrixSet::empty());
@@ -199,7 +207,8 @@ pub unsafe fn sceGumLoadMatrix(m: &ScePspFMatrix4) {
 }
 
 #[allow(non_snake_case)]
-pub unsafe fn sceGumLookAt(eye: &ScePspFVector3, center: &ScePspFVector3, up: &ScePspFVector3) {
+#[no_mangle]
+pub unsafe extern "C" fn sceGumLookAt(eye: &ScePspFVector3, center: &ScePspFVector3, up: &ScePspFVector3) {
     let mut t = gum_load_identity();
     gum_look_at(&mut t, eye, center, up);
 
@@ -225,7 +234,8 @@ pub unsafe fn sceGumLookAt(eye: &ScePspFVector3, center: &ScePspFVector3, up: &S
 ///
 /// - `mode`: Matrix mode to use
 #[allow(non_snake_case)]
-pub unsafe fn sceGumMatrixMode(mode: MatrixMode) {
+#[no_mangle]
+pub unsafe extern "C" fn sceGumMatrixMode(mode: MatrixMode) {
     get_context_unchecked().prepare(MatrixSet::VMAT3, MatrixSet::empty());
 
     vfpu_asm!(
@@ -259,7 +269,8 @@ pub unsafe fn sceGumMatrixMode(mode: MatrixMode) {
 ///
 /// - `m`: Matrix to multiply stack with
 #[allow(non_snake_case)]
-pub unsafe fn sceGumMultMatrix(m: &ScePspFMatrix4) {
+#[no_mangle]
+pub unsafe extern "C" fn sceGumMultMatrix(m: &ScePspFMatrix4) {
     get_context_unchecked().prepare(MatrixSet::VMAT3, MatrixSet::VMAT0 | MatrixSet::VMAT1);
 
     vfpu_asm!(
@@ -283,7 +294,8 @@ pub unsafe fn sceGumMultMatrix(m: &ScePspFMatrix4) {
 ///
 /// The matrix loses its orthonogal status after executing this function.
 #[allow(non_snake_case)]
-pub unsafe fn sceGumOrtho(
+#[no_mangle]
+pub unsafe extern "C" fn sceGumOrtho(
     left: f32,
     right: f32,
     bottom: f32,
@@ -341,7 +353,8 @@ pub unsafe fn sceGumOrtho(
 ///
 /// The matrix loses its orthonogal status after executing this function.
 #[allow(non_snake_case)]
-pub unsafe fn sceGumPerspective(fovy: f32, aspect: f32, near: f32, far: f32) {
+#[no_mangle]
+pub unsafe extern "C" fn sceGumPerspective(fovy: f32, aspect: f32, near: f32, far: f32) {
     get_context_unchecked().prepare(MatrixSet::VMAT3, MatrixSet::VMAT0 | MatrixSet::VMAT1);
 
     vfpu_asm!(
@@ -392,7 +405,8 @@ pub unsafe fn sceGumPerspective(fovy: f32, aspect: f32, near: f32, far: f32) {
 
 /// Pop matrix from stack
 #[allow(non_snake_case)]
-pub unsafe fn sceGumPopMatrix() {
+#[no_mangle]
+pub unsafe extern "C" fn sceGumPopMatrix() {
     CURRENT_MATRIX = CURRENT_MATRIX.offset(-1);
     get_context_unchecked().prepare(MatrixSet::VMAT3, MatrixSet::empty());
 
@@ -410,7 +424,8 @@ pub unsafe fn sceGumPopMatrix() {
 
 /// Push current matrix onto stack
 #[allow(non_snake_case)]
-pub unsafe fn sceGumPushMatrix() {
+#[no_mangle]
+pub unsafe extern "C" fn sceGumPushMatrix() {
     CURRENT_MATRIX = CURRENT_MATRIX.offset(1);
     get_context_unchecked().prepare(MatrixSet::VMAT3, MatrixSet::empty());
 
@@ -430,7 +445,8 @@ pub unsafe fn sceGumPushMatrix() {
 ///
 /// - `angle`: Angle in radians
 #[allow(non_snake_case)]
-pub unsafe fn sceGumRotateX(angle: f32) {
+#[no_mangle]
+pub unsafe extern "C" fn sceGumRotateX(angle: f32) {
     get_context_unchecked().prepare(MatrixSet::VMAT3, MatrixSet::VMAT0 | MatrixSet::VMAT1);
 
     vfpu_asm!(
@@ -456,7 +472,8 @@ pub unsafe fn sceGumRotateX(angle: f32) {
 ///
 /// - `angle`: Angle in radians
 #[allow(non_snake_case)]
-pub unsafe fn sceGumRotateY(angle: f32) {
+#[no_mangle]
+pub unsafe extern "C" fn sceGumRotateY(angle: f32) {
     get_context_unchecked().prepare(MatrixSet::VMAT3, MatrixSet::VMAT0 | MatrixSet::VMAT1);
 
     vfpu_asm!(
@@ -482,7 +499,8 @@ pub unsafe fn sceGumRotateY(angle: f32) {
 ///
 /// - `angle`: Angle in radians
 #[allow(non_snake_case)]
-pub unsafe fn sceGumRotateZ(angle: f32) {
+#[no_mangle]
+pub unsafe extern "C" fn sceGumRotateZ(angle: f32) {
     get_context_unchecked().prepare(MatrixSet::VMAT3, MatrixSet::VMAT0 | MatrixSet::VMAT1);
 
     vfpu_asm!(
@@ -508,7 +526,8 @@ pub unsafe fn sceGumRotateZ(angle: f32) {
 ///
 /// - `v`: Pointer to vector containing angles
 #[allow(non_snake_case)]
-pub unsafe fn sceGumRotateXYZ(v: &ScePspFVector3) {
+#[no_mangle]
+pub unsafe extern "C" fn sceGumRotateXYZ(v: &ScePspFVector3) {
     sceGumRotateX(v.x);
     sceGumRotateY(v.y);
     sceGumRotateZ(v.z);
@@ -520,7 +539,8 @@ pub unsafe fn sceGumRotateXYZ(v: &ScePspFVector3) {
 ///
 /// - `v`: Pointer to vector containing angles
 #[allow(non_snake_case)]
-pub unsafe fn sceGumRotateZYX(v: &ScePspFVector3) {
+#[no_mangle]
+pub unsafe extern "C" fn sceGumRotateZYX(v: &ScePspFVector3) {
     sceGumRotateZ(v.z);
     sceGumRotateY(v.y);
     sceGumRotateX(v.x);
@@ -532,7 +552,8 @@ pub unsafe fn sceGumRotateZYX(v: &ScePspFVector3) {
 ///
 /// The matrix loses its orthonogal status after executing this function.
 #[allow(non_snake_case)]
-pub unsafe fn sceGumScale(v: &ScePspFVector3) {
+#[no_mangle]
+pub unsafe extern "C" fn sceGumScale(v: &ScePspFVector3) {
     get_context_unchecked().prepare(MatrixSet::VMAT3, MatrixSet::VMAT0);
 
     vfpu_asm!(
@@ -551,7 +572,8 @@ pub unsafe fn sceGumScale(v: &ScePspFVector3) {
 ///
 /// - `m`: Matrix to write result to
 #[allow(non_snake_case)]
-pub unsafe fn sceGumStoreMatrix(m: &mut ScePspFMatrix4) {
+#[no_mangle]
+pub unsafe extern "C" fn sceGumStoreMatrix(m: &mut ScePspFMatrix4) {
     get_context_unchecked().prepare(MatrixSet::VMAT3, MatrixSet::VMAT0);
 
     vfpu_asm!(
@@ -570,7 +592,8 @@ pub unsafe fn sceGumStoreMatrix(m: &mut ScePspFMatrix4) {
 ///
 /// - `v`: Translation coordinates
 #[allow(non_snake_case)]
-pub unsafe fn sceGumTranslate(v: &ScePspFVector3) {
+#[no_mangle]
+pub unsafe extern "C" fn sceGumTranslate(v: &ScePspFVector3) {
     get_context_unchecked().prepare(MatrixSet::VMAT3, MatrixSet::VMAT0 | MatrixSet::VMAT1);
 
     vfpu_asm!(
@@ -588,7 +611,8 @@ pub unsafe fn sceGumTranslate(v: &ScePspFVector3) {
 
 /// Explicitly flush dirty matrices to the hardware
 #[allow(non_snake_case)]
-pub unsafe fn sceGumUpdateMatrix() {
+#[no_mangle]
+pub unsafe extern "C" fn sceGumUpdateMatrix() {
     STACK_DEPTH[CURRENT_MODE as usize] = CURRENT_MATRIX;
 
     if CURRENT_MATRIX_UPDATE != 0 {
