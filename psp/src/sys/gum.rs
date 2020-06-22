@@ -35,17 +35,27 @@ static mut MATRIX_STACK: [[ScePspFMatrix4; 32]; 4] = {
 static mut MATRIX_UPDATE: [i32; 4] = [0, 0, 0, 0];
 static mut CURRENT_MATRIX_UPDATE: i32 = 0;
 
+// This is a horrible unsound hack. It is used only a few times below. The
+// reason this is here, is because this whole file was translated literally
+// from C code, and Rust does not allow mutable references when defining static
+// data. This should be removed.
+//
+// TODO: Figure out a better way of doing this.
+const unsafe fn matrix_ref_to_mut_ptr_hack(r: &'static ScePspFMatrix4) -> *mut ScePspFMatrix4 {
+    r as *const _ as _
+}
+
 static mut CURRENT_MATRIX: *mut ScePspFMatrix4 = unsafe {
-    &mut MATRIX_STACK[MatrixMode::Projection as usize][0]
+    matrix_ref_to_mut_ptr_hack(&MATRIX_STACK[MatrixMode::Projection as usize][0])
 };
 
 static mut CURRENT_MODE: MatrixMode = MatrixMode::Projection;
 static mut STACK_DEPTH: [*mut ScePspFMatrix4; 4] = unsafe {
     [
-        &mut MATRIX_STACK[MatrixMode::Projection as usize][0],
-        &mut MATRIX_STACK[MatrixMode::View as usize][0],
-        &mut MATRIX_STACK[MatrixMode::Model as usize][0],
-        &mut MATRIX_STACK[MatrixMode::Texture as usize][0],
+        matrix_ref_to_mut_ptr_hack(&MATRIX_STACK[MatrixMode::Projection as usize][0]),
+        matrix_ref_to_mut_ptr_hack(&MATRIX_STACK[MatrixMode::View as usize][0]),
+        matrix_ref_to_mut_ptr_hack(&MATRIX_STACK[MatrixMode::Model as usize][0]),
+        matrix_ref_to_mut_ptr_hack(&MATRIX_STACK[MatrixMode::Texture as usize][0]),
     ]
 };
 

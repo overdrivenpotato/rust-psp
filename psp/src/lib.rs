@@ -6,7 +6,6 @@
     core_intrinsics,
     const_loop,
     const_if_match,
-    const_mut_refs,
     const_generics,
     c_variadic,
 )]
