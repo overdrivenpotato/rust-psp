@@ -92,6 +92,7 @@ macro_rules! module {
         mod __psp_module {
             #[no_mangle]
             #[link_section = ".rodata.sceModuleInfo"]
+            #[used]
             static MODULE_INFO: $crate::Align16<$crate::sys::SceModuleInfo> = $crate::Align16(
                 $crate::sys::SceModuleInfo {
                     mod_attribute: 0,
@@ -116,6 +117,7 @@ macro_rules! module {
 
             #[no_mangle]
             #[link_section = ".lib.ent"]
+            #[used]
             static LIB_ENT: $crate::sys::SceLibraryEntry = $crate::sys::SceLibraryEntry {
                 // TODO: Fix this?
                 name: core::ptr::null(),
@@ -129,6 +131,7 @@ macro_rules! module {
 
             #[no_mangle]
             #[link_section = ".rodata.sceResident"]
+            #[used]
             static LIB_ENT_TABLE: $crate::sys::SceLibraryEntryTable = $crate::sys::SceLibraryEntryTable {
                 module_start_nid: 0xd632acdb, // module_start
                 module_info_nid: 0xf01d73a7, // SceModuleInfo

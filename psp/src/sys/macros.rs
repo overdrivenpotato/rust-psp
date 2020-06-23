@@ -54,6 +54,7 @@ macro_rules! nid {
     ($name:ident, $section:expr, $value:expr) => {
         #[no_mangle]
         #[link_section = $section]
+        #[used]
         static $name: u32 = $value;
     }
 }
@@ -134,10 +135,12 @@ macro_rules! psp_extern {
             mod [< __ $lib_name _mod >] {
                 #[link_section = ".rodata.sceResident"]
                 #[no_mangle]
+                #[used]
                 static [< __ $lib_name _RESIDENT >] : [u8; $crate::sys::macros::lib_name_bytes_len($lib_name)] = $crate::sys::macros::lib_name_bytes($lib_name);
 
                 #[link_section = ".lib.stub"]
                 #[no_mangle]
+                #[used]
                 static [< __ $lib_name _STUB >] : $crate::sys::SceStubLibraryEntry = $crate::sys::SceStubLibraryEntry {
                     name: expr! { & [< __ $lib_name _RESIDENT >] [0] },
                     version: [$lib_minor_version, $lib_major_version],
