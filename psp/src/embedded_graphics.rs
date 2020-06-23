@@ -16,25 +16,11 @@ use embedded_graphics::{
 use alloc::alloc::{alloc, Layout};
 
 pub struct PspDisplay {
-    buf: *mut u32,
+    draw_buf: *mut u32,
     pub size: Size,
 }
 
-#[repr(C, align(4))]
-struct Vertex {
-    u: f32,
-    v: f32,
-    x: f32,
-    y: f32,
-    z: f32,
-}
-
 static mut LIST: crate::Align16<[u32; 0x40000]> = crate::Align16([0; 0x40000]);
-static VERTICES: crate::Align16<[Vertex; 2]> = crate::Align16([
-    Vertex { u: 0.0, v: 0.0, x: 0.0, y: 0.0, z: 0.0},
-    Vertex { u: 0.9375, v: 0.53125 , x: SCREEN_WIDTH as f32, y: SCREEN_HEIGHT as f32, z: 1.0},
-]);
-static mut VRAM: *mut u32 = 0x4000_0000 as *mut u32;
 
 impl PspDisplay {
     pub fn new() -> Self {
@@ -43,21 +29,8 @@ impl PspDisplay {
 
             sys::sceDisplaySetMode(sys::DisplayMode::Lcd, SCREEN_WIDTH as usize, SCREEN_HEIGHT as usize);
 
-            // Cache-through address
-            VRAM = (0x4000_0000u32 | sys::sceGeEdramGetAddr() as u32) as *mut u32;
-
-            sys::sceDisplaySetFrameBuf(
-                VRAM as *const u8,
-                BUF_WIDTH as usize,
-                sys::DisplayPixelFormat::Psm8888,
-                sys::DisplaySetBufSync::NextFrame,
-            );
-
-
-            let fbp0 = get_static_vram_buffer(BUF_WIDTH, SCREEN_HEIGHT, sys::TexturePixelFormat::Psm8888);
-            let fbp1 = get_static_vram_buffer(BUF_WIDTH, SCREEN_HEIGHT, sys::TexturePixelFormat::Psm8888);
-            let zbp = get_static_vram_buffer(BUF_WIDTH, SCREEN_HEIGHT, sys::TexturePixelFormat::Psm4444);
-            let buf = (0x4400_0000 as *mut u8).add(get_static_vram_buffer(512, 512, sys::TexturePixelFormat::Psm8888) as usize) as *mut u32;
+            let disp = get_static_vram_buffer(BUF_WIDTH, SCREEN_HEIGHT, sys::TexturePixelFormat::Psm8888);
+            let draw = (0x4400_0000 as *mut u8).add(get_static_vram_buffer(512, 272, sys::TexturePixelFormat::Psm8888) as usize) as *mut u32;
 
             sys::sceGumLoadIdentity();
             sys::sceGuInit();
@@ -66,40 +39,21 @@ impl PspDisplay {
                 sys::GuContextType::Direct,
                 &mut LIST as *mut _ as *mut c_void,
             );
-            sys::sceGuDrawBuffer(sys::DisplayPixelFormat::Psm8888, fbp0, BUF_WIDTH as i32);
-            sys::sceGuDispBuffer(SCREEN_WIDTH as i32, SCREEN_HEIGHT as i32, fbp1, BUF_WIDTH as i32);
-            sys::sceGuDepthBuffer(zbp, BUF_WIDTH as i32);
+            sys::sceGuDrawBuffer(sys::DisplayPixelFormat::Psm8888, (draw as u32 - 0x4400_0000) as *mut c_void, BUF_WIDTH as i32);
+            sys::sceGuDispBuffer(SCREEN_WIDTH as i32, SCREEN_HEIGHT as i32, disp, BUF_WIDTH as i32);
             sys::sceGuOffset(2048 - (SCREEN_WIDTH/2), 2048 - (SCREEN_HEIGHT/2));
             sys::sceGuViewport(2048, 2048, SCREEN_WIDTH as i32, SCREEN_HEIGHT as i32);
-            sys::sceGuDepthRange(65535, 0);
             sys::sceGuScissor(0, 0, SCREEN_WIDTH as i32, SCREEN_HEIGHT as i32);
             sys::sceGuEnable(sys::GuState::ScissorTest);
 
             sys::sceGuEnable(sys::GuState::Texture2D);
             sys::sceGuEnable(sys::GuState::ClipPlanes);
 
-            // setup matrices
-            sys::sceGumMatrixMode(sys::MatrixMode::Projection);
-            sys::sceGumLoadIdentity();
-            sys::sceGumOrtho(0.0, 480.0, 272.0, 0.0, -30.0, 30.0);
-
-            sys::sceGumMatrixMode(sys::MatrixMode::View);
-            sys::sceGumLoadIdentity();
-
-            sys::sceGumMatrixMode(sys::MatrixMode::Model);
-            sys::sceGumLoadIdentity();
-
-            sys::sceGuTexMode(sys::TexturePixelFormat::Psm8888, 0, 0, 0);
-
-            sys::sceGuTexFunc(sys::TextureEffect::Replace, sys::TextureColorComponent::Rgb);
-            sys::sceGuTexFilter(sys::TextureFilter::Linear, sys::TextureFilter::Linear);
-            sys::sceGuTexWrap(sys::GuTexWrapMode::Clamp, sys::GuTexWrapMode::Clamp);
-
             sys::sceGuFinish();
             sys::sceGuSync(sys::GuSyncMode::Finish, sys::GuSyncBehavior::Wait);
             sys::sceGuDisplay(true);
 
-            Self { buf, size }
+            Self { draw_buf: draw, size }
         }
     }
 
@@ -115,23 +69,23 @@ impl PspDisplay {
     }
 
     pub fn flush(&mut self) {
-        unsafe {
+        unsafe { 
             sys::sceGuStart(sys::GuContextType::Direct, &mut LIST.0 as *mut _ as *mut _);
-
-            sys::sceGuTexImage(sys::MipmapLevel::None, 512, 512, 512, self.buf as *const c_void);
-
-            // draw buffer
-            sys::sceGumDrawArray(
-                sys::GuPrimitive::Sprites,
-                sys::VertexType::TEXTURE_32BITF | sys::VertexType::VERTEX_32BITF | sys::VertexType::TRANSFORM_3D,
-                2,
-                core::ptr::null_mut(),
-                &VERTICES as *const crate::Align16<_> as *const _
+            sys::sceGuCopyImage(
+                sys::DisplayPixelFormat::Psm8888,
+                0,
+                0,
+                512,
+                272,
+                512,
+                self.draw_buf as *mut c_void,
+                0,
+                0,
+                512,
+                0x4400_0000 as *mut c_void
             );
-
             sys::sceGuFinish();
             sys::sceGuSync(sys::GuSyncMode::Finish, sys::GuSyncBehavior::Wait);
-            sys::sceGuSwapBuffers();
         }
     }
 
@@ -150,7 +104,7 @@ impl DrawTarget<Rgb888> for PspDisplay {
         let Pixel(point, color) = pixel;
         if let Some(index) = self.point_to_index(point) {
             unsafe {
-                *self.buf.add(index) = rgba_to_bgra(RawU24::from(color).into_inner());
+                *self.draw_buf.add(index) = rgba_to_bgra(RawU24::from(color).into_inner());
             }
         }
         Ok(())
@@ -163,7 +117,7 @@ impl DrawTarget<Rgb888> for PspDisplay {
         for Pixel(point, color) in pixels.into_iter() {
             if let Some(index) = self.point_to_index(point) {
                 unsafe {
-                    *self.buf.add(index) = rgba_to_bgra(RawU24::from(color).into_inner());
+                    *self.draw_buf.add(index) = rgba_to_bgra(RawU24::from(color).into_inner());
                 }
             }
         }
@@ -175,13 +129,11 @@ impl DrawTarget<Rgb888> for PspDisplay {
         unsafe {
 
             sys::sceGuStart(sys::GuContextType::Direct, &mut LIST.0 as *mut [u32; 0x40000] as *mut _);
-            sys::sceGuDrawBufferList(sys::DisplayPixelFormat::Psm8888, self.buf as *mut c_void, 512);
             sys::sceGuClearColor(rgba_to_bgra(RawU24::from(color).into_inner()));
             sys::sceGuClearDepth(0);
             sys::sceGuClear(sys::ClearBuffer::COLOR_BUFFER_BIT | sys::ClearBuffer::DEPTH_BUFFER_BIT);
             sys::sceGuFinish();
             sys::sceGuSync(sys::GuSyncMode::Finish, sys::GuSyncBehavior::Wait);
-            sys::sceGuSwapBuffers();
         }
         Ok(())
     }
@@ -229,12 +181,11 @@ impl DrawTarget<Rgb888> for PspDisplay {
                 dx,
                 dy,
                 512,
-                self.buf as *mut c_void
+                self.draw_buf as *mut c_void
             );
 
             sys::sceGuFinish();
             sys::sceGuSync(sys::GuSyncMode::Finish, sys::GuSyncBehavior::Wait);
-            sys::sceGuSwapBuffers();
         }
         Ok(())
     }
