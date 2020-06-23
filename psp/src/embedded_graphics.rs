@@ -6,16 +6,18 @@ use core::ffi::c_void;
 use core::convert::TryFrom;
 use embedded_graphics::{
     drawable::Pixel,
-    geometry::Size,
+    geometry::{Size, Dimensions},
     pixelcolor::Rgb888,
     pixelcolor::raw::{RawU24, RawData},
     geometry::Point,
     DrawTarget,
+    image::{Image, ImageDimensions, IntoPixelIter},
 };
+use alloc::alloc::{alloc, Layout};
 
 pub struct PspDisplay {
     buf: *mut u32,
-    size: Size,
+    pub size: Size,
 }
 
 #[repr(C, align(4))]
@@ -55,7 +57,6 @@ impl PspDisplay {
             let fbp0 = get_static_vram_buffer(BUF_WIDTH, SCREEN_HEIGHT, sys::TexturePixelFormat::Psm8888);
             let fbp1 = get_static_vram_buffer(BUF_WIDTH, SCREEN_HEIGHT, sys::TexturePixelFormat::Psm8888);
             let zbp = get_static_vram_buffer(BUF_WIDTH, SCREEN_HEIGHT, sys::TexturePixelFormat::Psm4444);
-
             let buf = (0x4400_0000 as *mut u8).add(get_static_vram_buffer(512, 512, sys::TexturePixelFormat::Psm8888) as usize) as *mut u32;
 
             sys::sceGumLoadIdentity();
@@ -68,7 +69,6 @@ impl PspDisplay {
             sys::sceGuDrawBuffer(sys::DisplayPixelFormat::Psm8888, fbp0, BUF_WIDTH as i32);
             sys::sceGuDispBuffer(SCREEN_WIDTH as i32, SCREEN_HEIGHT as i32, fbp1, BUF_WIDTH as i32);
             sys::sceGuDepthBuffer(zbp, BUF_WIDTH as i32);
-
             sys::sceGuOffset(2048 - (SCREEN_WIDTH/2), 2048 - (SCREEN_HEIGHT/2));
             sys::sceGuViewport(2048, 2048, SCREEN_WIDTH as i32, SCREEN_HEIGHT as i32);
             sys::sceGuDepthRange(65535, 0);
@@ -116,7 +116,7 @@ impl PspDisplay {
 
     pub fn flush(&mut self) {
         unsafe {
-            sys::sceGuStart(sys::GuContextType::Direct, &mut LIST.0 as *mut [u32; 0x40000] as *mut _);
+            sys::sceGuStart(sys::GuContextType::Direct, &mut LIST.0 as *mut _ as *mut _);
 
             sys::sceGuTexImage(sys::MipmapLevel::None, 512, 512, 512, self.buf as *const c_void);
 
@@ -179,6 +179,59 @@ impl DrawTarget<Rgb888> for PspDisplay {
             sys::sceGuClearColor(rgba_to_bgra(RawU24::from(color).into_inner()));
             sys::sceGuClearDepth(0);
             sys::sceGuClear(sys::ClearBuffer::COLOR_BUFFER_BIT | sys::ClearBuffer::DEPTH_BUFFER_BIT);
+            sys::sceGuFinish();
+            sys::sceGuSync(sys::GuSyncMode::Finish, sys::GuSyncBehavior::Wait);
+            sys::sceGuSwapBuffers();
+        }
+        Ok(())
+    }
+
+     fn draw_image<'a, 'b, I>(&mut self, item: &'a Image<'b, I, Rgb888>) -> Result<(), Self::Error>
+    where
+        &'b I: IntoPixelIter<Rgb888>,
+        I: ImageDimensions,
+    {
+        let dx = item.top_left().x as i32;
+        let dy = item.top_left().y as i32;
+        let width = item.size().width as i32;
+        let height = item.size().height as i32;
+
+        let padded_width = (width + 3) & !3; 
+        let diff = (padded_width - width) as usize;
+
+        let image_data_ptr = unsafe {
+            alloc(Layout::from_size_align((padded_width*height*4) as usize, 16).unwrap()) 
+        };
+        let mut i = 0;
+        for color in item.into_iter()
+            .map(|p| rgba_to_bgra(RawU24::from(p.1).into_inner())) {
+                for (j, byte) in color.to_ne_bytes().iter().enumerate() {
+                    unsafe {
+                        *image_data_ptr.add(i*4+j) = *byte;
+                    }
+                }
+                i += 1;
+                if (i % padded_width as usize) == 0 {
+                    i += diff;
+                }
+        }
+
+        unsafe {
+            sys::sceGuStart(sys::GuContextType::Direct, &mut LIST.0 as *mut _ as *mut _);
+            sys::sceGuCopyImage(
+                sys::DisplayPixelFormat::Psm8888,
+                0,
+                0,
+                width,
+                height,
+                padded_width,
+                image_data_ptr as *const c_void,
+                dx,
+                dy,
+                512,
+                self.buf as *mut c_void
+            );
+
             sys::sceGuFinish();
             sys::sceGuSync(sys::GuSyncMode::Finish, sys::GuSyncBehavior::Wait);
             sys::sceGuSwapBuffers();

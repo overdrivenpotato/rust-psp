@@ -8,3 +8,6 @@ edition = "2018"
 psp = { path = "../../psp", features = ["embedded-graphics"] }
 embedded-graphics = "0.6.2"
 lvgl = "0.3.1"
+
+[profile.release]
+debug = true

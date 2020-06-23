@@ -64,6 +64,7 @@ fn psp_main() {
         .into_styled(TextStyleBuilder::new(Font6x8).text_color(rust).build())
         .draw(&mut disp)
         .unwrap();
+
     loop {
         unsafe {
             psp::sys::sceDisplayWaitVblankStart();

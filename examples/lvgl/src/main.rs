@@ -2,7 +2,11 @@
 #![no_main]
 
 use core::time::Duration;
+
 use psp::embedded_graphics::PspDisplay;
+use psp::sys;
+
+extern crate alloc;
 
 use lvgl;
 use lvgl::{UI, Color, State, Widget, Part, Animation};
@@ -45,14 +49,31 @@ fn psp_main() {
     let mut bar = Bar::new(&mut screen).unwrap();
     bar.set_size(250, 20).unwrap();
     bar.set_pos(205, 100).unwrap();
-    bar.set_range(0, 100).unwrap();
-    bar.set_anim_time(1000).unwrap();
-    bar.set_value(100, Animation::ON).unwrap();
+    bar.set_range(0, 20).unwrap();
+    //bar.set_anim_time(50000).unwrap();
+    //bar.set_value(1000, Animation::ON).unwrap();
+
+    ui.task_handler();
+    disp.flush();
+
+    let mut loop_start: u64 = 0;
+    let mut loop_end: u64 = 0;
+    let mut loop_millis: u64;
+    let loops_per_sec = unsafe { sys::sceRtcGetTickResolution() };
+    let mut loops = 0;
 
     loop {
-        unsafe { psp::sys::sceDisplayWaitVblankStart(); }
-        ui.tick_inc(Duration::from_millis(16));
-        ui.task_handler();
-        disp.flush();
+        unsafe {
+            sys::sceRtcGetCurrentTick(&mut loop_start as *mut u64);
+            bar.set_value(loops, Animation::ON).unwrap();
+            sys::sceDisplayWaitVblankStart();
+            ui.task_handler();
+            disp.flush();
+            sys::sceRtcGetCurrentTick(&mut loop_end as *mut u64);
+            loop_millis = (((loop_end - loop_start) as f64 / loops_per_sec as f64) * 1_000.0) as u64; 
+            ui.tick_inc(Duration::from_millis(loop_millis));
+            loops += 1;
+        }
     }
 }
+

@@ -2734,7 +2734,7 @@ pub unsafe extern "C" fn sceGuCopyImage(
     width: i32,
     height: i32,
     srcw: i32,
-    src: *mut c_void,
+    src: *const c_void,
     dx: i32,
     dy: i32,
     destw: i32,
