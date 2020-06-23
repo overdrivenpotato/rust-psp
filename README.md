@@ -46,7 +46,7 @@ implementations of graphics functions, and the addition of missing libraries.
 - [x] Macro-based VFPU assembler
 - [x] Full 3D graphics support (faster than PSPSDK in some cases!)
 - [x] No dependency on PSPSDK / PSPToolchain
-- [ ] Reach full parity with user mode support in PSPSDK
+- [x] Reach full parity with user mode support in PSPSDK
 - [ ] Add support for creating kernel mode modules
 - [ ] Port definitions to `libc` crate
 - [ ] Add `std` support
