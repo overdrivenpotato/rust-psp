@@ -4,6 +4,10 @@ fn main() {
     println!("cargo:rerun-if-changed=build.rs");
     println!("cargo:rerun-if-changed=libunwind.a");
 
+    if env::var("CARGO_FEATURE_STUB_ONLY").is_ok() {
+        return;
+    }
+
     // TODO: Do we even need to copy the library over? Maybe we can just link
     // directly from the current directory.
     let out_dir = env::var("OUT_DIR").unwrap();
