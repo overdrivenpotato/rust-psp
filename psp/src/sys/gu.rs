@@ -3559,11 +3559,11 @@ pub unsafe extern "C" fn sceGuDebugFlush() {
                     y_pixel_counter = 0;
                     loop {
                         if y_pixel_counter == 0 {
-                            font_glyph = *(((&FONT as *const u8 as *const u32 as u32) - 4 + char_index as u32) as *const u32);
+                            font_glyph = *(((&FONT as *const u8 as *const u32 as u32) + char_index as u32) as *const u32);
                             glyph_pos = 1;
                         } else {
                             if y_pixel_counter == 4 {
-                                font_glyph = *(((&FONT as *const u8 as *const u32 as u32) + char_index as u32) as *const u32);
+                                font_glyph = *(((&FONT as *const u8 as *const u32 as u32) + 4 + char_index as u32) as *const u32);
                                 glyph_pos = 1 
                             }
                         }
