@@ -3527,7 +3527,6 @@ pub unsafe extern "C" fn sceGuDebugPrint(x: i32, mut y: i32, mut color: u32, mut
 #[allow(non_snake_case)]
 #[no_mangle]
 pub unsafe extern "C" fn sceGuDebugFlush() {
-    //let mut pixel: i32;
     let edram_address = GE_EDRAM_ADDRESS;
     let mut pixel_size: DisplayPixelFormat;
     let mut frame_width: i32;
@@ -3569,7 +3568,6 @@ pub unsafe extern "C" fn sceGuDebugFlush() {
                         }
                         x_pixel_counter = 7;
                         pos = x + (y + y_pixel_counter) * frame_width;
-                        //pixel = pos * 2 + edram_address as i32 + frame_buffer as i32;
                         pos = pos * 4 + edram_address as i32 + frame_buffer as i32;
                         loop {
                             match pixel_size {
@@ -3586,7 +3584,6 @@ pub unsafe extern "C" fn sceGuDebugFlush() {
                             x_pixel_counter = x_pixel_counter - 1;
                             glyph_pos = glyph_pos << 1;
                             pos = pos + 4;
-                            //pixel = pixel + 2;
                             if !(-1 < x_pixel_counter) { 
                                 break;
                             }
