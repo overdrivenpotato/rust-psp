@@ -3451,3 +3451,155 @@ pub unsafe extern "C" fn sceGuDrawArrayN(
         send_command_i_stall(GeCommand::Prim, ((primitive_type as i32) << 16) | count);
     }
 }
+
+static mut CHAR_BUFFER_USED: u32 = 0;
+static mut CHAR_BUFFER: [u8; 32768] = [0u8; 32768];
+static FONT: [u8; 768] = *include_bytes!("./debugfont.bin");
+
+#[repr(C, packed)]
+pub struct DebugCharStruct {
+    x: i32,
+    y: i32,
+    color: u32,
+    character: u8,
+    unused: [u8; 3]
+}
+
+#[allow(non_snake_case)]
+#[no_mangle]
+pub unsafe extern "C" fn sceGuDebugPrint(x: i32, mut y: i32, mut color: u32, mut msg: *const u8) {
+    let mut cur_char: u8;
+    let mut uVar1: u32;
+    let iVar2: i32;
+    let uVar3: u32;
+    let iVar4: i32;
+    let mut cur_x: i32;
+    let mut char_struct_ptr: *mut DebugCharStruct = core::mem::transmute::<&[u8; 32768], *mut DebugCharStruct>(&CHAR_BUFFER);
+
+    let mut i = CHAR_BUFFER_USED;
+    if i >= 0x3ff {
+        return
+    }
+    uVar1 = color >> 8 & 0xff;
+    uVar3 = color >> 16 & 0xff;
+    iVar4 = (uVar3 >> 3) as i32;
+    cur_x = x;
+    match DRAW_BUFFER.pixel_size {
+        DisplayPixelFormat::Psm5650 => {
+            iVar2 = (uVar1 as i32) >> 2;
+            uVar1 = (iVar4 as u32) << 0xb; 
+            uVar1 = (uVar1 | iVar2 as u32) << 5;
+            color = (color & 0xff) >> 3;
+        },
+        DisplayPixelFormat::Psm5551 => {
+            iVar2 = (uVar1 >> 3) as i32;
+            uVar1 = (((color >> 24) >> 7) << 0xf | (iVar4 as u32) << 10) as u32;
+            uVar1 = (uVar1 | iVar2 as u32) << 5;
+            color = (color & 0xff) >> 3;
+        }
+        DisplayPixelFormat::Psm8888 => {}
+        DisplayPixelFormat::Psm4444 => {
+            uVar1 = ((color >> 0x18) >> 4) << 0xc | (uVar3 >> 4) << 8 | (uVar1 >> 4) << 4;
+            color = color & 0xff >> 4;
+        }
+    }
+    color = uVar1 | color;
+    cur_char = *msg;
+    while cur_char != b'\0' {
+        if cur_char == b'\n' {
+            y = y + 8;
+            cur_x = x;
+        } else {
+            (*char_struct_ptr).x = cur_x;
+            i = i + 1;
+            (*char_struct_ptr).character = cur_char - 0x20;
+            (*char_struct_ptr).y = y;
+            (*char_struct_ptr).color = color;
+            char_struct_ptr = (char_struct_ptr as u32 + 16) as *mut DebugCharStruct;
+            cur_x = cur_x + 8;
+        }
+        msg = msg.add(1);
+        cur_char = *msg;
+    }
+    CHAR_BUFFER_USED = i;
+}
+
+#[allow(non_snake_case)]
+#[no_mangle]
+pub unsafe extern "C" fn sceGuDebugFlush() {
+    //let mut pixel: i32;
+    let edram_address = GE_EDRAM_ADDRESS;
+    let mut pixel_size: DisplayPixelFormat;
+    let mut frame_width: i32;
+    let mut frame_buffer: *mut c_void;
+    let draw_buffer_height = DRAW_BUFFER.height;
+    let mut char_index: i32;
+    let mut pos: i32;
+    let mut x_pixel_counter: i32;
+    let mut glyph_pos: u32 = 0;
+    let mut color: u32;
+    let mut font_glyph: u32 = 0;
+    let mut y_pixel_counter: i32;
+    let mut x: i32;
+    let mut char_buffer_used = CHAR_BUFFER_USED;
+    let mut y: i32;
+    let mut char_struct_ptr: *mut DebugCharStruct = core::mem::transmute::<&[u8; 32768], *mut DebugCharStruct>(&CHAR_BUFFER);
+
+    if char_buffer_used != 0 {
+        loop {
+            frame_buffer = DRAW_BUFFER.frame_buffer;
+            frame_width = DRAW_BUFFER.frame_width;
+            pixel_size = DRAW_BUFFER.pixel_size;
+            y = (*char_struct_ptr).y;
+            x = (*char_struct_ptr).x;
+            if (y + 7 < draw_buffer_height) &&
+                (((x + 7 < DRAW_BUFFER.width) as i32 & !y >> 0x1f) != 0) && -1 < x {
+                    color = (*char_struct_ptr).color;
+                    char_index = ((*char_struct_ptr).character) as i32 * 8;
+                    y_pixel_counter = 0;
+                    loop {
+                        if y_pixel_counter == 0 {
+                            font_glyph = *(((&FONT as *const u8 as *const u32 as u32) - 4 + char_index as u32) as *const u32);
+                            glyph_pos = 1;
+                        } else {
+                            if y_pixel_counter == 4 {
+                                font_glyph = *(((&FONT as *const u8 as *const u32 as u32) + char_index as u32) as *const u32);
+                                glyph_pos = 1 
+                            }
+                        }
+                        x_pixel_counter = 7;
+                        pos = x + (y + y_pixel_counter) * frame_width;
+                        //pixel = pos * 2 + edram_address as i32 + frame_buffer as i32;
+                        pos = pos * 4 + edram_address as i32 + frame_buffer as i32;
+                        loop {
+                            match pixel_size {
+                                DisplayPixelFormat::Psm8888 => {
+                                    if font_glyph & glyph_pos != 0 {
+                                        *((pos as u32 + 0x4000_0000) as *mut u32) = color;
+                                    }
+                                },
+                                _ => {
+
+                                    *((pos as u32 + 0x4000_0002) as *mut u16) = color as u16;
+                                }
+                            }
+                            x_pixel_counter = x_pixel_counter - 1;
+                            glyph_pos = glyph_pos << 1;
+                            pos = pos + 4;
+                            //pixel = pixel + 2;
+                            if !(-1 < x_pixel_counter) { 
+                                break;
+                            }
+                        }
+                        y_pixel_counter += 1;
+                        if !(y_pixel_counter < 8) { break; }
+                    }
+                }
+                char_buffer_used = char_buffer_used - 1;
+                char_struct_ptr = ((char_struct_ptr as u32) + 16) as *mut DebugCharStruct;
+        if char_buffer_used == 0 { break; }
+        }
+        CHAR_BUFFER_USED = 0;
+    }
+}
+
