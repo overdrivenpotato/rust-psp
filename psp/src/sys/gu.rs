@@ -3474,7 +3474,7 @@ pub struct DebugCharStruct {
 ///
 /// - `x`: Horizontal start position 
 /// - `y`: Vertical start position
-/// - `color`: Text color, BGRA
+/// - `color`: Text color, ABGR
 /// - `msg`: C-style string
 #[allow(non_snake_case)]
 #[no_mangle]
