@@ -3453,11 +3453,21 @@ pub unsafe extern "C" fn sceGuDrawArrayN(
 }
 
 static mut CHAR_BUFFER_USED: u32 = 0;
-static mut CHAR_BUFFER: [u8; 32768] = [0u8; 32768];
+static mut CHAR_BUFFER: [DebugCharStruct; 2048] = [
+    DebugCharStruct {
+        x: 0,
+        y: 0,
+        color: 0,
+        character: b'\0',
+        unused: [0,0,0]
+    };
+    2048
+];
 static FONT: [u8; 768] = *include_bytes!("./debugfont.bin");
 
 #[repr(C, packed)]
-pub struct DebugCharStruct {
+#[derive(Copy, Clone)]
+struct DebugCharStruct {
     x: i32,
     y: i32,
     color: u32,
@@ -3465,10 +3475,7 @@ pub struct DebugCharStruct {
     unused: [u8; 3]
 }
 
-/// Add characters to CHAR_BUFFER 
-///
-/// Flushing the characters to the draw buffer requires calling sceGuDebugFlush 
-/// afterwards.
+/// Add characters to an internal buffer for later printing with sceGuDebugFlush 
 ///
 /// # Parameters
 ///
@@ -3485,7 +3492,7 @@ pub unsafe extern "C" fn sceGuDebugPrint(x: i32, mut y: i32, mut color: u32, mut
     let uVar3: u32;
     let iVar4: i32;
     let mut cur_x: i32;
-    let mut char_struct_ptr: *mut DebugCharStruct = core::mem::transmute::<&[u8; 32768], *mut DebugCharStruct>(&CHAR_BUFFER);
+    let mut char_struct_ptr: *mut DebugCharStruct = &mut CHAR_BUFFER as *mut _ as *mut DebugCharStruct;
 
     let mut i = CHAR_BUFFER_USED;
     if i >= 0x3ff {
@@ -3537,9 +3544,7 @@ pub unsafe extern "C" fn sceGuDebugPrint(x: i32, mut y: i32, mut color: u32, mut
     CHAR_BUFFER_USED = i;
 }
 
-/// Flush CHAR_BUFFER to the draw buffer
-///
-/// Call sceGuDebugPrint first to add a message to CHAR_BUFFER
+/// Flush character buffer created by sceGuDebugPrint to the draw buffer
 #[allow(non_snake_case)]
 #[no_mangle]
 pub unsafe extern "C" fn sceGuDebugFlush() {
@@ -3558,7 +3563,7 @@ pub unsafe extern "C" fn sceGuDebugFlush() {
     let mut x: i32;
     let mut char_buffer_used = CHAR_BUFFER_USED;
     let mut y: i32;
-    let mut char_struct_ptr: *mut DebugCharStruct = core::mem::transmute::<&[u8; 32768], *mut DebugCharStruct>(&CHAR_BUFFER);
+    let mut char_struct_ptr: *mut DebugCharStruct = &mut CHAR_BUFFER as *mut _ as *mut DebugCharStruct; 
 
     if char_buffer_used != 0 {
         loop {
@@ -3574,11 +3579,11 @@ pub unsafe extern "C" fn sceGuDebugFlush() {
                     y_pixel_counter = 0;
                     loop {
                         if y_pixel_counter == 0 {
-                            font_glyph = *(((&FONT as *const u8 as *const u32 as u32) + char_index as u32) as *const u32);
+                            font_glyph = *(((&FONT as *const _ as u32) + char_index as u32) as *const u32);
                             glyph_pos = 1;
                         } else {
                             if y_pixel_counter == 4 {
-                                font_glyph = *(((&FONT as *const u8 as *const u32 as u32) + 4 + char_index as u32) as *const u32);
+                                font_glyph = *(((&FONT as *const _ as u32) + 4 + char_index as u32) as *const u32);
                                 glyph_pos = 1 
                             }
                         }
@@ -3615,4 +3620,3 @@ pub unsafe extern "C" fn sceGuDebugFlush() {
         CHAR_BUFFER_USED = 0;
     }
 }
-
