@@ -1,4 +1,5 @@
-//! A basic graphics example that only clears the screen.
+//! A basic example of sceGuDebugPrint functionality
+//! Prints "Hello World" in red at 100, 100
 
 #![no_std]
 #![no_main]

@@ -3465,6 +3465,17 @@ pub struct DebugCharStruct {
     unused: [u8; 3]
 }
 
+/// Add characters to CHAR_BUFFER 
+///
+/// Flushing the characters to the draw buffer requires calling sceGuDebugFlush 
+/// afterwards.
+///
+/// # Parameters
+///
+/// - `x`: Horizontal start position 
+/// - `y`: Vertical start position
+/// - `color`: Text color, BGRA
+/// - `msg`: C-style string
 #[allow(non_snake_case)]
 #[no_mangle]
 pub unsafe extern "C" fn sceGuDebugPrint(x: i32, mut y: i32, mut color: u32, mut msg: *const u8) {
@@ -3524,6 +3535,9 @@ pub unsafe extern "C" fn sceGuDebugPrint(x: i32, mut y: i32, mut color: u32, mut
     CHAR_BUFFER_USED = i;
 }
 
+/// Flush CHAR_BUFFER to the draw buffer
+///
+/// Call sceGuDebugPrint first to add a message to CHAR_BUFFER
 #[allow(non_snake_case)]
 #[no_mangle]
 pub unsafe extern "C" fn sceGuDebugFlush() {
