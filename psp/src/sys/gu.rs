@@ -3501,20 +3501,22 @@ pub unsafe extern "C" fn sceGuDebugPrint(x: i32, mut y: i32, mut color: u32, mut
             uVar1 = (iVar4 as u32) << 0xb; 
             uVar1 = (uVar1 | iVar2 as u32) << 5;
             color = (color & 0xff) >> 3;
+            color = uVar1 | color;
         },
         DisplayPixelFormat::Psm5551 => {
             iVar2 = (uVar1 >> 3) as i32;
             uVar1 = (((color >> 24) >> 7) << 0xf | (iVar4 as u32) << 10) as u32;
             uVar1 = (uVar1 | iVar2 as u32) << 5;
             color = (color & 0xff) >> 3;
+            color = uVar1 | color;
         }
         DisplayPixelFormat::Psm8888 => {}
         DisplayPixelFormat::Psm4444 => {
             uVar1 = ((color >> 0x18) >> 4) << 0xc | (uVar3 >> 4) << 8 | (uVar1 >> 4) << 4;
             color = color & 0xff >> 4;
+            color = uVar1 | color;
         }
     }
-    color = uVar1 | color;
     cur_char = *msg;
     while cur_char != b'\0' {
         if cur_char == b'\n' {
