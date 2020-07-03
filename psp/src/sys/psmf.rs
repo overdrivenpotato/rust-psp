@@ -42,7 +42,7 @@ pub struct ScePsmf_GroupStream {
     pub private_stream_id: u8,
     pub p_std_buffer_scale_and_size: [u8; 2usize],
     pub ep_map_for_one_stream_id_start_address: [u8; 4usize],
-    pub number_of_EP_entries: [u8; 4usize],
+    pub number_of_ep_entries: [u8; 4usize],
 }
 
 #[repr(C)]
@@ -56,23 +56,23 @@ pub struct ScePsmf_EP {
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct ScePsmf_EntryPoint {
-    pub PTS_EP_start: u32,
-    pub EP_start_offset: u32,
+    pub pts_ep_start: u32,
+    pub ep_start_offset: u32,
 }
 
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct ScePsmf {
     pub type_: i32,
-    pub groupingPeriod_id: i32,
+    pub grouping_period_id: i32,
     pub group_id: i32,
-    pub psmfStream_id: i32,
+    pub psmf_stream_id: i32,
     pub header: *mut c_void,
-    pub sequenceInfo: *mut c_void,
-    pub currentGroupingPeriod: *mut c_void,
-    pub currentGroup: *mut c_void,
-    pub currentStream: *mut c_void,
-    pub currentEP_map: *mut c_void,
+    pub sequence_info: *mut c_void,
+    pub current_grouping_period: *mut c_void,
+    pub current_group: *mut c_void,
+    pub current_stream: *mut c_void,
+    pub current_ep_map: *mut c_void,
 }
 
 #[repr(C)]
@@ -83,7 +83,7 @@ pub struct ScePsmf_SequenceInfo {
     pub presentation_start_time: [u8; 4usize],
     pub msb_presentation_end_time: [u8; 2usize],
     pub presentation_end_time: [u8; 4usize],
-    pub MUX_rate_bound: [u8; 4usize],
+    pub mux_rate_bound: [u8; 4usize],
     pub std_delay_bound: [u8; 4usize],
     pub number_of_total_stream: u8,
     pub number_of_grouping_period: u8,
@@ -170,26 +170,37 @@ pub struct PsmfPlayer {
     pub video_step: i32,
     pub warm_up: i32,
     pub seek_dest_timestamp: i64,
-    pub videoWidth: i32,
-    pub videoHeight: i32,
+    pub video_width: i32,
+    pub video_height: i32,
 }
 
 #[repr(u32)]
 #[derive(Debug, Copy, Clone)]
-pub enum ConfigMode {
+pub enum PsmfConfigMode {
     Loop,
     PixelType,
 }
 
 #[repr(u32)]
 #[derive(Debug, Copy, Clone)]
-pub enum PlayerMode {
+pub enum PsmfPlayerMode {
     Play,
     SlowMotion,
     StepFrame,
     Pause,
     Forward,
     Rewind,
+}
+
+#[repr(u32)]
+#[derive(Debug, Copy, Clone)]
+pub enum PsmfPlayerStatus {
+    None = 0,
+    Init = 1,
+    Standby = 2,
+    Playing = 4,
+    Error = 0x100,
+    PlayingFinished = 0x200,
 }
 
 psp_extern! {
@@ -219,10 +230,10 @@ psp_extern! {
     pub fn scePsmfGetAudioInfo(psmf_struct: &ScePsmf, audio_info: &ScePsmf_SequenceInfo_Audio) -> u32;
 
     #[psp(0xC7DB3A5B)]
-    pub fn scePsmfGetCurrentStreamType(psmf_struct: &ScePsmf, type_addr: u32, channel_addr: u32) -> u32;
+    pub fn scePsmfGetCurrentStreamType(psmf_struct: &ScePsmf, type_: &mut u32, channel_addr: u32) -> u32;
 
     #[psp(0xA5EBFE81)]
-    pub fn scePsmfGetStreamSize(psmf_struct: &ScePsmf, u32 size_addr) -> u32;
+    pub fn scePsmfGetStreamSize(psmf_struct: &ScePsmf, size: &mut u32) -> u32;
 
     #[psp(0x5B70FCC1)]
     pub fn scePsmfQueryStreamOffset(buffer_addr: u32, offset_addr: u32) -> u32;
@@ -255,12 +266,12 @@ psp_extern! {
     pub fn scePsmfCheckEPMap(psmf_struct: &ScePsmf) -> u32;
 
     #[psp(0x4E624A34)]
-    pub fn scePsmfGetEPWithId(psmf_struct: &ScePsmf, epid: i32, u32 &ScePsmf_EP) -> u32;
+    pub fn scePsmfGetEPWithId(psmf_struct: &ScePsmf, epid: i32, entry: &ScePsmf_EP) -> u32;
 
     #[psp(0x7C0E7AC3)]
-    pub fn scePsmfGetEPWithTimestamp(psmf_struct: &ScePsmf, ts: u32, u32 &ScePsmf_EP) -> u32;
+    pub fn scePsmfGetEPWithTimestamp(psmf_struct: &ScePsmf, ts: u32, entry: &ScePsmf_EP) -> u32;
     #[psp(0x5F457515)]
-    pub fn scePsmfGetEPidWithTimestamp(psmf_struct &ScePsmf, ts: u32) -> u32;
+    pub fn scePsmfGetEPidWithTimestamp(psmf_struct: &ScePsmf, ts: u32) -> u32;
 }
 
 psp_extern! {
@@ -278,7 +289,7 @@ psp_extern! {
     pub fn scePsmfPlayerBreak(psmf_player: &mut PsmfPlayer) -> i32;
 
     #[psp(0x3D6D25A9)]
-    pub fn scePsmfPlayerSetPsmf(psmf_player &mut PsmfPlayer, filename: *const u8) -> i32;
+    pub fn scePsmfPlayerSetPsmf(psmf_player: &mut PsmfPlayer, filename: *const u8) -> i32;
 
     #[psp(0x58B83577)]
     pub fn scePsmfPlayerSetPsmfCB(psmf_player: &mut PsmfPlayer, filename: *const u8) -> i32;
@@ -320,7 +331,7 @@ psp_extern! {
     pub fn scePsmfPlayerGetPsmfInfo(psmf_player: &mut PsmfPlayer, psmf_info: &mut PsmfInfo, width: &mut u32, height: &mut u32) -> u32;
 
     #[psp(0xF3EFAA91)]
-    pub fn scePsmfPlayerGetCurrentPlayMode(psmf_player: &mut PsmfPlayer, play_mode: &PlayerMode, play_speed: &mut u32) -> u32;
+    pub fn scePsmfPlayerGetCurrentPlayMode(psmf_player: &mut PsmfPlayer, play_mode: &PsmfPlayerMode, play_speed: &mut u32) -> u32;
 
     #[psp(0x9FF2B2E7)]
     pub fn scePsmfPlayerGetCurrentVideoStream(psmf_player: &mut PsmfPlayer, video_codec: &mut i32, video_stream_num: &mut  i32) -> u32;
@@ -332,7 +343,7 @@ psp_extern! {
     pub fn scePsmfPlayerSetTempBuf(psmf_player: &mut PsmfPlayer, temp_buf: *mut u8, temp_buf_size: u32) -> i32;
 
     #[psp(0xA3D81169)]
-    pub fn scePsmfPlayerChangePlayMode(psmf_player: &mut PsmfPlayer, play_mode: PlayerMode, play_speed: i32) -> u32;
+    pub fn scePsmfPlayerChangePlayMode(psmf_player: &mut PsmfPlayer, play_mode: PsmfPlayerMode, play_speed: i32) -> u32;
 
     #[psp(0xB8D10C56)]
     pub fn scePsmfPlayerSelectAudio(psmf_player: &mut PsmfPlayer) -> u32;
@@ -347,5 +358,5 @@ psp_extern! {
     pub fn scePsmfPlayerSelectSpecificAudio(psmf_player: &mut PsmfPlayer, audio_codec: i32, audio_stream_Num: i32) -> u32;
 
     #[psp(0x1E57A8E7)]
-    pub fn scePsmfPlayerConfigPlayer(psmf_player: &mut PsmfPlayer, config_mode: ConfigMode, config_attr: i32) -> u32;
+    pub fn scePsmfPlayerConfigPlayer(psmf_player: &mut PsmfPlayer, config_mode: PsmfConfigMode, config_attr: i32) -> u32;
 }

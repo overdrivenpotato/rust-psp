@@ -101,6 +101,9 @@ pub use utility::*;
 mod net;
 pub use net::*;
 
+mod psmf;
+pub use psmf::*;
+
 // These are not found (likely because this was tested in user mode on a PSP-2000).
 // pub mod sircs;
 // pub mod codec;
