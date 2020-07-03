@@ -26,22 +26,6 @@ fn psp_main() {
             &mut LIST as *mut _ as *mut c_void,
         );
         sys::sceGuDrawBuffer(DisplayPixelFormat::Psm8888, fbp0, BUF_WIDTH as i32);
-        sys::sceGuDispBuffer(SCREEN_WIDTH as i32, SCREEN_HEIGHT as i32, fbp1, BUF_WIDTH as i32);
-        sys::sceGuDepthBuffer(zbp, BUF_WIDTH as i32);
-        sys::sceGuOffset(2048 - (SCREEN_WIDTH/2), 2048 - (SCREEN_HEIGHT/2));
-        sys::sceGuViewport(2048, 2048, SCREEN_WIDTH as i32, SCREEN_HEIGHT as i32);
-        sys::sceGuDepthRange(65535, 0);
-        sys::sceGuScissor(0, 0, SCREEN_WIDTH as i32, SCREEN_HEIGHT as i32);
-        sys::sceGuEnable(GuState::ScissorTest);
-        sys::sceGuFinish();
-        sys::sceGuSync(sys::GuSyncMode::Finish, sys::GuSyncBehavior::Wait);
-
-
-        sys::sceGuStart(
-            sys::GuContextType::Direct,
-            &mut LIST as *mut _ as *mut c_void,
-        );
-
         sys::sceGuDebugPrint(100, 100, 0xff0000ff, b"Hello World\0" as *const u8);
         sys::sceGuDebugFlush();
 
@@ -49,7 +33,6 @@ fn psp_main() {
         sys::sceGuSync(sys::GuSyncMode::Finish, sys::GuSyncBehavior::Wait);
         sys::sceDisplayWaitVblankStart();
         sys::sceGuDisplay(true);
-        sys::sceGuSwapBuffers();
     }
 }
 
