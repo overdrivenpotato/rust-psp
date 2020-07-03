@@ -5,8 +5,8 @@
 #![no_main]
 
 use core::ffi::c_void;
-use psp::sys::{self, GuState, TexturePixelFormat, DisplayPixelFormat};
-use psp::{BUF_WIDTH, SCREEN_WIDTH, SCREEN_HEIGHT};
+use psp::sys::{self, TexturePixelFormat, DisplayPixelFormat};
+use psp::{BUF_WIDTH, SCREEN_HEIGHT};
 
 psp::module!("sample_gu_debug", 1, 1);
 
@@ -17,9 +17,6 @@ fn psp_main() {
 
     unsafe {
         let fbp0 = get_static_vram_buffer(BUF_WIDTH, SCREEN_HEIGHT, TexturePixelFormat::Psm8888);
-        let fbp1 = get_static_vram_buffer(BUF_WIDTH, SCREEN_HEIGHT, TexturePixelFormat::Psm8888);
-        let zbp = get_static_vram_buffer(BUF_WIDTH, SCREEN_HEIGHT, TexturePixelFormat::Psm4444);
-
         sys::sceGuInit();
         sys::sceGuStart(
             sys::GuContextType::Direct,
