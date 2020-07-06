@@ -1,0 +1,13 @@
+[package]
+name = "psp-paint-mode"
+version = "0.1.0"
+authors = ["Glenn Hope <glenn.alexander.hope@gmail.com>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+psp = { version = "0.1", features = [ "embedded-graphics" ] }
+embedded-graphics = "0.6.2"
+numtoa = "0.2"
+arrayvec = { version = "0.5", default-features = false }
