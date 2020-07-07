@@ -5,7 +5,10 @@
 #![feature(exclusive_range_pattern)]
 #![feature(half_open_range_patterns)]
 
-use psp_paint_mode::{draw_debug_textbox, get_background, DrawObject};
+use psp_paint_mode::{
+    convert_analog_to_delta_with_sensitivity_deadzone, draw_debug_textbox, get_background,
+    DrawObject,
+};
 
 use embedded_graphics::prelude::*;
 
