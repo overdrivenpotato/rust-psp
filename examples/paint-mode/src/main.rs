@@ -33,7 +33,7 @@ fn psp_main() {
 
     unsafe {
         psp::sys::sceCtrlSetSamplingCycle(0);
-        psp::sys::sceCtrlSetSamplingMode(CtrlMode::Analaog);
+        psp::sys::sceCtrlSetSamplingMode(CtrlMode::Analog);
     };
 
     let pad_data = &mut get_empty_ctrl_data();

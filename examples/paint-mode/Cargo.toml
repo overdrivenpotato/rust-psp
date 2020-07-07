@@ -5,6 +5,6 @@ authors = ["Glenn Hope <glenn.alexander.hope@gmail.com>"]
 edition = "2018"
 
 [dependencies]
-psp = { version = "0.1", features = [ "embedded-graphics" ] }
+psp = { path = "../../psp", features = ["embedded-graphics"] }
 embedded-graphics = "0.6.2"
 numtoa = "0.2"
