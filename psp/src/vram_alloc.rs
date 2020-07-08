@@ -2,35 +2,6 @@ use crate::sys::TexturePixelFormat;
 use crate::sys::sceGeEdramGetSize;
 use core::mem::size_of;
 
-pub trait VramAllocator {
-    fn new() -> Self;
-
-    fn alloc(&mut self, num_bytes: u32) -> VramMemChunk;
-    fn dealloc(&mut self, chunk: VramMemChunk);
-    fn realloc(&mut self, chunk: VramMemChunk) -> VramMemChunk;
-
-    fn alloc_sized<T: Sized>(&mut self, count: u32) -> VramMemChunk {
-        let size = size_of::<T>() as u32;
-        self.alloc(count * size)
-    }
-
-    fn alloc_texture_pixels(
-        &mut self,
-        width: u32,
-        height: u32,
-        psm: TexturePixelFormat,
-    ) -> VramMemChunk {
-        let size = get_memory_size(width, height, psm);
-        self.alloc(size)
-    }
-
-    fn total_mem(&self) -> u32 {
-        unsafe {
-            sceGeEdramGetSize()
-        }
-    }
-}
-
 pub struct VramMemChunk {
     start: u32,
     len: u32,
@@ -55,12 +26,12 @@ pub struct SimpleVramAllocator {
    offset: u32,
 }
 
-impl VramAllocator for SimpleVramAllocator {
-    fn new() -> Self {
+impl SimpleVramAllocator {
+    pub fn new() -> Self {
         Self { offset: 0 }
     }
 
-    fn alloc(&mut self, size: u32) -> VramMemChunk {
+    pub fn alloc(&mut self, size: u32) -> VramMemChunk {
         let old_offset = self.offset;
         self.offset += size;
 
@@ -71,12 +42,33 @@ impl VramAllocator for SimpleVramAllocator {
         VramMemChunk::new(old_offset, size)
     }
 
-    fn dealloc(&mut self, _chunk: VramMemChunk) {
+    pub fn dealloc(&mut self, _chunk: VramMemChunk) {
         unimplemented!("Deallocation is not supported for the simple allocator.");
     }
 
-    fn realloc(&mut self, _chunk: VramMemChunk) -> VramMemChunk {
+    pub fn realloc(&mut self, _chunk: VramMemChunk) -> VramMemChunk {
         unimplemented!("Reallocation is not supported for the simple allocator.");
+    }
+
+    pub fn alloc_sized<T: Sized>(&mut self, count: u32) -> VramMemChunk {
+        let size = size_of::<T>() as u32;
+        self.alloc(count * size)
+    }
+
+    pub fn alloc_texture_pixels(
+        &mut self,
+        width: u32,
+        height: u32,
+        psm: TexturePixelFormat,
+    ) -> VramMemChunk {
+        let size = get_memory_size(width, height, psm);
+        self.alloc(size)
+    }
+
+    fn total_mem(&self) -> u32 {
+        unsafe {
+            sceGeEdramGetSize()
+        }
     }
 }
 

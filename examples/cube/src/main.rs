@@ -9,7 +9,7 @@ use psp::sys::{
     FrontFaceDirection, ShadingModel, GuState, TexturePixelFormat, DepthFunc,
     VertexType, ClearBuffer, MipmapLevel,
 };
-use psp::vram_alloc::{VramAllocator, SimpleVramAllocator};
+use psp::vram_alloc::SimpleVramAllocator;
 use psp::{BUF_WIDTH, SCREEN_WIDTH, SCREEN_HEIGHT};
 
 psp::module!("sample_cube", 1, 1);

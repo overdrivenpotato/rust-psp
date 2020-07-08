@@ -6,7 +6,7 @@
 
 use core::ffi::c_void;
 use psp::sys::{self, TexturePixelFormat, DisplayPixelFormat};
-use psp::vram_alloc::{VramAllocator, SimpleVramAllocator};
+use psp::vram_alloc::SimpleVramAllocator;
 use psp::{BUF_WIDTH, SCREEN_HEIGHT};
 
 psp::module!("sample_gu_debug", 1, 1);
