@@ -5,7 +5,7 @@
 
 use core::ffi::c_void;
 use psp::sys::{self, GuState, TexturePixelFormat, DisplayPixelFormat};
-use psp::gu_utils::get_static_vram_buffer;
+use psp::vram_alloc::{VramAllocator, SimpleVramAllocator};
 use psp::{BUF_WIDTH, SCREEN_WIDTH, SCREEN_HEIGHT};
 
 psp::module!("sample_gu_background", 1, 1);
@@ -15,19 +15,21 @@ static mut LIST: psp::Align16<[u32; 0x40000]> = psp::Align16([0; 0x40000]);
 fn psp_main() {
     psp::enable_home_button();
 
+    let mut allocator = SimpleVramAllocator::new();
+    let fbp0 = allocator.alloc_texture_pixels(BUF_WIDTH, SCREEN_HEIGHT, TexturePixelFormat::Psm8888).start();
+    let fbp1 = allocator.alloc_texture_pixels(BUF_WIDTH, SCREEN_HEIGHT, TexturePixelFormat::Psm8888).start();
+    let zbp = allocator.alloc_texture_pixels(BUF_WIDTH, SCREEN_HEIGHT, TexturePixelFormat::Psm4444).start();
+
     unsafe {
-        let fbp0 = get_static_vram_buffer(BUF_WIDTH, SCREEN_HEIGHT, TexturePixelFormat::Psm8888);
-        let fbp1 = get_static_vram_buffer(BUF_WIDTH, SCREEN_HEIGHT, TexturePixelFormat::Psm8888);
-        let zbp = get_static_vram_buffer(BUF_WIDTH, SCREEN_HEIGHT, TexturePixelFormat::Psm4444);
 
         sys::sceGuInit();
         sys::sceGuStart(
             sys::GuContextType::Direct,
             &mut LIST as *mut _ as *mut c_void,
         );
-        sys::sceGuDrawBuffer(DisplayPixelFormat::Psm8888, fbp0, BUF_WIDTH as i32);
-        sys::sceGuDispBuffer(SCREEN_WIDTH as i32, SCREEN_HEIGHT as i32, fbp1, BUF_WIDTH as i32);
-        sys::sceGuDepthBuffer(zbp, BUF_WIDTH as i32);
+        sys::sceGuDrawBuffer(DisplayPixelFormat::Psm8888, fbp0 as _, BUF_WIDTH as i32);
+        sys::sceGuDispBuffer(SCREEN_WIDTH as i32, SCREEN_HEIGHT as i32, fbp1 as _, BUF_WIDTH as i32);
+        sys::sceGuDepthBuffer(zbp as _, BUF_WIDTH as i32);
         sys::sceGuOffset(2048 - (SCREEN_WIDTH/2), 2048 - (SCREEN_HEIGHT/2));
         sys::sceGuViewport(2048, 2048, SCREEN_WIDTH as i32, SCREEN_HEIGHT as i32);
         sys::sceGuDepthRange(65535, 0);
