@@ -7,6 +7,7 @@ use crate::sys::{ScePspFMatrix4, ScePspFVector4};
 const NUM_MATRICES: usize = 8;
 
 bitflags::bitflags! {
+    #[repr(C)]
     pub struct MatrixSet: u8 {
         const VMAT0 = 0b0000_0001;
         const VMAT1 = 0b0000_0010;

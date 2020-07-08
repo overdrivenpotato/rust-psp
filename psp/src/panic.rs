@@ -117,7 +117,7 @@ extern "C" {
 
 #[inline(never)]
 #[no_mangle]
-extern fn rust_panic(mut msg: &mut dyn BoxMeUp) -> ! {
+fn rust_panic(mut msg: &mut dyn BoxMeUp) -> ! {
     let code = unsafe {
         let obj = &mut msg as *mut &mut dyn BoxMeUp;
         panic_unwind::__rust_start_panic(obj as usize)
