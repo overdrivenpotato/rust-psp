@@ -15,7 +15,7 @@ pub trait VramAllocator {
     }
     fn dealloc_sized<T: Sized>(&mut self, count: u32) -> VramMemChunk {
         let size = size_of::<T>() as u32;
-        self.alloc(count * size)
+        self.dealloc(count * size)
     }
 
     fn alloc_texture_pixels(
