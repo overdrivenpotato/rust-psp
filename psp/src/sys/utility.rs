@@ -297,6 +297,7 @@ pub enum UtilityNetconfAction {
 }
 
 bitflags::bitflags! {
+    #[repr(C)]
     pub struct UtilityMsgDialogOption: i32 {
         /// Error message (why two flags?)
         const ERROR = 0;
@@ -620,6 +621,7 @@ pub enum UtilityHtmlViewerDisconnectMode {
     Confirm,
 }
 
+#[repr(C)]
 bitflags::bitflags! {
     pub struct UtilityHtmlViewerOption: u32 {
         /// Open SCE net start page

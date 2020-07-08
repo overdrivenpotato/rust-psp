@@ -83,6 +83,7 @@ pub enum MatrixMode {
 bitflags::bitflags! {
     /// The vertex type decides how the vertices align and what kind of
     /// information they contain.
+    #[repr(C)]
     pub struct VertexType: i32 {
         /// 8-bit texture coordinates
         const TEXTURE_8BIT = 1;
@@ -345,6 +346,7 @@ pub enum DepthFunc {
 
 bitflags::bitflags! {
     /// Clear Buffer Mask
+    #[repr(C)]
     pub struct ClearBuffer: u32 {
         /// Clears the color buffer.
         const COLOR_BUFFER_BIT = 1;
@@ -485,6 +487,7 @@ pub enum StencilOperation {
 
 bitflags::bitflags!(
     /// Light Components
+    #[repr(C)]
     pub struct LightComponent: i32 {
         const AMBIENT = 1;
         const DIFFUSE = 2;

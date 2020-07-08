@@ -2,6 +2,7 @@ use crate::sys::SceUid;
 
 bitflags::bitflags! {
     /// Power callback flags
+    #[repr(C)]
     pub struct PowerInfo: u32 {
         /// Indicates the power switch it pushed, putting the unit into suspend mode
         const POWER_SWITCH = 0x80000000;

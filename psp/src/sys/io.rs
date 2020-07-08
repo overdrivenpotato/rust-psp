@@ -35,6 +35,7 @@ pub struct SceIoStat {
 }
 
 bitflags::bitflags! {
+    #[repr(C)]
     pub struct IoStatMode: i32 {
         /// Symbolic Link
         const IFLNK = 0x4000;
@@ -70,6 +71,7 @@ bitflags::bitflags! {
 }
 
 bitflags::bitflags! {
+    #[repr(C)]
     pub struct IoStatAttr: u32 {
         /// Symlink
         const IFLNK = 0x0008;
@@ -102,6 +104,7 @@ pub enum IoWhence {
 }
 
 bitflags::bitflags! {
+    #[repr(C)]
     pub struct IoOpenFlags: i32 {
         const RD_ONLY = 0x0001;
         const WR_ONLY = 0x0002;
