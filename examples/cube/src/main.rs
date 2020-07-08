@@ -1,11 +1,11 @@
 #![no_std]
 #![no_main]
 
-use core::{ptr, ffi::c_void, f32::consts::PI};
+use core::{ptr, f32::consts::PI};
 use psp::Align16;
 use psp::{BUF_WIDTH, SCREEN_WIDTH, SCREEN_HEIGHT};
 use psp::sys::{
-    self, ScePspFVector3, DisplayPixelFormat, GuContextType, GuSyncMode, GuSyncBehavior,
+    self, get_static_vram_buffer, ScePspFVector3, DisplayPixelFormat, GuContextType, GuSyncMode, GuSyncBehavior,
     GuPrimitive, TextureFilter, TextureEffect, TextureColorComponent,
     FrontFaceDirection, ShadingModel, GuState, TexturePixelFormat, DepthFunc,
     VertexType, ClearBuffer, MipmapLevel,
@@ -79,35 +79,6 @@ static VERTICES: Align16<[Vertex; 12 * 3]> = Align16([
     Vertex { u: 1.0, v: 1.0, x:  1.0, y: -1.0, z:  1.0}, // 6
     Vertex { u: 0.0, v: 1.0, x:  1.0, y: -1.0, z: -1.0}, // 5
 ]);
-
-fn get_memory_size(width: u32, height: u32, psm: TexturePixelFormat) -> u32 {
-    match psm {
-        TexturePixelFormat::PsmT4 => (width * height) >> 1,
-        TexturePixelFormat::PsmT8 => width * height,
-
-        TexturePixelFormat::Psm5650
-        | TexturePixelFormat::Psm5551
-        | TexturePixelFormat::Psm4444
-        | TexturePixelFormat::PsmT16 => {
-            2 * width * height
-        }
-
-        TexturePixelFormat::Psm8888 | TexturePixelFormat::PsmT32 => 4 * width * height,
-
-        _ => 0,
-    }
-}
-
-unsafe fn get_static_vram_buffer(width: u32, height: u32, psm: TexturePixelFormat) -> *mut c_void {
-    static mut STATIC_OFFSET: u32 = 0;
-
-    let mem_size = get_memory_size(width, height, psm);
-    let result = STATIC_OFFSET as *mut _;
-
-    STATIC_OFFSET += mem_size;
-
-    result
-}
 
 fn psp_main() {
     unsafe { psp_main_inner() }

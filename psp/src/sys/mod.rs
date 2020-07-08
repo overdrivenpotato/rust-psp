@@ -80,6 +80,9 @@ pub use hprm::*;
 mod gu;
 pub use gu::*;
 
+mod gu_utils;
+pub use gu_utils::*;
+
 mod gum;
 pub use gum::*;
 
