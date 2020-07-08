@@ -7,15 +7,11 @@ pub trait VramAllocator {
 
     fn alloc(&mut self, num_bytes: u32) -> VramMemChunk;
     fn dealloc(&mut self, chunk: VramMemChunk);
-    fn realloc(&mut self, chunk: VramMemChunk);
+    fn realloc(&mut self, chunk: VramMemChunk) -> VramMemChunk;
 
     fn alloc_sized<T: Sized>(&mut self, count: u32) -> VramMemChunk {
         let size = size_of::<T>() as u32;
         self.alloc(count * size)
-    }
-    fn dealloc_sized<T: Sized>(&mut self, count: u32) -> VramMemChunk {
-        let size = size_of::<T>() as u32;
-        self.dealloc(count * size)
     }
 
     fn alloc_texture_pixels(
@@ -79,7 +75,7 @@ impl VramAllocator for SimpleVramAllocator {
         unimplemented!("Deallocation is not supported for the simple allocator.");
     }
 
-    fn realloc(&mut self, _chunk: VramMemChunk) {
+    fn realloc(&mut self, _chunk: VramMemChunk) -> VramMemChunk {
         unimplemented!("Reallocation is not supported for the simple allocator.");
     }
 }
