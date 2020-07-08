@@ -1,7 +1,7 @@
 use embedded_graphics::{
     pixelcolor::Rgb888,
     prelude::*,
-    primitives::{circle::Circle, rectangle::Rectangle, triangle::Triangle, line::Line},
+    primitives::{circle::Circle, line::Line, rectangle::Rectangle, triangle::Triangle},
     style::{PrimitiveStyle, PrimitiveStyleBuilder, Styled},
 };
 
@@ -34,16 +34,30 @@ impl DrawObject {
             Self::Circ(circ) => circ.draw(disp).unwrap(),
             Self::Tri(tri) => tri.draw(disp).unwrap(),
             Self::Rect(rect) => rect.draw(disp).unwrap(),
-            Self::X(x) => { for line in x { line.draw(disp).unwrap(); } },
+            Self::X(x) => {
+                for line in x {
+                    line.draw(disp).unwrap();
+                }
+            }
         };
     }
 
     pub fn translate_mut(&mut self, point: Point) {
         match self {
-            Self::Circ(circ) => {circ.translate_mut(point);},
-            Self::Tri(tri) => {tri.translate_mut(point);},
-            Self::Rect(rect) => {rect.translate_mut(point);},
-            Self::X(x) => { for line in x { line.translate_mut(point); } },
+            Self::Circ(circ) => {
+                circ.translate_mut(point);
+            }
+            Self::Tri(tri) => {
+                tri.translate_mut(point);
+            }
+            Self::Rect(rect) => {
+                rect.translate_mut(point);
+            }
+            Self::X(x) => {
+                for line in x {
+                    line.translate_mut(point);
+                }
+            }
         };
     }
 
@@ -90,55 +104,55 @@ impl DrawObject {
         }
     }
 
+    pub fn move_by(&mut self, delta_x_pixels: i32, delta_y_pixels: i32, max_x: i32, max_y: i32) {
+        let existing_center = self.center();
+        let requested_delta = Point::new(delta_x_pixels, delta_y_pixels);
+        let mut target_location: Point = existing_center + requested_delta;
+        target_location.x = target_location.x.clamp(0, max_x);
+        target_location.y = target_location.y.clamp(0, max_y);
+        let actual_delta = target_location - existing_center;
+        self.translate_mut(actual_delta);
+    }
+
     pub fn new_circle(point: Point, size: u32) -> Self {
-        Self::Circ(Circle::new(point, size).into_styled(
-            PrimitiveStyleBuilder::new()
-                .stroke_color(Rgb888::RED)
-                .stroke_width(1)
-                .build(),
-        ))
+        Self::Circ(
+            Circle::new(point, size).into_styled(
+                PrimitiveStyleBuilder::new()
+                    .stroke_color(Rgb888::RED)
+                    .stroke_width(1)
+                    .build(),
+            ),
+        )
     }
 
     pub fn new_triangle(point: Point, size: u32) -> Self {
-        let mut tri = Triangle::new(
-            point,
-            point,
-            point,
-        )
-        .into_styled(
+        let mut tri = Triangle::new(point, point, point).into_styled(
             PrimitiveStyleBuilder::new()
-            .stroke_color(Rgb888::GREEN)
-            .stroke_width(1)
-            .build(),
+                .stroke_color(Rgb888::GREEN)
+                .stroke_width(1)
+                .build(),
         );
         grow_triangle_by(&mut tri, size as _);
         Self::Tri(tri)
     }
 
     pub fn new_rectangle(point: Point, size: u32) -> Self {
-        let mut rect = Rectangle::new(
-            point,
-            point,
-        )
-        .into_styled(
+        let mut rect = Rectangle::new(point, point).into_styled(
             PrimitiveStyleBuilder::new()
-            .stroke_color(Rgb888::MAGENTA)
-            .stroke_width(1)
-            .build(),
+                .stroke_color(Rgb888::MAGENTA)
+                .stroke_width(1)
+                .build(),
         );
         grow_rectangle_by(&mut rect, size as _);
         Self::Rect(rect)
     }
 
     pub fn new_x(point: Point, size: u32) -> Self {
-        let line_1 = Line::new(
-            point,
-            point,
-        ).into_styled(
+        let line_1 = Line::new(point, point).into_styled(
             PrimitiveStyleBuilder::new()
-            .stroke_color(Rgb888::BLUE)
-            .stroke_width(1)
-            .build(),
+                .stroke_color(Rgb888::BLUE)
+                .stroke_width(1)
+                .build(),
         );
         let line_2 = line_1.clone();
         let mut x = [line_1, line_2];

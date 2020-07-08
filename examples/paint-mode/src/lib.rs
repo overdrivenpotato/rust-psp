@@ -1,4 +1,5 @@
 #![no_std]
+#![feature(clamp)]
 
 pub mod drawobject;
 pub use drawobject::DrawObject;

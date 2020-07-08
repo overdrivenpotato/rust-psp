@@ -1,7 +1,6 @@
 #![no_std]
 #![no_main]
 #![feature(slice_fill)]
-#![feature(clamp)]
 #![feature(exclusive_range_pattern)]
 #![feature(half_open_range_patterns)]
 
@@ -36,7 +35,7 @@ fn psp_main() {
         psp::sys::sceCtrlSetSamplingMode(CtrlMode::Analog);
     };
 
-    let pad_data = &mut get_empty_ctrl_data();
+    let pad_data = &mut SceCtrlData::default();
     loop {
         unsafe {
             // Read button/analog input
@@ -72,9 +71,15 @@ fn psp_main() {
             draw_obj = DrawObject::new_x(cur_location, cur_size);
         }
 
-        move_draw_obj(&mut draw_obj, pad_data);
-        cur_location = draw_obj.center();
-        cur_size = draw_obj.size();
+        let delta_x_pixels = convert_analog_to_delta_with_sensitivity_deadzone(pad_data.lx);
+        let delta_y_pixels = convert_analog_to_delta_with_sensitivity_deadzone(pad_data.ly);
+        draw_obj.move_by(
+            delta_x_pixels,
+            delta_y_pixels,
+            SCREEN_WIDTH as i32,
+            SCREEN_HEIGHT as i32,
+        );
+        draw_obj.draw(disp);
 
         if i < 10 {
             i += 1;
@@ -83,33 +88,11 @@ fn psp_main() {
             i = 0;
         }
 
-        draw_obj.draw(disp);
-    }
-}
-
-fn get_empty_ctrl_data() -> SceCtrlData {
-    SceCtrlData {
-        timestamp: Default::default(),
-        buttons: CtrlButtons::empty(),
-        lx: Default::default(),
-        ly: Default::default(),
-        rsrv: Default::default(),
+        cur_location = draw_obj.center();
+        cur_size = draw_obj.size();
     }
 }
 
 fn get_midpoint() -> Point {
     Point::new(SCREEN_WIDTH as i32 / 2, SCREEN_HEIGHT as i32 / 2)
-}
-
-fn move_draw_obj(draw_obj: &mut DrawObject, pad_data: &SceCtrlData) {
-    let delta_x = convert_analog_to_delta_with_sensitivity_deadzone(pad_data.lx);
-    let delta_y = convert_analog_to_delta_with_sensitivity_deadzone(pad_data.ly);
-
-    let existing_center = draw_obj.center();
-    let requested_delta = Point::new(delta_x, delta_y);
-    let mut target_location: Point = existing_center + requested_delta;
-    target_location.x = target_location.x.clamp(0, SCREEN_WIDTH as i32);
-    target_location.y = target_location.y.clamp(0, SCREEN_HEIGHT as i32);
-    let actual_delta = target_location - existing_center;
-    draw_obj.translate_mut(actual_delta);
 }

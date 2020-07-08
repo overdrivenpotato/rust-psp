@@ -10,13 +10,12 @@ const MAX_SPEED: i32 = 4;
 // Carve a number of rings around our deadzone equal to MAX_SPEED.
 const SPEED_MODIFIER: i32 = 127 / MAX_SPEED;
 
-
 // Convert the analog stick position to a number of pixels to move
 // in the direction it is being held.
 //
 // First, we need to treat 127, 127 as 0,0 on a Cartesian plane.
 // We receive coordinates from the PSP control stick like this:
-// 
+//
 // +--------------------+
 // |0,0            255,0|
 // |                    |
@@ -26,7 +25,7 @@ const SPEED_MODIFIER: i32 = 127 / MAX_SPEED;
 // |                    |
 // |                    |
 // |                    |
-// |0,255        255,255| 
+// |0,255        255,255|
 // +--------------------+
 //
 // So we subtract 127 to make our values look like this:
@@ -40,7 +39,7 @@ const SPEED_MODIFIER: i32 = 127 / MAX_SPEED;
 // |                    |
 // |                    |
 // |                    |
-// |-127,127     127,127| 
+// |-127,127     127,127|
 // +--------------------+
 //
 // Then, we carve out a "deadzone" around 0,0 where inputs are equal to zero.
@@ -62,7 +61,7 @@ const SPEED_MODIFIER: i32 = 127 / MAX_SPEED;
 // Now, we use MAX_SPEED as the number of "rings" around 0,0.
 // So for a MAX_SPEED value of 3, this would look like:
 //
-//          For Y:            -    For X:    +   
+//          For Y:            -    For X:    +
 //  +--------------------+ +--------------------+
 //  |33333333333333333333| |33221100000000112233|
 // -|22222222222222222222| |33221100000000112233|
@@ -77,8 +76,8 @@ const SPEED_MODIFIER: i32 = 127 / MAX_SPEED;
 //  +--------------------+ +--------------------+
 //
 // And for a MAX_SPEED of 6, something like this:
-// 
-//          For Y:            -    For X:    +   
+//
+//          For Y:            -    For X:    +
 //  +--------------------+ +--------------------+
 //  |66666666666666666666| |65432100000000123456|
 // -|44444444444444444444| |65432100000000123456|
@@ -118,7 +117,6 @@ pub fn convert_analog_to_delta_with_sensitivity_deadzone(raw_val: u8) -> i32 {
     } else {
         delta_val - DEADZONE
     };
-
 
     distance_without_deadzone / SPEED_MODIFIER
 }
