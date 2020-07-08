@@ -42,14 +42,6 @@ impl SimpleVramAllocator {
         VramMemChunk::new(old_offset, size)
     }
 
-    pub fn dealloc(&mut self, _chunk: VramMemChunk) {
-        unimplemented!("Deallocation is not supported for the simple allocator.");
-    }
-
-    pub fn realloc(&mut self, _chunk: VramMemChunk) -> VramMemChunk {
-        unimplemented!("Reallocation is not supported for the simple allocator.");
-    }
-
     pub fn alloc_sized<T: Sized>(&mut self, count: u32) -> VramMemChunk {
         let size = size_of::<T>() as u32;
         self.alloc(count * size)
