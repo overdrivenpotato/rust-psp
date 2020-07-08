@@ -3,13 +3,14 @@
 
 use core::{ptr, f32::consts::PI};
 use psp::Align16;
-use psp::{BUF_WIDTH, SCREEN_WIDTH, SCREEN_HEIGHT};
 use psp::sys::{
-    self, get_static_vram_buffer, ScePspFVector3, DisplayPixelFormat, GuContextType, GuSyncMode, GuSyncBehavior,
+    self, ScePspFVector3, DisplayPixelFormat, GuContextType, GuSyncMode, GuSyncBehavior,
     GuPrimitive, TextureFilter, TextureEffect, TextureColorComponent,
     FrontFaceDirection, ShadingModel, GuState, TexturePixelFormat, DepthFunc,
     VertexType, ClearBuffer, MipmapLevel,
 };
+use psp::utils::gu::get_static_vram_buffer;
+use psp::{BUF_WIDTH, SCREEN_WIDTH, SCREEN_HEIGHT};
 
 psp::module!("sample_cube", 1, 1);
 

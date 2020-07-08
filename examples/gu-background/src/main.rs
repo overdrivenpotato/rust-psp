@@ -4,7 +4,8 @@
 #![no_main]
 
 use core::ffi::c_void;
-use psp::sys::{self, get_static_vram_buffer, GuState, TexturePixelFormat, DisplayPixelFormat};
+use psp::sys::{self, GuState, TexturePixelFormat, DisplayPixelFormat};
+use psp::utils::gu::get_static_vram_buffer;
 use psp::{BUF_WIDTH, SCREEN_WIDTH, SCREEN_HEIGHT};
 
 psp::module!("sample_gu_background", 1, 1);

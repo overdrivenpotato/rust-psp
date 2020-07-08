@@ -5,7 +5,8 @@
 #![no_main]
 
 use core::ffi::c_void;
-use psp::sys::{self, get_static_vram_buffer, TexturePixelFormat, DisplayPixelFormat};
+use psp::sys::{self, TexturePixelFormat, DisplayPixelFormat};
+use psp::utils::gu::get_static_vram_buffer;
 use psp::{BUF_WIDTH, SCREEN_HEIGHT};
 
 psp::module!("sample_gu_debug", 1, 1);
