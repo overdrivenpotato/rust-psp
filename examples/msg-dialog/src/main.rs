@@ -5,8 +5,8 @@ use psp::sys::{
     UtilityDialogCommon, UtilityMsgDialogParams, UtilityMsgDialogMode, 
     UtilityMsgDialogPressed, SystemParamLanguage, UtilityDialogButtonAccept, 
     UtilityMsgDialogOption, self,
-    DisplayPixelFormat, Context, GuState, DepthFunc, FrontFaceDirection, 
-    ShadingModel, SyncMode, SyncBehavior
+    DisplayPixelFormat, GuContextType, GuState, DepthFunc, FrontFaceDirection, 
+    ShadingModel, GuSyncMode, GuSyncBehavior
 };
 
 use core::ffi::c_void;
@@ -20,7 +20,7 @@ const BUF_WIDTH: i32 = 512;
 
 unsafe fn setup_gu() {
     sys::sceGuInit(); 
-    sys::sceGuStart(Context::Direct, &mut LIST as *mut _ as *mut c_void);
+    sys::sceGuStart(GuContextType::Direct, &mut LIST as *mut _ as *mut c_void);
     sys::sceGuDrawBuffer(DisplayPixelFormat::Psm8888, core::ptr::null_mut(), BUF_WIDTH);
     sys::sceGuDispBuffer(SCR_WIDTH, SCR_HEIGHT, 0x88000 as *mut c_void, BUF_WIDTH);
     sys::sceGuDepthBuffer(0x110000 as *mut c_void, BUF_WIDTH);
@@ -36,7 +36,7 @@ unsafe fn setup_gu() {
     sys::sceGuEnable(GuState::CullFace);
     sys::sceGuEnable(GuState::ClipPlanes);
     sys::sceGuFinish();
-    sys::sceGuSync(SyncMode::Finish, SyncBehavior::Wait);
+    sys::sceGuSync(GuSyncMode::Finish, GuSyncBehavior::Wait);
 
     sys::sceDisplayWaitVblankStart();
     sys::sceGuDisplay(true);
@@ -90,9 +90,9 @@ fn psp_main() {
             _ => (),
         }
         unsafe {
-            sys::sceGuStart(sys::Context::Direct, &mut LIST as *mut _ as *mut c_void);
+            sys::sceGuStart(GuContextType::Direct, &mut LIST as *mut _ as *mut c_void);
             sys::sceGuFinish();
-            sys::sceGuSync(sys::SyncMode::Finish, sys::SyncBehavior::Wait);
+            sys::sceGuSync(GuSyncMode::Finish, sys::GuSyncBehavior::Wait);
             sys::sceDisplayWaitVblankStart();
             sys::sceGuSwapBuffers();
         }
