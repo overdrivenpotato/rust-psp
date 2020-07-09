@@ -64,8 +64,6 @@ impl SimpleVramAllocator {
     }
 }
 
-// TODO: can we hardcode SCREEN_WIDTH and SCREEN_HEIGHT here, or is there a use-case
-//       for allocating for smaller portions of the screen?
 fn get_memory_size(width: u32, height: u32, psm: TexturePixelFormat) -> u32 {
     match psm {
         TexturePixelFormat::PsmT4 => (width * height) >> 1,
