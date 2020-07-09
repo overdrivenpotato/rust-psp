@@ -9,7 +9,7 @@ use psp::sys::{
     FrontFaceDirection, ShadingModel, GuState, TexturePixelFormat, DepthFunc,
     VertexType, ClearBuffer, MipmapLevel,
 };
-use psp::gu_utils::get_static_vram_buffer;
+use psp::vram_alloc::SimpleVramAllocator;
 use psp::{BUF_WIDTH, SCREEN_WIDTH, SCREEN_HEIGHT};
 
 psp::module!("sample_cube", 1, 1);
@@ -88,18 +88,19 @@ fn psp_main() {
 unsafe fn psp_main_inner() {
     psp::enable_home_button();
 
-    let fbp0 = get_static_vram_buffer(BUF_WIDTH, SCREEN_HEIGHT, TexturePixelFormat::Psm8888);
-    let fbp1 = get_static_vram_buffer(BUF_WIDTH, SCREEN_HEIGHT, TexturePixelFormat::Psm8888);
-    let zbp = get_static_vram_buffer(BUF_WIDTH, SCREEN_HEIGHT, TexturePixelFormat::Psm4444);
+    let mut allocator = SimpleVramAllocator::new();
+    let fbp0 = allocator.alloc_texture_pixels(BUF_WIDTH, SCREEN_HEIGHT, TexturePixelFormat::Psm8888).start();
+    let fbp1 = allocator.alloc_texture_pixels(BUF_WIDTH, SCREEN_HEIGHT, TexturePixelFormat::Psm8888).start();
+    let zbp = allocator.alloc_texture_pixels(BUF_WIDTH, SCREEN_HEIGHT, TexturePixelFormat::Psm4444).start();
 
     sys::sceGumLoadIdentity();
 
     sys::sceGuInit();
 
     sys::sceGuStart(GuContextType::Direct, &mut LIST.0 as *mut [u32; 0x40000] as *mut _);
-    sys::sceGuDrawBuffer(DisplayPixelFormat::Psm8888, fbp0, BUF_WIDTH as i32);
-    sys::sceGuDispBuffer(SCREEN_WIDTH as i32, SCREEN_HEIGHT as i32, fbp1, BUF_WIDTH as i32);
-    sys::sceGuDepthBuffer(zbp, BUF_WIDTH as i32);
+    sys::sceGuDrawBuffer(DisplayPixelFormat::Psm8888, fbp0 as _, BUF_WIDTH as i32);
+    sys::sceGuDispBuffer(SCREEN_WIDTH as i32, SCREEN_HEIGHT as i32, fbp1 as _, BUF_WIDTH as i32);
+    sys::sceGuDepthBuffer(zbp as _, BUF_WIDTH as i32);
     sys::sceGuOffset(2048 - (SCREEN_WIDTH / 2), 2048 - (SCREEN_HEIGHT / 2));
     sys::sceGuViewport(2048, 2048, SCREEN_WIDTH as i32, SCREEN_HEIGHT as i32);
     sys::sceGuDepthRange(65535, 0);
