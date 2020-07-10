@@ -29,6 +29,8 @@ struct PspConfig {
     xmb_background_overlay_png: Option<String>,
 
     /// Path to ATRAC3 audio file played in the XMB menu.
+    ///
+    /// Must be 66kbps, under 500KB and under 55 seconds.
     xmb_music_at3: Option<String>,
 
     /// Path to associated PSAR data stored in the EBOOT.
