@@ -2,14 +2,14 @@
 
 #[repr(u16)]
 #[derive(Debug, Copy, Clone)]
-pub enum FontFamily {
+pub enum SceFontFamilyCode {
     SansSerif = 1,
     Serif,
 }
 
 #[repr(u16)]
 #[derive(Debug, Copy, Clone)]
-pub enum FontStyle {
+pub enum SceFontStyleCode {
     Regular = 1,
     Italic = 2,
     Bold = 5,
@@ -19,7 +19,7 @@ pub enum FontStyle {
 
 #[repr(u16)]
 #[derive(Debug, Copy, Clone)]
-pub enum FontLanguage { 
+pub enum SceFontLanguageCode { 
     Japanese = 1,
     Latin = 2,
     Korean = 3,
@@ -28,7 +28,7 @@ pub enum FontLanguage {
 
 #[repr(u32)]
 #[derive(Debug, Copy, Clone)]
-pub enum FontPixelFormat {
+pub enum SceFontPixelFormatCode {
     /// 2 pixels packed in 1 byte (natural order)
     Format4,
     /// 2 pixels packed in 1 byte (reversed order)
@@ -43,17 +43,17 @@ pub enum FontPixelFormat {
 
 #[repr(C)]
 #[derive(Copy, Clone)]
-pub struct PGFFontStyle {
+pub struct SceFontStyle {
     pub font_h: f32,
     pub font_v: f32,
     pub font_h_res: f32,
     pub font_v_res: f32,
     pub font_weight: f32,
-    pub font_family: FontFamily,
-    pub font_style: FontStyle,
+    pub font_family: SceFontFamilyCode,
+    pub font_style: SceFontStyleCode,
     // ???
     pub font_style_sub: u16,
-    pub font_language: FontLanguage,
+    pub font_language: SceFontLanguageCode,
     pub font_region: u16,
     pub font_country: u16,
     pub font_name: [u8; 64],
@@ -64,8 +64,8 @@ pub struct PGFFontStyle {
 
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
-pub struct GlyphImage {
-    pub pixel_format: FontPixelFormat,
+pub struct SceFontGlyphImage {
+    pub pixel_format: SceFontPixelFormatCode,
     pub x_pos_64: i32,
     pub y_pos_64: i32,
     pub buf_width: u16,
@@ -77,7 +77,7 @@ pub struct GlyphImage {
 
 #[repr(C)]
 #[derive(Debug, Copy, Clone, Default)]
-pub struct PGFCharInfo {
+pub struct SceFontCharInfo {
    pub bitmap_width: u32,
    pub bitmap_height: u32,
    pub bitmap_left: u32,
@@ -99,7 +99,7 @@ pub struct PGFCharInfo {
 
 #[repr(C)]
 #[derive(Copy, Clone)]
-pub struct PGFFontInfo {
+pub struct SceFontInfo {
     // Glyph metrics (in 26.6 signed fixed-point).
     pub max_glyph_width_i: i32,
     pub max_glyph_height_i: i32,
@@ -132,14 +132,14 @@ pub struct PGFFontInfo {
     pub shadow_map_length: i32,
     
     /// Font style (used by font comparison functions).
-    pub font_style: PGFFontStyle,
+    pub font_style: SceFontStyle,
     pub bpp: u8,
     pub pad: [u8; 3]
 }
 
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
-pub struct FontNewLibParams {
+pub struct SceFontNewLibParams {
     pub user_data_addr: u32,
     pub num_fonts: u32,
     pub cache_data_addr: u32,
@@ -155,7 +155,7 @@ pub struct FontNewLibParams {
 
 #[repr(C)]
 #[derive(Debug, Copy, Clone, Default)]
-pub struct FontImageRect {
+pub struct SceFontImageRect {
     pub width: i16,
     pub height: i16,
 }
@@ -166,7 +166,7 @@ psp_extern! {
     #![version = (0x00, 0x11)]
 
     #[psp(0x67F17ED7)]
-    pub fn sceFontNewLib(param: &FontNewLibParams, error_code: &mut i32) -> u32;
+    pub fn sceFontNewLib(param: &SceFontNewLibParams, error_code: &mut i32) -> u32;
 
     #[psp(0x574B6FBC)]
     pub fn sceFontDoneLib(handle: u32) -> i32;
@@ -184,34 +184,34 @@ psp_extern! {
     pub fn sceFontClose(handle: u32) -> i32;
 
     #[psp(0x099EF33C)]
-    pub fn sceFontFindOptimumFont(handle: u32, font_style: &PGFFontStyle, error_code: &mut i32) -> i32;
+    pub fn sceFontFindOptimumFont(handle: u32, font_style: &SceFontStyle, error_code: &mut i32) -> i32;
 
     #[psp(0x681E61A7)]
-    pub fn sceFontFindFont(handle: u32, font_style: &PGFFontStyle, error_code: &mut i32) -> i32; 
+    pub fn sceFontFindFont(handle: u32, font_style: &SceFontStyle, error_code: &mut i32) -> i32; 
 
     #[psp(0x0DA7535E)]
-    pub fn sceFontGetFontInfo(handle: u32, font_info: &mut PGFFontInfo) -> i32;
+    pub fn sceFontGetFontInfo(handle: u32, font_info: &mut SceFontInfo) -> i32;
 
     #[psp(0x5333322D)]
-    pub fn sceFontGetFontInfoByIndexNumber(handle: u32, font_style: &mut PGFFontStyle, index: u32) -> i32;
+    pub fn sceFontGetFontInfoByIndexNumber(handle: u32, font_style: &mut SceFontStyle, index: u32) -> i32;
 
     #[psp(0xDCC80C2F)]
-    pub fn sceFontGetCharInfo(handle: u32, char_code: u32, char_info: &mut PGFCharInfo) -> i32;
+    pub fn sceFontGetCharInfo(handle: u32, char_code: u32, char_info: &mut SceFontCharInfo) -> i32;
 
     #[psp(0xAA3DE7B5)]
-    pub fn sceFontGetShadowInfo(handle: u32, char_code: u32, char_info: &mut PGFCharInfo) -> i32;
+    pub fn sceFontGetShadowInfo(handle: u32, char_code: u32, char_info: &mut SceFontCharInfo) -> i32;
 
     #[psp(0x5C3E4A9E)]
-    pub fn sceFontGetCharImageRect(handle: u32, char_code: u32, char_rect: &mut FontImageRect) -> i32;
+    pub fn sceFontGetCharImageRect(handle: u32, char_code: u32, char_rect: &mut SceFontImageRect) -> i32;
 
     #[psp(0x48B06520)]
-    pub fn sceFontGetShadowImageRect(handle: u32, char_code: u32, char_rect: &mut FontImageRect) -> i32;
+    pub fn sceFontGetShadowImageRect(handle: u32, char_code: u32, char_rect: &mut SceFontImageRect) -> i32;
 
     #[psp(0x980F4895)]
-    pub fn sceFontGetCharGlyphImage(handle: u32, char_code: u32, glyph: &mut GlyphImage) -> i32;
+    pub fn sceFontGetCharGlyphImage(handle: u32, char_code: u32, glyph: &mut SceFontGlyphImage) -> i32;
 
     #[psp(0xCA1E6945)]
-    pub fn sceFontGetCharGlyphImage_Clip(handle: u32, char_code: u32, glyph: &mut GlyphImage, clip_x_pos: i32, clip_y_pos: i32) -> i32;
+    pub fn sceFontGetCharGlyphImage_Clip(handle: u32, char_code: u32, glyph: &mut SceFontGlyphImage, clip_x_pos: i32, clip_y_pos: i32) -> i32;
 
     #[psp(0xEE232411)]
     pub fn sceFontSetAltCharacterCode(handle: u32, char_code: u32) -> i32;
@@ -220,7 +220,7 @@ psp_extern! {
     pub fn sceFontFlush(handle: u32) -> i32;
 
     #[psp(0xBC75D85B)]
-    pub fn sceFontGetFontList(handle: u32, font_style: *mut PGFFontStyle, num_fonts: i32) -> i32;
+    pub fn sceFontGetFontList(handle: u32, font_style: *mut SceFontStyle, num_fonts: i32) -> i32;
 
     #[psp(0x27F6E642)]
     pub fn sceFontGetNumFontList(handle: u32, error_code: &mut i32) -> i32;
@@ -244,8 +244,8 @@ psp_extern! {
     pub fn sceFontCalcMemorySize() -> i32;
 
     #[psp(0x568BE516)]
-    pub fn sceFontGetShadowGlyphImage(handle: u32, char_code: u32, glyph: &mut GlyphImage) -> i32;
+    pub fn sceFontGetShadowGlyphImage(handle: u32, char_code: u32, glyph: &mut SceFontGlyphImage) -> i32;
 
     #[psp(0x5DCF6858)]
-    pub fn sceFontGetShadowGlyphImage_Clip(handle: u32, char_code: u32, glyph: &mut GlyphImage, clip_x_pos: i32, clip_y_pos: i32) -> i32;
+    pub fn sceFontGetShadowGlyphImage_Clip(handle: u32, char_code: u32, glyph: &mut SceFontGlyphImage, clip_x_pos: i32, clip_y_pos: i32) -> i32;
 }
