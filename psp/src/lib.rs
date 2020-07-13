@@ -4,8 +4,6 @@
     global_asm,
     untagged_unions,
     core_intrinsics,
-    const_loop,
-    const_if_match,
     const_generics,
     c_variadic,
 )]
@@ -30,7 +28,9 @@ pub mod debug;
 
 #[macro_use] mod vfpu;
 mod eabi;
+pub mod math;
 pub mod sys;
+pub mod test_runner;
 pub mod vram_alloc;
 
 #[cfg(not(feature = "stub-only"))] mod alloc_impl;
