@@ -68,7 +68,7 @@ impl TestRunner {
             if l == r {
                 self.write(&format!("PASS: {:?} == {:?}\n", l, r));
             } else {
-                self.write(&format!("FAIL: {:?} == {:?}\n", l, r));
+                self.write(&format!("FAIL: {:?} != {:?}\n", l, r));
                 self.failure = true;
             }
         }

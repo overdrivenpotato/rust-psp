@@ -11,8 +11,7 @@ fn psp_main() {
 
     let mut test_runner = TestRunner::new_file_runner();
     test_runner.start();
-    test_runner.check_value_equality(
-        &[
+    test_runner.check_value_equality(&[
         (test_cos(2.5), -0.8011436),
         (test_cos(0.0), 1.0),
         (test_cos(psp::sys::GU_PI), -1.0),
