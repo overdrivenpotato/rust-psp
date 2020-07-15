@@ -1,6 +1,26 @@
 use crate::sys::TexturePixelFormat;
-use crate::sys::sceGeEdramGetSize;
+use crate::sys::{sceGeEdramGetAddr, sceGeEdramGetSize};
 use core::mem::size_of;
+
+type VramAllocator = SimpleVramAllocator;
+
+static mut VRAM_ALLOCATOR: VramAllocatorSingleton = VramAllocatorSingleton {
+    alloc: Some(VramAllocator::new()),
+};
+
+pub fn get_vram_allocator() -> Option<VramAllocator> {
+    unsafe { VRAM_ALLOCATOR.get_vram_alloc() }
+}
+
+pub struct VramAllocatorSingleton {
+    alloc: Option<VramAllocator>,
+}
+
+impl VramAllocatorSingleton {
+    pub fn get_vram_alloc(&mut self) -> Option<VramAllocator> {
+        self.alloc.take()
+    }
+}
 
 pub struct VramMemChunk {
     start: u32,
@@ -12,8 +32,8 @@ impl VramMemChunk {
         Self { start, len }
     }
 
-    pub fn start(&self) -> u32 {
-        self.start
+    pub fn as_mut_ptr(&self) -> *mut u8 {
+        unsafe { vram_start_addr().offset(self.start as isize) }
     }
 
     pub fn len(&self) -> u32 {
@@ -22,15 +42,19 @@ impl VramMemChunk {
 }
 
 // A dead-simple VRAM bump allocator.
+// TODO: ensure 16-bit alignment?
+// TODO: pin?
+#[derive(Debug)]
 pub struct SimpleVramAllocator {
-   offset: u32,
+    offset: u32,
 }
 
 impl SimpleVramAllocator {
-    pub fn new() -> Self {
+    const fn new() -> Self {
         Self { offset: 0 }
     }
 
+    // TODO: return a Result instead of panicking
     pub fn alloc(&mut self, size: u32) -> VramMemChunk {
         let old_offset = self.offset;
         self.offset += size;
@@ -57,11 +81,28 @@ impl SimpleVramAllocator {
         self.alloc(size)
     }
 
-    fn total_mem(&self) -> u32 {
+    // TODO: write, or write_volatile?
+    // TODO: result instead of unwrap?
+    pub fn move_to_vram<T: Sized>(&mut self, obj: T) -> &mut T {
         unsafe {
-            sceGeEdramGetSize()
+            let chunk = self.alloc_sized::<T>(1);
+            let ptr = chunk.as_mut_ptr() as *mut T;
+            ptr.write(obj);
+            ptr.as_mut().unwrap()
         }
     }
+
+    fn total_mem(&self) -> u32 {
+        total_vram_size()
+    }
+}
+
+fn total_vram_size() -> u32 {
+    unsafe { sceGeEdramGetSize() }
+}
+
+fn vram_start_addr() -> *mut u8 {
+    unsafe { sceGeEdramGetAddr() }
 }
 
 fn get_memory_size(width: u32, height: u32, psm: TexturePixelFormat) -> u32 {

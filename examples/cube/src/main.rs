@@ -9,7 +9,7 @@ use psp::sys::{
     FrontFaceDirection, ShadingModel, GuState, TexturePixelFormat, DepthFunc,
     VertexType, ClearBuffer, MipmapLevel,
 };
-use psp::vram_alloc::SimpleVramAllocator;
+use psp::vram_alloc::get_vram_allocator;
 use psp::{BUF_WIDTH, SCREEN_WIDTH, SCREEN_HEIGHT};
 
 psp::module!("sample_cube", 1, 1);
@@ -88,10 +88,10 @@ fn psp_main() {
 unsafe fn psp_main_inner() {
     psp::enable_home_button();
 
-    let mut allocator = SimpleVramAllocator::new();
-    let fbp0 = allocator.alloc_texture_pixels(BUF_WIDTH, SCREEN_HEIGHT, TexturePixelFormat::Psm8888).start();
-    let fbp1 = allocator.alloc_texture_pixels(BUF_WIDTH, SCREEN_HEIGHT, TexturePixelFormat::Psm8888).start();
-    let zbp = allocator.alloc_texture_pixels(BUF_WIDTH, SCREEN_HEIGHT, TexturePixelFormat::Psm4444).start();
+    let mut allocator = get_vram_allocator().unwrap();
+    let fbp0 = allocator.alloc_texture_pixels(BUF_WIDTH, SCREEN_HEIGHT, TexturePixelFormat::Psm8888).as_mut_ptr();
+    let fbp1 = allocator.alloc_texture_pixels(BUF_WIDTH, SCREEN_HEIGHT, TexturePixelFormat::Psm8888).as_mut_ptr();
+    let zbp = allocator.alloc_texture_pixels(BUF_WIDTH, SCREEN_HEIGHT, TexturePixelFormat::Psm4444).as_mut_ptr();
 
     sys::sceGumLoadIdentity();
 
