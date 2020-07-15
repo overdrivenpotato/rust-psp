@@ -347,6 +347,16 @@ macro_rules! instruction {
         )
     };
 
+    // vsbn.s 0110 0001 0 ttttttt 0 sssssss 0 ddddddd
+    (vsbn_s $d:ident, $s:ident, $t:ident) => {
+        concat!(
+            "\n.byte ", $crate::register_single!($d),
+            "\n.byte ", $crate::register_single!($s),
+            "\n.byte ", $crate::register_single!($t),
+            "\n.byte 0b01100001",
+        )
+    };
+
     // vdiv.s 0110 0011 1 ttttttt 0 sssssss 0 ddddddd
     (vdiv_s $d:ident, $s:ident, $t:ident) => {
         concat!(
@@ -487,6 +497,29 @@ macro_rules! instruction {
         )
     };
 
+    // vdet.p 0110 0110 1 ttttttt 0 sssssss 1 ddddddd
+    (vdet_p $d:ident, $s:ident, $t:ident) => {
+        concat!(
+            "\n.byte 0x80 | ", $crate::register_pair!($d),
+            "\n.byte ", $crate::register_pair!($s),
+            "\n.byte 0x80 |", $crate::register_pair!($t),
+            "\n.byte 0b01100110",
+        )
+    };
+
+    // vcrs.t 0110 0111 0 ttttttt 1 sssssss 0 ddddddd
+    (vcrs_t $d:ident, $s:ident, $t:ident) => {
+        concat!(
+            "\n.byte ", $crate::register_triple!($d),
+            "\n.byte 0x80 | ", $crate::register_triple!($s),
+            "\n.byte ", $crate::register_triple!($t),
+            "\n.byte 0b01100111",
+        )
+    };
+
+    // vcmp.s 0110 1100 0 ttttttt 0 sssssss 0 000iiii 
+     
+
     // vmin.s 0110 1101 0 ttttttt 0 sssssss 0 ddddddd
     (vmin_s $d:ident, $s:ident, $t:ident) => {
         concat!(
@@ -564,6 +597,126 @@ macro_rules! instruction {
             "\n.byte 0x80 | ", $crate::register_quad!($s),
             "\n.byte 0x80 | ", $crate::register_quad!($t),
             "\n.byte 0b01101101",
+        )
+    };
+
+    //vscmp.s 0110 0110 1 ttttttt 0 sssssss 0 ddddddd
+    (vscmp_s $d:ident, $s:ident, $t:ident) => {
+        concat!(
+            "\n.byte ", $crate::register_single!($d),
+            "\n.byte ", $crate::register_single!($s),
+            "\n.byte 0x80 | ", $crate::register_single!($t),
+            "\n.byte 0b01100110",
+        )
+    };
+
+    //vscmp.p 0110 0110 1 ttttttt 0 sssssss 1 ddddddd
+    (vscmp_p $d:ident, $s:ident, $t:ident) => {
+        concat!(
+            "\n.byte 0x80 | ", $crate::register_double!($d),
+            "\n.byte ", $crate::register_double!($s),
+            "\n.byte 0x80 | ", $crate::register_double!($t),
+            "\n.byte 0b01100110",
+        )
+    };
+
+    //vscmp.t 0110 0110 1 ttttttt 1 sssssss 0 ddddddd
+    (vscmp_t $d:ident, $s:ident, $t:ident) => {
+        concat!(
+            "\n.byte ", $crate::register_triple!($d),
+            "\n.byte 0x80 |", $crate::register_triple!($s),
+            "\n.byte 0x80 | ", $crate::register_triple!($t),
+            "\n.byte 0b01100110",
+        )
+    };
+
+    //vscmp.q 0110 0110 1 ttttttt 1 sssssss 1 ddddddd
+    (vscmp_q $d:ident, $s:ident, $t:ident) => {
+        concat!(
+            "\n.byte 0x80 |", $crate::register_quad!($d),
+            "\n.byte 0x80 |", $crate::register_quad!($s),
+            "\n.byte 0x80 | ", $crate::register_quad!($t),
+            "\n.byte 0b01100110",
+        )
+    };
+
+    //vsge.s 0110 0111 0 ttttttt 0 sssssss 0 ddddddd
+    (vsge_s $d:ident, $s:ident, $t:ident) => {
+        concat!(
+            "\n.byte ", $crate::register_single!($d),
+            "\n.byte ", $crate::register_single!($s),
+            "\n.byte ", $crate::register_single!($t),
+            "\n.byte 0b01100111",
+        )
+    };
+
+    //vsge.p 0110 0111 0 ttttttt 0 sssssss 1 ddddddd
+    (vsge_p $d:ident, $s:ident, $t:ident) => {
+        concat!(
+            "\n.byte 0x80 | ", $crate::register_double!($d),
+            "\n.byte ", $crate::register_double!($s),
+            "\n.byte ", $crate::register_double!($t),
+            "\n.byte 0b01100111",
+        )
+    };
+
+    //vsge.t 0110 0111 0 ttttttt 1 sssssss 0 ddddddd
+    (vsge_t $d:ident, $s:ident, $t:ident) => {
+        concat!(
+            "\n.byte ", $crate::register_triple!($d),
+            "\n.byte 0x80 |", $crate::register_triple!($s),
+            "\n.byte ", $crate::register_triple!($t),
+            "\n.byte 0b01100111",
+        )
+    };
+
+    //vsge.q 0110 0111 0 ttttttt 1 sssssss 1 ddddddd
+    (vsge_q $d:ident, $s:ident, $t:ident) => {
+        concat!(
+            "\n.byte 0x80 |", $crate::register_quad!($d),
+            "\n.byte 0x80 |", $crate::register_quad!($s),
+            "\n.byte ", $crate::register_quad!($t),
+            "\n.byte 0b01100111",
+        )
+    };
+
+    //vslt.s 0110 0111 1 ttttttt 0 sssssss 0 ddddddd
+    (vslt_s $d:ident, $s:ident, $t:ident) => {
+        concat!(
+            "\n.byte ", $crate::register_single!($d),
+            "\n.byte ", $crate::register_single!($s),
+            "\n.byte ", $crate::register_single!($t),
+            "\n.byte 0b01100111",
+        )
+    };
+
+    //vslt.p 0110 0111 1 ttttttt 0 sssssss 1 ddddddd
+    (vslt_p $d:ident, $s:ident, $t:ident) => {
+        concat!(
+            "\n.byte 0x80 | ", $crate::register_double!($d),
+            "\n.byte ", $crate::register_double!($s),
+            "\n.byte 0x80 |", $crate::register_double!($t),
+            "\n.byte 0b01100111",
+        )
+    };
+
+    //vslt.t 0110 0111 1 ttttttt 1 sssssss 0 ddddddd
+    (vslt_t $d:ident, $s:ident, $t:ident) => {
+        concat!(
+            "\n.byte ", $crate::register_triple!($d),
+            "\n.byte 0x80 |", $crate::register_triple!($s),
+            "\n.byte 0x80 |", $crate::register_triple!($t),
+            "\n.byte 0b01100111",
+        )
+    };
+
+    //vslt.q 0110 0111 1 ttttttt 1 sssssss 1 ddddddd
+    (vslt_q $d:ident, $s:ident, $t:ident) => {
+        concat!(
+            "\n.byte 0x80 |", $crate::register_quad!($d),
+            "\n.byte 0x80 |", $crate::register_quad!($s),
+            "\n.byte 0x80 |", $crate::register_quad!($t),
+            "\n.byte 0b01100111",
         )
     };
 
@@ -674,6 +827,86 @@ macro_rules! instruction {
             "\n.byte 0x80",
             "\n.byte 0b00000011",
             "\n.byte 0b11010000",
+        )
+    };
+
+    // vsat0.s 1101 0000 0000 0100 0 sssssss 0 ddddddd
+    (vsat0_s $d:ident, $s:ident) => {
+        concat!(
+            "\n.byte ", $crate::register_single!($d),
+            "\n.byte ", $crate::register_single!($s),
+            "\n.byte 0b00000100",
+            "\n.byte 0b11101000",
+        )
+    };
+
+    // vsat0.p 1101 0000 0000 0100 0 sssssss 1 ddddddd
+    (vsat0_p $d:ident, $s:ident) => {
+        concat!(
+            "\n.byte 0x80 |", $crate::register_double!($d),
+            "\n.byte ", $crate::register_double!($s),
+            "\n.byte 0b00000100",
+            "\n.byte 0b11101000",
+        )
+    };
+
+    // vsat0.t 1101 0000 0000 0100 1 sssssss 0 ddddddd
+    (vsat0_t $d:ident, $s:ident) => {
+        concat!(
+            "\n.byte ", $crate::register_triple!($d),
+            "\n.byte | 0x80", $crate::register_triple!($s),
+            "\n.byte 0b00000100",
+            "\n.byte 0b11101000",
+        )
+    };
+
+    // vsat0.q 1101 0000 0000 0100 1 sssssss 1 ddddddd
+    (vsat0_q $d:ident, $s:ident) => {
+        concat!(
+            "\n.byte | 0x80", $crate::register_quad!($d),
+            "\n.byte | 0x80", $crate::register_quad!($s),
+            "\n.byte 0b00000100",
+            "\n.byte 0b11101000",
+        )
+    };
+
+    // vsat1.s 1101 0000 0000 0101 0 sssssss 0 ddddddd
+    (vsat1_s $d:ident, $s:ident) => {
+        concat!(
+            "\n.byte ", $crate::register_single!($d),
+            "\n.byte ", $crate::register_single!($s),
+            "\n.byte 0b00000101",
+            "\n.byte 0b11101000",
+        )
+    };
+
+    // vsat1.p 1101 0000 0000 0101 0 sssssss 1 ddddddd
+    (vsat1_p $d:ident, $s:ident) => {
+        concat!(
+            "\n.byte 0x80 |", $crate::register_double!($d),
+            "\n.byte ", $crate::register_double!($s),
+            "\n.byte 0b00000101",
+            "\n.byte 0b11101000",
+        )
+    };
+
+    // vsat1.t 1101 0000 0000 0101 1 sssssss 0 ddddddd
+    (vsat1_t $d:ident, $s:ident) => {
+        concat!(
+            "\n.byte ", $crate::register_triple!($d),
+            "\n.byte | 0x80", $crate::register_triple!($s),
+            "\n.byte 0b00000101",
+            "\n.byte 0b11101000",
+        )
+    };
+
+    // vsat1.q 1101 0000 0000 0101 1 sssssss 1 ddddddd
+    (vsat1_q $d:ident, $s:ident) => {
+        concat!(
+            "\n.byte | 0x80", $crate::register_quad!($d),
+            "\n.byte | 0x80", $crate::register_quad!($s),
+            "\n.byte 0b00000101",
+            "\n.byte 0b11101000",
         )
     };
 
