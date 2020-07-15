@@ -1,5 +1,7 @@
 //! PGF Font Library
 
+use core::ffi::c_void;
+
 #[repr(u16)]
 #[derive(Debug, Copy, Clone)]
 pub enum SceFontFamilyCode {
@@ -163,20 +165,24 @@ pub struct SceFontInfo {
     pub pad: [u8; 3]
 }
 
+type UnknownFn = extern "C" fn();
+
+/// The library works with only num_fonts, alloc_func, and free_func set to
+/// non-null values. Function signatures for the other functions are unknown.
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct SceFontNewLibParams {
     pub user_data_addr: u32,
     pub num_fonts: u32,
-    pub cache_data_addr: u32,
-    pub alloc_func_addr: u32,
-    pub free_func_addr: u32,
-    pub open_func_addr: u32,
-    pub close_func_addr: u32,
-    pub read_func_addr: u32,
-    pub seek_func_addr: u32,
-    pub error_func_addr: u32,
-    pub io_finish_func_addr: u32,
+    pub cache_data: u32,
+    pub alloc_func: Option<fn(unk_ptr: *mut c_void, amount: usize) -> *mut c_void>,
+    pub free_func: Option<fn(unk_ptr: *mut c_void, ptr: *mut c_void)>,
+    pub open_func: Option<UnknownFn>,
+    pub close_func: Option<UnknownFn>,
+    pub read_func: Option<UnknownFn>,
+    pub seek_func: Option<UnknownFn>,
+    pub error_func: Option<UnknownFn>,
+    pub io_finish_func: Option<UnknownFn>,
 }
 
 #[repr(C)]
