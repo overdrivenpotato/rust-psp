@@ -2,15 +2,17 @@
 
 set -euo
 
-export CARGO_HOME="$(pwd)"/.cargo
-export XARGO_HOME="$(pwd)"/.xargo
+export BUILD_ROOT="$(pwd)"
+
+export CARGO_HOME="${BUILD_ROOT}"/.cargo
+export XARGO_HOME="${BUILD_ROOT}"/.xargo
 
 pushd repo/cargo-psp/
 cargo build --release
 popd
 
 pushd repo/ci/tests
-/repo/cargo-psp/target/release/cargo-psp
+${BUILD_ROOT}/repo/cargo-psp/target/release/cargo-psp
 popd
 
 cp -r repo/ci/tests/target/mipsel-sony-psp/release/* release/
