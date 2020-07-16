@@ -1,4 +1,4 @@
 [workspace]
 
 members = [ "psp", "cargo-psp" ]
-exclude = [ "examples", "ci", "testcases" ]
+exclude = [ "examples", "ci" ]
