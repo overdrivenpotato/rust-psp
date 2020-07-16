@@ -12,7 +12,7 @@ cargo build --release
 popd
 
 pushd repo/ci/tests
-${BUILD_ROOT}/repo/cargo-psp/target/release/cargo-psp
+${BUILD_ROOT}/repo/target/release/cargo-psp
 popd
 
 cp -r repo/ci/tests/target/mipsel-sony-psp/release/* release/
