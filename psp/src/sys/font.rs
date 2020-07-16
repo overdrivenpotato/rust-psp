@@ -208,28 +208,28 @@ psp_extern! {
     #![version = (0x00, 0x11)]
 
     #[psp(0x67F17ED7)]
-    pub fn sceFontNewLib(param: &SceFontNewLibParams, error_code: &SceFontErrorCode) -> u32;
+    pub fn sceFontNewLib(param: &SceFontNewLibParams, error_code: &mut SceFontErrorCode) -> u32;
 
     #[psp(0x574B6FBC)]
     pub fn sceFontDoneLib(handle: u32) -> i32;
 
     #[psp(0xA834319D)]
-    pub fn sceFontOpen(handle: u32, index: u32, mode: u32, error_code: &SceFontErrorCode) -> u32;
+    pub fn sceFontOpen(handle: u32, index: u32, mode: u32, error_code: &mut SceFontErrorCode) -> u32;
 
     #[psp(0xBB8E7FE6)]
     pub fn sceFontOpenUserMemory(handle: u32, font_data: *const u8, font_length: i32, error_code: SceFontErrorCode) -> u32;
 
     #[psp(0x57FCB733)]
-    pub fn sceFontOpenUserFile(handle: u32, file_name: *const u8, mode: u32, error_code: &SceFontErrorCode) -> u32;
+    pub fn sceFontOpenUserFile(handle: u32, file_name: *const u8, mode: u32, error_code: &mut SceFontErrorCode) -> u32;
 
     #[psp(0x3AEA8CB6)]
     pub fn sceFontClose(handle: u32) -> i32;
 
     #[psp(0x099EF33C)]
-    pub fn sceFontFindOptimumFont(handle: u32, font_style: &SceFontStyle, error_code: &SceFontErrorCode) -> i32;
+    pub fn sceFontFindOptimumFont(handle: u32, font_style: &SceFontStyle, error_code: &mut SceFontErrorCode) -> i32;
 
     #[psp(0x681E61A7)]
-    pub fn sceFontFindFont(handle: u32, font_style: &SceFontStyle, error_code: &SceFontErrorCode) -> i32; 
+    pub fn sceFontFindFont(handle: u32, font_style: &SceFontStyle, error_code: &mut SceFontErrorCode) -> i32; 
 
     #[psp(0x0DA7535E)]
     pub fn sceFontGetFontInfo(handle: u32, font_info: &mut SceFontInfo) -> i32;
@@ -265,22 +265,22 @@ psp_extern! {
     pub fn sceFontGetFontList(handle: u32, font_style: *mut SceFontStyle, num_fonts: i32) -> i32;
 
     #[psp(0x27F6E642)]
-    pub fn sceFontGetNumFontList(handle: u32, error_code: &SceFontErrorCode) -> i32;
+    pub fn sceFontGetNumFontList(handle: u32, error_code: &mut SceFontErrorCode) -> i32;
 
     #[psp(0x48293280)]
     pub fn sceFontSetResolution(handle: u32, h_res: f32, v_res: f32) -> i32;
 
     #[psp(0x74B21701)]
-    pub fn sceFontPixelToPointH(handle: u32, pixels_h: f32, error_code: &SceFontErrorCode) -> f32;
+    pub fn sceFontPixelToPointH(handle: u32, pixels_h: f32, error_code: &mut SceFontErrorCode) -> f32;
 
     #[psp(0xF8F0752E)]
-    pub fn sceFontPixelToPointV(handle: u32, pixels_v: f32, error_code: &SceFontErrorCode) -> f32;
+    pub fn sceFontPixelToPointV(handle: u32, pixels_v: f32, error_code: &mut SceFontErrorCode) -> f32;
 
     #[psp(0x472694CD)]
-    pub fn sceFontPointToPixelH(handle: u32, point_h: f32, error_code: &SceFontErrorCode) -> f32;
+    pub fn sceFontPointToPixelH(handle: u32, point_h: f32, error_code: &mut SceFontErrorCode) -> f32;
 
     #[psp(0x3C4B7E82)]
-    pub fn sceFontPointToPixelV(handle: u32, point_v: f32, error_code: &SceFontErrorCode) -> f32;
+    pub fn sceFontPointToPixelV(handle: u32, point_v: f32, error_code: &mut SceFontErrorCode) -> f32;
 
     #[psp(0x2F67356A)]
     pub fn sceFontCalcMemorySize() -> i32;
