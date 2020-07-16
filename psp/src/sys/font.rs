@@ -64,11 +64,20 @@ pub enum SceFontPixelFormatCode {
 pub enum SceFontErrorCode {
     Success = 0,
     OutOfMemory = 0x80460001,
-    InvalidLibId = 0x8046002,
-    InvalidParameter = 0x8046003,
-    HandlerOpenFailed = 0x8046005,
+    InvalidLibId = 0x80460002,
+    InvalidParameter = 0x80460003,
+    NoFile = 0x80460004,
+    HandlerOpenFailed = 0x80460005,
+    HandlerCloseFailed = 0x80460006,
+    HandlerReadFailed = 0x80460007,
+    HandlerSeekFailed = 0x80460008,
     TooManyOpenFonts = 0x80460009,
     InvalidFontData = 0x8046000A,
+    InconsistentData = 0x8046000B,
+    Expired = 0x8046000C,
+    Registry = 0x8046000D,
+    NoSupport = 0x8046000E,
+    Unknown = 0x8046FFFF,
 }
 
 #[repr(C)]
