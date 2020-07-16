@@ -2,7 +2,7 @@
 #![no_main]
 
 use psp::test_runner::TestRunner;
-use psp::vram_alloc::get_vram_allocator_singleton;
+use psp::vram_alloc::get_vram_allocator;
 
 psp::module!("vram_test", 1, 1);
 
@@ -12,16 +12,16 @@ fn psp_main() {
     let mut test_runner = TestRunner::new_file_runner();
     test_runner.start();
 
-    let mut alloc = get_vram_allocator_singleton().unwrap();
+    let mut alloc = get_vram_allocator().unwrap();
     test_runner.pass("allocator_initialization", "Received VRAM allocator.");
 
-    let fake_alloc = get_vram_allocator_singleton();
+    let fake_alloc = get_vram_allocator();
     match fake_alloc {
-        Some(_) => test_runner.fail(
+        Ok(_) => test_runner.fail(
             "allocator_doubling_prevention",
             "Received second VRAM allocator! Singleton is not working.",
         ),
-        None => test_runner.pass(
+        Err(_) => test_runner.pass(
             "allocator_doubling_prevention",
             "VRAM allocator singleton functional.",
         ),

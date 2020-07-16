@@ -4,12 +4,16 @@ use core::mem::size_of;
 
 type VramAllocator = SimpleVramAllocator;
 
+#[derive(Debug)]
+pub struct VramAllocatorInUseError {}
+
 static mut VRAM_ALLOCATOR: VramAllocatorSingleton = VramAllocatorSingleton {
     alloc: Some(VramAllocator::new()),
 };
 
-pub fn get_vram_allocator() -> Option<VramAllocator> {
-    unsafe { VRAM_ALLOCATOR.get_vram_alloc() }
+pub fn get_vram_allocator() -> Result<VramAllocator, VramAllocatorInUseError> {
+    let opt_alloc = unsafe { VRAM_ALLOCATOR.get_vram_alloc() };
+    opt_alloc.ok_or(VramAllocatorInUseError{})
 }
 
 pub struct VramAllocatorSingleton {
@@ -33,7 +37,11 @@ impl VramMemChunk {
     }
 
     pub fn as_mut_ptr(&self) -> *mut u8 {
-        unsafe { vram_start_addr().offset(self.start as isize) }
+        unsafe { vram_start_addr().add(self.start as usize) }
+    }
+
+    pub fn as_mut_ptr_direct(&self) -> *mut u8 {
+        unsafe { vram_start_addr_direct().add(self.start as usize) }
     }
 
     pub fn len(&self) -> u32 {
@@ -42,7 +50,6 @@ impl VramMemChunk {
 }
 
 // A dead-simple VRAM bump allocator.
-// TODO: ensure 16-bit alignment?
 // TODO: pin?
 #[derive(Debug)]
 pub struct SimpleVramAllocator {
@@ -66,6 +73,7 @@ impl SimpleVramAllocator {
         VramMemChunk::new(old_offset, size)
     }
 
+    // TODO: ensure 16-bit alignment?
     pub fn alloc_sized<T: Sized>(&mut self, count: u32) -> VramMemChunk {
         let size = size_of::<T>() as u32;
         self.alloc(count * size)
@@ -83,6 +91,7 @@ impl SimpleVramAllocator {
 
     // TODO: write, or write_volatile?
     // TODO: result instead of unwrap?
+    // TODO: Keep track of the allocated chunk
     pub fn move_to_vram<T: Sized>(&mut self, obj: T) -> &mut T {
         unsafe {
             let chunk = self.alloc_sized::<T>(1);
@@ -101,7 +110,14 @@ fn total_vram_size() -> u32 {
     unsafe { sceGeEdramGetSize() }
 }
 
+// NOTE: VRAM actually starts at 0x4000000, as returned by sceGeEdramGetAddr.
+//       The Gu functions take that into account, and start their pointer
+//       indices at 0. See GE_EDRAM_ADDRESS in gu.rs for that offset being used.
 fn vram_start_addr() -> *mut u8 {
+    0x0 as *const u8 as _
+}
+
+fn vram_start_addr_direct() -> *mut u8 {
     unsafe { sceGeEdramGetAddr() }
 }
 
