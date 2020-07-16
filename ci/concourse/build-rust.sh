@@ -1,5 +1,4 @@
 #!/bin/bash
-
 set -euo
 
 export BUILD_ROOT="$(pwd)"
