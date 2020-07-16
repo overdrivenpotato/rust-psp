@@ -3,13 +3,12 @@
 
 use psp::test_runner::TestRunner;
 use psp::vram_alloc::get_vram_allocator;
+use core::ptr::null_mut;
 
 psp::module!("vram_test", 1, 1);
 
 fn psp_main() {
     psp::enable_home_button();
-
-    let zero_ptr = 0x0 as *const u8 as *mut u8;
 
     let mut test_runner = TestRunner::new_file_runner();
     test_runner.start();
@@ -31,6 +30,8 @@ fn psp_main() {
 
     // TODO: have no safe functions which allow uninitialized mem
     unsafe {
+        let zero_ptr = null_mut();
+
         let chunk1 = alloc.alloc_sized::<[u8; 4]>(1);
         let chunk2 = alloc.alloc_sized::<[u8; 4]>(1);
 

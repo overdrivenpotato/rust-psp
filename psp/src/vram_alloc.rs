@@ -1,6 +1,7 @@
 use crate::sys::TexturePixelFormat;
 use crate::sys::{sceGeEdramGetAddr, sceGeEdramGetSize};
 use core::mem::size_of;
+use core::ptr::null_mut;
 
 type VramAllocator = SimpleVramAllocator;
 
@@ -112,8 +113,8 @@ fn total_vram_size() -> u32 {
 // NOTE: VRAM actually starts at 0x4000000, as returned by sceGeEdramGetAddr.
 //       The Gu functions take that into account, and start their pointer
 //       indices at 0. See GE_EDRAM_ADDRESS in gu.rs for that offset being used.
-fn vram_start_addr_zero() -> *mut u8 {
-    0x0 as *const u8 as _
+fn vram_start_addr_zero() -> *mut u8 { 
+    null_mut()
 }
 
 fn vram_start_addr_direct() -> *mut u8 {
