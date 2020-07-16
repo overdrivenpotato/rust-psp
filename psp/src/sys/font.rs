@@ -194,7 +194,7 @@ pub struct SceFontNewLibParams {
     pub open_func: Option<extern "C" fn(unk_ptr: *mut c_void, filename: *const u8, error_code: &mut SceFontErrorCode) -> SceUid>,
     /// Returns an SceFontErrorCode
     pub close_func: Option<extern "C" fn(unk_ptr: *mut c_void, fd: SceUid) -> SceFontErrorCode>,
-    /// Returns number of bytes read
+    /// Returns number of "type"s read (ie bytes_read / type_size)
     pub read_func: Option<extern "C" fn(unk_ptr: *mut c_void, data: *mut c_void, type_size: u32) -> u32>,
     /// Returns an SceFontErrorCode
     pub seek_func: Option<extern "C" fn (unk_ptr: *mut c_void, fd: SceUid, offset: i32) -> SceFontErrorCode>,
