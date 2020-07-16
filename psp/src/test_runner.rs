@@ -42,11 +42,15 @@ impl TestRunner {
         }
     }
 
-    pub fn start(&self) {
+    pub fn run<F: Fn(&mut TestRunner)>(&mut self, f: F) {
+        f(self)
+    }
+
+    pub fn start_run(&self) {
         self.write_args(format_args!("\n\n{}\n", STARTING_TOKEN));
     }
 
-    pub fn finish(self) {
+    pub fn finish_run(self) {
         if self.failure {
             self.write_args(format_args!("{}\n", FAILURE_TOKEN));
         } else {
@@ -71,7 +75,6 @@ impl TestRunner {
         } else {
             self.fail(testcase_name, &format!("{:?} != {:?}", l, r));
         }
-
     }
     pub fn check_list<T>(&mut self, val_pairs: &[(&str, T, T)])
     where

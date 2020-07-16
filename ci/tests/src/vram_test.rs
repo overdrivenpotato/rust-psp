@@ -1,18 +1,8 @@
-#![no_std]
-#![no_main]
-
+use core::ptr::null_mut;
 use psp::test_runner::TestRunner;
 use psp::vram_alloc::get_vram_allocator;
-use core::ptr::null_mut;
 
-psp::module!("vram_test", 1, 1);
-
-fn psp_main() {
-    psp::enable_home_button();
-
-    let mut test_runner = TestRunner::new_file_runner();
-    test_runner.start();
-
+pub fn test_main(test_runner: &mut TestRunner) {
     let mut alloc = get_vram_allocator().unwrap();
     test_runner.pass("allocator_initialization", "Received VRAM allocator.");
 
@@ -28,7 +18,6 @@ fn psp_main() {
         ),
     }
 
-    // TODO: have no safe functions which allow uninitialized mem
     unsafe {
         let zero_ptr = null_mut();
 
@@ -60,11 +49,14 @@ fn psp_main() {
 
         let muh_item = alloc.move_to_vram([69u8; 16]);
 
-        test_runner.check("vram_moved_addr", muh_item.as_mut_ptr(), 0x4000008 as *const u8 as _);
+        test_runner.check(
+            "vram_moved_addr",
+            muh_item.as_mut_ptr(),
+            0x4000008 as *const u8 as _,
+        );
 
         test_runner.check("vram_storage_len", muh_item.len(), 16);
         test_runner.check("vram_storage_integrity1", muh_item[4], 69);
         test_runner.check("vram_storage_integrity2", muh_item[15], 69);
     }
-    test_runner.finish();
 }

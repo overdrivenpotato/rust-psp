@@ -1,12 +1,16 @@
 #!/bin/bash
 
-set -e
+set -euo
 
 export CARGO_HOME="$(pwd)"/.cargo
 export XARGO_HOME="$(pwd)"/.xargo
 
-pushd repo/ci/tests/psp-ci-test
-make
+pushd repo/cargo-psp/
+cargo build --release
 popd
 
-cp -r repo/ci/tests/psp-ci-test/target/psp/release/* release/
+pushd repo/ci/tests
+/repo/cargo-psp/target/release/cargo-psp
+popd
+
+cp -r repo/ci/tests/target/mipsel-sony-psp/release/* release/
