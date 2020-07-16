@@ -36,11 +36,11 @@ impl VramMemChunk {
         Self { start, len }
     }
 
-    pub fn as_mut_ptr(&self) -> *mut u8 {
-        unsafe { vram_start_addr().add(self.start as usize) }
+    pub fn as_mut_ptr_from_zero(&self) -> *mut u8 {
+        unsafe { vram_start_addr_zero().add(self.start as usize) }
     }
 
-    pub fn as_mut_ptr_direct(&self) -> *mut u8 {
+    pub fn as_mut_ptr_direct_to_vram(&self) -> *mut u8 {
         unsafe { vram_start_addr_direct().add(self.start as usize) }
     }
 
@@ -92,13 +92,12 @@ impl SimpleVramAllocator {
     // TODO: write, or write_volatile?
     // TODO: result instead of unwrap?
     // TODO: Keep track of the allocated chunk
-    pub fn move_to_vram<T: Sized>(&mut self, obj: T) -> &mut T {
-        unsafe {
-            let chunk = self.alloc_sized::<T>(1);
-            let ptr = chunk.as_mut_ptr() as *mut T;
-            ptr.write(obj);
-            ptr.as_mut().unwrap()
-        }
+    // TODO: determine unsafety of this
+    pub unsafe fn move_to_vram<T: Sized>(&mut self, obj: T) -> &mut T {
+        let chunk = self.alloc_sized::<T>(1);
+        let ptr = chunk.as_mut_ptr_direct_to_vram() as *mut T;
+        ptr.write(obj);
+        ptr.as_mut().unwrap()
     }
 
     fn total_mem(&self) -> u32 {
@@ -113,7 +112,7 @@ fn total_vram_size() -> u32 {
 // NOTE: VRAM actually starts at 0x4000000, as returned by sceGeEdramGetAddr.
 //       The Gu functions take that into account, and start their pointer
 //       indices at 0. See GE_EDRAM_ADDRESS in gu.rs for that offset being used.
-fn vram_start_addr() -> *mut u8 {
+fn vram_start_addr_zero() -> *mut u8 {
     0x0 as *const u8 as _
 }
 

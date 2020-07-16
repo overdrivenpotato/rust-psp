@@ -5,4 +5,4 @@ authors = ["Glenn Hope <glenn.alexander.hope@gmail.com>"]
 edition = "2018"
 
 [dependencies]
-psp = { path = "../../psp" }
+psp = { path = "../../../psp" }

@@ -9,6 +9,8 @@ psp::module!("vram_test", 1, 1);
 fn psp_main() {
     psp::enable_home_button();
 
+    let zero_ptr = 0x0 as *const u8 as *mut u8;
+
     let mut test_runner = TestRunner::new_file_runner();
     test_runner.start();
 
@@ -34,18 +36,30 @@ fn psp_main() {
 
         test_runner.check_list(&[
             (
-                "first_chunk_addr",
-                chunk1.as_mut_ptr(),
+                "first_chunk_addr_zero",
+                chunk1.as_mut_ptr_direct_to_vram(),
                 psp::sys::sceGeEdramGetAddr(),
             ),
             (
-                "second_chunk_addr",
-                chunk2.as_mut_ptr(),
+                "second_chunk_addr_zero",
+                chunk2.as_mut_ptr_direct_to_vram(),
                 psp::sys::sceGeEdramGetAddr().offset(4),
+            ),
+            (
+                "first_chunk_addr_direct",
+                chunk1.as_mut_ptr_from_zero(),
+                zero_ptr,
+            ),
+            (
+                "second_chunk_addr_direct",
+                chunk2.as_mut_ptr_from_zero(),
+                zero_ptr.offset(4),
             ),
         ]);
 
         let muh_item = alloc.move_to_vram([69u8; 16]);
+
+        test_runner.check("vram_moved_addr", muh_item.as_mut_ptr(), 0x4000008 as *const u8 as _);
 
         test_runner.check("vram_storage_len", muh_item.len(), 16);
         test_runner.check("vram_storage_integrity1", muh_item[4], 69);
