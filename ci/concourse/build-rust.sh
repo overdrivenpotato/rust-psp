@@ -7,13 +7,6 @@ export BUILD_ROOT="$(pwd)"
 export CARGO_HOME="${BUILD_ROOT}"/.cargo
 export XARGO_HOME="${BUILD_ROOT}"/.xargo
 
-# XXX
-echo FUCK
-pwd
-find
-find | grep 'cargo-psp$'
-# XXX
-
 pushd repo/cargo-psp/
 cargo build --release
 popd
