@@ -1,6 +1,7 @@
 //! PGF Font Library
 
 use core::ffi::c_void;
+use crate::sys::kernel::SceUid;
 
 #[repr(u16)]
 #[derive(Debug, Copy, Clone)]
@@ -61,6 +62,7 @@ pub enum SceFontPixelFormatCode {
 #[repr(u32)]
 #[derive(Debug, Copy, Clone)]
 pub enum SceFontErrorCode {
+    Success = 0,
     OutOfMemory = 0x80460001,
     InvalidLibId = 0x8046002,
     InvalidParameter = 0x8046003,
@@ -168,20 +170,28 @@ pub struct SceFontInfo {
 type UnknownFn = extern "C" fn();
 
 /// The library works with only num_fonts, alloc_func, and free_func set to
-/// non-null values. Function signatures for the other functions are unknown.
+/// non-null values so long as you don't load a font from a file.
+/// Function signatures reversed from 11 Eyes Crossover. 
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Copy, Clone)]
 pub struct SceFontNewLibParams {
     pub user_data_addr: u32,
     pub num_fonts: u32,
     pub cache_data: u32,
-    pub alloc_func: Option<fn(unk_ptr: *mut c_void, amount: usize) -> *mut c_void>,
-    pub free_func: Option<fn(unk_ptr: *mut c_void, ptr: *mut c_void)>,
-    pub open_func: Option<UnknownFn>,
-    pub close_func: Option<UnknownFn>,
-    pub read_func: Option<UnknownFn>,
-    pub seek_func: Option<UnknownFn>,
+    /// Returns pointer to allocated memory
+    pub alloc_func: Option<extern "C" fn(unk_ptr: *mut c_void, amount: usize) -> *mut c_void>,
+    pub free_func: Option<extern "C" fn(unk_ptr: *mut c_void, ptr: *mut c_void)>,
+    /// Returns fd of opened file
+    pub open_func: Option<extern "C" fn(unk_ptr: *mut c_void, filename: *const u8, error_code: &mut SceFontErrorCode) -> SceUid>,
+    /// Returns an SceFontErrorCode
+    pub close_func: Option<extern "C" fn(unk_ptr: *mut c_void, fd: SceUid) -> SceFontErrorCode>,
+    /// Returns number of bytes read
+    pub read_func: Option<extern "C" fn(unk_ptr: *mut c_void, data: *mut c_void, type_size: u32) -> u32>,
+    /// Returns an SceFontErrorCode
+    pub seek_func: Option<extern "C" fn (unk_ptr: *mut c_void, fd: SceUid, offset: i32) -> SceFontErrorCode>,
+    /// Unknown, pass None
     pub error_func: Option<UnknownFn>,
+    /// Unknown, pass None
     pub io_finish_func: Option<UnknownFn>,
 }
 
