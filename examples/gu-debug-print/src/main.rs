@@ -17,7 +17,7 @@ fn psp_main() {
     psp::enable_home_button();
 
     let mut allocator = get_vram_allocator().unwrap();
-    let fbp0 = allocator.alloc_texture_pixels(BUF_WIDTH, SCREEN_HEIGHT, TexturePixelFormat::Psm8888).as_mut_ptr();
+    let fbp0 = allocator.alloc_texture_pixels(BUF_WIDTH, SCREEN_HEIGHT, TexturePixelFormat::Psm8888).as_mut_ptr_from_zero();
 
     unsafe {
         sys::sceGuInit();

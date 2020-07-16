@@ -3,7 +3,7 @@
 # Without this line, the tests will always pass.
 set -ueo pipefail
 
-[ -d ~/rust-psp/ci/ ] && cd ~/rust-psp/ci
+[ -d ~/rust-psp/ci/ ] && cd ~/rust-psp/ci/
 
 BUILD_DIR="target/mipsel-sony-psp/debug/"
 LOG_FILE="${BUILD_DIR}/psp_output_file.log"
