@@ -226,7 +226,7 @@ psp_extern! {
     pub fn sceFontOpen(handle: u32, index: u32, mode: u32, error_code: &mut SceFontErrorCode) -> u32;
 
     #[psp(0xBB8E7FE6)]
-    pub fn sceFontOpenUserMemory(handle: u32, font_data: *const u8, font_length: i32, error_code: SceFontErrorCode) -> u32;
+    pub fn sceFontOpenUserMemory(handle: u32, font_data: *const u8, font_length: i32, error_code: &mut SceFontErrorCode) -> u32;
 
     #[psp(0x57FCB733)]
     pub fn sceFontOpenUserFile(handle: u32, file_name: *const u8, mode: u32, error_code: &mut SceFontErrorCode) -> u32;
