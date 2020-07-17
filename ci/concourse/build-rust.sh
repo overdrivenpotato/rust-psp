@@ -45,5 +45,10 @@ fi
 popd
 
 if [ "$CI" = "1" ]; then
-    cp -r ${PREFIX}ci/tests/target/mipsel-sony-psp/debug/* debug/
+    if [ "$RELEASE" = "1" ]; then
+        # TODO: add release flag? did not work with it added.
+        cp -r ${PREFIX}ci/tests/target/mipsel-sony-psp/release/* release/
+    else
+        cp -r ${PREFIX}ci/tests/target/mipsel-sony-psp/debug/* debug/
+    fi
 fi
