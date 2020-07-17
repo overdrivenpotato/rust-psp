@@ -8,9 +8,9 @@ else
 fi
 
 if true; then
-    RELEASE="1"
+    RELEASE="release"
 else
-    RELEASE="0"
+    RELEASE="debug"
 fi
 
 if [ "$CI" = "1" ]; then
@@ -25,30 +25,25 @@ fi
 
 
 pushd ${PREFIX}cargo-psp/
-if [ "$RELEASE" = "1" ]; then
+if [ "$RELEASE" = "release" ]; then
     cargo build --release
 else
     cargo build
 fi
 popd
 
-PATH="${HOMEDIR}/${PREFIX}/target/release:${PATH}"
+PATH="${HOMEDIR}/${PREFIX}/target/${RELEASE}:${PATH}"
 
 pushd ${PREFIX}ci/tests
 [ -f Xargo.toml ] && rm Xargo.toml
-if [ "$RELEASE" = "1" ]; then
-    # TODO: add release flag? did not work with it added.
-    ${HOMEDIR}/${PREFIX}target/release/cargo-psp
+# TODO: add release flag? did not work with it added.
+if [ "$RELEASE" = "release" ]; then
+    cargo-psp --release
 else
-    ${HOMEDIR}/${PREFIX}target/debug/cargo-psp
+    cargo-psp
 fi
 popd
 
 if [ "$CI" = "1" ]; then
-    if [ "$RELEASE" = "1" ]; then
-        # TODO: add release flag? did not work with it added.
-        cp -r ${PREFIX}ci/tests/target/mipsel-sony-psp/release/* release/
-    else
-        cp -r ${PREFIX}ci/tests/target/mipsel-sony-psp/debug/* debug/
-    fi
+    cp -r ${PREFIX}ci/tests/target/mipsel-sony-psp/${RELEASE}/* release/
 fi
