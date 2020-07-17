@@ -1,17 +1,23 @@
 #!/bin/bash
 set -euo
 
-export BUILD_ROOT="$(pwd)"
+if [ -d repo/ci/ ]; then
+    export PREFIX="repo/"
+    export HOMEDIR="$(pwd)"
+else
+    export PREFIX="rust-psp/"
+    export HOMEDIR="${HOME}"
+fi
 
-export CARGO_HOME="${BUILD_ROOT}"/.cargo
-export XARGO_HOME="${BUILD_ROOT}"/.xargo
+export CARGO_HOME="${HOMEDIR}"/.cargo
+export XARGO_HOME="${HOMEDIR}"/.xargo
 
-pushd repo/cargo-psp/
+pushd ${PREFIX}cargo-psp/
 cargo build --release
 popd
 
-pushd repo/ci/tests
-${BUILD_ROOT}/repo/target/release/cargo-psp
+pushd ${PREFIX}ci/tests
+${HOMEDIR}/${PREFIX}target/release/cargo-psp
 popd
 
-cp -r repo/ci/tests/target/mipsel-sony-psp/release/* release/
+cp -r ${PREFIX}ci/tests/target/mipsel-sony-psp/release/* release/
