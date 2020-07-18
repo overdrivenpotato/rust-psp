@@ -3,21 +3,7 @@
 # Fail on errors
 set -euxo pipefail
 
-if true; then
-    RELEASE="release"
-else
-    RELEASE="debug"
-fi
-
-if [ -d repo/ci/ ]; then
-    CI="1"
-    BUILD_DIR="build"
-    PPSSPP="/ppsspp/build-sdl/PPSSPPHeadless"
-else
-    CI="0"
-    BUILD_DIR="ci/tests/target/mipsel-sony-psp/${RELEASE}"
-    PPSSPP="PPSSPPHeadless"
-fi
+. "$(dirname $0)"/env.sh
 
 "$PPSSPP" "${BUILD_DIR}/EBOOT.PBP" --timeout=10 -r "${BUILD_DIR}/"
 

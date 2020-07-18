@@ -1,30 +1,9 @@
 #!/bin/bash
 set -euxo pipefail
 
-if [ -d repo/ci/ ]; then
-    CI="1"
-else
-    CI="0"
-fi
+. "$(dirname $0)"/env.sh
 
-if true; then
-    RELEASE="release"
-else
-    RELEASE="debug"
-fi
-
-if [ "$CI" = "1" ]; then
-    export PREFIX="repo/"
-    export HOMEDIR="$(pwd)"
-    export CARGO_HOME="${HOMEDIR}"/.cargo
-    export XARGO_HOME="${HOMEDIR}"/.xargo
-else
-    export PREFIX="rust-psp/"
-    export HOMEDIR="${HOME}"
-fi
-
-
-pushd ${PREFIX}cargo-psp/
+pushd ${PREFIX}/cargo-psp/
 if [ "$RELEASE" = "release" ]; then
     cargo build --release
 else
@@ -34,7 +13,7 @@ popd
 
 PATH="${HOMEDIR}/${PREFIX}/target/${RELEASE}:${PATH}"
 
-pushd ${PREFIX}ci/tests
+pushd ${PREFIX}/ci/tests
 
 [ -f Xargo.toml ] && rm Xargo.toml
 
@@ -46,5 +25,5 @@ fi
 popd
 
 if [ "$CI" = "1" ]; then
-    cp -r ${PREFIX}ci/tests/target/mipsel-sony-psp/${RELEASE}/* release/
+    cp -r ${PREFIX}/ci/tests/target/mipsel-sony-psp/${RELEASE}/* release/
 fi
