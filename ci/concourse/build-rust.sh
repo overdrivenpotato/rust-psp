@@ -32,15 +32,17 @@ else
 fi
 popd
 
-PATH="${HOMEDIR}/${PREFIX}/target/${RELEASE}:${PATH}"
+#PATH="${HOMEDIR}/${PREFIX}/target/${RELEASE}:${PATH}"
+
+cp ${HOMEDIR}/${PREFIX}/target/${RELEASE}/cargo-psp ${CARGO_HOME}/bin/cargo-psp
 
 pushd ${PREFIX}ci/tests
 [ -f Xargo.toml ] && rm Xargo.toml
 # TODO: add release flag? did not work with it added.
 if [ "$RELEASE" = "release" ]; then
-    cargo-psp --release
+    cargo psp --release
 else
-    cargo-psp
+    cargo psp
 fi
 popd
 
