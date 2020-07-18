@@ -1,12 +1,29 @@
 #!/bin/bash
+set -euxo pipefail
 
-set -e
+. "$(dirname $0)"/env.sh
 
-export CARGO_HOME="$(pwd)"/.cargo
-export XARGO_HOME="$(pwd)"/.xargo
-
-pushd repo/ci/tests/psp-ci-test
-make
+pushd ${PREFIX}/cargo-psp/
+if [ "$OPT_LEVEL" = "release" ]; then
+    cargo build --release
+else
+    cargo build
+fi
 popd
 
-cp -r repo/ci/tests/psp-ci-test/target/psp/release/* release/
+PATH="${HOMEDIR}/${PREFIX}/target/${OPT_LEVEL}:${PATH}"
+
+pushd ${PREFIX}/ci/tests
+
+[ -f Xargo.toml ] && rm Xargo.toml
+
+if [ "$OPT_LEVEL" = "release" ]; then
+    cargo psp --release
+else
+    cargo psp
+fi
+popd
+
+if [ "$CI" = "1" ]; then
+    cp -r ${PREFIX}/ci/tests/target/mipsel-sony-psp/${OPT_LEVEL}/* release/
+fi

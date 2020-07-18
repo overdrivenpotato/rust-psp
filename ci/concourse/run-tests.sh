@@ -1,13 +1,15 @@
 #!/bin/bash
 
 # Fail on errors
-set -e
+set -euxo pipefail
 
-/ppsspp/build-sdl/PPSSPPHeadless build/psp-ci-test.prx --timeout=10 -r build/
-cat build/psp-ci-test.test
-diff build/psp-ci-test.test repo/ci/tests/psp-ci-test/psp-ci-test.expected | tee build/psp-ci-test.result
+. "$(dirname $0)"/env.sh
 
-if [`cat build/psp-ci-test.result` == ""]; then \
+"$PPSSPP" "${BUILD_DIR}/EBOOT.PBP" --timeout=10 -r "${BUILD_DIR}/"
+
+cat "${BUILD_DIR}"/psp_output_file.log
+
+if [ "$(tail -n 1 "${BUILD_DIR}/psp_output_file.log")" == "FINAL_SUCCESS" ]; then \
     echo "Test passed";
 else \
     echo "Test failed";
