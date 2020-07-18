@@ -3,7 +3,11 @@
 # Fail on errors
 set -euo pipefail
 
-/ppsspp/build-sdl/PPSSPPHeadless build/EBOOT.PHP --timeout=10 -r build/
+pwd
+ls
+ls *
+
+/ppsspp/build-sdl/PPSSPPHeadless build/EBOOT.PBP --timeout=10 -r build/
 
 cat build/psp_output_file.log
 
