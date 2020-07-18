@@ -1,13 +1,29 @@
 #!/bin/bash
 
 # Fail on errors
-set -euo pipefail
+set -euxo pipefail
 
-/ppsspp/build-sdl/PPSSPPHeadless build/EBOOT.PBP --timeout=10 -r build/
+if true; then
+    RELEASE="release"
+else
+    RELEASE="debug"
+fi
 
-cat build/psp_output_file.log
+if [ -d repo/ci/ ]; then
+    CI="1"
+    BUILD_DIR="build"
+    PPSSPP="/ppsspp/build-sdl/PPSSPPHeadless"
+else
+    CI="0"
+    BUILD_DIR="ci/tests/target/mipsel-sony-psp/${RELEASE}"
+    PPSSPP="PPSSPPHeadless"
+fi
 
-if [ "$(tail -n 1 build/psp_output_file.log)" == "FINAL_SUCCESS" ]; then \
+"$PPSSPP" "${BUILD_DIR}/EBOOT.PBP" --timeout=10 -r "${BUILD_DIR}/"
+
+cat "${BUILD_DIR}"/psp_output_file.log
+
+if [ "$(tail -n 1 "${BUILD_DIR}/psp_output_file.log")" == "FINAL_SUCCESS" ]; then \
     echo "Test passed";
 else \
     echo "Test failed";
