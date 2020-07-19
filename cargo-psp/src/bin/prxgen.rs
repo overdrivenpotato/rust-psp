@@ -119,30 +119,28 @@ impl PrxGen {
         // Change first program header physical address to `.rodata.sceModuleInfo` file offset
         // TODO: Kernel mode support
         self.program_headers[0].p_paddr = {
-            let section_names = {
-                // Section header string table
-                let sh_string_table = self.section_headers[self.header.e_shstrndx as usize];
+            // Section header string table
+            let sh_string_table = self.section_headers[self.header.e_shstrndx as usize];
 
-                let start_idx = sh_string_table.sh_offset as usize;
-                let end_idx = start_idx + sh_string_table.sh_size as usize;
+            let start_idx = sh_string_table.sh_offset as usize;
+            let end_idx = start_idx + sh_string_table.sh_size as usize;
 
-                let strings = &self.elf_bytes[start_idx..end_idx];
+            let section_names = &self.elf_bytes[start_idx..end_idx];
 
-                strings
-                    .split(|b| *b == 0)
-                    .map(Vec::from)
-                    .map(String::from_utf8)
-                    // All section header names should be utf8 or something is
-                    // severely wrong.
-                    .map(Result::unwrap)
-                    .collect::<Vec<_>>()
-            };
-
-            section_headers
+            self.section_headers
                 .iter()
-                .enumerate()
-                .find_map(|(i, sh)| {
-                    if section_names[i] == ".rodata.sceModuleInfo" {
+                .find_map(|sh| {
+                    let name = &section_names[sh.sh_name as usize..]
+                        .split(|b| *b == 0)
+                        .next()
+                        .map(Vec::from)
+                        .map(String::from_utf8)
+                        // All section header names should be utf8 or something is
+                        // severely wrong.
+                        .map(Result::unwrap)
+                        .unwrap();
+
+                    if name == ".rodata.sceModuleInfo" {
                         Some(sh.sh_offset)
                     } else {
                         None
