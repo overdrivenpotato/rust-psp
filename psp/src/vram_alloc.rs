@@ -14,7 +14,7 @@ static mut VRAM_ALLOCATOR: VramAllocatorSingleton = VramAllocatorSingleton {
 
 pub fn get_vram_allocator() -> Result<VramAllocator, VramAllocatorInUseError> {
     let opt_alloc = unsafe { VRAM_ALLOCATOR.get_vram_alloc() };
-    opt_alloc.ok_or(VramAllocatorInUseError{})
+    opt_alloc.ok_or(VramAllocatorInUseError {})
 }
 
 pub struct VramAllocatorSingleton {
@@ -113,7 +113,7 @@ fn total_vram_size() -> u32 {
 // NOTE: VRAM actually starts at 0x4000000, as returned by sceGeEdramGetAddr.
 //       The Gu functions take that into account, and start their pointer
 //       indices at 0. See GE_EDRAM_ADDRESS in gu.rs for that offset being used.
-fn vram_start_addr_zero() -> *mut u8 { 
+fn vram_start_addr_zero() -> *mut u8 {
     null_mut()
 }
 

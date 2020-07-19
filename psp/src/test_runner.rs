@@ -12,10 +12,11 @@ use alloc::format;
 use alloc::vec::Vec;
 use core::fmt::Arguments;
 
-pub struct TestRunner {
+pub struct TestRunner<'a> {
     _mode: TestRunnerMode,
     fd: SceUid,
     failure: bool,
+    failures: Vec<&'a str>
 }
 
 enum TestRunnerMode {
@@ -23,13 +24,14 @@ enum TestRunnerMode {
     FILE,
 }
 
-impl TestRunner {
+impl<'a> TestRunner<'a> {
     pub fn new_fifo_runner() -> Self {
         let fd = get_test_output_pipe();
         Self {
             fd,
             _mode: TestRunnerMode::FIFO,
             failure: false,
+            failures: Vec::new(),
         }
     }
 
@@ -39,6 +41,7 @@ impl TestRunner {
             fd,
             _mode: TestRunnerMode::FILE,
             failure: false,
+            failures: Vec::new(),
         }
     }
 
@@ -52,6 +55,7 @@ impl TestRunner {
 
     pub fn finish_run(self) {
         if self.failure {
+            self.write_args(format_args!("Failing tests: {:?}\n", self.failures));
             self.write_args(format_args!("{}\n", FAILURE_TOKEN));
         } else {
             self.write_args(format_args!("{}\n", SUCCESS_TOKEN));
@@ -66,7 +70,7 @@ impl TestRunner {
         }
     }
 
-    pub fn check<T>(&mut self, testcase_name: &str, l: T, r: T)
+    pub fn check<T>(&mut self, testcase_name: &'a str, l: T, r: T)
     where
         T: core::fmt::Debug + PartialEq,
     {
@@ -76,7 +80,52 @@ impl TestRunner {
             self.fail(testcase_name, &format!("{:?} != {:?}", l, r));
         }
     }
-    pub fn check_list<T>(&mut self, val_pairs: &[(&str, T, T)])
+
+    pub fn check_large_collection<T>(&mut self, testcase_name: &'a str, l: &[T], r: &[T])
+    where
+        T: core::fmt::Debug + PartialEq + Eq,
+    {
+        if l.iter().eq(r.iter()) {
+            self.pass(testcase_name, "Equal!");
+        } else {
+            if l.len() != r.len() {
+                self.dbg(
+                    testcase_name,
+                    &format!("Lengths differ! {} != {}", l.len(), r.len()),
+                );
+            }
+
+            let mut i = 0;
+            for (li, ri) in l.iter().zip(r.iter()) {
+                if li != ri {
+                    self.dbg(
+                        testcase_name,
+                        &format!("Differ on item {}: {:?} != {:?}", i, li, ri),
+                    );
+                    break;
+                }
+                i += 1;
+            }
+
+            self.fail(
+                testcase_name,
+                "Collections were not equal!",
+            );
+        }
+    }
+
+    pub fn check_silent<T>(&mut self, testcase_name: &'a str, l: T, r: T)
+    where
+        T: core::fmt::Debug + PartialEq,
+    {
+        if l == r {
+            self.pass(testcase_name, "Equal.");
+        } else {
+            self.fail(testcase_name, "Not equal!");
+        }
+    }
+
+    pub fn check_list<T>(&mut self, val_pairs: &[(&'a str, T, T)])
     where
         T: core::fmt::Debug + PartialEq,
     {
@@ -85,7 +134,7 @@ impl TestRunner {
         }
     }
 
-    pub fn _check_return_values<T>(&mut self, val_pairs: &[(&str, &dyn Fn() -> T, T)])
+    pub fn _check_return_values<T>(&mut self, val_pairs: &[(&'a str, &dyn Fn() -> T, T)])
     where
         T: core::fmt::Debug + PartialEq + Eq + Clone,
     {
@@ -101,8 +150,13 @@ impl TestRunner {
         self.write_args(format_args!("[PASS]: ({}) {}\n", testcase_name, msg));
     }
 
-    pub fn fail(&mut self, testcase_name: &str, msg: &str) {
+    pub fn dbg(&self, testcase_name: &str, msg: &str) {
+        self.write_args(format_args!("[NOTE]: ({}) {}\n", testcase_name, msg));
+    }
+
+    pub fn fail(&mut self, testcase_name: &'a str, msg: &str) {
         self.failure = true;
+        self.failures.push(testcase_name);
         self.write_args(format_args!("[FAIL]: ({}) {}\n", testcase_name, msg));
     }
 
