@@ -155,20 +155,20 @@ fn main() {
         .spawn()
         .unwrap();
 
-    let xargo_stdout = process.stdout.take();
+    let xargo_stderr = process.stderr.take();
 
     // This is a pretty big hack. We wait until `xargo` starts printing and then
     // remove the toml. Then we have to manually pipe the output to our stdout.
     //
     // Ideally we could just set `XARGO_TOML_PATH` to some temporary file.
     thread::spawn(move || {
-        let mut xargo_stdout = xargo_stdout.unwrap();
-        let mut stdout = io::stdout();
+        let mut xargo_stderr = xargo_stderr.unwrap();
+        let mut stderr = io::stderr();
         let mut removed_xargo_toml = false;
         let mut buf = vec![0; 8192];
 
         loop {
-            let bytes = xargo_stdout.read(&mut buf).unwrap();
+            let bytes = xargo_stderr.read(&mut buf).unwrap();
 
             if !removed_xargo_toml {
                 fs::remove_file("Xargo.toml").unwrap();
@@ -179,7 +179,7 @@ fn main() {
                 break
             }
 
-            stdout.write_all(&buf[0..bytes]).unwrap();
+            stderr.write_all(&buf[0..bytes]).unwrap();
         }
     });
 
