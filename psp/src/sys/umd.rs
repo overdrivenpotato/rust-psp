@@ -18,7 +18,7 @@ pub enum UmdType {
 
 bitflags::bitflags! {
     /// UMD drive state
-    #[repr(C)]
+    #[repr(transparent)]
     pub struct UmdStateFlags: i32 {
         const NOT_PRESENT = 0x01;
         const PRESENT = 0x02;

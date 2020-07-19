@@ -10,7 +10,7 @@ pub const USB_CAM_MIC_DRIVER_NAME: &str = "USBCamMicDriver";
 pub const USB_STOR_DRIVER_NAME: &str = "USBStor_Driver";
 
 bitflags::bitflags! {
-    #[repr(C)]
+    #[repr(transparent)]
     pub struct UsbState: i32 {
         const ACTIVATED = 0x200;
         const CONNECTED = 0x020;
@@ -272,7 +272,7 @@ pub enum UsbCamResolutionEx {
 
 bitflags::bitflags! {
     /// Flags for reverse effects.
-    #[repr(C)]
+    #[repr(transparent)]
     pub struct UsbCamReverseFlags: i32 {
         const FLIP = 1;
         const MIRROR = 0x100;

@@ -297,7 +297,7 @@ pub enum UtilityNetconfAction {
 }
 
 bitflags::bitflags! {
-    #[repr(C)]
+    #[repr(transparent)]
     pub struct UtilityMsgDialogOption: i32 {
         /// Error message (why two flags?)
         const ERROR = 0;
