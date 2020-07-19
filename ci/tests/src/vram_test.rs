@@ -57,6 +57,7 @@ pub fn test_main(test_runner: &mut TestRunner) {
 
         test_runner.check("vram_storage_len", muh_item.len(), 16);
         test_runner.check("vram_storage_integrity1", muh_item[4], 69);
-        test_runner.check("vram_storage_integrity2", muh_item[15], 69);
+        muh_item[15] = 42;
+        test_runner.check("vram_storage_integrity2", muh_item[15], 42);
     }
 }
