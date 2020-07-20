@@ -133,6 +133,9 @@ fn main() {
         [target.mipsel-sony-psp.dependencies.alloc]\n\
         [target.mipsel-sony-psp.dependencies.panic_unwind]\n\
         stage = 1\n\
+        [target.mipsel-sony-psp.dependencies.std]\n\
+        stage = 2\n\
+        path = \"YOUR_PATH_HERE\"\n\
     ";
 
     fs::write("Xargo.toml", xargo_toml).unwrap();
