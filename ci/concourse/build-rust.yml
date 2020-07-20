@@ -20,7 +20,7 @@ outputs:
 caches:
   - path: .cargo
   - path: .xargo
-  - path: repo/ci/tests/psp-ci-test/target/
+  - path: repo/ci/tests/target/
   - path: repo/target/
   
 run:
