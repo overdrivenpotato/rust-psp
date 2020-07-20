@@ -1,6 +1,8 @@
 #![no_std]
 #![no_main]
 
+#![feature(core_intrinsics)]
+
 #[cfg(not(feature = "stub-only"))] extern crate alloc;
 
 use psp::test_runner::TestRunner;
