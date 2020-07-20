@@ -167,11 +167,11 @@ impl<'a> PrxGen<'a> {
         // and that the first segment is loaded at virtual address 0. Assertions
         // ensure this is the case.
         {
-            // First segment needs to be loaded to 0.
-            assert_eq!(0, self.program_headers[0].p_vaddr);
-
             let load_segments = || self.program_headers.iter()
                 .filter(|ph| ph.p_type == PT_LOAD);
+
+            // First segment needs to be loaded to 0.
+            assert_eq!(0, load_segments().next().unwrap().p_vaddr);
 
             let start_offset = load_segments().next().unwrap().p_offset;
 
