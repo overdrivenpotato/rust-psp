@@ -128,13 +128,42 @@ fn main() {
     // Skip `cargo psp`
     let args = env::args().skip(2);
 
-    let xargo_toml = "\
-        [target.mipsel-sony-psp.dependencies.core]\n\
-        stage = 1\n\
-        [target.mipsel-sony-psp.dependencies.std]\n\
-        stage = 2\n\
-        path = \"/home/glenn/rust-stdlib-potato/rust/src/libstd\"\n\
-    ";
+    let xargo_toml = r#"
+[target.mipsel-sony-psp.dependencies.core]
+stage = 0
+
+#[target.mipsel-sony-psp.dependencies.compiler_builtins]
+#features = ["mem"]
+#stage = 1
+#path = "/home/glenn/rust-stdlib-potato/compiler-builtins"
+
+#[target.mipsel-sony-psp.dependencies.libc]
+#features = ["rustc-dep-of-std"]
+#stage = 2
+#path = "/home/glenn/rust-stdlib-potato/libc"
+
+[target.mipsel-sony-psp.dependencies.alloc]
+stage = 3
+
+[target.mipsel-sony-psp.dependencies.panic_unwind]
+stage = 4
+
+[target.mipsel-sony-psp.dependencies.std]
+stage = 5
+
+
+[patch.crates-io.libc]
+path = "/home/glenn/rust-stdlib-potato/libc"
+
+#[patch.crates-io.compiler_builtins]
+#path = "/home/glenn/rust-stdlib-potato/compiler-builtins"
+
+#[patch.crates-io.cfg-if]
+#path = "/home/glenn/rust-stdlib-potato/cfg-if"
+
+#[patch.crates-io.cc]
+#path = "/home/glenn/rust-stdlib-potato/cc-rs"
+"#;
 
     fs::write("Xargo.toml", xargo_toml).unwrap();
 

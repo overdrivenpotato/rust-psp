@@ -20,11 +20,11 @@ fn print_and_die(s: String) -> ! {
     }
 }
 
-#[panic_handler]
-#[inline(never)]
-fn panic(info: &PanicInfo) -> ! {
-    panic_impl(info)
-}
+//#[panic_handler]
+//#[inline(never)]
+//fn panic(info: &PanicInfo) -> ! {
+//    panic_impl(info)
+//}
 
 #[inline(always)]
 #[cfg_attr(not(target_os = "psp"), allow(unused))]

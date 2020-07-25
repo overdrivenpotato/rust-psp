@@ -7,7 +7,9 @@
     const_loop,
     const_if_match,
     const_generics,
+    restricted_std,
     c_variadic,
+    lang_items,
 )]
 
 // For unwinding support
@@ -16,8 +18,6 @@
 
 // For the `const_generics` feature.
 #![allow(incomplete_features)]
-
-#![no_std]
 
 #[macro_use] extern crate paste;
 #[cfg(not(feature = "stub-only"))] extern crate alloc;
@@ -47,9 +47,13 @@ pub mod vram_alloc;
 #[cfg(not(feature = "stub-only"))] mod constants;
 #[cfg(not(feature = "stub-only"))] pub use constants::*;
 
-#[cfg(feature = "stub-only")]
-#[panic_handler]
-fn panic(_: &core::panic::PanicInfo) -> ! { loop {} }
+//#[cfg(feature = "stub-only")]
+//#[panic_handler]
+//fn panic(_: &core::panic::PanicInfo) -> ! { loop {} }
+
+#[lang = "eh_personality"]
+#[no_mangle]
+pub extern "C" fn rust_eh_personality() {}
 
 #[cfg(feature="embedded-graphics")]
 pub mod embedded_graphics;
@@ -150,7 +154,7 @@ macro_rules! module {
                 unsafe {
                     extern fn main_thread(_argc: usize, _argv: *mut c_void) -> i32 {
                         // TODO: Maybe print any error to debug screen?
-                        let _ = $crate::panic::catch_unwind(|| {
+                        let _ = std::panic::catch_unwind(|| {
                             super::psp_main();
                         });
 
