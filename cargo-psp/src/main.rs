@@ -128,6 +128,14 @@ fn main() {
     // Skip `cargo psp`
     let args = env::args().skip(2);
 
+    // Power users can skip staging std for no_std builds.
+    let std_directive = match env::var("CARGO_PSP_NO_STD") {
+        Ok(_) => "",
+        _ => r#"[target.mipsel-sony-psp.dependencies.std]
+        stage = 3
+        "#,
+    };
+
     let libc_directive = match env::var("CARGO_PSP_LIBC") {
         Ok(loc) => format!(
             r#"[patch.crates-io.libc]
@@ -147,10 +155,12 @@ stage = 1
 [target.mipsel-sony-psp.dependencies.panic_unwind]
 stage = 2
 
-[target.mipsel-sony-psp.dependencies.std]
-stage = 3
+{std_directive}
+
 {libc_directive}
-"#, libc_directive=libc_directive);
+"#, 
+std_directive=std_directive,
+libc_directive=libc_directive);
 
 
     fs::write("Xargo.toml", xargo_toml).unwrap();
