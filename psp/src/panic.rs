@@ -20,14 +20,16 @@ fn print_and_die(s: String) -> ! {
     }
 }
 
-//#[panic_handler]
-//#[inline(never)]
-//fn panic(info: &PanicInfo) -> ! {
-//    panic_impl(info)
-//}
+#[cfg(not(feature = "std"))]
+#[panic_handler]
+#[inline(never)]
+fn panic(info: &PanicInfo) -> ! {
+    panic_impl(info)
+}
 
 #[inline(always)]
 #[cfg_attr(not(target_os = "psp"), allow(unused))]
+#[cfg(not(feature = "std"))]
 fn panic_impl(info: &PanicInfo) -> ! {
     struct PanicPayload<'a> {
         inner: &'a fmt::Arguments<'a>,
@@ -71,6 +73,7 @@ fn panic_impl(info: &PanicInfo) -> ! {
 /// Executes the primary logic for a panic, including checking for recursive
 /// panics, panic hooks, and finally dispatching to the panic runtime to either
 /// abort or unwind.
+#[cfg(not(feature = "std"))]
 fn rust_panic_with_hook(
     payload: &mut dyn BoxMeUp,
     message: Option<&fmt::Arguments<'_>>,
