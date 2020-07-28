@@ -184,8 +184,7 @@ fn main() {
     let rustflags = env::var("RUSTFLAGS").unwrap_or("".into())
         + " -C link-dead-code -C opt-level=3";
 
-    let mut process = Command::new("cargo-psp")
-        // Relaunch as `cargo build -Z build-std` wrapper.
+    let mut process = Command::new("cargo")
         .arg("build")
         .arg("--target")
         .arg("mipsel-sony-psp")

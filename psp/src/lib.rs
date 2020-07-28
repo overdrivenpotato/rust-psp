@@ -56,6 +56,7 @@ pub mod sys;
 fn panic(_: &core::panic::PanicInfo) -> ! { loop {} }
 
 #[cfg(feature = "std")]
+#[cfg(target_os = "psp")]
 #[lang = "eh_personality"]
 #[no_mangle]
 pub extern "C" fn rust_eh_personality() {}
