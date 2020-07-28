@@ -1,3 +1,4 @@
+#![allow(stable_features)]
 #![feature(
     alloc_error_handler,
     llvm_asm,

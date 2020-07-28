@@ -4,8 +4,18 @@
 // been adapted to run on the PSP.
 
 use crate::sys;
+
+#[cfg(feature = "std")]
+use core::{mem::ManuallyDrop, any::Any, panic::BoxMeUp};
+#[cfg(not(feature = "std"))]
 use core::{mem::{self, ManuallyDrop}, any::Any, panic::{PanicInfo, BoxMeUp, Location}};
+
+#[cfg(not(feature = "std"))]
 use core::fmt;
+
+#[cfg(feature = "std")]
+use std::{boxed::Box, string::String};
+#[cfg(not(feature = "std"))]
 use alloc::{boxed::Box, string::{String, ToString}};
 
 #[link(name = "unwind", kind = "static")]
