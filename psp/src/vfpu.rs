@@ -640,43 +640,43 @@ macro_rules! instruction {
         )
     };
 
-    //vsge.s 0110 0111 0 ttttttt 0 sssssss 0 ddddddd
+    //vsge.s 0110 1111 0 ttttttt 0 sssssss 0 ddddddd
     (vsge_s $d:ident, $s:ident, $t:ident) => {
         concat!(
             "\n.byte ", $crate::register_single!($d),
             "\n.byte ", $crate::register_single!($s),
             "\n.byte ", $crate::register_single!($t),
-            "\n.byte 0b01100111",
+            "\n.byte 0b01101111",
         )
     };
 
-    //vsge.p 0110 0111 0 ttttttt 0 sssssss 1 ddddddd
+    //vsge.p 0110 1111 0 ttttttt 0 sssssss 1 ddddddd
     (vsge_p $d:ident, $s:ident, $t:ident) => {
         concat!(
             "\n.byte 0x80 | ", $crate::register_pair!($d),
             "\n.byte ", $crate::register_pair!($s),
             "\n.byte ", $crate::register_pair!($t),
-            "\n.byte 0b01100111",
+            "\n.byte 0b01101111",
         )
     };
 
-    //vsge.t 0110 0111 0 ttttttt 1 sssssss 0 ddddddd
+    //vsge.t 0110 1111 0 ttttttt 1 sssssss 0 ddddddd
     (vsge_t $d:ident, $s:ident, $t:ident) => {
         concat!(
             "\n.byte ", $crate::register_triple!($d),
             "\n.byte 0x80 |", $crate::register_triple!($s),
             "\n.byte ", $crate::register_triple!($t),
-            "\n.byte 0b01100111",
+            "\n.byte 0b01101111",
         )
     };
 
-    //vsge.q 0110 0111 0 ttttttt 1 sssssss 1 ddddddd
+    //vsge.q 0110 1111 0 ttttttt 1 sssssss 1 ddddddd
     (vsge_q $d:ident, $s:ident, $t:ident) => {
         concat!(
             "\n.byte 0x80 |", $crate::register_quad!($d),
             "\n.byte 0x80 |", $crate::register_quad!($s),
             "\n.byte ", $crate::register_quad!($t),
-            "\n.byte 0b01100111",
+            "\n.byte 0b01101111",
         )
     };
 
