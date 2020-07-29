@@ -11,7 +11,10 @@ pub fn test_main(test_runner: &mut TestRunner) {
         ("cos_pi", test_cos(GU_PI), -1.0),
         ("intrinsics_cos_pi", test_cos_intrinsic(GU_PI), -1.0),
 
+        ("sin_0", test_sin(0), 0.0),
+        ("sin_pi", test_sin(GU_PI), 0.0),
         ("sin_2.5", test_sin(2.5), 0.5984721),
+        ("intrinsics_sin_2.5", test_sin_intrinsic(2.5), 0.5984721),
     ]);
     let almost_zero = test_sin_intrinsic(GU_PI);
     test_runner.check_true("intrinsics_sin_0", almost_zero < EPSILON && almost_zero > -EPSILON);
@@ -22,7 +25,7 @@ fn test_cos(num: f32) -> f32 {
 }
 
 fn test_cos_intrinsic(num: f32) -> f32 {
-    unsafe { core::intrinsics::cosf32(GU_PI) }
+    unsafe { core::intrinsics::cosf32(num) }
 }
 
 fn test_sin(num: f32) -> f32 {
@@ -30,5 +33,5 @@ fn test_sin(num: f32) -> f32 {
 }
 
 fn test_sin_intrinsic(num: f32) -> f32 {
-    unsafe { core::intrinsics::sinf32(GU_PI) }
+    unsafe { core::intrinsics::sinf32(num) }
 }
