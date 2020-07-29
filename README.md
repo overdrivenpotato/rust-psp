@@ -47,8 +47,8 @@ implementations of graphics functions, and the addition of missing libraries.
 - [x] Full 3D graphics support (faster than PSPSDK in some cases!)
 - [x] No dependency on PSPSDK / PSPToolchain
 - [x] Reach full parity with user mode support in PSPSDK
+- [x] Port definitions to `libc` crate
 - [ ] Add support for creating kernel mode modules
-- [ ] Port definitions to `libc` crate
 - [ ] Add `std` support
 - [ ] Automatically sign EBOOT.PBP files to run on unmodified PSPs
 - [ ] Implement / reverse undiscovered libraries
