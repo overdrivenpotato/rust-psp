@@ -32,8 +32,8 @@ pub mod debug;
 mod eabi;
 pub mod math;
 pub mod sys;
-pub mod test_runner;
-pub mod vram_alloc;
+#[cfg(not(feature = "stub-only"))] pub mod test_runner;
+#[cfg(not(feature = "stub-only"))] pub mod vram_alloc;
 
 #[cfg(not(feature = "stub-only"))] mod alloc_impl;
 #[cfg(not(feature = "stub-only"))] pub mod panic;
