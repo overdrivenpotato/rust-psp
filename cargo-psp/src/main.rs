@@ -180,6 +180,11 @@ fn main() {
     // Skip `cargo psp`
     let args = env::args().skip(2);
 
+    let build_std_flag = match env::var("RUST_PSP_BUILD_STD") {
+        Ok(_) => "build-std",
+        Err(_) => "build-std=core,alloc,panic_unwind",
+    };
+
     // FIXME: This is a workaround. This should eventually be removed.
     let rustflags = env::var("RUSTFLAGS").unwrap_or("".into())
         + " -C link-dead-code -C opt-level=3";
@@ -189,7 +194,7 @@ fn main() {
         .arg("--target")
         .arg("mipsel-sony-psp")
         .arg("-Z")
-        .arg("build-std")
+        .arg(build_std_flag)
         .args(args)
         .env("RUSTFLAGS", rustflags)
         .stdin(Stdio::inherit())

@@ -16,7 +16,7 @@ build = "build.rs"
 crate-type = ["lib", "staticlib"]
 
 [features]
-default = ["std"]
+default = []
 std = []
 # Compile this library as a stub provider. Useful to compile this as a static
 # library for other projects.

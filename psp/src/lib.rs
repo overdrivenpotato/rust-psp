@@ -56,7 +56,6 @@ pub mod sys;
 #[panic_handler]
 fn panic(_: &core::panic::PanicInfo) -> ! { loop {} }
 
-#[cfg(feature = "std")]
 #[cfg(target_os = "psp")]
 #[lang = "eh_personality"]
 #[no_mangle]
