@@ -1,29 +1,20 @@
 #!/bin/bash
-set -euxo pipefail
 
-. "$(dirname $0)"/env.sh
+set -euo pipefail
 
-pushd ${PREFIX}/cargo-psp/
-if [ "$OPT_LEVEL" = "release" ]; then
-    cargo build --release
-else
-    cargo build
-fi
+export CARGO_HOME="$(pwd)"/.cargo
+export XARGO_HOME="$(pwd)"/.xargo
+
+pushd repo/cargo-psp/
+cargo build
 popd
 
-PATH="${HOMEDIR}/${PREFIX}/target/${OPT_LEVEL}:${PATH}"
+PATH="$(realpath repo)/target/debug:$PATH"
 
-pushd ${PREFIX}/ci/tests
+pushd repo/ci/tests
 
-[ -f Xargo.toml ] && rm Xargo.toml
+cargo psp
 
-if [ "$OPT_LEVEL" = "release" ]; then
-    cargo psp --release
-else
-    cargo psp
-fi
 popd
 
-if [ "$CI" = "1" ]; then
-    cp -r ${PREFIX}/ci/tests/target/mipsel-sony-psp/${OPT_LEVEL}/* release/
-fi
+cp -r repo/ci/tests/target/mipsel-sony-psp/debug/* rust-build-dir

@@ -7,7 +7,6 @@ image_resource:
     repository: rustpsp/compile-rust
 
 params:
-  RUST_TARGET_PATH: "." 
   RUSTFLAGS: "-C link-dead-code"
 
 inputs:
@@ -15,7 +14,6 @@ inputs:
 
 outputs:
   - name: rust-build-dir
-    path: release
 
 caches:
   - path: .cargo
