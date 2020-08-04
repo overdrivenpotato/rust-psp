@@ -9,7 +9,7 @@ image_resource:
     # The version is irrelevant here. This is a small base image that contains
     # `rustup`. The actual toolchain is selected with `RUSTUP_TOOLCHAIN` below,
     # and should be cached with `RUSTUP_HOME`.
-    tag: 1.44-alpine
+    tag: 1.44-slim
 
 params:
   RUSTFLAGS: "-C link-dead-code"
