@@ -7,7 +7,7 @@ export XARGO_HOME="$(pwd)"/.xargo
 export RUSTUP_HOME="$(pwd)"/.rustup
 
 # Install rust-src if needed.
-if ! rustup component list --installed | grep rust-src; then
+if ! rustup component list --installed | grep -q rust-src; then
     rustup set profile minimal
     rustup component add rust-src
 fi
