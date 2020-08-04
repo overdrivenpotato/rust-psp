@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 set -euo pipefail
 
@@ -6,14 +6,14 @@ export CARGO_HOME="$(pwd)"/.cargo
 export XARGO_HOME="$(pwd)"/.xargo
 export RUSTUP_HOME="$(pwd)"/.rustup
 
-cd repo/cargo-psp/
+pushd repo/cargo-psp/
 cargo build
-cd ../..
+popd
 
 PATH="$(realpath repo)/target/debug:$PATH"
 
-cd repo/ci/tests
+pushd repo/ci/tests
 cargo psp
-cd ../../..
+popd
 
 cp -r repo/ci/tests/target/mipsel-sony-psp/debug/* rust-build-dir
