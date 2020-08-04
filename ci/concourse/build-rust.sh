@@ -4,6 +4,7 @@ set -euo pipefail
 
 export CARGO_HOME="$(pwd)"/.cargo
 export XARGO_HOME="$(pwd)"/.xargo
+export RUSTUP_HOME="$(pwd)"/.rustup
 
 pushd repo/cargo-psp/
 cargo build

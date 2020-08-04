@@ -4,10 +4,16 @@ platform: linux
 image_resource:
   type: docker-image
   source:
-    repository: rustpsp/compile-rust
+    repository: rust
+
+    # The version is irrelevant here. This is a small base image that contains
+    # `rustup`. The actual toolchain is selected with `RUSTUP_TOOLCHAIN` below,
+    # and should be cached with `RUSTUP_HOME`.
+    tag: 1.44-alpine
 
 params:
   RUSTFLAGS: "-C link-dead-code"
+  RUSTUP_TOOLCHAIN: nightly-2020-06-05
 
 inputs:
   - name: repo
@@ -18,6 +24,7 @@ outputs:
 caches:
   - path: .cargo
   - path: .xargo
+  - path: .rustup
   - path: repo/ci/tests/target/
   - path: repo/target/
   
