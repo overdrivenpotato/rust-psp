@@ -6,16 +6,14 @@ export CARGO_HOME="$(pwd)"/.cargo
 export XARGO_HOME="$(pwd)"/.xargo
 export RUSTUP_HOME="$(pwd)"/.rustup
 
-pushd repo/cargo-psp/
+cd repo/cargo-psp/
 cargo build
-popd
+cd ../..
 
 PATH="$(realpath repo)/target/debug:$PATH"
 
-pushd repo/ci/tests
-
+cd repo/ci/tests
 cargo psp
-
-popd
+cd ../../..
 
 cp -r repo/ci/tests/target/mipsel-sony-psp/debug/* rust-build-dir
