@@ -1,4 +1,3 @@
----
 platform: linux
 
 image_resource:
@@ -9,10 +8,9 @@ image_resource:
 inputs:
   - name: repo
   - name: rust-build-dir
-    path: build/
 
 outputs:
   - name: rust-build-dir
-  
+
 run:
   path: repo/ci/concourse/run-tests.sh

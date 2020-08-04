@@ -1,4 +1,3 @@
----
 platform: linux
 
 image_resource:
@@ -27,6 +26,6 @@ caches:
   - path: .rustup
   - path: repo/ci/tests/target/
   - path: repo/target/
-  
+
 run:
   path: repo/ci/concourse/build-rust.sh

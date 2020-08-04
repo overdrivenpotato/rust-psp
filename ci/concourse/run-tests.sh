@@ -1,17 +1,14 @@
 #!/bin/bash
 
-# Fail on errors
-set -euxo pipefail
+set -euo pipefail
 
-. "$(dirname $0)"/env.sh
+/ppsspp/build-sdl/PPSSPPHeadless rust-build-dir/EBOOT.PBP --timeout=10 -r .
 
-"$PPSSPP" "${BUILD_DIR}/EBOOT.PBP" --timeout=10 -r "${BUILD_DIR}/"
+cat psp_output_file.log
 
-cat "${BUILD_DIR}"/psp_output_file.log
-
-if [ "$(tail -n 1 "${BUILD_DIR}/psp_output_file.log")" == "FINAL_SUCCESS" ]; then \
-    echo "Test passed";
-else \
-    echo "Test failed";
-    exit -1
+if [ "$(tail -n 1 psp_output_file.log)" == FINAL_SUCCESS ]; then
+    echo Test passed
+else
+    echo Test failed
+    exit 1
 fi
