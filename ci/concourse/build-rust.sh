@@ -1,29 +1,25 @@
 #!/bin/bash
-set -euxo pipefail
 
-. "$(dirname $0)"/env.sh
+set -euo pipefail
 
-pushd ${PREFIX}/cargo-psp/
-if [ "$OPT_LEVEL" = "release" ]; then
-    cargo build --release
-else
-    cargo build
+export CARGO_HOME="$(pwd)"/.cargo
+export XARGO_HOME="$(pwd)"/.xargo
+export RUSTUP_HOME="$(pwd)"/.rustup
+
+# Install rust-src if needed.
+if ! rustup component list --installed | grep -q rust-src; then
+    rustup set profile minimal
+    rustup component add rust-src
 fi
+
+pushd repo/cargo-psp/
+cargo build
 popd
 
-PATH="${HOMEDIR}/${PREFIX}/target/${OPT_LEVEL}:${PATH}"
+PATH="$(realpath repo)/target/debug:$PATH"
 
-pushd ${PREFIX}/ci/tests
-
-[ -f Xargo.toml ] && rm Xargo.toml
-
-if [ "$OPT_LEVEL" = "release" ]; then
-    cargo psp --release
-else
-    cargo psp
-fi
+pushd repo/ci/tests
+cargo psp
 popd
 
-if [ "$CI" = "1" ]; then
-    cp -r ${PREFIX}/ci/tests/target/mipsel-sony-psp/${OPT_LEVEL}/* release/
-fi
+cp -r repo/ci/tests/target/mipsel-sony-psp/debug/* rust-build-dir
