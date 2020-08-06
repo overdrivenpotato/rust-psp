@@ -1,7 +1,7 @@
 use cargo_metadata::MetadataCommand;
 use std::{
-    env, fs, thread,
-    io::{self, ErrorKind, Read, Write},
+    env, fs,
+    io::ErrorKind,
     process::{self, Command, Stdio},
 };
 
@@ -141,7 +141,7 @@ fn main() {
     let rustflags = env::var("RUSTFLAGS").unwrap_or("".into())
         + " -C link-dead-code -C opt-level=3";
 
-    let mut process = Command::new("cargo-psp")
+    let status = Command::new("cargo-psp")
         // Relaunch as xargo wrapper.
         .env(SUBPROCESS_ENV_VAR, "1")
         .arg("build")
@@ -150,41 +150,17 @@ fn main() {
         .args(args)
         .env("RUSTFLAGS", rustflags)
         .stdin(Stdio::inherit())
-        .stdout(Stdio::piped())
+        .stdout(Stdio::inherit())
         .stderr(Stdio::inherit())
         .spawn()
+        .unwrap()
+        .wait()
         .unwrap();
 
-    let xargo_stderr = process.stderr.take();
-
-    // This is a pretty big hack. We wait until `xargo` starts printing and then
-    // remove the toml. Then we have to manually pipe the output to our stdout.
-    //
-    // Ideally we could just set `XARGO_TOML_PATH` to some temporary file.
-    thread::spawn(move || {
-        let mut xargo_stderr = xargo_stderr.unwrap();
-        let mut stderr = io::stderr();
-        let mut removed_xargo_toml = false;
-        let mut buf = vec![0; 8192];
-
-        loop {
-            let bytes = xargo_stderr.read(&mut buf).unwrap();
-
-            if !removed_xargo_toml {
-                fs::remove_file("Xargo.toml").unwrap();
-                removed_xargo_toml = true;
-            }
-
-            if bytes == 0 {
-                break
-            }
-
-            stderr.write_all(&buf[0..bytes]).unwrap();
-        }
-    });
-
-
-    let status = process.wait().unwrap();
+    // This is a pretty big hack. We wait until `xargo` finishes and then remove
+    // the toml. Ideally we could just set `XARGO_TOML_PATH` to some temporary
+    // file.
+    fs::remove_file("Xargo.toml").unwrap();
 
     if !status.success() {
         let code = match status.code() {
