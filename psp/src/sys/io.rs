@@ -1,6 +1,6 @@
 use crate::sys::SceUid;
 use crate::sys::ScePspDateTime;
-use crate::eabi::i6;
+use crate::eabi::{i6, i_ii_i_rii, i_ii_i_ri};
 use core::ffi::c_void;
 
 /// Describes a single directory entry
@@ -243,7 +243,7 @@ psp_extern! {
     pub fn sceIoWriteAsync(fd: SceUid, data: *const c_void, size: u32)
      -> i32;
 
-    #[psp(0x27EB27B8)]
+    #[psp(0x27EB27B8, i_ii_i_rii)]
     /// Reposition read/write file descriptor offset
     ///
     /// # Parameters
@@ -259,7 +259,7 @@ psp_extern! {
     /// The position in the file after the seek.
     pub fn sceIoLseek(fd: SceUid, offset: i64, whence: IoWhence) -> i64;
 
-    #[psp(0x71B19E77)]
+    #[psp(0x71B19E77, i_ii_i_ri)]
     /// Reposition read/write file descriptor offset (asynchronous)
     ///
     /// # Parameters
