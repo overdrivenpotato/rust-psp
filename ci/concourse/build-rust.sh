@@ -3,7 +3,7 @@
 set -euo pipefail
 
 # If NO_CACHE is *not* set, then setup the cache directories
-if [ -z "$NO_CACHE" ]; then
+if [ -z "${NO_CACHE:-}" ]; then
     # Cache only for normal builds
     export CARGO_HOME="$(pwd)"/.cargo
     export XARGO_HOME="$(pwd)"/.xargo
