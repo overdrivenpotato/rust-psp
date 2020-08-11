@@ -1,16 +1,33 @@
----
 resource_types:
   - name: pull-request
     type: docker-image
     source:
       repository: teliaoss/github-pr-resource
+  - name: cron-resource
+    type: docker-image
+    source:
+      repository: cftoolsmiths/cron-resource
+  - name: slack-alert
+    type: docker-image
+    source:
+      repository: arbourd/concourse-slack-alert-resource
 
 resources:
   - name: master-branch
     type: git
-    source: 
+    source:
       uri: https://github.com/overdrivenpotato/rust-psp
       branch: master
+  - name: nightly-trigger
+    type: cron-resource
+    source:
+      # Trigger at 9AM New York time
+      expression: "0 9 * * *"
+      location: "America/New_York"
+  - name: discord-channel
+    type: slack-alert
+    source:
+      url: ((webhook-url))
   - name: pull-request
     type: pull-request
     source:
@@ -60,3 +77,26 @@ jobs:
           params:
             path: repo
             status: success
+
+  - name: test-rustc-nightly
+    public: true
+    plan:
+      - do:
+        - get: nightly-trigger
+          trigger: true
+        - get: repo
+          resource: master-branch
+          params: { submodules: none }
+        - task: build-rust
+          file: repo/ci/concourse/build-rust.yml
+          params:
+            RUSTUP_TOOLCHAIN: nightly
+            NO_CACHE: true
+        - task: run-tests
+          file: repo/ci/concourse/run-tests.yml
+        on_failure:
+          put: discord-channel
+          params:
+            message: Rust-PSP failed with latest nightly
+            type: failed
+            color: '#ff0000'
