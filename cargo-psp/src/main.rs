@@ -181,8 +181,14 @@ fn main() {
     let args = env::args().skip(2);
 
     let build_std_flag = match env::var("RUST_PSP_BUILD_STD") {
-        Ok(_) => "build-std",
-        Err(_) => "build-std=core,alloc,panic_unwind",
+        Ok(_) => {
+            eprintln!("[NOTE]: Detected RUST_PSP_BUILD_STD env var, using \"build-std\".");
+            "build-std"
+        },
+        Err(_) => {
+            eprintln!("[NOTE]: Did not detect RUST_PSP_BUILD_STD env var, using \"build-std=core,compiler_builtins,alloc,panic_unwind\".");
+            "build-std=core,compiler_builtins,alloc,panic_unwind"
+        },
     };
 
     // FIXME: This is a workaround. This should eventually be removed.
@@ -191,10 +197,10 @@ fn main() {
 
     let mut process = Command::new("cargo")
         .arg("build")
-        .arg("--target")
-        .arg("mipsel-sony-psp")
         .arg("-Z")
         .arg(build_std_flag)
+        .arg("--target")
+        .arg("mipsel-sony-psp")
         .args(args)
         .env("RUSTFLAGS", rustflags)
         .stdin(Stdio::inherit())

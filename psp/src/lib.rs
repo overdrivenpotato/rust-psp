@@ -56,11 +56,10 @@ pub mod sys;
 #[panic_handler]
 fn panic(_: &core::panic::PanicInfo) -> ! { loop {} }
 
-#[cfg(target_os = "psp")]
-#[lang = "eh_personality"]
-#[no_mangle]
-pub extern "C" fn rust_eh_personality() {}
-
+//#[cfg(target_os = "psp")]
+//#[lang = "eh_personality"]
+//#[no_mangle]
+//pub extern "C" fn rust_eh_personality() {}
 
 #[cfg(feature = "std")]
 pub use std::panic::catch_unwind;
