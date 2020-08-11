@@ -11,7 +11,7 @@ if [ -z "${NO_CACHE:-}" ]; then
 fi
 
 rustup set profile minimal
-rustup update $RUSTUP_TOOLCHAIN
+rustup update --no-self-update $RUSTUP_TOOLCHAIN
 
 # Install rust-src if needed.
 if ! rustup component list --installed | grep -q rust-src; then
