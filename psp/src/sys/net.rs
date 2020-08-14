@@ -1429,8 +1429,17 @@ psp_extern! {
 
 #[allow(non_camel_case_types)]
 pub type socklen_t = u32;
+
 #[repr(C)]
-pub struct sockaddr(pub u32);
+#[derive(Copy, Clone)]
+pub struct sockaddr {
+    /// Total length
+    pub sa_len: u8,
+    /// Address family
+    pub sa_family: u8,
+    /// Actually longer; address value
+    pub sa_data: [u8; 14],
+}
 
 psp_extern! {
     #![name = "sceNetInet"]
