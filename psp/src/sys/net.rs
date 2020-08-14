@@ -2242,9 +2242,9 @@ psp_extern! {
     #[psp(0x629E2FB7)]
     /// Begin a address to name lookup
     ///
-    /// @param rid -Resolver id
     /// # Parameters
     ///
+    /// - `rid`: Resolver id
     /// - `addr`: Pointer to the address to resolve
     /// - `hostname`: Buffer to receive the name
     /// - `hostname_len`: Length of the buffer
