@@ -1942,6 +1942,7 @@ macro_rules! vfpu_const {
     (VFPU_LOG10TWO) => {"17"};
     (VFPU_LOG2TEN) => {"18"};
     (VFPU_SQRT3_2) => {"19"};
+    (VFPU_SQRT4_3) => {"20"};
 }
 
 #[doc(hidden)]
