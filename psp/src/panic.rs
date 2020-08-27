@@ -3,12 +3,11 @@
 // Most of the code here is lifted from `rustc/src/libstd/panicking.rs`. It has
 // been adapted to run on the PSP.
 
-#[cfg_attr(feature = "std", cfg(debug_assertions))]
 use crate::sys;
 
 #[cfg(feature = "std")]
 use core::{mem::ManuallyDrop, any::Any};
-#[cfg(all(debug_assertions, feature = "std"))]
+#[cfg(feature = "std")]
 use core::panic::BoxMeUp;
 #[cfg(not(feature = "std"))]
 use core::{mem::{self, ManuallyDrop}, any::Any, panic::{PanicInfo, BoxMeUp, Location}};
@@ -22,7 +21,6 @@ use alloc::{boxed::Box, string::{String, ToString}};
 #[link(name = "unwind", kind = "static")]
 extern {}
 
-#[cfg_attr(feature = "std", cfg(debug_assertions))]
 fn print_and_die(s: String) -> ! {
     dprintln!("{}", s);
 
@@ -127,11 +125,9 @@ fn update_panic_count(amt: isize) -> usize {
 extern "C" {
     fn __rust_panic_cleanup(payload: *mut u8) -> *mut (dyn Any + Send + 'static);
     #[unwind(allowed)]
-    #[cfg_attr(feature = "std", cfg(debug_assertions))]
     fn __rust_start_panic(payload: usize) -> u32;
 }
 
-#[cfg_attr(feature = "std", cfg(debug_assertions))]
 #[inline(never)]
 #[no_mangle]
 fn rust_panic(mut msg: &mut dyn BoxMeUp) -> ! {
@@ -143,7 +139,6 @@ fn rust_panic(mut msg: &mut dyn BoxMeUp) -> ! {
     print_and_die(alloc::format!("failed to initiate panic, error {}", code))
 }
 
-#[cfg_attr(feature = "std", cfg(debug_assertions))]
 #[cfg(not(test))]
 #[no_mangle]
 extern "C" fn __rust_drop_panic() -> ! {
