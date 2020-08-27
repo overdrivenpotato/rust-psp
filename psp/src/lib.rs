@@ -12,8 +12,6 @@
     lang_items,
 )]
 
-#![cfg_attr(feature = "std", feature(restricted_std))]
-
 // For unwinding support
 #![feature(std_internals, panic_info_message, panic_internals, unwind_attributes)]
 #![cfg_attr(not(feature = "stub-only"), feature(panic_unwind))]
@@ -55,11 +53,6 @@ pub mod sys;
 #[cfg(feature = "stub-only")]
 #[panic_handler]
 fn panic(_: &core::panic::PanicInfo) -> ! { loop {} }
-
-//#[cfg(target_os = "psp")]
-//#[lang = "eh_personality"]
-//#[no_mangle]
-//pub extern "C" fn rust_eh_personality() {}
 
 #[cfg(feature = "std")]
 pub use std::panic::catch_unwind;
