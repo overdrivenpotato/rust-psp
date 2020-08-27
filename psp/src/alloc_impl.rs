@@ -54,6 +54,7 @@ unsafe impl GlobalAlloc for SystemAlloc {
 #[global_allocator]
 static ALLOC: SystemAlloc = SystemAlloc;
 
+#[cfg(not(feature = "std"))]
 #[alloc_error_handler]
 fn aeh(_: Layout) -> ! { loop {} }
 

@@ -4,8 +4,18 @@
 // been adapted to run on the PSP.
 
 use crate::sys;
+
+#[cfg(feature = "std")]
+use core::{mem::ManuallyDrop, any::Any};
+#[cfg(feature = "std")]
+use core::panic::BoxMeUp;
+#[cfg(not(feature = "std"))]
 use core::{mem::{self, ManuallyDrop}, any::Any, panic::{PanicInfo, BoxMeUp, Location}};
+
+#[cfg(not(feature = "std"))]
 use core::fmt;
+
+#[cfg(not(feature = "std"))]
 use alloc::{boxed::Box, string::{String, ToString}};
 
 #[link(name = "unwind", kind = "static")]
@@ -20,6 +30,7 @@ fn print_and_die(s: String) -> ! {
     }
 }
 
+#[cfg(not(feature = "std"))]
 #[panic_handler]
 #[inline(never)]
 fn panic(info: &PanicInfo) -> ! {
@@ -28,6 +39,7 @@ fn panic(info: &PanicInfo) -> ! {
 
 #[inline(always)]
 #[cfg_attr(not(target_os = "psp"), allow(unused))]
+#[cfg(not(feature = "std"))]
 fn panic_impl(info: &PanicInfo) -> ! {
     struct PanicPayload<'a> {
         inner: &'a fmt::Arguments<'a>,
@@ -71,6 +83,7 @@ fn panic_impl(info: &PanicInfo) -> ! {
 /// Executes the primary logic for a panic, including checking for recursive
 /// panics, panic hooks, and finally dispatching to the panic runtime to either
 /// abort or unwind.
+#[cfg(not(feature = "std"))]
 fn rust_panic_with_hook(
     payload: &mut dyn BoxMeUp,
     message: Option<&fmt::Arguments<'_>>,

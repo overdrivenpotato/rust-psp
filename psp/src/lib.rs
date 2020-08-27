@@ -1,3 +1,4 @@
+#![allow(stable_features)]
 #![feature(
     alloc_error_handler,
     llvm_asm,
@@ -8,6 +9,7 @@
     const_if_match,
     const_generics,
     c_variadic,
+    lang_items,
 )]
 
 // For unwinding support
@@ -17,7 +19,7 @@
 // For the `const_generics` feature.
 #![allow(incomplete_features)]
 
-#![no_std]
+#![cfg_attr(not(feature = "std"), no_std)]
 
 #[macro_use] extern crate paste;
 #[cfg(not(feature = "stub-only"))] extern crate alloc;
@@ -47,9 +49,16 @@ pub mod sys;
 #[cfg(not(feature = "stub-only"))] mod constants;
 #[cfg(not(feature = "stub-only"))] pub use constants::*;
 
+#[cfg(not(feature = "std"))]
 #[cfg(feature = "stub-only")]
 #[panic_handler]
 fn panic(_: &core::panic::PanicInfo) -> ! { loop {} }
+
+#[cfg(feature = "std")]
+pub use std::panic::catch_unwind;
+
+#[cfg(not(feature = "std"))]
+pub use panic::catch_unwind;
 
 #[cfg(feature="embedded-graphics")]
 pub mod embedded_graphics;
@@ -150,7 +159,7 @@ macro_rules! module {
                 unsafe {
                     extern fn main_thread(_argc: usize, _argv: *mut c_void) -> i32 {
                         // TODO: Maybe print any error to debug screen?
-                        let _ = $crate::panic::catch_unwind(|| {
+                        let _ = $crate::catch_unwind(|| {
                             super::psp_main();
                         });
 

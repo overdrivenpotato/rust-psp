@@ -13,23 +13,22 @@ use alloc::vec::Vec;
 use core::fmt::Arguments;
 
 pub struct TestRunner<'a> {
-    _mode: TestRunnerMode,
-    fd: SceUid,
+    mode: TestRunnerMode,
     failure: bool,
     failures: Vec<&'a str>
 }
 
 enum TestRunnerMode {
-    FIFO,
-    FILE,
+    FIFO(SceUid),
+    FILE(SceUid),
+    Dprintln,
 }
 
 impl<'a> TestRunner<'a> {
     pub fn new_fifo_runner() -> Self {
         let fd = get_test_output_pipe();
         Self {
-            fd,
-            _mode: TestRunnerMode::FIFO,
+            mode: TestRunnerMode::FIFO(fd),
             failure: false,
             failures: Vec::new(),
         }
@@ -38,12 +37,20 @@ impl<'a> TestRunner<'a> {
     pub fn new_file_runner() -> Self {
         let fd = get_test_output_file();
         Self {
-            fd,
-            _mode: TestRunnerMode::FILE,
+            mode: TestRunnerMode::FILE(fd),
             failure: false,
             failures: Vec::new(),
         }
     }
+
+    pub fn new_dprintln_runner() -> Self {
+        Self {
+            mode: TestRunnerMode::Dprintln,
+            failure: false,
+            failures: Vec::new(),
+        }
+    }
+
 
     pub fn run<F: Fn(&mut TestRunner)>(&mut self, f: F) {
         f(self)
@@ -161,11 +168,27 @@ impl<'a> TestRunner<'a> {
     }
 
     pub fn write_args(&self, args: Arguments) {
-        write_to_psp_output_fd(self.fd, &format!("{}", args));
+        match self.mode {
+            TestRunnerMode::FILE(fd) | TestRunnerMode::FIFO(fd) => {
+                write_to_psp_output_fd(fd, &format!("{}", args));
+            }
+            TestRunnerMode::Dprintln => {
+                crate::dprintln!("{}", args);
+            }
+
+        }
     }
 
     fn quit(self) {
-        close_psp_file_and_quit_game(self.fd);
+        match self.mode {
+            TestRunnerMode::FILE(fd) | TestRunnerMode::FIFO(fd) => {
+                close_psp_file(fd);
+                quit_game();
+            }
+            TestRunnerMode::Dprintln => {
+                loop {}
+            }
+        }
     }
 }
 
@@ -214,9 +237,14 @@ fn write_to_psp_output_fd(fd: SceUid, msg: &str) {
     }
 }
 
-fn close_psp_file_and_quit_game(fd: SceUid) {
+fn close_psp_file(fd: SceUid) {
     unsafe {
         sys::sceIoClose(fd);
+    }
+}
+
+fn quit_game() {
+    unsafe {
         sys::sceKernelExitGame();
     }
 }
