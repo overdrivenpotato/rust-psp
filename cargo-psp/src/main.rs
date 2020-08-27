@@ -186,7 +186,6 @@ fn main() {
             "build-std"
         },
         Err(_) => {
-            eprintln!("[NOTE]: Did not detect RUST_PSP_BUILD_STD env var, using \"build-std=core,compiler_builtins,alloc,panic_unwind\".");
             "build-std=core,compiler_builtins,alloc,panic_unwind"
         },
     };
