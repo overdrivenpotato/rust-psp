@@ -1,20 +1,19 @@
 #![feature(restricted_std)]
 #![no_main]
 
-use core::{ptr, ffi::c_void};
+use core::{ffi::c_void, f32::consts::PI};
 
 use psp::{sys, vram_alloc::get_vram_allocator, BUF_WIDTH, SCREEN_HEIGHT, SCREEN_WIDTH, 
     sys::{
         TexturePixelFormat, DisplayPixelFormat, GuPrimitive, VertexType, GuState,
         sceAudioChReserve, sceAudioOutput, sceAudioGetChannelRestLen, 
-        sceAudioSetChannelDataLen,
-    }
+        sceAudioSetChannelDataLen, ThreadAttributes, ScePspFVector3,
+    },
 };
 
-use wavefront_obj::obj;
-use wavefront_obj::ParseError;
+mod crab;
 
-psp::module!("std_obj_draw", 1, 1);
+psp::module!("crab-rave", 1, 1);
 
 static mut LIST: psp::Align16<[u32; 0x40000]> = psp::Align16([0; 0x40000]);
 
@@ -26,25 +25,22 @@ const CHANNEL: i32 = 0;
 
 
 #[no_mangle]
-fn psp_main() -> Result<(), ParseError> {
+fn psp_main() {
     psp::enable_home_button();
-    let mut vertices: Vec<wavefront_obj::obj::Vertex> = Vec::new();
-    match obj::parse("host0:/assets/teapot.obj") {
-        Err(e) => {/* psp::dprintln!("{:?}\n", e); panic!();*/ },
-        Ok(teapot) => vertices = teapot.objects[0].clone().vertices,
-    }
 
     let mut allocator = get_vram_allocator().unwrap();
     let fbp0 = allocator.alloc_texture_pixels(BUF_WIDTH, SCREEN_HEIGHT, TexturePixelFormat::Psm8888).as_mut_ptr_from_zero();
     let fbp1 = allocator.alloc_texture_pixels(BUF_WIDTH, SCREEN_HEIGHT, TexturePixelFormat::Psm8888).as_mut_ptr_from_zero();
     let zbp = allocator.alloc_texture_pixels(BUF_WIDTH, SCREEN_HEIGHT, TexturePixelFormat::Psm4444).as_mut_ptr_from_zero();
 
-    psp::enable_home_button();
     unsafe { 
         sceAudioChReserve(CHANNEL, MAX_SAMPLES as i32, psp::sys::AudioFormat::Stereo) 
     };
     let mut start_pos: usize = 0;
     let mut restlen = 0;
+
+    unsafe {sys::sceKernelChangeCurrentThreadAttr(0, ThreadAttributes::VFPU)};
+
 
     unsafe {
 
@@ -65,6 +61,8 @@ fn psp_main() -> Result<(), ParseError> {
         sys::sceGuSync(sys::GuSyncMode::Finish, sys::GuSyncBehavior::Wait);
         sys::sceDisplayWaitVblankStart();
         sys::sceGuDisplay(true);
+        let mut val = 0.0;
+
         loop {
             if (start_pos+MAX_SAMPLES*4) < AUDIO_CLIP.len() {
                 if restlen == 0 {
@@ -106,35 +104,41 @@ fn psp_main() -> Result<(), ParseError> {
                 sys::ClearBuffer::DEPTH_BUFFER_BIT
             );
 
-            //sys::sceGumMatrixMode(sys::MatrixMode::Projection);
-            //sys::sceGumLoadIdentity();
-            //sys::sceGumPerspective(75.0, 16.0 / 9.0, 0.5, 1000.0);
+            sys::sceGumMatrixMode(sys::MatrixMode::Projection);
+            sys::sceGumLoadIdentity();
+            sys::sceGumPerspective(75.0, 16.0 / 9.0, 0.5, 1000.0);
 
-            //sys::sceGumMatrixMode(sys::MatrixMode::View);
-            //sys::sceGumLoadIdentity();
+            sys::sceGumMatrixMode(sys::MatrixMode::View);
+            sys::sceGumLoadIdentity();
 
-            //sys::sceGumMatrixMode(sys::MatrixMode::Model);
-            //sys::sceGumLoadIdentity();
-
-
-            //sys::sceGumDrawArray(
-                //GuPrimitive::Triangles,
-                //VertexType::TEXTURE_32BITF | VertexType::VERTEX_32BITF | VertexType::TRANSFORM_3D,
-                //vertices.len() as i32,
-                //ptr::null_mut(),
-                //vertices.as_ptr() as *const _,
-            //);
+            sys::sceGumMatrixMode(sys::MatrixMode::Model);
+            sys::sceGumLoadIdentity();
 
 
-            //let pos = sys::ScePspFVector3 { x: 0.0, y: 0.0, z: -2.5 };
-            
-            //sys::sceGumTranslate(&pos);
+            let pos = sys::ScePspFVector3 { x: 0.0, y: 0.0, z: -8.0 };
+            let rot = ScePspFVector3 {
+                x: val * 0.79 * (PI / 180.0),
+                y: val * 0.98 * (PI / 180.0),
+                z: val * 1.32 * (PI / 180.0),
+            };
+
+            sys::sceGumTranslate(&pos);
+            sys::sceGumRotateXYZ(&rot);
+
+            sys::sceGuColor(0xff0000ff);
+            sys::sceGumDrawArray(
+                GuPrimitive::Triangles,
+                VertexType::VERTEX_32BITF | VertexType::TRANSFORM_3D,
+                crab::CRAB.0.len() as i32,
+                core::ptr::null(), 
+                &crab::CRAB as *const _ as *const _,
+            );
 
             sys::sceGuFinish();
             sys::sceGuSync(sys::GuSyncMode::Finish, sys::GuSyncBehavior::Wait);
             sys::sceDisplayWaitVblankStart();
             sys::sceGuSwapBuffers();
+            val += 1.0;
         }
     }
-    //Ok(())
 }
