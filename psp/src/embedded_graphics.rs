@@ -15,8 +15,11 @@ use embedded_graphics::{
 };
 use alloc::alloc::{alloc, Layout};
 
+use crate::vram_alloc::{VramMemChunk, self};
+
 pub struct PspDisplay {
-    draw_buf: *mut u32,
+    draw_buf: VramMemChunk, 
+    disp_buf: VramMemChunk,
     pub size: Size,
 }
 
@@ -29,31 +32,24 @@ impl PspDisplay {
 
             sys::sceDisplaySetMode(sys::DisplayMode::Lcd, SCREEN_WIDTH as usize, SCREEN_HEIGHT as usize);
 
-            let disp = get_static_vram_buffer(BUF_WIDTH, SCREEN_HEIGHT, sys::TexturePixelFormat::Psm8888);
-            let draw = (0x4400_0000 as *mut u8).add(get_static_vram_buffer(512, 272, sys::TexturePixelFormat::Psm8888) as usize) as *mut u32;
+            let mut allocator = vram_alloc::get_vram_allocator().unwrap();
+            let disp = allocator.alloc_texture_pixels(BUF_WIDTH, SCREEN_HEIGHT, sys::TexturePixelFormat::Psm8888);
+            let draw = allocator.alloc_texture_pixels(BUF_WIDTH, SCREEN_HEIGHT, sys::TexturePixelFormat::Psm8888);
 
-            sys::sceGumLoadIdentity();
             sys::sceGuInit();
-
             sys::sceGuStart(
                 sys::GuContextType::Direct,
                 &mut LIST as *mut _ as *mut c_void,
             );
-            sys::sceGuDrawBuffer(sys::DisplayPixelFormat::Psm8888, (draw as u32 - 0x4400_0000) as *mut c_void, BUF_WIDTH as i32);
-            sys::sceGuDispBuffer(SCREEN_WIDTH as i32, SCREEN_HEIGHT as i32, disp, BUF_WIDTH as i32);
-            sys::sceGuOffset(2048 - (SCREEN_WIDTH/2), 2048 - (SCREEN_HEIGHT/2));
-            sys::sceGuViewport(2048, 2048, SCREEN_WIDTH as i32, SCREEN_HEIGHT as i32);
-            sys::sceGuScissor(0, 0, SCREEN_WIDTH as i32, SCREEN_HEIGHT as i32);
-            sys::sceGuEnable(sys::GuState::ScissorTest);
-
-            sys::sceGuEnable(sys::GuState::Texture2D);
-            sys::sceGuEnable(sys::GuState::ClipPlanes);
+            sys::sceGuDrawBuffer(sys::DisplayPixelFormat::Psm8888, draw.as_mut_ptr_from_zero() as *mut c_void, BUF_WIDTH as i32);
+            sys::sceGuDrawBufferList(sys::DisplayPixelFormat::Psm8888, draw.as_mut_ptr_from_zero() as *mut c_void, BUF_WIDTH as i32);
+            sys::sceGuDispBuffer(SCREEN_WIDTH as i32, SCREEN_HEIGHT as i32, disp.as_mut_ptr_from_zero() as *mut c_void, BUF_WIDTH as i32);
 
             sys::sceGuFinish();
             sys::sceGuSync(sys::GuSyncMode::Finish, sys::GuSyncBehavior::Wait);
             sys::sceGuDisplay(true);
 
-            Self { draw_buf: draw, size }
+            Self { draw_buf: draw, disp_buf: disp, size }
         }
     }
 
@@ -64,7 +60,6 @@ impl PspDisplay {
                 return Some((x + y * BUF_WIDTH) as usize);
             }
         }
-
         None
     }
 
@@ -75,27 +70,28 @@ impl PspDisplay {
                 sys::DisplayPixelFormat::Psm8888,
                 0,
                 0,
-                512,
+                480,
                 272,
                 512,
-                self.draw_buf as *mut c_void,
+                self.draw_buf.as_mut_ptr_direct_to_vram() as *mut c_void,
                 0,
                 0,
                 512,
-                0x4400_0000 as *mut c_void
+                self.disp_buf.as_mut_ptr_direct_to_vram() as *mut c_void
             );
             sys::sceGuFinish();
             sys::sceGuSync(sys::GuSyncMode::Finish, sys::GuSyncBehavior::Wait);
         }
     }
+}
 
-    pub fn destroy(self) {
+impl Drop for PspDisplay {
+    fn drop(&mut self) {
         unsafe {
-            sys::sceGuTerm();
+            sys::sceGuTerm()
         }
     }
 }
-
 
 impl DrawTarget<Rgb888> for PspDisplay {
     type Error = core::convert::Infallible;
@@ -104,7 +100,7 @@ impl DrawTarget<Rgb888> for PspDisplay {
         let Pixel(point, color) = pixel;
         if let Some(index) = self.point_to_index(point) {
             unsafe {
-                *self.draw_buf.add(index) = rgba_to_bgra(RawU24::from(color).into_inner());
+                *(self.draw_buf.as_mut_ptr_direct_to_vram() as *mut u32).add(index) = 0xFF << 24 | rgb_to_bgr(RawU24::from(color).into_inner());
             }
         }
         Ok(())
@@ -117,7 +113,7 @@ impl DrawTarget<Rgb888> for PspDisplay {
         for Pixel(point, color) in pixels.into_iter() {
             if let Some(index) = self.point_to_index(point) {
                 unsafe {
-                    *self.draw_buf.add(index) = rgba_to_bgra(RawU24::from(color).into_inner());
+                    *(self.draw_buf.as_mut_ptr_direct_to_vram() as *mut u32).add(index) =0xFF << 24 |  rgb_to_bgr(RawU24::from(color).into_inner());
                 }
             }
         }
@@ -125,19 +121,17 @@ impl DrawTarget<Rgb888> for PspDisplay {
         Ok(())
     }
 
-    fn clear(&mut self, color: Rgb888) -> Result<(), Self::Error> {
+        fn clear(&mut self, color: Rgb888) -> Result<(), Self::Error> {
         unsafe {
 
-            sys::sceGuStart(sys::GuContextType::Direct, &mut LIST.0 as *mut [u32; 0x40000] as *mut _);
-            sys::sceGuClearColor(rgba_to_bgra(RawU24::from(color).into_inner()));
-            sys::sceGuClearDepth(0);
-            sys::sceGuClear(sys::ClearBuffer::COLOR_BUFFER_BIT | sys::ClearBuffer::DEPTH_BUFFER_BIT);
+            sys::sceGuStart(sys::GuContextType::Direct, &mut LIST.0 as *mut _ as *mut _);
+            sys::sceGuClearColor(rgb_to_bgr(RawU24::from(color).into_inner()));
+            sys::sceGuClear(sys::ClearBuffer::COLOR_BUFFER_BIT | sys::ClearBuffer::FAST_CLEAR_BIT);
             sys::sceGuFinish();
             sys::sceGuSync(sys::GuSyncMode::Finish, sys::GuSyncBehavior::Wait);
         }
         Ok(())
     }
-
      fn draw_image<'a, 'b, I>(&mut self, item: &'a Image<'b, I, Rgb888>) -> Result<(), Self::Error>
     where
         &'b I: IntoPixelIter<Rgb888>,
@@ -156,8 +150,8 @@ impl DrawTarget<Rgb888> for PspDisplay {
         };
         let mut i = 0;
         for color in item.into_iter()
-            .map(|p| rgba_to_bgra(RawU24::from(p.1).into_inner())) {
-                for (j, byte) in color.to_ne_bytes().iter().enumerate() {
+            .map(|p| 0xFF << 24 | rgb_to_bgr(RawU24::from(p.1).into_inner())) {
+                for (j, byte) in color.to_le_bytes().iter().enumerate() {
                     unsafe {
                         *image_data_ptr.add(i*4+j) = *byte;
                     }
@@ -181,7 +175,7 @@ impl DrawTarget<Rgb888> for PspDisplay {
                 dx,
                 dy,
                 512,
-                self.draw_buf as *mut c_void
+                self.draw_buf.as_mut_ptr_direct_to_vram() as *mut c_void
             );
 
             sys::sceGuFinish();
@@ -195,38 +189,7 @@ impl DrawTarget<Rgb888> for PspDisplay {
     }
 }
 
-
 #[inline]
-fn rgba_to_bgra(rgba: u32) -> u32 {
-    // 0xAABBGGRR -> 0xAARRGGBB
-    core::intrinsics::bswap(rgba << 8 | rgba >> 24)
-}
-
-fn get_memory_size(width: u32, height: u32, psm: sys::TexturePixelFormat) -> u32 {
-    match psm {
-        sys::TexturePixelFormat::PsmT4 => (width * height) >> 1,
-        sys::TexturePixelFormat::PsmT8 => width * height,
-
-        sys::TexturePixelFormat::Psm5650
-        | sys::TexturePixelFormat::Psm5551
-        | sys::TexturePixelFormat::Psm4444
-        | sys::TexturePixelFormat::PsmT16 => {
-            2 * width * height
-        }
-
-        sys::TexturePixelFormat::Psm8888 | sys::TexturePixelFormat::PsmT32 => 4 * width * height,
-
-        _ => unimplemented!(),
-    }
-}
-
-unsafe fn get_static_vram_buffer(width: u32, height: u32, psm: sys::TexturePixelFormat) -> *mut c_void {
-    static mut STATIC_OFFSET: u32 = 0;
-
-    let mem_size = get_memory_size(width, height, psm);
-    let result = STATIC_OFFSET as *mut _;
-
-    STATIC_OFFSET += mem_size as u32;
-
-    result
+fn rgb_to_bgr(rgb: u32) -> u32 {
+    core::intrinsics::bswap(rgb << 8 | rgb >> 24)
 }
