@@ -57,6 +57,9 @@ fn psp_main() {
         sys::sceGuDepthRange(65535, 0);
         sys::sceGuScissor(0, 0, SCREEN_WIDTH as i32, SCREEN_HEIGHT as i32);
         sys::sceGuEnable(GuState::ScissorTest);
+        sys::sceGuEnable(GuState::Lighting);
+        sys::sceGuEnable(GuState::Light0);
+        sys::sceGuFrontFace(sys::FrontFaceDirection::Clockwise);
         sys::sceGuFinish();
         sys::sceGuSync(sys::GuSyncMode::Finish, sys::GuSyncBehavior::Wait);
         sys::sceDisplayWaitVblankStart();
@@ -115,23 +118,38 @@ fn psp_main() {
             sys::sceGumLoadIdentity();
 
 
-            let pos = sys::ScePspFVector3 { x: 0.0, y: 0.0, z: -8.0 };
+            let pos = sys::ScePspFVector3 { x: -1.0, y: 0.0, z: -8.0 };
             let rot = ScePspFVector3 {
                 x: val * 0.79 * (PI / 180.0),
                 y: val * 0.98 * (PI / 180.0),
                 z: val * 1.32 * (PI / 180.0),
             };
+            //let rot = ScePspFVector3 {
+                //x: -45.0 * (PI / 180.0),
+                //y: 0.0,
+                //z: 0.0,
+            //};
 
             sys::sceGumTranslate(&pos);
             sys::sceGumRotateXYZ(&rot);
 
-            sys::sceGuColor(0xff0000ff);
+            //sys::sceGuColor(0xff0000ff);
+            sys::sceGuLight(0, sys::LightType::Pointlight, sys::LightComponent::DIFFUSE, 
+                &ScePspFVector3 {
+                   x: -1.0, y: 0.0, z: -2.0
+                }
+            );
+
+            sys::sceGuLightColor(0, sys::LightComponent::DIFFUSE, 0xff00ffff);
+            sys::sceGuMaterial(sys::LightComponent::DIFFUSE, 0xff0000ff);
+
             sys::sceGumDrawArray(
                 GuPrimitive::Triangles,
                 VertexType::VERTEX_32BITF | VertexType::TRANSFORM_3D,
-                crab::CRAB.0.len() as i32,
-                core::ptr::null(), 
-                &crab::CRAB as *const _ as *const _,
+                crab::VERTICES.0.len() as i32,
+                //core::ptr::null(),
+                &crab::INDICES as *const _ as *const _, 
+                &crab::VERTICES as *const _ as *const _,
             );
 
             sys::sceGuFinish();
