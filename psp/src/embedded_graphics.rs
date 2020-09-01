@@ -35,7 +35,6 @@ impl PspDisplay {
             let mut allocator = vram_alloc::get_vram_allocator().unwrap();
             let disp = allocator.alloc_texture_pixels(BUF_WIDTH, SCREEN_HEIGHT, sys::TexturePixelFormat::Psm8888);
             let draw = allocator.alloc_texture_pixels(BUF_WIDTH, SCREEN_HEIGHT, sys::TexturePixelFormat::Psm8888);
-
             sys::sceGuInit();
             sys::sceGuStart(
                 sys::GuContextType::Direct,
@@ -44,6 +43,8 @@ impl PspDisplay {
             sys::sceGuDrawBuffer(sys::DisplayPixelFormat::Psm8888, draw.as_mut_ptr_from_zero() as *mut c_void, BUF_WIDTH as i32);
             sys::sceGuDrawBufferList(sys::DisplayPixelFormat::Psm8888, draw.as_mut_ptr_from_zero() as *mut c_void, BUF_WIDTH as i32);
             sys::sceGuDispBuffer(SCREEN_WIDTH as i32, SCREEN_HEIGHT as i32, disp.as_mut_ptr_from_zero() as *mut c_void, BUF_WIDTH as i32);
+            sys::sceGuScissor(0, 0, SCREEN_WIDTH as i32, SCREEN_HEIGHT as i32);
+            sys::sceGuEnable(sys::GuState::ScissorTest);
 
             sys::sceGuFinish();
             sys::sceGuSync(sys::GuSyncMode::Finish, sys::GuSyncBehavior::Wait);
@@ -126,7 +127,8 @@ impl DrawTarget<Rgb888> for PspDisplay {
 
             sys::sceGuStart(sys::GuContextType::Direct, &mut LIST.0 as *mut _ as *mut _);
             sys::sceGuClearColor(rgb_to_bgr(RawU24::from(color).into_inner()));
-            sys::sceGuClear(sys::ClearBuffer::COLOR_BUFFER_BIT | sys::ClearBuffer::FAST_CLEAR_BIT);
+            //sys::sceGuClearDepth(0);
+            sys::sceGuClear(sys::ClearBuffer::COLOR_BUFFER_BIT | sys::ClearBuffer::FAST_CLEAR_BIT /*| sys::ClearBuffer::DEPTH_BUFFER_BIT*/);
             sys::sceGuFinish();
             sys::sceGuSync(sys::GuSyncMode::Finish, sys::GuSyncBehavior::Wait);
         }
