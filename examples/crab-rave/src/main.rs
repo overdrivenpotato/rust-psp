@@ -124,16 +124,10 @@ fn psp_main() {
                 y: val * 0.98 * (PI / 180.0),
                 z: val * 1.32 * (PI / 180.0),
             };
-            //let rot = ScePspFVector3 {
-                //x: -45.0 * (PI / 180.0),
-                //y: 0.0,
-                //z: 0.0,
-            //};
 
             sys::sceGumTranslate(&pos);
             sys::sceGumRotateXYZ(&rot);
 
-            //sys::sceGuColor(0xff0000ff);
             sys::sceGuLight(0, sys::LightType::Pointlight, sys::LightComponent::DIFFUSE, 
                 &ScePspFVector3 {
                    x: -1.0, y: 0.0, z: -2.0
@@ -147,7 +141,6 @@ fn psp_main() {
                 GuPrimitive::Triangles,
                 VertexType::VERTEX_32BITF | VertexType::TRANSFORM_3D | VertexType::INDEX_16BIT,
                 crab::INDICES.0.len() as i32,
-                //core::ptr::null(),
                 &crab::INDICES as *const _ as *const _, 
                 &crab::VERTICES as *const _ as *const _,
             );
