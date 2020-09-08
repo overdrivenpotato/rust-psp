@@ -11,7 +11,7 @@ pub fn test_main(test_runner: &mut TestRunner) {
         ("cos_pi", test_cos(GU_PI), -1.0),
         ("intrinsics_cos_pi", test_cos_intrinsic(GU_PI), -1.0),
 
-        ("sin_0", test_sin(0), 0.0),
+        ("sin_0", test_sin(0.0), 0.0),
         ("sin_pi", test_sin(GU_PI), 0.0),
         ("sin_2.5", test_sin(2.5), 0.5984721),
         ("intrinsics_sin_2.5", test_sin_intrinsic(2.5), 0.5984721),

@@ -1,4 +1,5 @@
 use core::mem::MaybeUninit;
+use crate::sys::{vfpu_context::{Context, MatrixSet}, VFPU_CONTEXT};
 
 macro_rules! trig_func {
     ( $($name:ident),* ) => {
@@ -7,6 +8,9 @@ macro_rules! trig_func {
             #[no_mangle]
             pub unsafe extern "C" fn [< $name f32 >](rad: f32) -> f32 {
                 let mut out = MaybeUninit::uninit();
+                VFPU_CONTEXT
+                .get_or_insert_with(Context::new)
+                .prepare(MatrixSet::empty(), MatrixSet::VMAT0);
 
                 $crate::vfpu_asm!(
                     .mips "mfc1 $$t0, $1";
