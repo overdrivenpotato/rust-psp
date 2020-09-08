@@ -5,5 +5,4 @@ authors = ["Paul Sajna <sajattack@gmail.com>"]
 edition = "2018"
 
 [dependencies]
-psp = { path = "../../psp", features=["std"] }
-libm = "0.2.1"
+psp = {path = "../../psp"}
