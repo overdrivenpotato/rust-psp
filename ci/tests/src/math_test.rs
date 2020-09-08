@@ -1,5 +1,6 @@
 use psp::math;
-use psp::sys::GU_PI;
+//use psp::sys::GU_PI;
+use core::f32::consts::PI;
 use psp::test_runner::TestRunner;
 
 const EPSILON: f32 = 0.00001;
@@ -8,15 +9,15 @@ pub fn test_main(test_runner: &mut TestRunner) {
     test_runner.check_list(&[
         ("cos_2.5", test_cos(2.5), -0.8011436),
         ("cos_0", test_cos(0.0), 1.0),
-        ("cos_pi", test_cos(GU_PI), -1.0),
-        ("intrinsics_cos_pi", test_cos_intrinsic(GU_PI), -1.0),
+        ("cos_pi", test_cos(PI), -1.0),
+        ("intrinsics_cos_pi", test_cos_intrinsic(PI), -1.0),
 
         ("sin_0", test_sin(0.0), 0.0),
-        ("sin_pi", test_sin(GU_PI), 0.0),
+        ("sin_pi", test_sin(PI), 0.0),
         ("sin_2.5", test_sin(2.5), 0.5984721),
         ("intrinsics_sin_2.5", test_sin_intrinsic(2.5), 0.5984721),
     ]);
-    let almost_zero = test_sin_intrinsic(GU_PI);
+    let almost_zero = test_sin_intrinsic(PI);
     test_runner.check_true("intrinsics_sin_0", almost_zero < EPSILON && almost_zero > -EPSILON);
 }
 
