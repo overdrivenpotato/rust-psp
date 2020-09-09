@@ -19,8 +19,9 @@ use crab::CRAB_VERTICES;
 
 psp::module!("lights", 1, 1);
 
-static mut LIST: Align16<[u32; 0x40000]> = Align16([0; 0x40000]);
+const LIGHT_DISTANCE: f32 = 5.0;
 
+static mut LIST: Align16<[u32; 0x40000]> = Align16([0; 0x40000]);
 
 static COLORS: [u32; 4] = [0xffff0000, 0xff00ff00, 0xff0000ff, 0xffff00ff];
 
@@ -87,7 +88,7 @@ fn psp_main() {
                 let pos = ScePspFVector3 {
                     x: cosf32(i as f32 * (PI / 2.0) + val as f32 * (PI / 180.0)) * LIGHT_DISTANCE,
                     y: 0.0,
-                    z: sinf32(i as f32 * (PI / 2.0) + val as f32 * (PI / 180.0)) * LIGHT_DISTANCE,
+                    z: (sinf32(i as f32 * (PI / 2.0) + val as f32 * (PI / 180.0)) * LIGHT_DISTANCE) - 8.0,
                 };
                 sys::sceGuLight(
                     i,
@@ -111,7 +112,7 @@ fn psp_main() {
             let pos = ScePspFVector3 {
                 x: 0.0,
                 y: 0.0,
-                z: -3.5,
+                z: -9.0,
             };
             sys::sceGumLoadIdentity();
             sys::sceGumTranslate(&pos);
