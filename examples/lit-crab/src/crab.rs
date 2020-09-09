@@ -1,7 +1,7 @@
 use psp::Align16;
 
 #[repr(C, align(4))]
-struct NPVertex {
+pub struct NPVertex {
     nx: f32,
     ny: f32,
     nz: f32,
