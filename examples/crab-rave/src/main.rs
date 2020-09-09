@@ -1,21 +1,30 @@
-#![feature(restricted_std)]
+#![no_std]
 #![no_main]
 
-use core::{ffi::c_void, f32::consts::PI};
+use core::f32::consts::PI;
 
-use psp::{sys, vram_alloc::get_vram_allocator, BUF_WIDTH, SCREEN_HEIGHT, SCREEN_WIDTH, 
+use psp::{
+    math::{cosf32, sinf32},
     sys::{
-        TexturePixelFormat, DisplayPixelFormat, GuPrimitive, VertexType, GuState,
+        self, ClearBuffer, DepthFunc, DisplayPixelFormat, FrontFaceDirection, GuContextType,
+        GuPrimitive, GuState, GuSyncBehavior, GuSyncMode, LightComponent, LightType::Pointlight,
+        MatrixMode, ScePspFVector3, ShadingModel, TexturePixelFormat, VertexType,
+
         sceAudioChReserve, sceAudioOutput, sceAudioGetChannelRestLen, 
-        sceAudioSetChannelDataLen, ThreadAttributes, ScePspFVector3,
+        sceAudioSetChannelDataLen, 
     },
+    vram_alloc::get_vram_allocator,
+    Align16, BUF_WIDTH, SCREEN_HEIGHT, SCREEN_WIDTH,
 };
 
 mod crab;
+use crab::CRAB_VERTICES;
 
 psp::module!("crab-rave", 1, 1);
 
-static mut LIST: psp::Align16<[u32; 0x40000]> = psp::Align16([0; 0x40000]);
+const LIGHT_DISTANCE: f32 = 5.0;
+
+static mut LIST: Align16<[u32; 0x40000]> = Align16([0; 0x40000]);
 
 static AUDIO_CLIP: [u8; 672320] = *include_bytes!("../assets/crabrave.pcm"); 
 
@@ -23,15 +32,10 @@ const MAX_VOL: i32 = 0x8000;
 const MAX_SAMPLES: usize = 65472;
 const CHANNEL: i32 = 0;
 
-
-#[no_mangle]
 fn psp_main() {
     psp::enable_home_button();
 
-    let mut allocator = get_vram_allocator().unwrap();
-    let fbp0 = allocator.alloc_texture_pixels(BUF_WIDTH, SCREEN_HEIGHT, TexturePixelFormat::Psm8888).as_mut_ptr_from_zero();
-    let fbp1 = allocator.alloc_texture_pixels(BUF_WIDTH, SCREEN_HEIGHT, TexturePixelFormat::Psm8888).as_mut_ptr_from_zero();
-    let zbp = allocator.alloc_texture_pixels(BUF_WIDTH, SCREEN_HEIGHT, TexturePixelFormat::Psm4444).as_mut_ptr_from_zero();
+    let np_vertex_format: VertexType = VertexType::NORMAL_32BITF | VertexType::VERTEX_32BITF;
 
     unsafe { 
         sceAudioChReserve(CHANNEL, MAX_SAMPLES as i32, psp::sys::AudioFormat::Stereo) 
@@ -39,31 +43,52 @@ fn psp_main() {
     let mut start_pos: usize = 0;
     let mut restlen = 0;
 
-    unsafe {sys::sceKernelChangeCurrentThreadAttr(0, ThreadAttributes::VFPU)};
-
-
     unsafe {
+        sys::sceKernelChangeCurrentThreadAttr(0, sys::ThreadAttributes::VFPU);
+        sys::sceKernelDcacheWritebackAll();
+
+        let mut allocator = get_vram_allocator().unwrap();
+        let fbp0 = allocator
+            .alloc_texture_pixels(BUF_WIDTH, SCREEN_HEIGHT, TexturePixelFormat::Psm8888)
+            .as_mut_ptr_from_zero();
+        let fbp1 = allocator
+            .alloc_texture_pixels(BUF_WIDTH, SCREEN_HEIGHT, TexturePixelFormat::Psm8888)
+            .as_mut_ptr_from_zero();
+        let zbp = allocator
+            .alloc_texture_pixels(BUF_WIDTH, SCREEN_HEIGHT, TexturePixelFormat::Psm4444)
+            .as_mut_ptr_from_zero();
 
         sys::sceGuInit();
-        sys::sceGuStart(
-            sys::GuContextType::Direct,
-            &mut LIST as *mut _ as *mut c_void,
-        );
+        sys::sceGuStart(GuContextType::Direct, &mut LIST.0 as *mut _ as _);
         sys::sceGuDrawBuffer(DisplayPixelFormat::Psm8888, fbp0 as _, BUF_WIDTH as i32);
-        sys::sceGuDispBuffer(SCREEN_WIDTH as i32, SCREEN_HEIGHT as i32, fbp1 as _, BUF_WIDTH as i32);
+        sys::sceGuDispBuffer(
+            SCREEN_WIDTH as i32,
+            SCREEN_HEIGHT as i32,
+            fbp1 as _,
+            BUF_WIDTH as i32,
+        );
         sys::sceGuDepthBuffer(zbp as _, BUF_WIDTH as i32);
-        sys::sceGuOffset(2048 - (SCREEN_WIDTH/2), 2048 - (SCREEN_HEIGHT/2));
+        sys::sceGuOffset(2048 - (SCREEN_WIDTH / 2), 2048 - (SCREEN_HEIGHT / 2));
         sys::sceGuViewport(2048, 2048, SCREEN_WIDTH as i32, SCREEN_HEIGHT as i32);
-        sys::sceGuDepthRange(65535, 0);
+        sys::sceGuDepthRange(0xc350, 0x2710);
         sys::sceGuScissor(0, 0, SCREEN_WIDTH as i32, SCREEN_HEIGHT as i32);
         sys::sceGuEnable(GuState::ScissorTest);
+        sys::sceGuDepthFunc(DepthFunc::GreaterOrEqual);
+        sys::sceGuFrontFace(FrontFaceDirection::Clockwise);
+        sys::sceGuShadeModel(ShadingModel::Smooth);
+        sys::sceGuEnable(GuState::DepthTest);
+        sys::sceGuEnable(GuState::CullFace);
+        sys::sceGuEnable(GuState::ClipPlanes);
         sys::sceGuEnable(GuState::Lighting);
         sys::sceGuEnable(GuState::Light0);
-        sys::sceGuFrontFace(sys::FrontFaceDirection::Clockwise);
+        sys::sceGuEnable(GuState::Light1);
+        sys::sceGuEnable(GuState::Light2);
+        sys::sceGuEnable(GuState::Light3);
         sys::sceGuFinish();
-        sys::sceGuSync(sys::GuSyncMode::Finish, sys::GuSyncBehavior::Wait);
+        sys::sceGuSync(GuSyncMode::Finish, GuSyncBehavior::Wait);
         sys::sceDisplayWaitVblankStart();
         sys::sceGuDisplay(true);
+
         let mut val = 0.0;
 
         loop {
@@ -95,60 +120,78 @@ fn psp_main() {
 
             restlen = sceAudioGetChannelRestLen(CHANNEL);
 
-
-            sys::sceGuStart(
-                sys::GuContextType::Direct,
-                &mut LIST as *mut _ as *mut c_void
-            );
-            sys::sceGuClearColor(0xff554433);
+            sys::sceGuStart(GuContextType::Direct, &mut LIST.0 as *mut _ as _);
+            sys::sceGuClearColor(0x554433);
             sys::sceGuClearDepth(0);
-            sys::sceGuClear(
-                sys::ClearBuffer::COLOR_BUFFER_BIT |
-                sys::ClearBuffer::DEPTH_BUFFER_BIT
-            );
+            sys::sceGuClear(ClearBuffer::COLOR_BUFFER_BIT | ClearBuffer::DEPTH_BUFFER_BIT);
 
-            sys::sceGumMatrixMode(sys::MatrixMode::Projection);
+            for i in 0..4 {
+                let pos = ScePspFVector3 {
+                    x: cosf32(i as f32 * (PI / 2.0) + val as f32 * (PI / 180.0)) * LIGHT_DISTANCE,
+                    y: 0.0,
+                    z: (sinf32(i as f32 * (PI / 2.0) + val as f32 * (PI / 180.0)) * LIGHT_DISTANCE),
+                };
+                sys::sceGuLight(
+                    i,
+                    Pointlight,
+                    LightComponent::DIFFUSE | LightComponent::SPECULAR,
+                    &pos,
+                );
+                sys::sceGuLightColor(i, LightComponent::DIFFUSE, 0xff00_ffff);
+                sys::sceGuLightColor(i, LightComponent::SPECULAR, 0xffff_ffff);
+                sys::sceGuLightAtt(i, 0.0, 1.0, 0.0);
+            }
+
+            sys::sceGuSpecular(12.0);
+            sys::sceGuAmbient(0x0022_2222);
+
+            sys::sceGumMatrixMode(MatrixMode::Projection);
             sys::sceGumLoadIdentity();
-            sys::sceGumPerspective(75.0, 16.0 / 9.0, 0.5, 1000.0);
+            sys::sceGumPerspective(75.0, 16.0 / 9.0, 1.0, 1000.0);
 
-            sys::sceGumMatrixMode(sys::MatrixMode::View);
+            sys::sceGumMatrixMode(MatrixMode::View);
+            let pos = ScePspFVector3 {
+                x: 0.0,
+                y: 0.0,
+                z: -9.0,
+            };
             sys::sceGumLoadIdentity();
+            sys::sceGumTranslate(&pos);
 
-            sys::sceGumMatrixMode(sys::MatrixMode::Model);
+            sys::sceGumMatrixMode(MatrixMode::Model);
+            let pos = ScePspFVector3 {
+                x: 0.0,
+                y: -1.5,
+                z: 0.0,
+            };
             sys::sceGumLoadIdentity();
+            sys::sceGumTranslate(&pos);
 
+            sys::sceGuColor(0xff7777);
 
-            let pos = sys::ScePspFVector3 { x: -1.0, y: 0.0, z: -8.0 };
+            sys::sceGumMatrixMode(MatrixMode::Model);
             let rot = ScePspFVector3 {
                 x: val * 0.79 * (PI / 180.0),
                 y: val * 0.98 * (PI / 180.0),
                 z: val * 1.32 * (PI / 180.0),
             };
-
-            sys::sceGumTranslate(&pos);
+            sys::sceGumLoadIdentity();
             sys::sceGumRotateXYZ(&rot);
 
-            sys::sceGuLight(0, sys::LightType::Pointlight, sys::LightComponent::DIFFUSE, 
-                &ScePspFVector3 {
-                   x: -1.0, y: 0.0, z: -2.0
-                }
-            );
-
-            sys::sceGuLightColor(0, sys::LightComponent::DIFFUSE, 0xff00ffff);
-            sys::sceGuMaterial(sys::LightComponent::DIFFUSE, 0xff0000ff);
-
+            sys::sceGuColor(0xff0000ff);
             sys::sceGumDrawArray(
                 GuPrimitive::Triangles,
-                VertexType::VERTEX_32BITF | VertexType::TRANSFORM_3D | VertexType::INDEX_16BIT,
-                crab::INDICES.0.len() as i32,
-                &crab::INDICES as *const _ as *const _, 
-                &crab::VERTICES as *const _ as *const _,
+                np_vertex_format | VertexType::TRANSFORM_3D,
+                CRAB_VERTICES.0.len() as i32,
+                core::ptr::null(), 
+                &CRAB_VERTICES.0 as *const _ as _,
             );
-
             sys::sceGuFinish();
-            sys::sceGuSync(sys::GuSyncMode::Finish, sys::GuSyncBehavior::Wait);
+            sys::sceGuSync(GuSyncMode::Finish, GuSyncBehavior::Wait);
+
             sys::sceDisplayWaitVblankStart();
             sys::sceGuSwapBuffers();
+
             val += 1.0;
         }
     }

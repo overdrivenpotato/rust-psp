@@ -5,5 +5,4 @@ authors = ["Paul Sajna <sajattack@gmail.com>"]
 edition = "2018"
 
 [dependencies]
-psp = { path = "../../psp" }
-wavefront_obj = "8.0.0"
+psp = {path = "../../psp"}
