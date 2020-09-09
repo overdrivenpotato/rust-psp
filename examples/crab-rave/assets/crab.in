@@ -1,16 +1,4 @@
-use psp::Align16;
-
-#[repr(C, align(4))]
-pub struct NPVertex {
-    nx: f32,
-    ny: f32,
-    nz: f32,
-    px: f32,
-    py: f32,
-    pz: f32,
-}
-
-pub static CRAB_VERTICES: Align16<[NPVertex; 27684]> = Align16([
+Align16([
     NPVertex { nx: -0.1416, ny: -0.9891, nz: -0.0402, px: -0.290549, py: -3.371013, pz: 1.939672},
     NPVertex { nx: -0.4617, ny: -0.8715, nz: -0.1656, px: -0.388143, py: -3.340059, pz: 1.844115},
     NPVertex { nx: -0.0929, ny: -0.9761, nz: -0.1965, px: -0.253167, py: -3.359422, pz: 1.804131},
@@ -27695,4 +27683,4 @@ pub static CRAB_VERTICES: Align16<[NPVertex; 27684]> = Align16([
     NPVertex { nx: 0.3438, ny: -0.2999, nz: -0.8899, px: 1.125119, py: -2.791092, pz: 0.238039},
     NPVertex { nx: -0.3283, ny: -0.5196, nz: -0.7888, px: 1.3572, py: -2.768646, pz: 0.324245},
     NPVertex { nx: 0.2001, ny: -0.8451, nz: -0.4958, px: 1.090469, py: -2.833143, pz: 0.258808},
-]);
+])
