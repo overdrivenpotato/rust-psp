@@ -17,8 +17,17 @@ use psp::{
     Align16, BUF_WIDTH, SCREEN_HEIGHT, SCREEN_WIDTH,
 };
 
-mod crab;
-use crab::CRAB_VERTICES;
+#[repr(C, align(4))]
+pub struct NPVertex {
+    nx: f32,
+    ny: f32,
+    nz: f32,
+    px: f32,
+    py: f32,
+    pz: f32,
+}
+
+static CRAB_VERTICES: Align16<[NPVertex; 27684]> = include!("../assets/crab.in");
 
 psp::module!("crab-rave", 1, 1);
 
