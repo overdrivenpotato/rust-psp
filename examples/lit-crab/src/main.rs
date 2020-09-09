@@ -88,7 +88,7 @@ fn psp_main() {
                 let pos = ScePspFVector3 {
                     x: cosf32(i as f32 * (PI / 2.0) + val as f32 * (PI / 180.0)) * LIGHT_DISTANCE,
                     y: 0.0,
-                    z: (sinf32(i as f32 * (PI / 2.0) + val as f32 * (PI / 180.0)) * LIGHT_DISTANCE) - 8.0,
+                    z: (sinf32(i as f32 * (PI / 2.0) + val as f32 * (PI / 180.0)) * LIGHT_DISTANCE),
                 };
                 sys::sceGuLight(
                     i,
