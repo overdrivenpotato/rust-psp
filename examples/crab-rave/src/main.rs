@@ -17,17 +17,7 @@ use psp::{
     Align16, BUF_WIDTH, SCREEN_HEIGHT, SCREEN_WIDTH,
 };
 
-#[repr(C, align(4))]
-pub struct NPVertex {
-    nx: f32,
-    ny: f32,
-    nz: f32,
-    px: f32,
-    py: f32,
-    pz: f32,
-}
-
-static CRAB_VERTICES: Align16<[NPVertex; 27684]> = include!("../assets/crab.in");
+static CRAB_VERTICES: Align16<[u8; 664416]> = Align16(*include_bytes!("../assets/crab.raw"));
 
 psp::module!("crab-rave", 1, 1);
 
@@ -191,7 +181,7 @@ fn psp_main() {
             sys::sceGumDrawArray(
                 GuPrimitive::Triangles,
                 np_vertex_format | VertexType::TRANSFORM_3D,
-                CRAB_VERTICES.0.len() as i32,
+                (&CRAB_VERTICES.0.len() / core::mem::size_of::<f32>() / 6) as i32,
                 core::ptr::null(), 
                 &CRAB_VERTICES.0 as *const _ as _,
             );
