@@ -54,6 +54,7 @@ pub mod sys;
 #[panic_handler]
 fn panic(_: &core::panic::PanicInfo) -> ! { loop {} }
 
+#[cfg(not(feature = "std"))]
 #[no_mangle]
 extern "C" fn __rust_foreign_exception() -> ! { loop {} }
 

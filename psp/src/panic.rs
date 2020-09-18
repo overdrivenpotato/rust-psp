@@ -3,12 +3,11 @@
 // Most of the code here is lifted from `rustc/src/libstd/panicking.rs`. It has
 // been adapted to run on the PSP.
 
+#[cfg(not(feature = "std"))]
 use crate::sys;
 
 #[cfg(feature = "std")]
 use core::{mem::ManuallyDrop, any::Any};
-#[cfg(feature = "std")]
-use core::panic::BoxMeUp;
 #[cfg(not(feature = "std"))]
 use core::{mem::{self, ManuallyDrop}, any::Any, panic::{PanicInfo, BoxMeUp, Location}};
 
@@ -21,6 +20,7 @@ use alloc::{boxed::Box, string::{String, ToString}};
 #[link(name = "unwind", kind = "static")]
 extern {}
 
+#[cfg(not(feature = "std"))]
 fn print_and_die(s: String) -> ! {
     dprintln!("{}", s);
 
@@ -130,6 +130,7 @@ extern "C" {
 
 #[inline(never)]
 #[no_mangle]
+#[cfg(not(feature = "std"))]
 fn rust_panic(mut msg: &mut dyn BoxMeUp) -> ! {
     let code = unsafe {
         let obj = &mut msg as *mut &mut dyn BoxMeUp;
@@ -141,6 +142,7 @@ fn rust_panic(mut msg: &mut dyn BoxMeUp) -> ! {
 
 #[cfg(not(test))]
 #[no_mangle]
+#[cfg(not(feature = "std"))]
 extern "C" fn __rust_drop_panic() -> ! {
     print_and_die("Rust panics must be rethrown".into());
 }
