@@ -59,7 +59,7 @@ static mut STACK_DEPTH: [*mut ScePspFMatrix4; 4] = unsafe {
     ]
 };
 
-static mut VFPU_CONTEXT: Option<Context> = None;
+pub(crate) static mut VFPU_CONTEXT: Option<Context> = None;
 unsafe fn get_context_unchecked() -> &'static mut Context {
     match VFPU_CONTEXT.as_mut() {
         Some(r) => r,
