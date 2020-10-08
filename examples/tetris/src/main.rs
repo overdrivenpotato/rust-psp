@@ -28,7 +28,7 @@ pub const BLOCK_SIZE: u32 = 16;
 pub static BLOCK: Align16<[u8;BLOCK_SIZE as usize*BLOCK_SIZE as usize*4]> = 
     Align16(*include_bytes!("../assets/block.bin"));
 
-pub static mut LIST: Align16<[u32; 0x40000]> = Align16([0; 0x40000]);
+static mut LIST: Align16<[u32; 0x40000]> = Align16([0; 0x40000]);
 
 
 fn psp_main() {
@@ -50,13 +50,13 @@ fn psp_main() {
         t.set_pos(9, 5);
         loop {
             clear_color(0xff554433);
-            o.draw();
-            i.draw();
-            s.draw();
-            z.draw();
-            l.draw();
-            j.draw();
-            t.draw();
+            o.draw(&mut LIST);
+            i.draw(&mut LIST);
+            s.draw(&mut LIST);
+            z.draw(&mut LIST);
+            l.draw(&mut LIST);
+            j.draw(&mut LIST);
+            t.draw(&mut LIST);
             finish_frame();
         }
     }
@@ -84,13 +84,10 @@ unsafe fn setup() {
     sys::sceGuEnable(GuState::ScissorTest);
     sys::sceGuDepthFunc(DepthFunc::GreaterOrEqual);
     sys::sceGuEnable(GuState::DepthTest);
-    sys::sceGuShadeModel(sys::ShadingModel::Smooth);
     sys::sceGuEnable(GuState::Texture2D);
 
     sys::sceGuTexMode(TexturePixelFormat::Psm8888, 0, 0, 0);
     sys::sceGuTexFunc(TextureEffect::Modulate, TextureColorComponent::Rgb);
-    sys::sceGuTexEnvColor(0x0);
-    sys::sceGuTexOffset(0.0, 0.0);
     sys::sceGuTexWrap(sys::GuTexWrapMode::Clamp, sys::GuTexWrapMode::Clamp);
     sys::sceGuTexFilter(TextureFilter::Nearest, TextureFilter::Nearest);
 

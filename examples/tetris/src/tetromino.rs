@@ -1,4 +1,5 @@
 use crate::sprite::Sprite;
+use psp::Align16;
 use crate::BLOCK;
 use crate::BLOCK_SIZE;
 
@@ -92,9 +93,9 @@ impl<'a> Tetromino <'a> {
         }
     }
 
-    pub fn draw(&self) {
+    pub fn draw(&self, displaylist: &mut Align16<[u32;0x40000]>) {
         for block in self.blocks.iter() {
-            block.draw();
+            block.draw(displaylist);
         }
     }
 }

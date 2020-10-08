@@ -6,8 +6,6 @@ use psp::sys::{
     GuSyncMode, GuSyncBehavior, GuContextType
 };
 
-use crate::LIST;
-
 #[repr(align(4))]
 pub struct Align4<T>(pub T);
 
@@ -43,7 +41,7 @@ impl<'a, T> Sprite<'a, T> where T: AsRef<[u8]> {
         }
     }
 
-    pub fn draw(&self) {
+    pub fn draw(&self, displaylist: &mut Align16<[u32; 0x40000]>) {
         // build vertices
         let vertices: Align16<[Align4<Vertex>; 2]> = Align16 ([
             Align4(Vertex { 
@@ -65,8 +63,7 @@ impl<'a, T> Sprite<'a, T> where T: AsRef<[u8]> {
         ]);
 
         unsafe {
-            sys::sceKernelDcacheWritebackInvalidateAll();
-            sys::sceGuStart(GuContextType::Direct, &mut LIST.0 as *mut [u32; 0x40000] as *mut _);
+            sys::sceGuStart(GuContextType::Direct, displaylist.0.as_mut_ptr() as *mut _);
             
             sys::sceGumMatrixMode(sys::MatrixMode::Model);
             sys::sceGumLoadIdentity();
@@ -74,6 +71,8 @@ impl<'a, T> Sprite<'a, T> where T: AsRef<[u8]> {
             // setup texture
             sys::sceGuTexImage(MipmapLevel::None, self.width as i32, self.height as i32, self.width as i32, self.texture.as_ref().as_ptr() as *const _); 
             sys::sceGuTexScale(1.0/self.width as f32, 1.0/self.height as f32);
+
+            sys::sceKernelDcacheWritebackInvalidateAll();
 
             // draw sprite
             sys::sceGumDrawArray(
