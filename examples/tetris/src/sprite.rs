@@ -2,8 +2,7 @@ use core::ptr;
 use psp::Align16;
 use psp::sys::{
     self, ScePspFVector3,
-    GuPrimitive, TexturePixelFormat, MipmapLevel, VertexType,
-    TextureEffect, TextureColorComponent, TextureFilter,
+    GuPrimitive, MipmapLevel, VertexType,
     GuSyncMode, GuSyncBehavior, GuContextType
 };
 
@@ -66,23 +65,15 @@ impl<'a, T> Sprite<'a, T> where T: AsRef<[u8]> {
         ]);
 
         unsafe {
+            sys::sceKernelDcacheWritebackInvalidateAll();
             sys::sceGuStart(GuContextType::Direct, &mut LIST.0 as *mut [u32; 0x40000] as *mut _);
             
             sys::sceGumMatrixMode(sys::MatrixMode::Model);
             sys::sceGumLoadIdentity();
             sys::sceGumTranslate(&ScePspFVector3 { x: self.x as f32, y: self.y as f32, z: 0.0});
             // setup texture
-            sys::sceGuTexMode(TexturePixelFormat::Psm8888, 0, 0, 0);
-            if self.texture.as_ref().as_ptr() as u32 & 15 != 0 {
-                sys::sceIoWrite(sys::SceUid(1), b"unaligned\n".as_ptr() as _, 10);
-            }
             sys::sceGuTexImage(MipmapLevel::None, self.width as i32, self.height as i32, self.width as i32, self.texture.as_ref().as_ptr() as *const _); 
-            sys::sceGuTexFunc(TextureEffect::Modulate, TextureColorComponent::Rgb);
-            sys::sceGuTexEnvColor(0x0);
-            sys::sceGuTexOffset(0.0, 0.0);
             sys::sceGuTexScale(1.0/self.width as f32, 1.0/self.height as f32);
-            sys::sceGuTexWrap(sys::GuTexWrapMode::Clamp, sys::GuTexWrapMode::Clamp);
-            sys::sceGuTexFilter(TextureFilter::Nearest, TextureFilter::Nearest);
 
             // draw sprite
             sys::sceGumDrawArray(

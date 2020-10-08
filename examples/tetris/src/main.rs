@@ -1,6 +1,7 @@
 #![no_std]
 #![no_main]
 
+#![allow(incomplete_features)]
 #![feature(const_generics, const_fn)]
 
 extern crate alloc;
@@ -10,8 +11,8 @@ mod tetromino;
 
 use psp::sys::{
     self, DisplayPixelFormat, GuContextType, GuSyncMode, GuSyncBehavior,
-    GuState, TexturePixelFormat, DepthFunc,
-    ClearBuffer, 
+    GuState, TexturePixelFormat, DepthFunc, TextureEffect, TextureColorComponent,
+    TextureFilter, ClearBuffer, 
 };
 
 use psp::Align16;
@@ -48,7 +49,6 @@ fn psp_main() {
         j.set_pos(5, 5);
         t.set_pos(9, 5);
         loop {
-            //start_frame();
             clear_color(0xff554433);
             o.draw();
             i.draw();
@@ -87,6 +87,13 @@ unsafe fn setup() {
     sys::sceGuShadeModel(sys::ShadingModel::Smooth);
     sys::sceGuEnable(GuState::Texture2D);
 
+    sys::sceGuTexMode(TexturePixelFormat::Psm8888, 0, 0, 0);
+    sys::sceGuTexFunc(TextureEffect::Modulate, TextureColorComponent::Rgb);
+    sys::sceGuTexEnvColor(0x0);
+    sys::sceGuTexOffset(0.0, 0.0);
+    sys::sceGuTexWrap(sys::GuTexWrapMode::Clamp, sys::GuTexWrapMode::Clamp);
+    sys::sceGuTexFilter(TextureFilter::Nearest, TextureFilter::Nearest);
+
     sys::sceGumMatrixMode(sys::MatrixMode::View);
     sys::sceGumLoadIdentity();
 
@@ -109,13 +116,7 @@ unsafe fn clear_color(color: u32) {
 
 }
 
-//unsafe fn start_frame() {
-    //sys::sceGuStart(GuContextType::Direct, &mut LIST.0 as *mut [u32; 0x40000] as *mut _);
-//}
-
 unsafe fn finish_frame() {
-    //sys::sceGuFinish();
-    //sys::sceGuSync(GuSyncMode::Finish, GuSyncBehavior::Wait);
     sys::sceDisplayWaitVblankStart();
     sys::sceGuSwapBuffers();
     sys::sceGuDisplay(true);
