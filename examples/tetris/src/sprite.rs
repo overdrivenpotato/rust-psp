@@ -1,12 +1,18 @@
 use core::ptr;
 use psp::Align16;
 use psp::sys::{
-    self, ScePspFVector3, GuContextType, GuSyncMode, GuSyncBehavior,
-    GuPrimitive, TextureFilter, TextureEffect, TextureColorComponent,
-    TexturePixelFormat, MipmapLevel, VertexType,
+    self, ScePspFVector3,
+    GuPrimitive, TexturePixelFormat, MipmapLevel, VertexType,
+    TextureEffect, TextureColorComponent, TextureFilter,
+    GuSyncMode, GuSyncBehavior, GuContextType
 };
 
-#[repr(C, align(4))]
+use crate::LIST;
+
+#[repr(align(4))]
+pub struct Align4<T>(pub T);
+
+#[repr(C, packed)]
 struct Vertex {
     u: f32,
     v: f32,
@@ -17,8 +23,8 @@ struct Vertex {
 }
 
 #[repr(C)]
-pub struct Sprite<T> {
-    texture: T, 
+pub struct Sprite<'a, T> {
+    texture: &'a T, 
     color: u32,
     x: u32,
     y: u32,
@@ -26,8 +32,8 @@ pub struct Sprite<T> {
     height: u32,
 }
 
-impl<T> Sprite<T> where T: AsRef<[u8]> {
-    pub const fn new(texture: T, color: u32, x: u32, y: u32, width: u32, height: u32) -> Self { 
+impl<'a, T> Sprite<'a, T> where T: AsRef<[u8]> {
+    pub const fn new(texture: &'a T, color: u32, x: u32, y: u32, width: u32, height: u32) -> Self { 
         Self {
             texture,
             color,
@@ -38,56 +44,50 @@ impl<T> Sprite<T> where T: AsRef<[u8]> {
         }
     }
 
-    pub fn draw(&self, displaylist: &mut [u32; 0x40000]) {
+    pub fn draw(&self) {
         // build vertices
-        let vertices: Align16<[Vertex; 2]> = Align16 ([
-            Vertex { 
+        let vertices: Align16<[Align4<Vertex>; 2]> = Align16 ([
+            Align4(Vertex { 
                 u: 0.0,
                 v: 0.0,
                 color: self.color,
                 x: 0.0,
                 y: 0.0,
                 z: 0.0,
-            },
-            Vertex {
+            }),
+            Align4(Vertex {
                 u: self.width as f32,
                 v: self.height as f32,
                 color: self.color,
                 x: self.width as f32,
                 y: self.height as f32,
-                z: 1.0,
-            }
+                z: 0.0,
+            })
         ]);
 
         unsafe {
-            sys::sceGuStart(GuContextType::Direct, displaylist.as_mut_ptr() as *mut _);
-
-            // setup matrices for cube
-
-            sys::sceGumMatrixMode(sys::MatrixMode::Projection);
-            sys::sceGumLoadIdentity();
-            sys::sceGumOrtho(0.0,480.0,272.0,0.0,-30.0,30.0);
-
-            sys::sceGumMatrixMode(sys::MatrixMode::View);
-            sys::sceGumLoadIdentity();
-
+            sys::sceGuStart(GuContextType::Direct, &mut LIST.0 as *mut [u32; 0x40000] as *mut _);
+            
             sys::sceGumMatrixMode(sys::MatrixMode::Model);
             sys::sceGumLoadIdentity();
             sys::sceGumTranslate(&ScePspFVector3 { x: self.x as f32, y: self.y as f32, z: 0.0});
-
             // setup texture
             sys::sceGuTexMode(TexturePixelFormat::Psm8888, 0, 0, 0);
+            if self.texture.as_ref().as_ptr() as u32 & 15 != 0 {
+                sys::sceIoWrite(sys::SceUid(1), b"unaligned\n".as_ptr() as _, 10);
+            }
             sys::sceGuTexImage(MipmapLevel::None, self.width as i32, self.height as i32, self.width as i32, self.texture.as_ref().as_ptr() as *const _); 
-
             sys::sceGuTexFunc(TextureEffect::Modulate, TextureColorComponent::Rgb);
-            sys::sceGuTexFilter(TextureFilter::Nearest, TextureFilter::Nearest);
-            sys::sceGuTexScale(1.0/self.width as f32, 1.0/self.height as f32);
+            sys::sceGuTexEnvColor(0x0);
             sys::sceGuTexOffset(0.0, 0.0);
+            sys::sceGuTexScale(1.0/self.width as f32, 1.0/self.height as f32);
+            sys::sceGuTexWrap(sys::GuTexWrapMode::Clamp, sys::GuTexWrapMode::Clamp);
+            sys::sceGuTexFilter(TextureFilter::Nearest, TextureFilter::Nearest);
 
             // draw sprite
             sys::sceGumDrawArray(
                 GuPrimitive::Sprites,
-                VertexType::TEXTURE_32BITF | VertexType::VERTEX_32BITF | VertexType::COLOR_8888 | VertexType::TRANSFORM_3D,
+                VertexType::TEXTURE_32BITF | VertexType::COLOR_8888 | VertexType::VERTEX_32BITF | VertexType::TRANSFORM_3D,
                 2,
                 ptr::null_mut(),
                 &vertices as *const Align16<_> as *const _,

@@ -10,7 +10,7 @@ mod tetromino;
 
 use psp::sys::{
     self, DisplayPixelFormat, GuContextType, GuSyncMode, GuSyncBehavior,
-    FrontFaceDirection, GuState, TexturePixelFormat, DepthFunc,
+    GuState, TexturePixelFormat, DepthFunc,
     ClearBuffer, 
 };
 
@@ -20,14 +20,14 @@ use psp::{BUF_WIDTH, SCREEN_WIDTH, SCREEN_HEIGHT};
 
 psp::module!("tetris", 1, 1);
 
-pub const BLOCK_SIZE: u32 = 32;
+pub const BLOCK_SIZE: u32 = 16;
 
 // The image data *must* be aligned to a 16 byte boundary and 
 // width / height must be a power of 2
-pub static BLOCK: &'static [u8;BLOCK_SIZE as usize*BLOCK_SIZE as usize*4] = 
-    include_bytes!("../assets/block.bin");
+pub static BLOCK: Align16<[u8;BLOCK_SIZE as usize*BLOCK_SIZE as usize*4]> = 
+    Align16(*include_bytes!("../assets/block.bin"));
 
-static mut LIST: Align16<[u32; 0x40000]> = Align16([0; 0x40000]);
+pub static mut LIST: Align16<[u32; 0x40000]> = Align16([0; 0x40000]);
 
 
 fn psp_main() {
@@ -48,14 +48,15 @@ fn psp_main() {
         j.set_pos(5, 5);
         t.set_pos(9, 5);
         loop {
+            //start_frame();
             clear_color(0xff554433);
-            o.draw(&mut LIST.0);
-            i.draw(&mut LIST.0);
-            s.draw(&mut LIST.0);
-            z.draw(&mut LIST.0);
-            l.draw(&mut LIST.0);
-            j.draw(&mut LIST.0);
-            t.draw(&mut LIST.0);
+            o.draw();
+            i.draw();
+            s.draw();
+            z.draw();
+            l.draw();
+            j.draw();
+            t.draw();
             finish_frame();
         }
     }
@@ -70,7 +71,6 @@ unsafe fn setup() {
     let zbp = allocator.alloc_texture_pixels(BUF_WIDTH, SCREEN_HEIGHT, TexturePixelFormat::Psm4444).as_mut_ptr_from_zero();
 
     sys::sceGumLoadIdentity();
-
     sys::sceGuInit();
 
     sys::sceGuStart(GuContextType::Direct, &mut LIST.0 as *mut [u32; 0x40000] as *mut _);
@@ -84,27 +84,39 @@ unsafe fn setup() {
     sys::sceGuEnable(GuState::ScissorTest);
     sys::sceGuDepthFunc(DepthFunc::GreaterOrEqual);
     sys::sceGuEnable(GuState::DepthTest);
-    sys::sceGuFrontFace(FrontFaceDirection::Clockwise);
+    sys::sceGuShadeModel(sys::ShadingModel::Smooth);
     sys::sceGuEnable(GuState::Texture2D);
-    sys::sceGuFinish();
-    sys::sceGuSync(GuSyncMode::Finish, GuSyncBehavior::Wait);
+
+    sys::sceGumMatrixMode(sys::MatrixMode::View);
+    sys::sceGumLoadIdentity();
+
+    sys::sceGumMatrixMode(sys::MatrixMode::Projection);
+    sys::sceGumLoadIdentity();
+    sys::sceGumOrtho(0.0,480.0,272.0,0.0,-30.0,30.0);
 
     psp::sys::sceDisplayWaitVblankStart();
-
-    sys::sceGuDisplay(true);
-
+    sys::sceGuFinish();
+    sys::sceGuSync(GuSyncMode::Finish, GuSyncBehavior::Wait);
 }
 
-unsafe fn clear_color(color: u32){
+unsafe fn clear_color(color: u32) {
     sys::sceGuStart(GuContextType::Direct, &mut LIST.0 as *mut [u32; 0x40000] as *mut _);
     sys::sceGuClearColor(color);
     sys::sceGuClearDepth(0);
     sys::sceGuClear(ClearBuffer::COLOR_BUFFER_BIT | ClearBuffer::DEPTH_BUFFER_BIT);
     sys::sceGuFinish();
     sys::sceGuSync(GuSyncMode::Finish, GuSyncBehavior::Wait);
+
 }
 
+//unsafe fn start_frame() {
+    //sys::sceGuStart(GuContextType::Direct, &mut LIST.0 as *mut [u32; 0x40000] as *mut _);
+//}
+
 unsafe fn finish_frame() {
+    //sys::sceGuFinish();
+    //sys::sceGuSync(GuSyncMode::Finish, GuSyncBehavior::Wait);
     sys::sceDisplayWaitVblankStart();
     sys::sceGuSwapBuffers();
+    sys::sceGuDisplay(true);
 }
