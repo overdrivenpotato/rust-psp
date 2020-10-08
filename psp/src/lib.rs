@@ -68,6 +68,7 @@ pub use panic::catch_unwind;
 pub mod embedded_graphics;
 
 #[repr(align(16))]
+#[derive(Copy, Clone)]
 pub struct Align16<T>(pub T);
 
 #[cfg(all(target_os = "psp", not(feature = "stub-only")))]

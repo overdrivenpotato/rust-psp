@@ -301,13 +301,13 @@ fn main() {
                     .arg(&sfo_path)
                     .arg(config.xmb_icon_png.clone().unwrap_or("NULL".into()))
                     .arg(config.xmb_icon_pmf.clone().unwrap_or("NULL".into()))
-                    .arg(config.xmb_background_png.clone().unwrap_or("NULL".into()))
                     .arg(
                         config
                             .xmb_background_overlay_png
                             .clone()
                             .unwrap_or("NULL".into()),
                     )
+                    .arg(config.xmb_background_png.clone().unwrap_or("NULL".into()))
                     .arg(config.xmb_music_at3.clone().unwrap_or("NULL".into()))
                     .arg(&prx_path)
                     .arg(config.psar.clone().unwrap_or("NULL".into()))
