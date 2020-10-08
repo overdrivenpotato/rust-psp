@@ -61,7 +61,7 @@ extern "C" fn __rust_foreign_exception() -> ! { loop {} }
 #[cfg(feature = "std")]
 pub use std::panic::catch_unwind;
 
-#[cfg(not(feature = "std"))]
+#[cfg(all(not(feature = "std"), not(feature = "stub-only")))]
 pub use panic::catch_unwind;
 
 #[cfg(feature="embedded-graphics")]
