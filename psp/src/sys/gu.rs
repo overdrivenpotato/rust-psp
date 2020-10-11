@@ -3139,7 +3139,7 @@ pub unsafe extern "C" fn sceGuClutMode(cpsm: ClutPixelFormat, shift: u32, mask: 
 ///
 /// ```no_run
 /// # use psp::sys::sceGuOffset;
-/// sceGuOffset(2048 - (480 / 2), 2048 - (272 / 2)) {
+/// sceGuOffset(2048 - (480 / 2), 2048 - (272 / 2));
 /// ```
 ///
 /// # Parameters

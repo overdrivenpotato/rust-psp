@@ -70,7 +70,7 @@ impl Context {
                     lv_q $c2, 32(t0);
                     lv_q $c3, 48(t0);
 
-                    : : "{t0}"($restore_addr) : "memory" : "volatile"
+                    : : "{$8}"($restore_addr) : "memory" : "volatile"
                 }
             }
         }
@@ -103,7 +103,7 @@ impl Context {
                     sv_q $c2, 32(t0);
                     sv_q $c3, 48(t0);
 
-                    : : "{t0}"($save_addr) : "memory" : "volatile"
+                    : : "{$8}"($save_addr) : "memory" : "volatile"
                 }
             }
         }

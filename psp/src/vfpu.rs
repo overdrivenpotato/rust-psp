@@ -67,6 +67,7 @@ macro_rules! vfpu_asm {
 
         #[cfg(not(target_os = "psp"))]
         {
+            // Discard variables so that we can avoid unused warnings.
             $(
                 $(let _ = $out_expr;)*
 
@@ -75,13 +76,21 @@ macro_rules! vfpu_asm {
                 )?
             )?
 
-            // Fixes many warnings if we extract this into a sub-function
+            // The type signature here lets you obtain any value, which avoids
+            // dead code warnings.
             #[inline(always)]
-            fn die() {
+            fn die<T>() -> T {
                 panic!("tried running vfpu_asm on a non-PSP platform");
             }
 
-            die();
+            die::<()>();
+
+            // Fix errors for output variables which are marked `=r` (they are
+            // never assigned). The type can be anything due to the signature of
+            // `die`.
+            $(
+                $($out_expr = die();)*
+            )*
         }
     }}
 }
