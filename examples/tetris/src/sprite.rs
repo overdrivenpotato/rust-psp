@@ -1,4 +1,4 @@
-use core::ptr;
+use core::{ptr, f32::consts::PI};
 use psp::Align16;
 use psp::sys::{
     self, ScePspFVector3,
@@ -23,21 +23,23 @@ struct Vertex {
 pub struct Sprite<'a, T> {
     texture: &'a T, 
     color: u32,
-    x: u32,
-    y: u32,
+    x: i32,
+    y: i32,
     width: u32,
     height: u32,
+    rotation_radians: f32,
 }
 
 impl<'a, T> Sprite<'a, T> where T: AsRef<[u8]> {
-    pub const fn new(texture: &'a T, color: u32, x: u32, y: u32, width: u32, height: u32) -> Self { 
+    pub const fn new(texture: &'a T, color: u32, x: i32, y: i32, width: u32, height: u32) -> Self { 
         Self {
             texture,
             color,
             x,
             y,
             width,
-            height
+            height,
+            rotation_radians: 0.0,
         }
     }
 
@@ -68,6 +70,7 @@ impl<'a, T> Sprite<'a, T> where T: AsRef<[u8]> {
             sys::sceGumMatrixMode(sys::MatrixMode::Model);
             sys::sceGumLoadIdentity();
             sys::sceGumTranslate(&ScePspFVector3 { x: self.x as f32, y: self.y as f32, z: 0.0});
+            sys::sceGumRotateZ(self.rotation_radians);
             // setup texture
             sys::sceGuTexImage(MipmapLevel::None, self.width as i32, self.height as i32, self.width as i32, self.texture.as_ref().as_ptr() as *const _); 
             sys::sceGuTexScale(1.0/self.width as f32, 1.0/self.height as f32);
@@ -88,12 +91,28 @@ impl<'a, T> Sprite<'a, T> where T: AsRef<[u8]> {
         }
     }
 
-    pub fn set_pos(&mut self, x: u32, y: u32) {
+    pub fn set_pos(&mut self, x: i32, y: i32) {
         self.x = x;
         self.y = y;
     }
 
-    pub fn get_pos(&mut self) -> (u32, u32) {
+    pub fn get_pos(&mut self) -> (i32, i32) {
         (self.x, self.y)
+    }
+
+    pub fn set_rotation_radians(&mut self, radians: f32) { 
+        self.rotation_radians = radians;
+    }
+
+    pub fn get_rotation_radians(&mut self) -> f32 { 
+        self.rotation_radians
+    }
+
+    pub fn set_rotation_degrees(&mut self, degrees: f32) { 
+        self.rotation_radians = degrees * (PI / 180.0);
+    }
+
+    pub fn get_rotation_degrees(&mut self) -> f32 { 
+        self.rotation_radians * (180.0 / PI)
     }
 }

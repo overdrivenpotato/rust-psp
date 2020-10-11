@@ -30,7 +30,6 @@ pub static BLOCK: Align16<[u8;BLOCK_SIZE as usize*BLOCK_SIZE as usize*4]> =
 
 static mut LIST: Align16<[u32; 0x40000]> = Align16([0; 0x40000]);
 
-
 fn psp_main() {
     unsafe {
         setup();
@@ -42,14 +41,22 @@ fn psp_main() {
         let mut j = tetromino::Tetromino::new_j();
         let mut t = tetromino::Tetromino::new_t();
         o.set_pos(1, 1);
-        i.set_pos(4, 0);
-        s.set_pos(6, 0);
-        z.set_pos(10, 0);
-        l.set_pos(3, 5);
-        j.set_pos(5, 5);
-        t.set_pos(9, 5);
+        i.set_pos(4, 1);
+        s.set_pos(7, 1);
+        z.set_pos(11, 1);
+        l.set_pos(3, 6);
+        j.set_pos(5, 6);
+        t.set_pos(9, 6);
+        let pad_data = &mut sys::SceCtrlData::default();;
         loop {
             clear_color(0xff554433);
+            psp::sys::sceCtrlReadBufferPositive(pad_data, 1);
+            if pad_data.buttons.contains(sys::CtrlButtons::RIGHT) {
+                t.rotate_cw();
+            }
+            if pad_data.buttons.contains(sys::CtrlButtons::LEFT) {
+                t.rotate_ccw();
+            }
             o.draw(&mut LIST);
             i.draw(&mut LIST);
             s.draw(&mut LIST);
