@@ -155,7 +155,7 @@ pub unsafe extern "C" fn sceGumFullInverse() {
         sv_q C320, 32(a0);
         sv_q C330, 48(a0);
 
-        : : "{a0}"(t.as_mut_ptr()) : "memory" : "volatile"
+        : : "{4}"(t.as_mut_ptr()) : "memory" : "volatile"
     );
 
     let t = gum_fast_inverse(&*t.as_ptr());
@@ -210,7 +210,7 @@ pub unsafe extern "C" fn sceGumLoadMatrix(m: &ScePspFMatrix4) {
         lv_q C320, 32(a0);
         lv_q C330, 48(a0);
 
-        : : "{a0}"(m) : "memory" : "volatile"
+        : : "{4}"(m) : "memory" : "volatile"
     );
 
     CURRENT_MATRIX_UPDATE = 1;
@@ -572,8 +572,10 @@ pub unsafe extern "C" fn sceGumScale(v: &ScePspFVector3) {
         vscl_t C310, C310, S001;
         vscl_t C320, C320, S002;
 
-        : : "{a0}"(v) : : "volatile"
+        : : "{4}"(v) : : "volatile"
     );
+
+    CURRENT_MATRIX_UPDATE = 1;
 }
 
 /// Store current matrix in the stack
@@ -592,7 +594,7 @@ pub unsafe extern "C" fn sceGumStoreMatrix(m: &mut ScePspFMatrix4) {
         sv_q C320, 32(a0);
         sv_q C330, 48(a0);
 
-        : : "{a0}"(m) : "memory" : "volatile"
+        : : "{4}"(m) : "memory" : "volatile"
     );
 }
 
@@ -746,7 +748,7 @@ unsafe fn gum_translate(m: &mut ScePspFMatrix4, v: &ScePspFVector3) {
         sv_q C220, 32(a0);
         sv_q C230, 48(a0);
 
-        : : "{a0}"(m), "{a1}"(v) : "memory" : "volatile"
+        : : "{4}"(m), "{a1}"(v) : "memory" : "volatile"
     );
 }
 
@@ -762,7 +764,7 @@ unsafe fn gum_load_identity() -> ScePspFMatrix4 {
         sv_q C020, 32(a0);
         sv_q C030, 48(a0);
 
-        : : "{a0}"(out.as_mut_ptr()) : "memory" : "volatile"
+        : : "{4}"(out.as_mut_ptr()) : "memory" : "volatile"
     );
 
     out.assume_init()
@@ -792,7 +794,7 @@ unsafe fn gum_fast_inverse(a: &ScePspFMatrix4) -> ScePspFMatrix4 {
         sv_q C020, 32(a0);
         sv_q C030, 48(a0);
 
-        : : "{a0}"(out.as_mut_ptr()), "{a1}"(a) : "memory" : "volatile"
+        : : "{4}"(out.as_mut_ptr()), "{a1}"(a) : "memory" : "volatile"
     );
 
     out.assume_init()
@@ -824,7 +826,7 @@ unsafe fn gum_mult_matrix(a: &ScePspFMatrix4, b: &ScePspFMatrix4) -> ScePspFMatr
         sv_q C220, 32(a0);
         sv_q C230, 48(a0);
 
-        : : "{a0}"(&mut out), "{a1}"(a), "{a2}"(b) : "memory" : "volatile"
+        : : "{4}"(&mut out), "{a1}"(a), "{a2}"(b) : "memory" : "volatile"
     );
 
     out.assume_init()
