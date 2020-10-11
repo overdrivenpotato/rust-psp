@@ -87,6 +87,7 @@ pub enum SceUtilityOskInputType {
 }
 
 #[derive(Debug, Clone, Copy)]
+#[repr(u32)]
 pub enum SceUtilityOskState {
     None,
     Initializing,
@@ -97,6 +98,7 @@ pub enum SceUtilityOskState {
 }
 
 #[derive(Debug, Clone, Copy)]
+#[repr(u32)]
 pub enum SceUtilityOskResult {
     Unchanged,
     Cancelled,
@@ -290,6 +292,7 @@ pub enum NetParam {
 }
 
 #[derive(Debug, Copy, Clone)]
+#[repr(i32)]
 pub enum UtilityNetconfAction {
     ConnectAP,
     DisplayStatus,
@@ -621,8 +624,8 @@ pub enum UtilityHtmlViewerDisconnectMode {
     Confirm,
 }
 
-#[repr(C)]
 bitflags::bitflags! {
+    #[repr(C)]
     pub struct UtilityHtmlViewerOption: u32 {
         /// Open SCE net start page
     const OPEN_SCE_START_PAGE  = 0x000001;
