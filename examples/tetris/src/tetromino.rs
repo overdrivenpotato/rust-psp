@@ -140,7 +140,8 @@ impl Tetromino {
     }
 
     pub fn draw(&self, displaylist: &mut Align16<[u32;0x40000]>) {
-        for block in self.as_sprites().iter() {
+        for block in self.as_sprites().iter_mut() {
+            block.set_scale(0.75);
             block.draw(displaylist);
         }
     }   

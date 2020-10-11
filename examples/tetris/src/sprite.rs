@@ -28,6 +28,7 @@ pub struct Sprite<'a, T> {
     width: u32,
     height: u32,
     rotation_radians: f32,
+    scale: f32,
 }
 
 impl<'a, T> Sprite<'a, T> where T: AsRef<[u8]> {
@@ -40,6 +41,7 @@ impl<'a, T> Sprite<'a, T> where T: AsRef<[u8]> {
             width,
             height,
             rotation_radians: 0.0,
+            scale: 1.0,
         }
     }
 
@@ -69,6 +71,7 @@ impl<'a, T> Sprite<'a, T> where T: AsRef<[u8]> {
             
             sys::sceGumMatrixMode(sys::MatrixMode::Model);
             sys::sceGumLoadIdentity();
+            sys::sceGumScale(&ScePspFVector3 { x: self.scale, y: self.scale, z: 1.0 });
             sys::sceGumTranslate(&ScePspFVector3 { x: self.x as f32, y: self.y as f32, z: 0.0});
             sys::sceGumRotateZ(self.rotation_radians);
             // setup texture
@@ -114,5 +117,9 @@ impl<'a, T> Sprite<'a, T> where T: AsRef<[u8]> {
 
     pub fn get_rotation_degrees(&mut self) -> f32 { 
         self.rotation_radians * (180.0 / PI)
+    }
+
+    pub fn set_scale(&mut self, scale: f32) { 
+        self.scale = scale;
     }
 }

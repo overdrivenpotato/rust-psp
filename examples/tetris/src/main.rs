@@ -33,38 +33,15 @@ static mut LIST: Align16<[u32; 0x40000]> = Align16([0; 0x40000]);
 fn psp_main() {
     unsafe {
         setup();
-        let mut o = tetromino::Tetromino::new_o();
-        let mut i = tetromino::Tetromino::new_i();
-        let mut s = tetromino::Tetromino::new_s();
-        let mut z = tetromino::Tetromino::new_z();
-        let mut l = tetromino::Tetromino::new_l();
-        let mut j = tetromino::Tetromino::new_j();
-        let mut t = tetromino::Tetromino::new_t();
-        o.set_pos(1, 1);
-        i.set_pos(4, 1);
-        s.set_pos(7, 1);
-        z.set_pos(11, 1);
-        l.set_pos(3, 6);
-        j.set_pos(5, 6);
-        t.set_pos(9, 6);
-        sys::sceCtrlSetSamplingCycle(0);
-        let pad_data = &mut sys::SceCtrlData::default();
         loop {
             clear_color(0xff554433);
-            psp::sys::sceCtrlReadBufferPositive(pad_data, 1);
-            if pad_data.buttons.contains(sys::CtrlButtons::RIGHT) {
-                t.rotate_cw();
+            for y in 0..5 {
+                for x in 0..10 {
+                    let mut i = tetromino::Tetromino::new_i();
+                    i.set_pos(15+x,y*4+2); 
+                    i.draw(&mut LIST);
+                }
             }
-            if pad_data.buttons.contains(sys::CtrlButtons::LEFT) {
-                t.rotate_ccw();
-            }
-            o.draw(&mut LIST);
-            i.draw(&mut LIST);
-            s.draw(&mut LIST);
-            z.draw(&mut LIST);
-            l.draw(&mut LIST);
-            j.draw(&mut LIST);
-            t.draw(&mut LIST);
             finish_frame();
         }
     }
