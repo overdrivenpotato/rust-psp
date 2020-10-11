@@ -1,7 +1,7 @@
 [package]
-name = "psp-cube-example"
+name = "rust-psp-tetris"
 version = "0.1.0"
-authors = ["Marko Mijalkovic <marko.mijalkovic97@gmail.com>"]
+authors = ["Paul Sajna <sajattack@gmail.com>"]
 edition = "2018"
 
 [dependencies]

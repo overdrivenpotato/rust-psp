@@ -47,7 +47,8 @@ fn psp_main() {
         l.set_pos(3, 6);
         j.set_pos(5, 6);
         t.set_pos(9, 6);
-        let pad_data = &mut sys::SceCtrlData::default();;
+        sys::sceCtrlSetSamplingCycle(0);
+        let pad_data = &mut sys::SceCtrlData::default();
         loop {
             clear_color(0xff554433);
             psp::sys::sceCtrlReadBufferPositive(pad_data, 1);

@@ -109,7 +109,7 @@ impl Tetromino {
         }
     }
 
-    fn to_sprites<'a>(&self) -> [Sprite<'a, [u8; BLOCK_SIZE as usize * BLOCK_SIZE as usize * 4]>; 4] {
+    fn as_sprites<'a>(&self) -> [Sprite<'a, [u8; BLOCK_SIZE as usize * BLOCK_SIZE as usize * 4]>; 4] {
         [
             Sprite::new(&BLOCK.0, self.color, self.block_locs[0].0*BLOCK_SIZE as i32+self.x*BLOCK_SIZE as i32, self.block_locs[0].1*BLOCK_SIZE as i32+self.y*BLOCK_SIZE as i32, BLOCK_SIZE, BLOCK_SIZE),
             Sprite::new(&BLOCK.0, self.color, self.block_locs[1].0*BLOCK_SIZE as i32+self.x*BLOCK_SIZE as i32, self.block_locs[1].1*BLOCK_SIZE as i32+self.y*BLOCK_SIZE as i32, BLOCK_SIZE, BLOCK_SIZE),
@@ -140,7 +140,7 @@ impl Tetromino {
     }
 
     pub fn draw(&self, displaylist: &mut Align16<[u32;0x40000]>) {
-        for block in self.to_sprites().iter() {
+        for block in self.as_sprites().iter() {
             block.draw(displaylist);
         }
     }   
