@@ -9,15 +9,18 @@ extern crate alloc;
 mod sprite;
 mod tetromino;
 
+use core::ptr;
+
 use psp::sys::{
     self, DisplayPixelFormat, GuContextType, GuSyncMode, GuSyncBehavior,
     GuState, TexturePixelFormat, DepthFunc, TextureEffect, TextureColorComponent,
-    TextureFilter, ClearBuffer, 
+    TextureFilter, ClearBuffer, ScePspFVector3, VertexType, MipmapLevel, GuPrimitive
 };
 
 use psp::Align16;
 use psp::vram_alloc::get_vram_allocator;
 use psp::{BUF_WIDTH, SCREEN_WIDTH, SCREEN_HEIGHT};
+use psp::benchmark;
 
 psp::module!("tetris", 1, 1);
 
@@ -34,14 +37,28 @@ fn psp_main() {
     unsafe {
         setup();
         loop {
+            let mut vertex_buffer = Align16([sprite::Vertex::default(); 400]);
+            let mut buffer_pos = 0;
+            let dur = benchmark(||{
             clear_color(0xff554433);
             for y in 0..5 {
                 for x in 0..10 {
                     let mut i = tetromino::Tetromino::new_i();
                     i.set_pos(15+x,y*4+2); 
-                    i.draw(&mut LIST);
+                    i.as_sprites()
+                    .iter()
+                    .for_each(|sprite| {
+                        let vertices = sprite.as_vertices();
+                        vertex_buffer.0[buffer_pos] = vertices[0];
+                        vertex_buffer.0[buffer_pos+1] = vertices[1];
+                        buffer_pos += 2;
+                    });
                 }
             }
+            draw_sprite_vertices(vertex_buffer, buffer_pos);
+            }, 1);
+            let fps_string = alloc::format!("{}\n", 1.0 / (dur.as_micros() as f32 / 1_000_000.0));
+            sys::sceIoWrite(sys::SceUid(1), fps_string.as_str().as_bytes().as_ptr() as _, fps_string.len());
             finish_frame();
         }
     }
@@ -98,8 +115,36 @@ unsafe fn clear_color(color: u32) {
 
 }
 
+unsafe fn draw_sprite_vertices(vertices: Align16<[sprite::Vertex; 400]>, length: usize) {
+    unsafe {
+            sys::sceGuStart(GuContextType::Direct, LIST.0.as_mut_ptr() as *mut _);
+            
+            sys::sceGumMatrixMode(sys::MatrixMode::Model);
+            sys::sceGumLoadIdentity();
+            sys::sceGumScale(&ScePspFVector3 { x: 0.75, y: 0.75, z: 1.0 });
+            //sys::sceGumTranslate(&ScePspFVector3 { x: self.x as f32, y: self.y as f32, z: 0.0});
+            // setup texture
+            sys::sceGuTexImage(MipmapLevel::None, BLOCK_SIZE as i32, BLOCK_SIZE as i32, BLOCK_SIZE as i32, BLOCK.0.as_ptr() as *const _); 
+            sys::sceGuTexScale(1.0/BLOCK_SIZE as f32, 1.0/BLOCK_SIZE as f32);
+
+            sys::sceKernelDcacheWritebackInvalidateAll();
+
+            // draw sprite
+            sys::sceGumDrawArray(
+                GuPrimitive::Sprites,
+                VertexType::TEXTURE_32BITF | VertexType::COLOR_8888 | VertexType::VERTEX_32BITF | VertexType::TRANSFORM_3D,
+                length as i32,
+                ptr::null_mut(),
+                &vertices as *const Align16<_> as *const _,
+            );	
+            sys::sceGuFinish();
+            sys::sceGuSync(GuSyncMode::Finish, GuSyncBehavior::Wait);
+
+        }
+}
+
 unsafe fn finish_frame() {
-    sys::sceDisplayWaitVblankStart();
+    //sys::sceDisplayWaitVblankStart();
     sys::sceGuSwapBuffers();
     sys::sceGuDisplay(true);
 }
