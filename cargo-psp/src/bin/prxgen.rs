@@ -32,14 +32,13 @@ fn main() {
             Arg::with_name("minfo")
                 .long("minfo")
                 .takes_value(true)
+                .default_value(".rodata.sceModuleInfo")
                 .help("Alternative name for .rodata.sceModuleInfo section")
         )
         .get_matches();
 
     let in_file = matches.value_of("in_file.elf").unwrap();
-    let mod_info_sh_name = matches
-        .value_of("minfo")
-        .unwrap_or(".rodata.sceModuleInfo");
+    let mod_info_sh_name = matches.value_of("minfo").unwrap();
 
     let mut prx_gen = PrxGen::load(in_file, mod_info_sh_name);
     prx_gen.modify();
