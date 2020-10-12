@@ -72,11 +72,16 @@ fn main() {
         .version("0.1")
         .author("Paul Sajna <sajattack@gmail.com>")
         .about("Creates SFO files used for building Sony PSP EBOOT executables")
+        .arg(Arg::with_name("bare")
+            .long("bare")
+            .help("Do not set any default values. Ignores the <title> value if set.")
+        )
         .arg(Arg::with_name("dword")
             .short("d")
             .long("dword")
             .help("key=VALUE Add a new DWORD value")
             .multiple(true)
+            .number_of_values(1)
             .takes_value(true)
         )
         .arg(Arg::with_name("string")
@@ -84,6 +89,7 @@ fn main() {
             .long("string")
             .help("key=STRING Add a new string value")
             .multiple(true)
+            .number_of_values(1)
             .takes_value(true)
         )
         .arg(Arg::with_name("title")
@@ -98,6 +104,8 @@ fn main() {
         )
         .get_matches();
 
+    let bare = matches.is_present("bare");
+
     let mut strings: HashMap<String, String> = HashMap::new();
 
     // TODO this type is undocumented, unused in mksfoext
@@ -105,17 +113,20 @@ fn main() {
     let mut dwords: HashMap<String, u32> = HashMap::new();
 
     let title = matches.value_of("title").unwrap();
-    strings.insert("TITLE".to_string(), title.to_string());
 
-    // Default Values
-    strings.insert("CATEGORY".to_string(), "MG".to_string());
-    strings.insert("DISC_ID".to_string(), "UCJS10041".to_string());
-    strings.insert("DISC_VERSION".to_string(), "1.00".to_string());
-    strings.insert("PSP_SYSTEM_VER".to_string(), "1.00".to_string());
+    if !bare {
+        strings.insert("TITLE".to_string(), title.to_string());
 
-    dwords.insert("BOOTABLE".to_string(), 1);
-    dwords.insert("PARENTAL_LEVEL".to_string(), 1);
-    dwords.insert("REGION".to_string(), 0x8000);
+        // Default Values
+        strings.insert("CATEGORY".to_string(), "MG".to_string());
+        strings.insert("DISC_ID".to_string(), "UCJS10041".to_string());
+        strings.insert("DISC_VERSION".to_string(), "1.00".to_string());
+        strings.insert("PSP_SYSTEM_VER".to_string(), "1.00".to_string());
+
+        dwords.insert("BOOTABLE".to_string(), 1);
+        dwords.insert("PARENTAL_LEVEL".to_string(), 1);
+        dwords.insert("REGION".to_string(), 0x8000);
+    }
 
     let valid: HashMap<&'static str, (EntryType, bool, bool, bool, bool)> = [
         ("BOOTABLE", (EntryType::Dword, false, false, true, true)),

@@ -28,14 +28,26 @@ fn main() {
                 .help("Output PRX file")
                 .required(true)
         )
+        .arg(
+            Arg::with_name("minfo")
+                .long("minfo")
+                .takes_value(true)
+                .default_value(".rodata.sceModuleInfo")
+                .help("Alternative name for .rodata.sceModuleInfo section")
+        )
         .get_matches();
 
-    let mut prx_gen = PrxGen::load(matches.value_of("in_file.elf").unwrap());
+    let in_file = matches.value_of("in_file.elf").unwrap();
+    let mod_info_sh_name = matches.value_of("minfo").unwrap();
+
+    let mut prx_gen = PrxGen::load(in_file, mod_info_sh_name);
     prx_gen.modify();
     prx_gen.save(matches.value_of("out_file.prx").unwrap());
 }
 
-struct PrxGen {
+struct PrxGen<'a> {
+    mod_info_sh_name: &'a str,
+
     elf_bytes: Vec<u8>,
 
     header: Header,
@@ -46,9 +58,9 @@ struct PrxGen {
     relocations: HashMap<usize, Vec<Rel>>,
 }
 
-impl PrxGen {
+impl<'a> PrxGen<'a> {
     /// Load the input ELF file and parse important structures.
-    fn load<P: AsRef<Path>>(path: P) -> Self {
+    fn load<P: AsRef<Path>>(path: P, mod_info_sh_name: &'a str) -> Self {
         let bytes = fs::read(path).unwrap();
         let header = Header::parse(&bytes).unwrap();
         let section_headers = SectionHeader::from_bytes(
@@ -79,6 +91,7 @@ impl PrxGen {
             .collect();
 
         Self {
+            mod_info_sh_name,
             elf_bytes: bytes,
             header,
             section_headers,
@@ -116,7 +129,7 @@ impl PrxGen {
             }
         }
 
-        // Change first program header physical address to `.rodata.sceModuleInfo` file offset
+        // Change first program header physical address to module info file offset
         // TODO: Kernel mode support
         self.program_headers[0].p_paddr = {
             // Section header string table
@@ -140,7 +153,7 @@ impl PrxGen {
                         .map(Result::unwrap)
                         .unwrap();
 
-                    if name == ".rodata.sceModuleInfo" {
+                    if name == self.mod_info_sh_name {
                         Some(sh.sh_offset)
                     } else {
                         None
