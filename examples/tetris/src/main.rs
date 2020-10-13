@@ -45,13 +45,11 @@ fn psp_main() {
                 for x in 0..10 {
                     let mut i = tetromino::Tetromino::new_i();
                     i.set_pos(15+x,y*4+2); 
-                    i.as_sprites()
+                    i.as_vertices()
                     .iter()
-                    .for_each(|sprite| {
-                        let vertices = sprite.as_vertices();
-                        vertex_buffer.0[buffer_pos] = vertices[0];
-                        vertex_buffer.0[buffer_pos+1] = vertices[1];
-                        buffer_pos += 2;
+                    .for_each(|vert| {
+                        vertex_buffer.0[buffer_pos] = *vert;
+                        buffer_pos += 1;
                     });
                 }
             }

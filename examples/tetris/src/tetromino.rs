@@ -1,5 +1,4 @@
-use crate::sprite::Sprite;
-use psp::Align16;
+use crate::sprite::{Sprite, self};
 use crate::BLOCK;
 use crate::BLOCK_SIZE;
 
@@ -118,6 +117,18 @@ impl Tetromino {
         ]
     }
 
+    pub fn as_vertices(&self) -> [sprite::Vertex; 8] {
+        let mut output = [sprite::Vertex::default(); 8];
+        let mut output_pos = 0;
+        self.as_sprites()
+        .iter()
+        .for_each(|s| s.as_vertices().iter().for_each(|v| {
+            output[output_pos] = *v;
+            output_pos += 1
+        }));
+        output
+    }
+
     pub fn set_pos(&mut self, x: i32, y: i32) {
         self.x = x;
         self.y = y;
@@ -138,12 +149,5 @@ impl Tetromino {
            self.block_locs[i] = (0-self.block_locs[i].1, self.block_locs[i].0);
         }
     }
-
-    pub fn draw(&self, displaylist: &mut Align16<[u32;0x40000]>) {
-        for block in self.as_sprites().iter_mut() {
-            block.set_scale(0.75);
-            block.draw(displaylist);
-        }
-    }   
 }
 
