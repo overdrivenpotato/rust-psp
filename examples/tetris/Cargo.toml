@@ -6,3 +6,7 @@ edition = "2018"
 
 [dependencies]
 psp = { path = "../../psp" }
+
+[profile.release]
+opt-level = 3
+lto = true

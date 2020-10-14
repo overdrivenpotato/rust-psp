@@ -1,6 +1,5 @@
 use crate::sprite::{Sprite, self};
-use crate::BLOCK;
-use crate::BLOCK_SIZE;
+use crate::{BLOCK, BLOCK_SIZE, Align4};
 
 pub struct Tetromino {
     x: i32,
@@ -110,23 +109,21 @@ impl Tetromino {
 
     pub fn as_sprites<'a>(&self) -> [Sprite<'a, [u8; BLOCK_SIZE as usize * BLOCK_SIZE as usize * 4]>; 4] {
         [
-            Sprite::new(&BLOCK.0, self.color, self.block_locs[0].0*BLOCK_SIZE as i32+self.x*BLOCK_SIZE as i32, self.block_locs[0].1*BLOCK_SIZE as i32+self.y*BLOCK_SIZE as i32, BLOCK_SIZE, BLOCK_SIZE),
-            Sprite::new(&BLOCK.0, self.color, self.block_locs[1].0*BLOCK_SIZE as i32+self.x*BLOCK_SIZE as i32, self.block_locs[1].1*BLOCK_SIZE as i32+self.y*BLOCK_SIZE as i32, BLOCK_SIZE, BLOCK_SIZE),
-            Sprite::new(&BLOCK.0, self.color, self.block_locs[2].0*BLOCK_SIZE as i32+self.x*BLOCK_SIZE as i32, self.block_locs[2].1*BLOCK_SIZE as i32+self.y*BLOCK_SIZE as i32, BLOCK_SIZE, BLOCK_SIZE),
-            Sprite::new(&BLOCK.0, self.color, self.block_locs[3].0*BLOCK_SIZE as i32+self.x*BLOCK_SIZE as i32, self.block_locs[3].1*BLOCK_SIZE as i32+self.y*BLOCK_SIZE as i32, BLOCK_SIZE, BLOCK_SIZE),
+            Sprite::new(&BLOCK, self.color, self.block_locs[0].0*BLOCK_SIZE as i32+self.x*BLOCK_SIZE as i32, self.block_locs[0].1*BLOCK_SIZE as i32+self.y*BLOCK_SIZE as i32, BLOCK_SIZE, BLOCK_SIZE),
+            Sprite::new(&BLOCK, self.color, self.block_locs[1].0*BLOCK_SIZE as i32+self.x*BLOCK_SIZE as i32, self.block_locs[1].1*BLOCK_SIZE as i32+self.y*BLOCK_SIZE as i32, BLOCK_SIZE, BLOCK_SIZE),
+            Sprite::new(&BLOCK, self.color, self.block_locs[2].0*BLOCK_SIZE as i32+self.x*BLOCK_SIZE as i32, self.block_locs[2].1*BLOCK_SIZE as i32+self.y*BLOCK_SIZE as i32, BLOCK_SIZE, BLOCK_SIZE),
+            Sprite::new(&BLOCK, self.color, self.block_locs[3].0*BLOCK_SIZE as i32+self.x*BLOCK_SIZE as i32, self.block_locs[3].1*BLOCK_SIZE as i32+self.y*BLOCK_SIZE as i32, BLOCK_SIZE, BLOCK_SIZE),
         ]
     }
 
-    pub fn as_vertices(&self) -> [sprite::Vertex; 8] {
-        let mut output = [sprite::Vertex::default(); 8];
-        let mut output_pos = 0;
+    pub fn as_vertices(&self) -> [Align4<sprite::Vertex>; 8] {
+        let mut ret = [Align4(sprite::Vertex::default()); 8];
         self.as_sprites()
-        .iter()
-        .for_each(|s| s.as_vertices().iter().for_each(|v| {
-            output[output_pos] = *v;
-            output_pos += 1
-        }));
-        output
+            .iter()
+            .flat_map(|s| s.as_vertex_iter())
+            .zip(ret.iter_mut())
+            .for_each(|(v, dst)| *dst = v);
+        ret 
     }
 
     pub fn set_pos(&mut self, x: i32, y: i32) {
