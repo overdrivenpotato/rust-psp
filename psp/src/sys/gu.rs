@@ -440,31 +440,19 @@ pub enum BlendOp {
     Abs = 5,
 }
 
-/// Blending factor for source operand
+/// Blending factor
 #[repr(u32)]
-pub enum BlendSrc {
-    SrcColor = 0,
-    OneMinusSrcColor = 1,
+pub enum BlendFactor {
+    Color = 0,
+    OneMinusColor = 1,
     SrcAlpha = 2,
     OneMinusSrcAlpha = 3,
-
-    // TODO: There are likely either 4 or 8 missing values here, as the combined
-    // enum between source and destination goes 0, 1, 2, 3, 4, 5, 10. What are
-    // 6, 7, 8, 9? This can probably be determined with some experimentation.
-    // They may also be reserved values.
-
-    /// Use the fixed value provided as `src_fix` in `sceGuBlendFunc`.
-    Fix = 10,
-}
-
-/// Blending Factor Destination
-#[repr(u32)]
-pub enum BlendDst {
-    DstColor = 0,
-    OneMinusDstColor = 1,
     DstAlpha = 4,
     OneMinusDstAlpha = 5,
-    /// Use the fixed value provided as `dst_fix` in `sceGuBlendFunc`.
+    // TODO: There are likely 4 missing values here.
+    // What are 6, 7, 8, 9? This can probably be determined with some experimentation.
+    // They may also be reserved values.
+    /// Use the fixed values provided in `sceGuBlendFunc`.
     Fix = 10,
 }
 
@@ -2525,14 +2513,14 @@ pub unsafe extern "C" fn sceGuAmbientColor(color: u32) {
 /// - `op`: Blending Operation
 /// - `src`: Blending function for source operand
 /// - `dest`: Blending function for dest operand
-/// - `srcfix`: Fixed value for `BlendSrc::Fix` (source operand)
-/// - `destfix`: Fixed value for `BlendDst::Fix` (dest operand)
+/// - `srcfix`: Fixed value for `BlendFactor::Fix` (source operand)
+/// - `destfix`: Fixed value for `BlendFactor::Fix` (dest operand)
 #[allow(non_snake_case)]
 #[no_mangle]
 pub unsafe extern "C" fn sceGuBlendFunc(
     op: BlendOp,
-    src: BlendSrc,
-    dest: BlendDst,
+    src: BlendFactor,
+    dest: BlendFactor,
     src_fix: u32,
     dest_fix: u32,
 ) {
