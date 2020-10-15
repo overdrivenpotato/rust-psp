@@ -1,7 +1,7 @@
 #![no_std]
 #![no_main]
 
-#![allow(incomplete_features)]
+#![allow(incomplete_features, dead_code)]
 #![feature(const_generics, const_fn)]
 
 extern crate alloc;
@@ -55,7 +55,7 @@ fn psp_main() {
         let mut loop_end = 0;
         let mut loop_start = 0;
         let ticks_per_sec = sys::sceRtcGetTickResolution();
-        let mut seconds_since_last_loop: f32 = 0.0;
+        let mut seconds_since_last_loop: f32;
 
         loop {
             seconds_since_last_loop = (loop_end - loop_start) as f32 / ticks_per_sec as f32;
