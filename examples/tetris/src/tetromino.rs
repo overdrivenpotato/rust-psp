@@ -114,7 +114,7 @@ impl Tetromino {
     }
 
     pub fn new_random(rng: &mut ChaChaRng) -> Self {
-       let rand_num = rng.gen_range(1, 7); 
+       let rand_num = rng.gen_range(0, 7); 
        match rand_num {
            1 => Tetromino::new_o(),
            2 => Tetromino::new_i(),
