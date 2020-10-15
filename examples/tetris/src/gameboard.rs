@@ -1,7 +1,7 @@
 use crate::graphics::sprite::Vertex;
 use crate::graphics::Align4;
 use crate::BLOCK_SIZE;
-use crate::GAMEBOARD_OFFSET;
+use crate::{GAMEBOARD_OFFSET, GAMEBOARD_WIDTH, GAMEBOARD_HEIGHT};
 use alloc::vec::Vec;
 
 #[derive(Debug)]
@@ -16,9 +16,9 @@ impl Gameboard {
     pub fn new() -> Self {
         Self {
             blocks: [None; 200],
-            width: 10,
-            height: 20,
-            block_spawn_loc: (10 / 2, 1),
+            width: GAMEBOARD_WIDTH,
+            height: GAMEBOARD_HEIGHT,
+            block_spawn_loc: (GAMEBOARD_WIDTH / 2, 1),
         }
     }
 

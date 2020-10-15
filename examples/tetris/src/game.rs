@@ -1,6 +1,7 @@
 use crate::gameboard::Gameboard;
 use crate::tetromino::Tetromino;
-use crate::graphics::{Align4, sprite::Vertex, self, BLOCK};
+use crate::{BLOCK_SIZE, GAMEBOARD_OFFSET, GAMEBOARD_WIDTH, GAMEBOARD_HEIGHT};
+use crate::graphics::{Align4, sprite::Vertex, self};
 
 use psp::{sys, Align16, sys::{CtrlButtons, SceCtrlData}};
 
@@ -137,21 +138,20 @@ impl Game {
     ) {
 
         // background
-        // TODO figure out blending and make this more transparent
         vertex_buffer.0[0] = Align4(Vertex { 
             u: 0.0,
             v: 0.0,
-            color: 0x1134_3434,
-            x: 16.0 * 15.0,
-            y: 16.0 * 1.0,
+            color: 0x7f34_3434,
+            x: BLOCK_SIZE as f32 * GAMEBOARD_OFFSET.0 as f32,
+            y: BLOCK_SIZE as f32 * GAMEBOARD_OFFSET.1 as f32,
             z: -1.0,
         });
         vertex_buffer.0[1] = Align4(Vertex { 
-            u: 16.0 * 10.0,
-            v: 16.0 * 20.0,
+            u: BLOCK_SIZE as f32 * GAMEBOARD_WIDTH as f32,
+            v: BLOCK_SIZE as f32 * GAMEBOARD_HEIGHT as f32,
             color: 0x7f34_3434,
-            x: 16.0*15.0 + 16.0 * 10.0,
-            y: 16.0*1.0 + 16.0 * 20.0 as f32,
+            x: BLOCK_SIZE as f32 * GAMEBOARD_OFFSET.0 as f32 + BLOCK_SIZE as f32 * GAMEBOARD_WIDTH as f32,
+            y: BLOCK_SIZE as f32 * GAMEBOARD_OFFSET.1 as f32 + BLOCK_SIZE as f32 * GAMEBOARD_HEIGHT as f32,
             z: -1.0,
         });
 

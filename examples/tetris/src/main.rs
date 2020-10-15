@@ -24,6 +24,8 @@ psp::module!("tetris", 1, 1);
 pub const BLOCK_SIZE: u32 = 16;
 
 pub const GAMEBOARD_OFFSET: (usize, usize) = (15, 1);
+pub const GAMEBOARD_WIDTH: usize = 10;
+pub const GAMEBOARD_HEIGHT: usize = 20;
 
 fn psp_main() {
     unsafe {
