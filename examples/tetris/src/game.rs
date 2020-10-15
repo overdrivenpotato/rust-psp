@@ -72,10 +72,10 @@ impl Game {
                 }
             }
             if pad_data.buttons.contains(CtrlButtons::CROSS) {
-                attempt_rotate_cw(&mut self.current_shape, &self.board);
+                attempt_rotate_ccw(&mut self.current_shape, &self.board);
             }
             if pad_data.buttons.contains(CtrlButtons::CIRCLE) {
-                attempt_rotate_ccw(&mut self.current_shape, &self.board);
+                attempt_rotate_cw(&mut self.current_shape, &self.board);
             }
             self.last_input = pad_data.buttons;
         }

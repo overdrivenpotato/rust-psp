@@ -156,7 +156,7 @@ impl Tetromino {
 
     pub fn rotate_ccw(&mut self) {
         for i in 0..4 {
-           self.block_locs[i] = (self.block_locs[i].1, self.block_locs[i].0);
+           self.block_locs[i] = (self.block_locs[i].1, 0-self.block_locs[i].0);
         }
     }
 
