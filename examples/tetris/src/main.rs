@@ -27,6 +27,7 @@ pub const GAMEBOARD_OFFSET: (usize, usize) = (15, 1);
 
 fn psp_main() {
     unsafe {
+        psp::enable_home_button();
         let mut allocator = get_vram_allocator().unwrap();
         graphics::setup(&mut allocator);
 
