@@ -6,6 +6,8 @@ edition = "2018"
 
 [dependencies]
 psp = { path = "../../psp" }
+rand = { version = "0.7", default-features=false }
+rand_chacha = { version = "0.2", default-features=false }
 
 [profile.release]
 opt-level = 3

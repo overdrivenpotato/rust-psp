@@ -5,7 +5,8 @@ use psp::sys::{
     GuPrimitive, MipmapLevel, VertexType,
     GuSyncMode, GuSyncBehavior, GuContextType
 };
-use crate::Align4;
+
+use crate::graphics::Align4;
 
 #[repr(C, packed)]
 #[derive(Debug, Clone, Copy, Default)]
@@ -18,23 +19,9 @@ pub struct Vertex {
     pub z: f32,
 }
 
-//impl Vertex {
-    //pub fn new(u: f32, v: f32, color: u32, x: f32, y: f32, z: f32) -> Self {
-        //Self {
-            //u,
-            //v,
-            //color,
-            //x,
-            //y,
-            //z,
-        //}
-    //}
-//}
-
 #[repr(C)]
-#[derive(Debug)]
 pub struct Sprite<'a, T> {
-    texture: Option<&'a T>, 
+    texture: &'a T, 
     color: u32,
     x: i32,
     y: i32,
@@ -47,7 +34,7 @@ pub struct Sprite<'a, T> {
 impl<'a, T> Sprite<'a, T> where T: AsRef<[u8]> {
     pub const fn new(texture: &'a T, color: u32, x: i32, y: i32, width: u32, height: u32) -> Self { 
         Self {
-            texture: Some(texture),
+            texture,
             color,
             x,
             y,
@@ -84,43 +71,40 @@ impl<'a, T> Sprite<'a, T> where T: AsRef<[u8]> {
     /// Don't use this if you're drawing many sprites, it's really slow
     /// Use fn as_vertex_iter() and collect your sprites into a single buffer to 
     /// draw all at once. Note: as_vertex_iter() does not preserve scaling or rotation.
-    //pub fn draw(&self, displaylist: &mut Align16<[u32; 0x40000]>) {
-        //use core::convert::TryInto;
-        //let vertex_array: alloc::boxed::Box<[Vertex; 2]> = self.as_vertex_iter()
-            //.collect::<alloc::vec::Vec<Vertex>>()
-            //.into_boxed_slice().try_into().unwrap();
+    pub fn draw(&self, displaylist: &mut Align16<[u32; 0x40000]>) {
+        use core::convert::TryInto;
+        let vertex_array: alloc::boxed::Box<[Align4<Vertex>; 2]> = self.as_vertex_iter()
+            .collect::<alloc::vec::Vec<Align4<Vertex>>>()
+            .into_boxed_slice().try_into().unwrap();
 
-        //let vertices: Align16<[Vertex;2]> = Align16(*vertex_array);
+        let vertices: Align16<[Align4<Vertex>;2]> = Align16(*vertex_array);
 
-        //unsafe {
-            //sys::sceGuStart(GuContextType::Direct, displaylist.0.as_mut_ptr() as *mut _);
+        unsafe {
+            sys::sceGuStart(GuContextType::Direct, displaylist.0.as_mut_ptr() as *mut _);
             
-            //sys::sceGumMatrixMode(sys::MatrixMode::Model);
-            //sys::sceGumLoadIdentity();
-            //sys::sceGumScale(&ScePspFVector3 { x: self.scale, y: self.scale, z: 1.0 });
-            ////sys::sceGumTranslate(&ScePspFVector3 { x: self.x as f32, y: self.y as f32, z: 0.0});
-            //sys::sceGumRotateZ(self.rotation_radians);
-            //// setup texture
-            //if self.texture.is_some() {
-                //sys::sceGuTexImage(MipmapLevel::None, self.width as i32, self.height as i32, self.width as i32, self.texture.unwrap().as_ref().as_ptr() as *const _); 
-            //}
-            //sys::sceGuTexScale(1.0/self.width as f32, 1.0/self.height as f32);
+            sys::sceGumMatrixMode(sys::MatrixMode::Model);
+            sys::sceGumLoadIdentity();
+            sys::sceGumScale(&ScePspFVector3 { x: self.scale, y: self.scale, z: 1.0 });
+            sys::sceGumRotateZ(self.rotation_radians);
+            // setup texture
+            sys::sceGuTexImage(MipmapLevel::None, self.width as i32, self.height as i32, self.width as i32, self.texture.as_ref().as_ptr() as *const _); 
+            sys::sceGuTexScale(1.0/self.width as f32, 1.0/self.height as f32);
 
-            //sys::sceKernelDcacheWritebackInvalidateAll();
+            sys::sceKernelDcacheWritebackInvalidateAll();
 
-            //// draw sprite
-            //sys::sceGumDrawArray(
-                //GuPrimitive::Sprites,
-                //VertexType::TEXTURE_32BITF | VertexType::COLOR_8888 | VertexType::VERTEX_32BITF | VertexType::TRANSFORM_3D,
-                //2,
-                //ptr::null_mut(),
-                //&vertices as *const Align16<_> as *const _,
-            //);	
-            //sys::sceGuFinish();
-            //sys::sceGuSync(GuSyncMode::Finish, GuSyncBehavior::Wait);
+            // draw sprite
+            sys::sceGumDrawArray(
+                GuPrimitive::Sprites,
+                VertexType::TEXTURE_32BITF | VertexType::COLOR_8888 | VertexType::VERTEX_32BITF | VertexType::TRANSFORM_3D,
+                2,
+                ptr::null_mut(),
+                &vertices as *const Align16<_> as *const _,
+            );	
+            sys::sceGuFinish();
+            sys::sceGuSync(GuSyncMode::Finish, GuSyncBehavior::Wait);
 
-        //}
-    //}
+        }
+    }
 
     pub fn set_pos(&mut self, x: i32, y: i32) {
         self.x = x;
@@ -168,19 +152,3 @@ impl<'a, T> Clone for Sprite<'a, T> where T: AsRef<[u8]> {
 }
 
 impl <'a, T> Copy for Sprite<'a, T> where T: AsRef<[u8]> {}
-
-impl <'a, T> Default for Sprite<'a, T> where T: AsRef<[u8]> {
-    fn default() -> Self {
-        Self {
-            texture: None, 
-            color: 0,
-            x: 0,
-            y: 0,
-            width: 0,
-            height: 0,
-            rotation_radians: 0.0,
-            scale: 0.0,
-        }
-    }
-}
-
