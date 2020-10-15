@@ -136,15 +136,25 @@ impl Game {
         texture_buffer: &Align16<&mut [u8]>
     ) {
 
-        // really hacked in outline for the grid, TODO
-        let background = graphics::sprite::Sprite::new(&BLOCK, 0xff34_3434,  
-            16 * 15, 16 * 1, 16*10, 16*20);
-        let mut background_vertex_iter = background.as_vertex_iter();
-        let mut background_vertices: Align16<[Align4<Vertex>; 2]> = Align16([Align4(Vertex::default()); 2]);
-        background_vertices.0[0] = background_vertex_iter.next().unwrap();
-        background_vertices.0[1] = background_vertex_iter.next().unwrap();
+        // background
+        // TODO figure out blending and make this more transparent
+        vertex_buffer.0[0] = Align4(Vertex { 
+            u: 0.0,
+            v: 0.0,
+            color: 0x1134_3434,
+            x: 16.0 * 15.0,
+            y: 16.0 * 1.0,
+            z: -1.0,
+        });
+        vertex_buffer.0[1] = Align4(Vertex { 
+            u: 16.0 * 10.0,
+            v: 16.0 * 20.0,
+            color: 0x7f34_3434,
+            x: 16.0*15.0 + 16.0 * 10.0,
+            y: 16.0*1.0 + 16.0 * 20.0 as f32,
+            z: -1.0,
+        });
 
-        (*vertex_buffer).0[0..2].copy_from_slice(&background_vertices.0);
         (*vertex_buffer).0[2..402].copy_from_slice(&self.board.as_vertices());
         (*vertex_buffer).0[402..410].copy_from_slice(&self.current_shape.as_vertices());
         (*vertex_buffer).0[410..418].copy_from_slice(&self.next_shape.as_vertices());
