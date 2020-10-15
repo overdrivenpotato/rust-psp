@@ -137,7 +137,7 @@ impl Game {
     ) {
 
         // really hacked in outline for the grid, TODO
-        let background = graphics::sprite::Sprite::new(&BLOCK, 0x0000_0000,  
+        let background = graphics::sprite::Sprite::new(&BLOCK, 0xff34_3434,  
             16 * 15, 16 * 1, 16*10, 16*20);
         let mut background_vertex_iter = background.as_vertex_iter();
         let mut background_vertices: Align16<[Align4<Vertex>; 2]> = Align16([Align4(Vertex::default()); 2]);
