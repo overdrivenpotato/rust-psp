@@ -44,6 +44,10 @@ pub unsafe fn setup(allocator: &mut psp::vram_alloc::SimpleVramAllocator) {
     sys::sceGuTexFunc(TextureEffect::Modulate, TextureColorComponent::Rgb);
     sys::sceGuTexWrap(sys::GuTexWrapMode::Repeat, sys::GuTexWrapMode::Repeat);
 
+    sys::sceGuEnable(GuState::Blend);
+    sys::sceGuBlendFunc(sys::BlendOp::Add, sys::BlendParam::SrcAlpha, sys::BlendParam::OneMinusSrcAlpha, 0, 0);
+    sys::sceGuAlphaFunc(sys::AlphaFunc::Greater, 0, 0xff);
+
     sys::sceGumMatrixMode(sys::MatrixMode::View);
     sys::sceGumLoadIdentity();
 
