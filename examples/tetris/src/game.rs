@@ -44,7 +44,7 @@ impl Game {
             next_shape,
             current_shape,
             next_shape_offset: (30, 7),
-            seconds_per_tick: 1.0,
+            seconds_per_tick: 0.25,
             seconds_since_tick: 0.0,
             shape_placed: false,
             rng,
@@ -67,10 +67,9 @@ impl Game {
                 attempt_move(&mut self.current_shape, 1, 0, &self.board);
             }
             if pad_data.buttons.contains(CtrlButtons::DOWN) {
-                if !attempt_move(&mut self.current_shape, 0, 1, &mut self.board) {
-                    self.current_shape.lock_to_gameboard(&mut self.board);
-                    self.shape_placed = true;
-                }
+                drop(&mut self.current_shape, &self.board);
+                self.current_shape.lock_to_gameboard(&mut self.board);
+                self.shape_placed = true;
             }
             if pad_data.buttons.contains(CtrlButtons::CROSS) {
                 attempt_rotate_ccw(&mut self.current_shape, &self.board);
@@ -111,9 +110,6 @@ impl Game {
     }
 
     // hard drop function, broken somehow
-    pub fn drop(&mut self, shape: &mut Tetromino) {
-        while attempt_move(shape, 0, 1, &self.board) {}
-    }
 
     pub fn set_score(&mut self, score: usize) {
         self.score = score;
@@ -220,4 +216,9 @@ pub fn is_shape_within_borders(shape: &Tetromino, board: &Gameboard) -> bool {
 pub fn does_shape_intersect_locked_blocks(shape: &Tetromino, board: &Gameboard) -> bool {
     let mapped_locs = shape.get_mapped_locs();
     !board.are_locs_empty(mapped_locs.to_vec())
+}
+
+
+pub fn drop(shape: &mut Tetromino, board: &Gameboard) {
+    while attempt_move(shape, 0, 1, board) {}
 }

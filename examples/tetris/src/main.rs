@@ -42,8 +42,6 @@ fn psp_main() {
 
         let mut game = game::Game::new();
         
-        // TODO cheating for now
-        let mut seconds_since_last_loop: f32 = 0.16667;
         
         graphics::clear_color(0xff554433);
         graphics::draw_text_at(130, 136, 0xffff_ffff, "Press Start to Play Tetris!"); 
@@ -54,12 +52,20 @@ fn psp_main() {
             sys::sceCtrlReadBufferPositive(ctrl_data, 1); 
         }
 
+        let mut loop_end = 0;
+        let mut loop_start = 0;
+        let ticks_per_sec = sys::sceRtcGetTickResolution();
+        let mut seconds_since_last_loop: f32 = 0.0;
+
         loop {
+            seconds_since_last_loop = (loop_end - loop_start) as f32 / ticks_per_sec as f32;
+            sys::sceRtcGetCurrentTick(&mut loop_start);
             graphics::clear_color(0xff554433);
             let game_over = game.process_game_loop(seconds_since_last_loop);
             if game_over  { 
                 game.draw(&mut vertex_buffer, &texture_buffer);
                 graphics::draw_text_at(100, 136, 0xffff_ffff, "Game Over. Press Start to Play Again");
+
                 let ctrl_data = &mut sys::SceCtrlData::default(); 
                 sys::sceCtrlReadBufferPositive(ctrl_data, 1); 
                 if ctrl_data.buttons.contains(sys::CtrlButtons::START) {
@@ -69,6 +75,7 @@ fn psp_main() {
                 game.draw(&mut vertex_buffer, &texture_buffer);
             }
             graphics::finish_frame();
+            sys::sceRtcGetCurrentTick(&mut loop_end);
         }
     }
 }
