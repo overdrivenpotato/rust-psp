@@ -1,8 +1,8 @@
 #![no_std]
 #![no_main]
 
-#![allow(incomplete_features, dead_code)]
-#![feature(const_generics, const_fn)]
+#![allow(dead_code)]
+#![feature(const_fn)]
 
 extern crate alloc;
 
