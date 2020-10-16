@@ -60,21 +60,21 @@ impl Game {
                 // no change in input, and I don't feel like doing held down buttons
                 return;
             }
-            if pad_data.buttons.contains(CtrlButtons::LEFT) {
+            if pad_data.buttons.contains(CtrlButtons::LEFT) && !self.last_input.contains(CtrlButtons::LEFT) {
                 attempt_move(&mut self.current_shape, -1, 0, &self.board);
             }
-            if pad_data.buttons.contains(CtrlButtons::RIGHT) {
+            if pad_data.buttons.contains(CtrlButtons::RIGHT) && !self.last_input.contains(CtrlButtons::RIGHT) {
                 attempt_move(&mut self.current_shape, 1, 0, &self.board);
             }
-            if pad_data.buttons.contains(CtrlButtons::DOWN) {
+            if pad_data.buttons.contains(CtrlButtons::DOWN) && !self.last_input.contains(CtrlButtons::DOWN) {
                 drop(&mut self.current_shape, &self.board);
                 self.current_shape.lock_to_gameboard(&mut self.board);
                 self.shape_placed = true;
             }
-            if pad_data.buttons.contains(CtrlButtons::CROSS) {
+            if pad_data.buttons.contains(CtrlButtons::CROSS) && !self.last_input.contains(CtrlButtons::CROSS)  {
                 attempt_rotate_ccw(&mut self.current_shape, &self.board);
             }
-            if pad_data.buttons.contains(CtrlButtons::CIRCLE) {
+            if pad_data.buttons.contains(CtrlButtons::CIRCLE) && !self.last_input.contains(CtrlButtons::CIRCLE)  {
                 attempt_rotate_cw(&mut self.current_shape, &self.board);
             }
             self.last_input = pad_data.buttons;
