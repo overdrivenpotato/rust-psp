@@ -61,21 +61,21 @@ impl Game {
                 return;
             }
             if pad_data.buttons.contains(CtrlButtons::LEFT) && !self.last_input.contains(CtrlButtons::LEFT) {
-                attempt_move(&mut self.current_shape, -1, 0, &self.board);
+                self.attempt_move(-1, 0);
             }
             if pad_data.buttons.contains(CtrlButtons::RIGHT) && !self.last_input.contains(CtrlButtons::RIGHT) {
-                attempt_move(&mut self.current_shape, 1, 0, &self.board);
+                self.attempt_move(1, 0);
             }
             if pad_data.buttons.contains(CtrlButtons::DOWN) && !self.last_input.contains(CtrlButtons::DOWN) {
-                drop(&mut self.current_shape, &self.board);
+                self.drop();
                 self.current_shape.lock_to_gameboard(&mut self.board);
                 self.shape_placed = true;
             }
             if pad_data.buttons.contains(CtrlButtons::CROSS) && !self.last_input.contains(CtrlButtons::CROSS)  {
-                attempt_rotate_ccw(&mut self.current_shape, &self.board);
+                self.attempt_rotate_ccw();
             }
             if pad_data.buttons.contains(CtrlButtons::CIRCLE) && !self.last_input.contains(CtrlButtons::CIRCLE)  {
-                attempt_rotate_cw(&mut self.current_shape, &self.board);
+                self.attempt_rotate_cw();
             }
             self.last_input = pad_data.buttons;
         }
@@ -103,7 +103,7 @@ impl Game {
     }
 
     pub fn tick(&mut self) {
-        if !attempt_move(&mut self.current_shape, 0, 1, &self.board) {
+        if !self.attempt_move(0, 1) {
             self.current_shape.lock_to_gameboard(&mut self.board);
             self.shape_placed = true;
         }
@@ -117,7 +117,7 @@ impl Game {
         self.current_shape = self.next_shape;
         let spawn_loc = self.board.get_spawn_loc();
         self.current_shape.set_pos(spawn_loc.0 as i32, spawn_loc.1 as i32);
-        is_position_legal(&self.current_shape, &self.board)
+        self.is_position_legal(&self.current_shape)
     }
 
     pub fn pick_next_shape(&mut self) {
@@ -160,63 +160,61 @@ impl Game {
             graphics::draw_text_at(327, 60, 0xffff_ffff, "Next Shape:");
         }
     }
-}
 
-
-pub fn attempt_move(shape: &mut Tetromino, x: i32, y: i32, board: &Gameboard) -> bool {
-    let mut temp: Tetromino = shape.clone();
-    temp.add_pos(x, y);
-    if is_position_legal(&temp, board) {
-        shape.add_pos(x, y);
-        return true;
-    }
-    false
-}
-
-pub fn attempt_rotate_cw(shape: &mut Tetromino, board: &Gameboard) -> bool {
-    let mut temp: Tetromino = shape.clone();
-    temp.rotate_cw();
-    if is_position_legal(&temp, board) {
-        shape.rotate_cw();
-        return true;
-    }
-    false
-}
-
-pub fn attempt_rotate_ccw(shape: &mut Tetromino, board: &Gameboard) -> bool {
-    let mut temp: Tetromino = shape.clone();
-    temp.rotate_ccw();
-    if is_position_legal(&temp, board) {
-        shape.rotate_ccw();
-        return true;
-    }
-    false
-}
-
-pub fn is_position_legal(shape: &Tetromino, board: &Gameboard) -> bool {
-    is_shape_within_borders(shape, board) 
-    && !does_shape_intersect_locked_blocks(shape, board)
-}
-
-
-pub fn is_shape_within_borders(shape: &Tetromino, board: &Gameboard) -> bool {
-    let mapped_locs = shape.get_mapped_locs();
-    for p in mapped_locs.iter() {
-        if !(p.0 < board.get_width() 
-        && p.1 < board.get_height()) {
-            return false
+    pub fn attempt_move(&mut self, x: i32, y: i32) -> bool {
+        let mut temp: Tetromino = self.current_shape.clone();
+        temp.add_pos(x, y);
+        if self.is_position_legal(&temp) {
+            self.current_shape.add_pos(x, y);
+            return true;
         }
+        false
     }
-    true
+
+    pub fn attempt_rotate_cw(&mut self) -> bool {
+        let mut temp: Tetromino = self.current_shape.clone();
+        temp.rotate_cw();
+        if self.is_position_legal(&temp) {
+            self.current_shape.rotate_cw();
+            return true;
+        }
+        false
+    }
+
+    pub fn attempt_rotate_ccw(&mut self) -> bool {
+        let mut temp: Tetromino = self.current_shape.clone();
+        temp.rotate_ccw();
+        if self.is_position_legal(&temp) {
+            self.current_shape.rotate_ccw();
+            return true;
+        }
+        false
+    }
+
+    pub fn is_position_legal(&self, shape: &Tetromino) -> bool {
+        self.is_shape_within_borders(shape) 
+        && !self.does_shape_intersect_locked_blocks(shape)
+    }
+
+    pub fn is_shape_within_borders(&self, shape: &Tetromino) -> bool {
+        let mapped_locs = shape.get_mapped_locs();
+        for p in mapped_locs.iter() {
+            if !(p.0 < GAMEBOARD_WIDTH 
+            && p.1 < GAMEBOARD_HEIGHT) {
+                return false
+            }
+        }
+        true
+    }
+
+    pub fn does_shape_intersect_locked_blocks(&self, shape: &Tetromino) -> bool {
+        let mapped_locs = shape.get_mapped_locs();
+        !self.board.are_locs_empty(mapped_locs.to_vec())
+    }
+
+    pub fn drop(&mut self) {
+        while self.attempt_move(0, 1) {}
+    }
 }
 
 
-pub fn does_shape_intersect_locked_blocks(shape: &Tetromino, board: &Gameboard) -> bool {
-    let mapped_locs = shape.get_mapped_locs();
-    !board.are_locs_empty(mapped_locs.to_vec())
-}
-
-
-pub fn drop(shape: &mut Tetromino, board: &Gameboard) {
-    while attempt_move(shape, 0, 1, board) {}
-}
