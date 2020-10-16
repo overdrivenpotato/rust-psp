@@ -109,8 +109,6 @@ impl Game {
         }
     }
 
-    // hard drop function, broken somehow
-
     pub fn set_score(&mut self, score: usize) {
         self.score = score;
     }
