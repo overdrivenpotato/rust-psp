@@ -4,7 +4,8 @@ use alloc::string::ToString;
 use psp::sys::{
     self, DisplayPixelFormat, GuContextType, GuSyncMode, GuSyncBehavior,
     GuState, TexturePixelFormat, TextureEffect, TextureColorComponent,
-    ClearBuffer, ScePspFVector3, VertexType, MipmapLevel, GuPrimitive
+    ClearBuffer, ScePspFVector3, VertexType, MipmapLevel, GuPrimitive,
+    BlendOp, BlendFactor, MatrixMode, AlphaFunc, GuTexWrapMode,
 };
 
 use psp::Align16;
@@ -42,20 +43,20 @@ pub unsafe fn setup(allocator: &mut psp::vram_alloc::SimpleVramAllocator) {
 
     sys::sceGuTexMode(TexturePixelFormat::Psm8888, 0, 0, 0);
     sys::sceGuTexFunc(TextureEffect::Modulate, TextureColorComponent::Rgb);
-    sys::sceGuTexWrap(sys::GuTexWrapMode::Repeat, sys::GuTexWrapMode::Repeat);
+    sys::sceGuTexWrap(GuTexWrapMode::Repeat, GuTexWrapMode::Repeat);
 
     sys::sceGuEnable(GuState::Blend);
-    sys::sceGuBlendFunc(sys::BlendOp::Add, sys::BlendParam::SrcAlpha, sys::BlendParam::OneMinusSrcAlpha, 0, 0);
-    sys::sceGuAlphaFunc(sys::AlphaFunc::Greater, 0, 0xff);
+    sys::sceGuBlendFunc(BlendOp::Add, BlendFactor::SrcAlpha, BlendFactor::OneMinusSrcAlpha, 0, 0);
+    sys::sceGuAlphaFunc(AlphaFunc::Greater, 0, 0xff);
 
-    sys::sceGumMatrixMode(sys::MatrixMode::View);
+    sys::sceGumMatrixMode(MatrixMode::View);
     sys::sceGumLoadIdentity();
 
-    sys::sceGumMatrixMode(sys::MatrixMode::Projection);
+    sys::sceGumMatrixMode(MatrixMode::Projection);
     sys::sceGumLoadIdentity();
     sys::sceGumOrtho(0.0,480.0,272.0,0.0,-30.0,30.0);
 
-    psp::sys::sceDisplayWaitVblankStart();
+    sys::sceDisplayWaitVblankStart();
     sys::sceGuFinish();
     sys::sceGuSync(GuSyncMode::Finish, GuSyncBehavior::Wait);
     sys::sceGuDisplay(true);
@@ -72,7 +73,7 @@ pub unsafe fn clear_color(color: u32) {
 pub unsafe fn draw_vertices(vertices: &Align16<alloc::boxed::Box<[Align4<Vertex>]>>, texture: &Align16<&mut [u8]>, length: usize) {
     sys::sceGuStart(GuContextType::Direct, LIST.0.as_mut_ptr() as *mut _);
     
-    sys::sceGumMatrixMode(sys::MatrixMode::Model);
+    sys::sceGumMatrixMode(MatrixMode::Model);
     sys::sceGumLoadIdentity();
     sys::sceGumScale(&ScePspFVector3 { x: 0.75, y: 0.75, z: 1.0 });
 
