@@ -10,14 +10,16 @@ mod tetromino;
 mod gameboard;
 mod game;
 mod graphics;
+mod audio;
 
 use psp::vram_alloc::get_vram_allocator;
 use psp::Align16;
-use psp::sys::{self, TexturePixelFormat};
+use psp::sys::{self, TexturePixelFormat, sceAudioChReserve};
 
 use crate::graphics::Align4;
 use crate::graphics::sprite::Vertex;
 use crate::graphics::BLOCK;
+use crate::audio::MAX_SAMPLES;
 
 psp::module!("tetris", 1, 1);
 
@@ -40,8 +42,11 @@ fn psp_main() {
         let texture_buffer = Align16(core::slice::from_raw_parts_mut(texture_buffer.as_mut_ptr_direct_to_vram(), texture_buffer.len() as usize));
         texture_buffer.0.copy_from_slice(&BLOCK);
 
+        let channel = sceAudioChReserve(-1, MAX_SAMPLES as i32, psp::sys::AudioFormat::Mono);
+        let mut start_pos: usize = 0;
+        let mut restlen: i32 = 0;
+
         let mut game = game::Game::new();
-        
         
         graphics::clear_color(0xff554433);
         graphics::draw_text_at(130, 136, 0xffff_ffff, "Press Start to Play Tetris!"); 
@@ -60,6 +65,11 @@ fn psp_main() {
         loop {
             seconds_since_last_loop = (loop_end - loop_start) as f32 / ticks_per_sec as f32;
             sys::sceRtcGetCurrentTick(&mut loop_start);
+
+            let audio_ret = audio::process_audio_loop(channel, start_pos, restlen);
+            restlen = audio_ret.0;
+            start_pos = audio_ret.1;
+
             graphics::clear_color(0xff554433);
             let game_over = game.process_game_loop(seconds_since_last_loop);
             if game_over  { 
