@@ -3,7 +3,7 @@ use crate::tetromino::Tetromino;
 use crate::{BLOCK_SIZE, GAMEBOARD_OFFSET, GAMEBOARD_WIDTH, GAMEBOARD_HEIGHT, BLOCK};
 use crate::graphics::{Align4, sprite::Vertex, self};
 
-use psp::{sys, Align16, sys::{CtrlButtons, SceCtrlData}};
+use psp::{sys, sys::{CtrlButtons, SceCtrlData}};
 
 use rand_chacha::ChaChaRng;
 use rand::prelude::*;
@@ -156,12 +156,12 @@ impl Game {
     /// - `texture_buffer`: Mutable reference to the main texture buffer.
     pub fn draw(
         &self,
-        vertex_buffer: &mut Align16<Box<[Align4<Vertex>]>>,
-        texture_buffer: &mut Align16<Box<[u8]>>
+        vertex_buffer: &mut Box<[Align4<Vertex>]>,
+        texture_buffer: &mut Box<[u8]>,
     ) {
 
         // background
-        vertex_buffer.0[0] = Align4(Vertex { 
+        vertex_buffer[0] = Align4(Vertex { 
             u: 0.0,
             v: 0.0,
             color: 0x7f34_3434,
@@ -169,7 +169,7 @@ impl Game {
             y: BLOCK_SIZE as f32 * GAMEBOARD_OFFSET.1 as f32,
             z: -1.0,
         });
-        vertex_buffer.0[1] = Align4(Vertex { 
+        vertex_buffer[1] = Align4(Vertex { 
             u: BLOCK_SIZE as f32 * GAMEBOARD_WIDTH as f32,
             v: BLOCK_SIZE as f32 * GAMEBOARD_HEIGHT as f32,
             color: 0x7f34_3434,
@@ -178,10 +178,10 @@ impl Game {
             z: -1.0,
         });
 
-        (*texture_buffer).0.copy_from_slice(&BLOCK);
-        (*vertex_buffer).0[2..402].copy_from_slice(&self.board.as_vertices());
-        (*vertex_buffer).0[402..410].copy_from_slice(&self.current_shape.as_vertices());
-        (*vertex_buffer).0[410..418].copy_from_slice(&self.next_shape.as_vertices());
+        (*texture_buffer).copy_from_slice(&BLOCK);
+        (*vertex_buffer)[2..402].copy_from_slice(&self.board.as_vertices());
+        (*vertex_buffer)[402..410].copy_from_slice(&self.current_shape.as_vertices());
+        (*vertex_buffer)[410..418].copy_from_slice(&self.next_shape.as_vertices());
 
         unsafe {
             graphics::draw_vertices(vertex_buffer, texture_buffer, BLOCK_SIZE, BLOCK_SIZE, 0.75, 0.75);       

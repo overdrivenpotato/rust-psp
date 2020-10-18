@@ -81,15 +81,16 @@ pub unsafe fn clear_color(color: u32) {
 ///
 /// # Parameters
 ///
-/// - `vertices`: Reference to 16-byte aligned, boxed buffer of 4-byte aligned vertices.
-/// - `texture`: Reference to 16-byte aligned, boxed buffer of texture.
+/// - `vertices`: Reference to boxed buffer of 4-byte aligned vertices. Pointer within Box
+/// must be 16-byte aligned.
+/// - `texture`: Reference to boxed buffer of texture. Pointer within Box must be 16-byte aligned.
 /// - `texture_width`: Width of texture, must be power of 2.
 /// - `texture_height`: Height of texture, must be power of 2.
 /// - `scale_x`: Horizontal scale factor.
 /// - `scale_y`: Vertical scale factor.
 pub unsafe fn draw_vertices(
-    vertices: &Align16<Box<[Align4<Vertex>]>>,
-    texture: &Align16<Box<[u8]>>,
+    vertices: &Box<[Align4<Vertex>]>,
+    texture: &Box<[u8]>,
     texture_width: u32,
     texture_height: u32,
     scale_x: f32,
@@ -102,7 +103,7 @@ pub unsafe fn draw_vertices(
     sys::sceGumScale(&ScePspFVector3 { x: scale_x, y: scale_y, z: 1.0 });
 
     // setup texture
-    sys::sceGuTexImage(MipmapLevel::None, texture_width as i32, texture_height as i32, texture_width as i32, (*texture.0).as_ptr() as _); 
+    sys::sceGuTexImage(MipmapLevel::None, texture_width as i32, texture_height as i32, texture_width as i32, (*texture).as_ptr() as _); 
     sys::sceGuTexScale(1.0/texture_width as f32, 1.0/texture_height as f32);
 
     sys::sceKernelDcacheWritebackInvalidateAll();
@@ -111,9 +112,9 @@ pub unsafe fn draw_vertices(
     sys::sceGumDrawArray(
         GuPrimitive::Sprites,
         VertexType::TEXTURE_32BITF | VertexType::COLOR_8888 | VertexType::VERTEX_32BITF | VertexType::TRANSFORM_3D,
-        (*vertices).0.len() as i32,
+        (*vertices).len() as i32,
         ptr::null_mut(),
-        (*vertices).0.as_ptr() as *const _
+        (*vertices).as_ptr() as _,
     );	
     sys::sceGuFinish();
     sys::sceGuSync(GuSyncMode::Finish, GuSyncBehavior::Wait);
