@@ -11,7 +11,6 @@ use psp::sys::{
 use psp::Align16;
 use psp::{BUF_WIDTH, SCREEN_WIDTH, SCREEN_HEIGHT};
 
-use crate::BLOCK_SIZE;
 use self::sprite::Vertex;
 
 pub mod sprite;
@@ -19,9 +18,6 @@ pub mod sprite;
 #[derive(Debug, Clone, Copy)]
 #[repr(align(4))]
 pub struct Align4<T>(pub T);
-
-pub static BLOCK: [u8;BLOCK_SIZE as usize*BLOCK_SIZE as usize*4] = 
-    *include_bytes!("../../assets/block.bin");
 
 static mut LIST: Align16<[u32; 0x40000]> = Align16([0; 0x40000]);
 

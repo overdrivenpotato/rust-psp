@@ -1,5 +1,5 @@
-use crate::graphics::{BLOCK, Align4, sprite::{Sprite, Vertex}};
-use crate::BLOCK_SIZE;
+use crate::graphics::{Align4, sprite::{Sprite, Vertex}};
+use crate::{BLOCK, BLOCK_SIZE};
 use crate::gameboard::Gameboard;
 use crate::GAMEBOARD_OFFSET;
 

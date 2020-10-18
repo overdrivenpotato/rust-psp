@@ -1,7 +1,7 @@
 use crate::gameboard::Gameboard;
 use crate::tetromino::Tetromino;
-use crate::{BLOCK_SIZE, GAMEBOARD_OFFSET, GAMEBOARD_WIDTH, GAMEBOARD_HEIGHT};
-use crate::graphics::{Align4, sprite::Vertex, BLOCK, self};
+use crate::{BLOCK_SIZE, GAMEBOARD_OFFSET, GAMEBOARD_WIDTH, GAMEBOARD_HEIGHT, BLOCK};
+use crate::graphics::{Align4, sprite::Vertex, self};
 
 use psp::{sys, Align16, sys::{CtrlButtons, SceCtrlData}};
 

@@ -28,6 +28,9 @@ pub const GAMEBOARD_OFFSET: (usize, usize) = (15, 1);
 pub const GAMEBOARD_WIDTH: usize = 10;
 pub const GAMEBOARD_HEIGHT: usize = 20;
 
+pub static BLOCK: [u8;BLOCK_SIZE as usize*BLOCK_SIZE as usize*4] = 
+    *include_bytes!("../assets/block.bin");
+
 fn psp_main() {
     unsafe {
         psp::enable_home_button();
