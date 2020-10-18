@@ -119,12 +119,9 @@ impl<'a, T> Sprite<'a, T> where T: AsRef<[u8]> {
     /// - `displaylist`: A reference to the aligned buffer used as GU's display list in 
     /// `sceGuStart`.
     pub fn draw(&self, displaylist: &mut Align16<[u32; 0x40000]>) {
-        use core::convert::TryInto;
-        let vertex_array: alloc::boxed::Box<[Align4<Vertex>; 2]> = self.as_vertex_iter()
-            .collect::<alloc::vec::Vec<Align4<Vertex>>>()
-            .into_boxed_slice().try_into().unwrap();
+        let vertex_array = self.as_vertices();
 
-        let vertices: Align16<[Align4<Vertex>;2]> = Align16(*vertex_array);
+        let vertices: Align16<[Align4<Vertex>;2]> = Align16(vertex_array);
 
         unsafe {
             sys::sceGuStart(GuContextType::Direct, displaylist.0.as_mut_ptr() as *mut _);

@@ -80,9 +80,9 @@ pub unsafe fn clear_color(color: u32) {
 ///
 /// # Parameters
 ///
-/// - `vertices`: Reference to boxed buffer of 4-byte aligned vertices. Pointer within Box
-/// must be 16-byte aligned.
-/// - `texture`: Reference to boxed buffer of texture. Pointer within Box must be 16-byte aligned.
+/// - `vertices`: Reference to buffer of 4-byte aligned vertices. The buffer must be 
+/// 16-byte aligned .
+/// - `texture`: Reference to buffer of texture. The buffer must be 16-byte aligned.
 /// - `texture_width`: Width of texture, must be power of 2.
 /// - `texture_height`: Height of texture, must be power of 2.
 /// - `scale_x`: Horizontal scale factor.
