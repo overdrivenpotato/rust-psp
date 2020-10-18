@@ -33,7 +33,7 @@ pub fn test_main(test_runner: &mut TestRunner) {
             (
                 "second_chunk_addr_zero",
                 chunk2.as_mut_ptr_direct_to_vram(),
-                psp::sys::sceGeEdramGetAddr().offset(4),
+                psp::sys::sceGeEdramGetAddr().offset(16),
             ),
             (
                 "first_chunk_addr_direct",
@@ -43,7 +43,7 @@ pub fn test_main(test_runner: &mut TestRunner) {
             (
                 "second_chunk_addr_direct",
                 chunk2.as_mut_ptr_from_zero(),
-                zero_ptr.offset(4),
+                zero_ptr.offset(16),
             ),
         ]);
 
@@ -52,7 +52,7 @@ pub fn test_main(test_runner: &mut TestRunner) {
         test_runner.check(
             "vram_moved_addr",
             muh_item.as_mut_ptr(),
-            0x4000008 as *const u8 as _,
+            0x4000020 as *const u8 as _,
         );
 
         test_runner.check("vram_storage_len", muh_item.len(), 16);
