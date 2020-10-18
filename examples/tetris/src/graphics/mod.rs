@@ -25,6 +25,11 @@ pub static BLOCK: [u8;BLOCK_SIZE as usize*BLOCK_SIZE as usize*4] =
 
 static mut LIST: Align16<[u32; 0x40000]> = Align16([0; 0x40000]);
 
+/// Setup the GU Library with all of the configuration we need
+///
+/// # Parameters
+///
+/// - `allocator`: A reference to a `SimpleVramAllocator`.
 pub unsafe fn setup(allocator: &mut psp::vram_alloc::SimpleVramAllocator) {
     let fbp0 = allocator.alloc_texture_pixels(BUF_WIDTH, SCREEN_HEIGHT, TexturePixelFormat::Psm8888).as_mut_ptr_from_zero();
     let fbp1 = allocator.alloc_texture_pixels(BUF_WIDTH, SCREEN_HEIGHT, TexturePixelFormat::Psm8888).as_mut_ptr_from_zero();
@@ -62,6 +67,11 @@ pub unsafe fn setup(allocator: &mut psp::vram_alloc::SimpleVramAllocator) {
     sys::sceGuDisplay(true);
 }
 
+/// Clear the screen a particular colour.
+///
+/// # Parameters
+///
+/// - `color`: The colour to clear with, in big-endian ABGR, little endian RGBA.
 pub unsafe fn clear_color(color: u32) {
     sys::sceGuStart(GuContextType::Direct, &mut LIST.0 as *mut [u32; 0x40000] as *mut _);
     sys::sceGuClearColor(color);
@@ -70,16 +80,33 @@ pub unsafe fn clear_color(color: u32) {
     sys::sceGuSync(GuSyncMode::Finish, GuSyncBehavior::Wait);
 }
 
-pub unsafe fn draw_vertices(vertices: &Align16<alloc::boxed::Box<[Align4<Vertex>]>>, texture: &Align16<&mut [u8]>, length: usize) {
+/// Draw vertices to the screen.
+///
+/// # Parameters
+///
+/// - `vertices`: Reference to 16-byte aligned, boxed buffer of 4-byte aligned vertices.
+/// - `texture`: Reference to 16-byte aligned, boxed buffer of texture.
+/// - `texture_width`: Width of texture, must be power of 2.
+/// - `texture_height`: Height of texture, must be power of 2.
+/// - `scale_x`: Horizontal scale factor.
+/// - `scale_y`: Vertical scale factor.
+pub unsafe fn draw_vertices(
+    vertices: &Align16<alloc::boxed::Box<[Align4<Vertex>]>>,
+    texture: &Align16<alloc::boxed::Box<[u8]>>,
+    texture_width: u32,
+    texture_height: u32,
+    scale_x: f32,
+    scale_y: f32,
+) {
     sys::sceGuStart(GuContextType::Direct, LIST.0.as_mut_ptr() as *mut _);
     
     sys::sceGumMatrixMode(MatrixMode::Model);
     sys::sceGumLoadIdentity();
-    sys::sceGumScale(&ScePspFVector3 { x: 0.75, y: 0.75, z: 1.0 });
+    sys::sceGumScale(&ScePspFVector3 { x: scale_x, y: scale_y, z: 1.0 });
 
     // setup texture
-    sys::sceGuTexImage(MipmapLevel::None, BLOCK_SIZE as i32, BLOCK_SIZE as i32, BLOCK_SIZE as i32, (*texture.0).as_ptr() as _); 
-    sys::sceGuTexScale(1.0/BLOCK_SIZE as f32, 1.0/BLOCK_SIZE as f32);
+    sys::sceGuTexImage(MipmapLevel::None, texture_width as i32, texture_height as i32, texture_width as i32, (*texture.0).as_ptr() as _); 
+    sys::sceGuTexScale(1.0/texture_width as f32, 1.0/texture_height as f32);
 
     sys::sceKernelDcacheWritebackInvalidateAll();
 
@@ -87,7 +114,7 @@ pub unsafe fn draw_vertices(vertices: &Align16<alloc::boxed::Box<[Align4<Vertex>
     sys::sceGumDrawArray(
         GuPrimitive::Sprites,
         VertexType::TEXTURE_32BITF | VertexType::COLOR_8888 | VertexType::VERTEX_32BITF | VertexType::TRANSFORM_3D,
-        length as i32,
+        (*vertices).0.len() as i32,
         ptr::null_mut(),
         (*vertices).0.as_ptr() as *const _
     );	
@@ -95,11 +122,21 @@ pub unsafe fn draw_vertices(vertices: &Align16<alloc::boxed::Box<[Align4<Vertex>
     sys::sceGuSync(GuSyncMode::Finish, GuSyncBehavior::Wait);
 }
 
+/// Draws text at a given point on the screen in a given colour.
+///
+/// # Parameters
+/// 
+/// - `x`: horizontal position
+/// - `y`: vertical position
+/// - `color`: Colour of text, in big-endian ABGR, little-endian RGBA.
+/// - `text`: ASCII text as an &str.
 pub unsafe fn draw_text_at(x: i32, y: i32, color: u32, text: &str) {
     sys::sceGuDebugPrint(x, y, color, (text.to_string() + "\0").as_bytes().as_ptr());
     sys::sceGuDebugFlush();
 }
 
+/// Finishes drawing by waiting for VBlank and swapping the Draw and Display buffer 
+/// pointers.
 pub unsafe fn finish_frame() {
     sys::sceDisplayWaitVblankStart();
     sys::sceGuSwapBuffers();

@@ -5,6 +5,16 @@ static TETRIS_SONG: [u8; 3402490] = *include_bytes!("../assets/tetris.pcm.raw");
 const MAX_VOL: i32 = 0x8000;
 pub const MAX_SAMPLES: usize = 65472;
 
+/// Called once per loop of the game, handles audio.
+///
+/// # Parameters
+/// - `channel`: An audio channel initialized by `sceAudioChReserve`
+/// - `start_pos`: The starting position from which to play audio
+/// - `restlen`: How much audio remains to be played
+///
+/// # Return Value
+///
+/// `(restlen, start_pos)`
 pub unsafe fn process_audio_loop(channel: i32, mut start_pos: usize, mut restlen: i32) -> (i32, usize) {
     if (start_pos+MAX_SAMPLES*2) < TETRIS_SONG.len() {
         if restlen == 0 {
