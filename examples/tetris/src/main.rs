@@ -12,9 +12,12 @@ mod game;
 mod graphics;
 mod audio;
 
+use alloc::boxed::Box;
+use core::slice;
+
 use psp::vram_alloc::get_vram_allocator;
 use psp::Align16;
-use psp::sys::{self, TexturePixelFormat, sceAudioChReserve};
+use psp::sys::{self, TexturePixelFormat, SceCtrlData, AudioFormat, CtrlButtons};
 
 use crate::graphics::Align4;
 use crate::graphics::sprite::Vertex;
@@ -31,6 +34,8 @@ pub const GAMEBOARD_HEIGHT: usize = 20;
 pub static BLOCK: [u8;BLOCK_SIZE as usize*BLOCK_SIZE as usize*4] = 
     *include_bytes!("../assets/block.bin");
 
+pub static TETRIS_SONG: [u8;3402490] = *include_bytes!("../assets/tetris.pcm.raw");
+
 fn psp_main() {
     unsafe {
         psp::enable_home_button();
@@ -38,13 +43,13 @@ fn psp_main() {
         graphics::setup(&mut allocator);
 
         let vertex_buffer = allocator.alloc_sized::<Vertex>(418);
-        let vertex_buffer = alloc::boxed::Box::from_raw(core::slice::from_raw_parts_mut(vertex_buffer.as_mut_ptr_direct_to_vram() as *mut Align4<Vertex>, 418));
+        let vertex_buffer = Box::from_raw(slice::from_raw_parts_mut(vertex_buffer.as_mut_ptr_direct_to_vram() as *mut Align4<Vertex>, 418));
         let mut vertex_buffer = Align16(vertex_buffer);
         let texture_buffer = allocator.alloc_texture_pixels(16, 16, TexturePixelFormat::Psm8888);
-        let texture_buffer = alloc::boxed::Box::from_raw(core::slice::from_raw_parts_mut(texture_buffer.as_mut_ptr_direct_to_vram() as *mut u8, 16*16*4));
+        let texture_buffer = Box::from_raw(slice::from_raw_parts_mut(texture_buffer.as_mut_ptr_direct_to_vram() as *mut u8, 16*16*4));
         let mut texture_buffer = Align16(texture_buffer);
 
-        let channel = sceAudioChReserve(-1, MAX_SAMPLES as i32, psp::sys::AudioFormat::Mono);
+        let channel = sys::sceAudioChReserve(-1, MAX_SAMPLES as i32, AudioFormat::Mono);
         let mut start_pos: usize = 0;
         let mut restlen: i32 = 0;
 
@@ -54,8 +59,8 @@ fn psp_main() {
         graphics::draw_text_at(130, 136, 0xffff_ffff, "Press Start to Play Tetris!"); 
         graphics::finish_frame();
 
-        let ctrl_data = &mut sys::SceCtrlData::default(); 
-        while !ctrl_data.buttons.contains(sys::CtrlButtons::START) {
+        let ctrl_data = &mut SceCtrlData::default(); 
+        while !ctrl_data.buttons.contains(CtrlButtons::START) {
             sys::sceCtrlReadBufferPositive(ctrl_data, 1); 
         }
 
@@ -78,9 +83,9 @@ fn psp_main() {
                 game.draw(&mut vertex_buffer, &mut texture_buffer);
                 graphics::draw_text_at(100, 136, 0xffff_ffff, "Game Over. Press Start to Play Again");
 
-                let ctrl_data = &mut sys::SceCtrlData::default(); 
+                let ctrl_data = &mut SceCtrlData::default(); 
                 sys::sceCtrlReadBufferPositive(ctrl_data, 1); 
-                if ctrl_data.buttons.contains(sys::CtrlButtons::START) {
+                if ctrl_data.buttons.contains(CtrlButtons::START) {
                     game = game::Game::new();
                 }
             } else {

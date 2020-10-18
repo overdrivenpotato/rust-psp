@@ -8,6 +8,8 @@ use psp::{sys, Align16, sys::{CtrlButtons, SceCtrlData}};
 use rand_chacha::ChaChaRng;
 use rand::prelude::*;
 
+use alloc::boxed::Box;
+
 /// Stores the state of our entire game
 pub struct Game {
     score: usize,
@@ -154,8 +156,8 @@ impl Game {
     /// - `texture_buffer`: Mutable reference to the main texture buffer.
     pub fn draw(
         &self,
-        vertex_buffer: &mut Align16<alloc::boxed::Box<[Align4<Vertex>]>>,
-        texture_buffer: &mut Align16<alloc::boxed::Box<[u8]>>
+        vertex_buffer: &mut Align16<Box<[Align4<Vertex>]>>,
+        texture_buffer: &mut Align16<Box<[u8]>>
     ) {
 
         // background

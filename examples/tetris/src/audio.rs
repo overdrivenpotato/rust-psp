@@ -1,6 +1,6 @@
-use psp::sys::{sceAudioOutput, sceAudioSetChannelDataLen, sceAudioGetChannelRestLen};
+use psp::sys;
 
-static TETRIS_SONG: [u8; 3402490] = *include_bytes!("../assets/tetris.pcm.raw"); 
+use crate::TETRIS_SONG;
 
 const MAX_VOL: i32 = 0x8000;
 pub const MAX_SAMPLES: usize = 65472;
@@ -18,7 +18,7 @@ pub const MAX_SAMPLES: usize = 65472;
 pub unsafe fn process_audio_loop(channel: i32, mut start_pos: usize, mut restlen: i32) -> (i32, usize) {
     if (start_pos+MAX_SAMPLES*2) < TETRIS_SONG.len() {
         if restlen == 0 {
-                sceAudioOutput(
+                sys::sceAudioOutput(
                     channel,
                     MAX_VOL,
                     TETRIS_SONG.as_ptr().add(start_pos) as *mut _
@@ -28,8 +28,8 @@ pub unsafe fn process_audio_loop(channel: i32, mut start_pos: usize, mut restlen
     } else {
         let remainder: i32 = (((TETRIS_SONG.len() % (MAX_SAMPLES*2)/2)+63) & !63) as i32;
         if restlen == 0 {
-            sceAudioSetChannelDataLen(channel, remainder);
-            sceAudioOutput(
+            sys::sceAudioSetChannelDataLen(channel, remainder);
+            sys::sceAudioOutput(
                 channel,
                 MAX_VOL,
                 TETRIS_SONG.as_ptr().add(start_pos) as *mut _
@@ -38,10 +38,10 @@ pub unsafe fn process_audio_loop(channel: i32, mut start_pos: usize, mut restlen
         }
         if start_pos >= TETRIS_SONG.len() {
             start_pos = 0;
-            sceAudioSetChannelDataLen(channel, MAX_SAMPLES as i32);
+            sys::sceAudioSetChannelDataLen(channel, MAX_SAMPLES as i32);
         }
     }
 
-    restlen = sceAudioGetChannelRestLen(channel);
+    restlen = sys::sceAudioGetChannelRestLen(channel);
     (restlen, start_pos)
 }
