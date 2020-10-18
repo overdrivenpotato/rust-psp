@@ -1,6 +1,5 @@
 use core::ptr;
 use alloc::string::ToString;
-use alloc::boxed::Box;
 
 use psp::sys::{
     self, DisplayPixelFormat, GuContextType, GuSyncMode, GuSyncBehavior,
@@ -89,8 +88,8 @@ pub unsafe fn clear_color(color: u32) {
 /// - `scale_x`: Horizontal scale factor.
 /// - `scale_y`: Vertical scale factor.
 pub unsafe fn draw_vertices(
-    vertices: &Box<[Align4<Vertex>]>,
-    texture: &Box<[u8]>,
+    vertices: &[Align4<Vertex>],
+    texture: &[u8],
     texture_width: u32,
     texture_height: u32,
     scale_x: f32,

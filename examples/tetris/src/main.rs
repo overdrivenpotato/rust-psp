@@ -12,7 +12,6 @@ mod game;
 mod graphics;
 mod audio;
 
-use alloc::boxed::Box;
 use core::slice;
 
 use psp::vram_alloc::get_vram_allocator;
@@ -42,9 +41,9 @@ fn psp_main() {
         graphics::setup(&mut allocator);
 
         let vertex_buffer = allocator.alloc_sized::<Vertex>(418);
-        let mut vertex_buffer = Box::from_raw(slice::from_raw_parts_mut(vertex_buffer.as_mut_ptr_direct_to_vram() as *mut Align4<Vertex>, 418));
+        let mut vertex_buffer = slice::from_raw_parts_mut(vertex_buffer.as_mut_ptr_direct_to_vram() as *mut Align4<Vertex>, 418);
         let texture_buffer = allocator.alloc_texture_pixels(16, 16, TexturePixelFormat::Psm8888);
-        let mut texture_buffer = Box::from_raw(slice::from_raw_parts_mut(texture_buffer.as_mut_ptr_direct_to_vram() as *mut u8, 16*16*4));
+        let mut texture_buffer = slice::from_raw_parts_mut(texture_buffer.as_mut_ptr_direct_to_vram() as *mut u8, 16*16*4);
 
         let channel = sys::sceAudioChReserve(-1, MAX_SAMPLES as i32, AudioFormat::Mono);
         let mut start_pos: usize = 0;
@@ -86,7 +85,7 @@ fn psp_main() {
                     game = game::Game::new();
                 }
             } else {
-                game.draw(&mut vertex_buffer, &mut texture_buffer);
+                game.draw(vertex_buffer, texture_buffer);
             }
             graphics::finish_frame();
             sys::sceRtcGetCurrentTick(&mut loop_end);
