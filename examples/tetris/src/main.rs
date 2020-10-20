@@ -35,59 +35,65 @@ pub static BLOCK: [u8;BLOCK_SIZE as usize*BLOCK_SIZE as usize*4] =
 pub static TETRIS_SONG: [u8;3402490] = *include_bytes!("../assets/tetris.pcm.raw");
 
 fn psp_main() {
-    unsafe {
-        psp::enable_home_button();
-        let mut allocator = get_vram_allocator().unwrap();
-        graphics::setup(&mut allocator);
+    psp::enable_home_button();
+    let mut allocator = get_vram_allocator().unwrap();
+    graphics::setup(&mut allocator);
 
-        let vertex_buffer = allocator.alloc_sized::<Vertex>(418);
-        let mut vertex_buffer = slice::from_raw_parts_mut(vertex_buffer.as_mut_ptr_direct_to_vram() as *mut Align4<Vertex>, 418);
-        let texture_buffer = allocator.alloc_texture_pixels(16, 16, TexturePixelFormat::Psm8888);
-        let mut texture_buffer = slice::from_raw_parts_mut(texture_buffer.as_mut_ptr_direct_to_vram() as *mut u8, 16*16*4);
+    let vertex_buffer = allocator.alloc_sized::<Vertex>(418);
+    let mut vertex_buffer = unsafe { slice::from_raw_parts_mut(vertex_buffer.as_mut_ptr_direct_to_vram() as *mut Align4<Vertex>, 418) };
+    let texture_buffer = allocator.alloc_texture_pixels(16, 16, TexturePixelFormat::Psm8888);
+    let mut texture_buffer = unsafe { slice::from_raw_parts_mut(texture_buffer.as_mut_ptr_direct_to_vram() as *mut u8, 16*16*4) };
 
-        let channel = sys::sceAudioChReserve(-1, MAX_SAMPLES as i32, AudioFormat::Mono);
-        let mut start_pos: usize = 0;
-        let mut restlen: i32 = 0;
+    let channel = unsafe { sys::sceAudioChReserve(-1, MAX_SAMPLES as i32, AudioFormat::Mono) };
+    let mut start_pos: usize = 0;
+    let mut restlen: i32 = 0;
 
-        let mut game = game::Game::new();
-        
-        graphics::clear_color(0xff554433);
-        graphics::draw_text_at(130, 136, 0xffff_ffff, "Press Start to Play Tetris!"); 
-        graphics::finish_frame();
+    let mut game = game::Game::new();
+    
+    graphics::clear_color(0xff554433);
+    graphics::draw_text_at(130, 136, 0xffff_ffff, "Press Start to Play Tetris!"); 
+    graphics::finish_frame();
 
-        let ctrl_data = &mut SceCtrlData::default(); 
-        while !ctrl_data.buttons.contains(CtrlButtons::START) {
+    let ctrl_data = &mut SceCtrlData::default(); 
+    while !ctrl_data.buttons.contains(CtrlButtons::START) {
+        unsafe {
             sys::sceCtrlReadBufferPositive(ctrl_data, 1); 
         }
+    }
 
-        let mut loop_end = 0;
-        let mut loop_start = 0;
-        let ticks_per_sec = sys::sceRtcGetTickResolution();
-        let mut seconds_since_last_loop: f32;
+    let mut loop_end = 0;
+    let mut loop_start = 0;
+    let ticks_per_sec = unsafe { sys::sceRtcGetTickResolution() };
+    let mut seconds_since_last_loop: f32;
 
-        loop {
-            seconds_since_last_loop = (loop_end - loop_start) as f32 / ticks_per_sec as f32;
+    loop {
+        seconds_since_last_loop = (loop_end - loop_start) as f32 / ticks_per_sec as f32;
+        unsafe {
             sys::sceRtcGetCurrentTick(&mut loop_start);
+        }
 
-            let audio_ret = audio::process_audio_loop(channel, start_pos, restlen);
-            restlen = audio_ret.0;
-            start_pos = audio_ret.1;
+        let audio_ret = audio::process_audio_loop(channel, start_pos, restlen);
+        restlen = audio_ret.0;
+        start_pos = audio_ret.1;
 
-            graphics::clear_color(0xff554433);
-            let game_over = game.process_game_loop(seconds_since_last_loop);
-            if game_over  { 
-                game.draw(&mut vertex_buffer, &mut texture_buffer);
-                graphics::draw_text_at(100, 136, 0xffff_ffff, "Game Over. Press Start to Play Again");
+        graphics::clear_color(0xff554433);
+        let game_over = game.process_game_loop(seconds_since_last_loop);
+        if game_over  { 
+            game.draw(&mut vertex_buffer, &mut texture_buffer);
+            graphics::draw_text_at(100, 136, 0xffff_ffff, "Game Over. Press Start to Play Again");
 
-                let ctrl_data = &mut SceCtrlData::default(); 
+            let ctrl_data = &mut SceCtrlData::default(); 
+            unsafe {
                 sys::sceCtrlReadBufferPositive(ctrl_data, 1); 
-                if ctrl_data.buttons.contains(CtrlButtons::START) {
-                    game = game::Game::new();
-                }
-            } else {
-                game.draw(vertex_buffer, texture_buffer);
             }
-            graphics::finish_frame();
+            if ctrl_data.buttons.contains(CtrlButtons::START) {
+                game = game::Game::new();
+            }
+        } else {
+            game.draw(vertex_buffer, texture_buffer);
+        }
+        graphics::finish_frame();
+        unsafe {
             sys::sceRtcGetCurrentTick(&mut loop_end);
         }
     }

@@ -59,29 +59,29 @@ impl Game {
         let mut pad_data = SceCtrlData::default();
         unsafe { 
             sys::sceCtrlReadBufferPositive(&mut pad_data, 1);
-            if self.last_input.bits() == pad_data.buttons.bits() {
-                // no change in input, and I don't feel like doing held down buttons
-                return;
-            }
-            if pad_data.buttons.contains(CtrlButtons::LEFT) && !self.last_input.contains(CtrlButtons::LEFT) {
-                self.attempt_move(-1, 0);
-            }
-            if pad_data.buttons.contains(CtrlButtons::RIGHT) && !self.last_input.contains(CtrlButtons::RIGHT) {
-                self.attempt_move(1, 0);
-            }
-            if pad_data.buttons.contains(CtrlButtons::DOWN) && !self.last_input.contains(CtrlButtons::DOWN) {
-                self.drop();
-                self.current_shape.lock_to_gameboard(&mut self.board);
-                self.shape_placed = true;
-            }
-            if pad_data.buttons.contains(CtrlButtons::CROSS) && !self.last_input.contains(CtrlButtons::CROSS)  {
-                self.attempt_rotate_ccw();
-            }
-            if pad_data.buttons.contains(CtrlButtons::CIRCLE) && !self.last_input.contains(CtrlButtons::CIRCLE)  {
-                self.attempt_rotate_cw();
-            }
-            self.last_input = pad_data.buttons;
         }
+        if self.last_input.bits() == pad_data.buttons.bits() {
+            // no change in input, and I don't feel like doing held down buttons
+            return;
+        }
+        if pad_data.buttons.contains(CtrlButtons::LEFT) && !self.last_input.contains(CtrlButtons::LEFT) {
+            self.attempt_move(-1, 0);
+        }
+        if pad_data.buttons.contains(CtrlButtons::RIGHT) && !self.last_input.contains(CtrlButtons::RIGHT) {
+            self.attempt_move(1, 0);
+        }
+        if pad_data.buttons.contains(CtrlButtons::DOWN) && !self.last_input.contains(CtrlButtons::DOWN) {
+            self.drop();
+            self.current_shape.lock_to_gameboard(&mut self.board);
+            self.shape_placed = true;
+        }
+        if pad_data.buttons.contains(CtrlButtons::CROSS) && !self.last_input.contains(CtrlButtons::CROSS)  {
+            self.attempt_rotate_ccw();
+        }
+        if pad_data.buttons.contains(CtrlButtons::CIRCLE) && !self.last_input.contains(CtrlButtons::CIRCLE)  {
+            self.attempt_rotate_cw();
+        }
+        self.last_input = pad_data.buttons;
     }
 
     /// Called once per loop of the game, does all the biz.
@@ -181,12 +181,10 @@ impl Game {
         (*vertex_buffer)[402..410].copy_from_slice(&self.current_shape.as_vertices());
         (*vertex_buffer)[410..418].copy_from_slice(&self.next_shape.as_vertices());
 
-        unsafe {
-            graphics::draw_vertices(vertex_buffer, texture_buffer, BLOCK_SIZE, BLOCK_SIZE, 0.75, 0.75);       
-            let score_string = alloc::format!("Score: {}", self.score);
-            graphics::draw_text_at(327, 40, 0xffff_ffff, score_string.as_str());
-            graphics::draw_text_at(327, 60, 0xffff_ffff, "Next Shape:");
-        }
+        graphics::draw_vertices(vertex_buffer, texture_buffer, BLOCK_SIZE, BLOCK_SIZE, 0.75, 0.75);       
+        let score_string = alloc::format!("Score: {}", self.score);
+        graphics::draw_text_at(327, 40, 0xffff_ffff, score_string.as_str());
+        graphics::draw_text_at(327, 60, 0xffff_ffff, "Next Shape:");
     }
 
     /// Attempts to add to the `current_shape` position, returns true if successful.
