@@ -162,9 +162,9 @@ pub unsafe extern "C" fn sceVfpuVector4AddXYZ(
     right_addend: *mut ScePspFVector4,
 ) -> *mut ScePspFVector4 {
     vfpu_asm! {
-        lv_q C010, 0(a1);
-        lv_q C020, 0(a2);
-        vadd_t C000, C010, C020;
+        lv_q C000, 0(a1);
+        lv_q C010, 0(a2);
+        vadd_t C000, C000, C010;
         sv_q C000, 0(a0); 
         : : "{4}"(result), "{5}"(left_addend), "{6}"(right_addend) : "memory" : "volatile"
     }
@@ -196,9 +196,9 @@ pub unsafe extern "C" fn sceVfpuVector4SubXYZ(
     subtrahend: *mut ScePspFVector4,
 ) -> *mut ScePspFVector4 {
     vfpu_asm! {
-        lv_q C010, 0(a1);
-        lv_q C020, 0(a2);
-        vsub_t C000, C010, C020;
+        lv_q C000, 0(a1);
+        lv_q C010, 0(a2);
+        vsub_t C000, C000, C010;
         sv_q C000, 0(a0); 
         : : "{4}"(result), "{5}"(minuend), "{6}"(subtrahend) : "memory" : "volatile"
     }
@@ -230,9 +230,9 @@ pub unsafe extern "C" fn sceVfpuVector4MulXYZ(
     multiplier: *mut ScePspFVector4,
 ) -> *mut ScePspFVector4 {
     vfpu_asm! {
-        lv_q C010, 0(a1);
-        lv_q C020, 0(a2);
-        vmul_t C000, C010, C020;
+        lv_q C000, 0(a1);
+        lv_q C010, 0(a2);
+        vmul_t C000, C000, C010;
         sv_q C000, 0(a0); 
         : : "{4}"(result), "{5}"(multiplicand), "{6}"(multiplier) : "memory" : "volatile"
     }
