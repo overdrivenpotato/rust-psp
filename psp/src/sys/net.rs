@@ -1,4 +1,5 @@
 use core::ffi::c_void;
+use crate::eabi::{i5, i6};
 
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
@@ -1473,7 +1474,7 @@ psp_extern! {
         addr_len: socklen_t,
     ) -> i32;
 
-    #[psp(0x4A114C7C)]
+    #[psp(0x4A114C7C, i5)]
     pub fn sceNetInetGetsockopt(
         s: i32,
         level: i32,
@@ -1496,15 +1497,15 @@ psp_extern! {
         flags: i32,
     ) -> usize;
 
-    #[psp(0xC91142E4)]
+    #[psp(0xC91142E4, i6)]
     pub fn sceNetInetRecvfrom(
         s: i32,
         buf: *mut c_void,
-        flags: usize,
-        arg1: i32,
+        len: usize,
+        flags: i32,
         from: *mut sockaddr,
         from_len: *mut socklen_t,
-    ) -> usize;
+    ) -> i32;
 
     #[psp(0x7AA671BC)]
     pub fn sceNetInetSend(
@@ -1512,9 +1513,9 @@ psp_extern! {
         buf: *const c_void,
         len: usize,
         flags: i32,
-    ) -> usize;
+    ) -> i32;
 
-    #[psp(0x05038FC7)]
+    #[psp(0x05038FC7, i6)]
     pub fn sceNetInetSendto(
         s: i32,
         buf: *const c_void,
@@ -1524,7 +1525,7 @@ psp_extern! {
         to_len: socklen_t,
     ) -> usize;
 
-    #[psp(0x2FE71FE7)]
+    #[psp(0x2FE71FE7, i5)]
     pub fn sceNetInetSetsockopt(
         s: i32,
         level: i32,
@@ -1532,6 +1533,7 @@ psp_extern! {
         opt_val: *const c_void,
         opt_len: socklen_t,
     ) -> i32;
+
 
     #[psp(0x4CFE4E56)]
     pub fn sceNetInetShutdown(
@@ -1552,7 +1554,21 @@ psp_extern! {
     #[psp(0xFBABE411)]
     pub fn sceNetInetGetErrno() -> i32;
 
+    #[psp(0x162E6FD5)]
+    pub fn sceNetInetGetsockname(
+        s: i32,
+        addr: *mut sockaddr,
+        addr_len: *mut socklen_t,
+    ) -> i32;
+
+    #[psp(0xE247B6D6)]
+    pub fn sceNetInetGetpeername(
+        s: i32,
+        addr: *mut sockaddr,
+        addr_len: *mut socklen_t,
+    ) -> i32;
 }
+
 
 psp_extern! {
     #![name = "sceSsl"]
