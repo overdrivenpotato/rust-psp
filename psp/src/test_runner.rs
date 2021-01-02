@@ -201,7 +201,7 @@ fn get_test_output_pipe() -> SceUid {
         );
         if fd.0 < 0 {
             panic!(
-                "Unable to open pipe \"{}\" for output! \
+                "Unable to open pipe for output! \
                 You must create it yourself with `mkfifo`."
             );
         }
