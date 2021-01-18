@@ -12,13 +12,13 @@ use embedded_graphics::style::PrimitiveStyleBuilder;
 use embedded_graphics::style::TextStyleBuilder;
 use tinybmp::Bmp;
 
-use psp::embedded_graphics::PspDisplay;
+use psp::embedded_graphics::Framebuffer;
 
 psp::module!("sample_emb_gfx", 1, 1);
 
 fn psp_main() {
     psp::enable_home_button();
-    let mut disp = PspDisplay::new();
+    let mut disp = Framebuffer::new();
 
 
     unsafe {

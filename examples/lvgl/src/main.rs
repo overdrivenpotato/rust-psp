@@ -3,7 +3,7 @@
 
 use core::time::Duration;
 
-use psp::embedded_graphics::PspDisplay;
+use psp::embedded_graphics::Framebuffer;
 use psp::sys;
 
 extern crate alloc;
@@ -18,7 +18,7 @@ psp::module!("sample_lvgl", 1, 1);
 #[no_mangle]
 fn psp_main() {
     psp::enable_home_button();
-    let mut disp = PspDisplay::new();
+    let mut disp = Framebuffer::new();
 
     let mut ui = UI::init().unwrap();
 
