@@ -134,7 +134,7 @@ extern "C" {
 fn rust_panic(mut msg: &mut dyn BoxMeUp) -> ! {
     let code = unsafe {
         let obj = &mut msg as *mut &mut dyn BoxMeUp;
-        panic_unwind::__rust_start_panic(obj as usize)
+        panic_unwind::__rust_start_panic(obj as _)
     };
 
     print_and_die(alloc::format!("failed to initiate panic, error {}", code))
