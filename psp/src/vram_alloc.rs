@@ -64,17 +64,17 @@ impl SimpleVramAllocator {
 
     // TODO: return a Result instead of panicking
     pub fn alloc(&mut self, size: u32) -> VramMemChunk {
-        let old_offset = self.offset;
-        self.offset += size;
+        // Align to 16 bytes
+        let offset = (self.offset + 15) & !15;
+        self.offset = offset + size;
 
         if self.offset > self.total_mem() {
             panic!("Total VRAM size exceeded!");
         }
 
-        VramMemChunk::new(old_offset, size)
+        VramMemChunk::new(offset, size)
     }
 
-    // TODO: ensure 16-bit alignment?
     pub fn alloc_sized<T: Sized>(&mut self, count: u32) -> VramMemChunk {
         let size = size_of::<T>() as u32;
         self.alloc(count * size)
