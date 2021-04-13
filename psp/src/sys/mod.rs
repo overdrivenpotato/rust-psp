@@ -104,6 +104,12 @@ pub use net::*;
 mod font;
 pub use font::*;
 
+mod vfpu;
+pub use vfpu::*;
+
+mod dmac;
+pub use dmac::*;
+
 // These are not found (likely because this was tested in user mode on a PSP-2000).
 // pub mod sircs;
 // pub mod codec;

@@ -61,22 +61,20 @@ fn aeh(_: Layout) -> ! { loop {} }
 #[no_mangle]
 #[cfg(not(feature = "stub-only"))]
 unsafe extern fn memset(ptr: *mut u8, value: u32, num: usize) -> *mut u8 {
-    for i in 0..num {
-        *ptr.add(i) = value as u8;
-    }
-
-    ptr
+    crate::sys::sceKernelMemset(ptr, value as u8, num)
 }
 
 #[no_mangle]
 #[cfg(not(feature = "stub-only"))]
-unsafe extern fn memcpy(dst: *mut u8, src: *const u8, num: isize) -> *mut u8 {
-    for i in 0..num {
-        *dst.offset(i) = *src.offset(i);
+unsafe extern fn memcpy(dst: *mut u8, src: *const u8, num: usize) -> *mut u8 {
+    if num < 12_000 {
+        crate::sys::sceKernelMemcpy(dst, src, num)
+    } else {
+        crate::sys::sceDmacMemcpy(dst, src, num); 
+        dst
     }
-
-    dst
 }
+
 
 #[no_mangle]
 #[cfg(not(feature = "stub-only"))]
@@ -96,14 +94,41 @@ unsafe extern fn memcmp(ptr1: *mut u8, ptr2: *mut u8, num: isize) -> i32 {
 #[cfg(not(feature = "stub-only"))]
 unsafe extern fn memmove(dst: *mut u8, src: *mut u8, num: isize) -> *mut u8 {
     if dst < src {
-        for i in 0..num {
-            *dst.offset(i) = *src.offset(i);
+        let mut size = num as usize;
+        let mut dst32 = dst as *mut u32;
+        let mut src32 = src as *mut u32;
+        while size > 3 {
+            *dst32 = *src32;
+            dst32 = dst32.add(1);
+            src32 = src32.add(1);
+            size = size.saturating_sub(4);
+        }
+        let mut dst_new = dst32 as *mut u8;
+        let mut src_new = src32 as *mut u8;
+        while size > 0 {
+            *dst_new = *src_new;
+            dst_new = dst_new.add(1);
+            src_new = src_new.add(1);
+            size = size.saturating_sub(1);
         }
     } else {
-        for i in num-1..=0 {
-            *dst.offset(i) = *src.offset(i);
+        let mut size = num as u32;
+        let mut dst32 = (dst as u32 + size -1) as *mut u32;
+        let mut src32 = (src as u32 + size -1) as *mut u32;
+        while size > 3 {
+            *dst32 = *src32;
+            dst32 = dst32.sub(1);
+            src32 = src32.sub(1);
+            size = size.saturating_sub(4);
+        }
+        let mut dst_new = dst32 as *mut u8;
+        let mut src_new = src32 as *mut u8;
+        while size > 0 {
+            *dst_new = *src_new;
+            dst_new = dst_new.sub(1);
+            src_new = src_new.sub(1);
+            size = size.saturating_sub(1);
         }
     }
-
     dst
 }
