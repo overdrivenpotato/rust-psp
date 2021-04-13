@@ -1,0 +1,13 @@
+[package]
+name = "psp-lvgl-example"
+version = "0.1.0"
+authors = ["Marko Mijalkovic <marko.mijalkovic97@gmail.com>"]
+edition = "2018"
+
+[dependencies]
+psp = { path = "../../psp", features = ["embedded-graphics"] }
+embedded-graphics = "0.6.2"
+lvgl = "0.3.1"
+
+[profile.release]
+debug = true
