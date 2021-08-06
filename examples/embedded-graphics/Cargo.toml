@@ -6,5 +6,5 @@ edition = "2018"
 
 [dependencies]
 psp = { path = "../../psp", features = ["embedded-graphics"] }
-embedded-graphics = "0.6.2"
-tinybmp = { version = "0.2.2", features = ["graphics"] }
+embedded-graphics = "0.7.1"
+tinybmp = { version = "0.3.1" }
