@@ -13,7 +13,7 @@
 )]
 
 // For unwinding support
-#![feature(std_internals, panic_info_message, panic_internals)]
+#![feature(std_internals, panic_info_message, panic_internals, c_unwind)]
 #![cfg_attr(not(feature = "stub-only"), feature(panic_unwind))]
 
 // For the `const_generics` feature.
