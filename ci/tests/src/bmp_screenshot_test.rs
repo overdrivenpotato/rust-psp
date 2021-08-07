@@ -1,10 +1,9 @@
 use alloc::vec::Vec;
 use core::ffi::c_void;
 
-use embedded_graphics::prelude::*;
 use embedded_graphics::pixelcolor::Rgb888;
-use embedded_graphics::primitives::{rectangle::Rectangle, triangle::Triangle};
-use embedded_graphics::style::PrimitiveStyleBuilder;
+use embedded_graphics::prelude::*;
+use embedded_graphics::primitives::{PrimitiveStyleBuilder, Rectangle, Triangle};
 
 use psp::embedded_graphics::Framebuffer;
 use psp::test_runner::TestRunner;
@@ -34,7 +33,7 @@ fn eg_triangle_screenshot() -> Vec<u8> {
     let style = PrimitiveStyleBuilder::new()
         .fill_color(Rgb888::BLACK)
         .build();
-    let black_backdrop = Rectangle::new(Point::new(0, 0), Point::new(160, 80)).into_styled(style);
+    let black_backdrop = Rectangle::new(Point::new(0, 0), Size::new(160, 80)).into_styled(style);
     black_backdrop.draw(&mut disp).unwrap();
     Triangle::new(
         Point::new(8, 66 + 16),

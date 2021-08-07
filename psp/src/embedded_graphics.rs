@@ -1,14 +1,9 @@
 //! Interop between the `psp` crate and the 2D `embedded-graphics` crate.
 
 use crate::sys;
-use crate::{SCREEN_WIDTH, SCREEN_HEIGHT, BUF_WIDTH};
+use crate::{BUF_WIDTH, SCREEN_HEIGHT, SCREEN_WIDTH};
 use core::convert::TryInto;
-use embedded_graphics::{
-    drawable::Pixel,
-    geometry::Size,
-    pixelcolor::{Rgb888, RgbColor},
-    DrawTarget,
-};
+use embedded_graphics::{draw_target::*, geometry::Size, pixelcolor::*, prelude::*, Pixel};
 
 pub struct Framebuffer {
     vram_base: *mut u16,
@@ -30,10 +25,30 @@ impl Framebuffer {
     }
 }
 
-impl DrawTarget<Rgb888> for Framebuffer {
+impl DrawTarget for Framebuffer {
     type Error = core::convert::Infallible;
+    type Color = Rgb888;
 
-    fn draw_pixel(&mut self, pixel: Pixel<Rgb888>) -> Result<(), Self::Error> {
+    fn draw_iter<I>(&mut self, pixels: I) -> Result<(), Self::Error>
+    where
+        I: IntoIterator<Item = embedded_graphics::Pixel<Self::Color>>,
+    {
+        for p in pixels.into_iter() {
+            self.draw_pixel(p)?;
+        }
+
+        Ok(())
+    }
+}
+
+impl OriginDimensions for Framebuffer {
+    fn size(&self) -> Size {
+        Size::new(SCREEN_WIDTH, SCREEN_HEIGHT)
+    }
+}
+
+impl Framebuffer {
+    fn draw_pixel(&mut self, pixel: Pixel<Rgb888>) -> Result<(), core::convert::Infallible> {
         let Pixel(coord, color) = pixel;
 
         if let Ok((x @ 0..=SCREEN_WIDTH, y @ 0..=SCREEN_HEIGHT)) = coord.try_into() {
@@ -42,16 +57,10 @@ impl DrawTarget<Rgb888> for Framebuffer {
                     .offset(x as isize)
                     .offset((y * BUF_WIDTH) as isize);
 
-                *ptr = (color.r() as u32)
-                    | ((color.g() as u32) << 8)
-                    | ((color.b() as u32) << 16);
+                *ptr = (color.r() as u32) | ((color.g() as u32) << 8) | ((color.b() as u32) << 16);
             }
         }
 
         Ok(())
-    }
-
-    fn size(&self) -> Size {
-        Size::new(SCREEN_WIDTH, SCREEN_HEIGHT)
     }
 }
