@@ -2925,6 +2925,7 @@ pub unsafe extern "C" fn sceGuTexLevelMode(mode: TextureLevelMode, bias: f32) {
     // Linker error if this is not here.
     #[no_mangle]
     #[cfg(target_os = "psp")]
+    #[allow(deprecated)]
     unsafe extern fn truncf(mut x: f32) -> f32 {
         llvm_asm!("cvt.w.s $0, $0" : "+f"(x));
         x

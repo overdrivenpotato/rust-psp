@@ -218,6 +218,7 @@ mod libunwind_shims {
     }
 
     #[no_mangle]
+    #[allow(deprecated)]
     unsafe extern "C" fn abort() {
         loop { llvm_asm!("" :::: "volatile"); }
     }

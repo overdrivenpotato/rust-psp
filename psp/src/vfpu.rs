@@ -32,6 +32,7 @@ macro_rules! vfpu_asm {
         )?
     ) => {{
         #[cfg(target_os = "psp")]
+        #[allow(deprecated)]
         {
             llvm_asm!(
                 concat!(
