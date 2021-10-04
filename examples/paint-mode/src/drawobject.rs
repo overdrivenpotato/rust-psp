@@ -1,8 +1,11 @@
 use embedded_graphics::{
+    geometry::AnchorPoint,
     pixelcolor::Rgb888,
     prelude::*,
-    primitives::{circle::Circle, line::Line, rectangle::Rectangle, triangle::Triangle},
-    style::{PrimitiveStyle, PrimitiveStyleBuilder, Styled},
+    primitives::{
+        circle::Circle, line::Line, rectangle::Rectangle, triangle::Triangle, PrimitiveStyle,
+        PrimitiveStyleBuilder, Styled,
+    },
 };
 
 use psp::embedded_graphics::Framebuffer;
@@ -22,10 +25,12 @@ pub enum DrawObject {
 impl DrawObject {
     pub fn size(&self) -> u32 {
         match self {
-            Self::Circ(circ) => circ.primitive.radius,
-            Self::Tri(tri) => tri.primitive.size().height / 2,
-            Self::Rect(rect) => rect.primitive.size().height / 2,
-            Self::X(x) => x[0].primitive.size().height / 2,
+            Self::Circ(circ) => circ.primitive.diameter / 2,
+            Self::Tri(tri) => {
+                ((tri.primitive.vertices[2].x - tri.primitive.vertices[1].x) / 2) as u32
+            }
+            Self::Rect(rect) => rect.primitive.size.height / 2,
+            Self::X(x) => ((x[0].primitive.end.y - x[0].primitive.start.y).abs() / 2) as u32,
         }
     }
 
@@ -65,7 +70,10 @@ impl DrawObject {
         let size = self.size();
         if size < 31 {
             match self {
-                Self::Circ(circ) => circ.primitive.radius += 1,
+                Self::Circ(circ) => {
+                    circ.primitive.diameter += 2;
+                    circ.primitive = circ.primitive.translate(Point::new(-1, -1));
+                }
                 Self::Tri(tri) => grow_triangle(tri),
                 Self::Rect(rect) => grow_rectangle(rect),
                 Self::X(x) => grow_x(x),
@@ -77,7 +85,10 @@ impl DrawObject {
         let size = self.size();
         if size > 2 {
             match self {
-                Self::Circ(circ) => circ.primitive.radius -= 1,
+                Self::Circ(circ) => {
+                    circ.primitive.diameter -= 2;
+                    circ.primitive = circ.primitive.translate(Point::new(1, 1));
+                }
                 Self::Tri(tri) => shrink_triangle(tri),
                 Self::Rect(rect) => shrink_rectangle(rect),
                 Self::X(x) => shrink_x(x),
@@ -87,15 +98,12 @@ impl DrawObject {
 
     pub fn center(&self) -> Point {
         match self {
-            Self::Circ(circ) => circ.primitive.center,
+            Self::Circ(circ) => circ.primitive.center(),
             Self::Tri(tri) => Point::new(
-                tri.primitive.p1.x,
-                (tri.primitive.p1.y + tri.primitive.p2.y) / 2,
+                tri.primitive.vertices[0].x,
+                (tri.primitive.vertices[0].y + tri.primitive.vertices[1].y) / 2,
             ),
-            Self::Rect(rect) => Point::new(
-                (rect.primitive.top_left.x + rect.primitive.bottom_right.x) / 2,
-                (rect.primitive.top_left.y + rect.primitive.bottom_right.y) / 2,
-            ),
+            Self::Rect(rect) => rect.primitive.center(),
 
             Self::X(x) => Point::new(
                 (x[0].primitive.start.x + x[0].primitive.end.x) / 2,
@@ -116,7 +124,7 @@ impl DrawObject {
 
     pub fn new_circle(point: Point, size: u32) -> Self {
         Self::Circ(
-            Circle::new(point, size).into_styled(
+            Circle::with_center(point, size * 2).into_styled(
                 PrimitiveStyleBuilder::new()
                     .stroke_color(Rgb888::RED)
                     .stroke_width(1)
@@ -137,13 +145,13 @@ impl DrawObject {
     }
 
     pub fn new_rectangle(point: Point, size: u32) -> Self {
-        let mut rect = Rectangle::new(point, point).into_styled(
+        let mut rect = Rectangle::new(point, Size::zero()).into_styled(
             PrimitiveStyleBuilder::new()
                 .stroke_color(Rgb888::MAGENTA)
                 .stroke_width(1)
                 .build(),
         );
-        grow_rectangle_by(&mut rect, size as _);
+        grow_rectangle_by(&mut rect, (size * 2) as _);
         Self::Rect(rect)
     }
 
@@ -162,47 +170,51 @@ impl DrawObject {
 }
 
 fn grow_triangle(styled_tri: &mut StyledTri) {
-    grow_triangle_by(styled_tri, 1)
+    grow_triangle_by(styled_tri, 2)
 }
 
 fn shrink_triangle(styled_tri: &mut StyledTri) {
-    grow_triangle_by(styled_tri, -1)
+    grow_triangle_by(styled_tri, -2)
 }
 
 fn grow_triangle_by(styled_tri: &mut StyledTri, grow_by: i32) {
     let mut tri = &mut styled_tri.primitive;
-    tri.p1.y -= grow_by;
+    tri.vertices[0].y -= grow_by;
 
-    tri.p2.x -= grow_by;
-    tri.p2.y += grow_by;
+    tri.vertices[1].x -= grow_by;
+    tri.vertices[1].y += grow_by;
 
-    tri.p3.x += grow_by;
-    tri.p3.y += grow_by;
+    tri.vertices[2].x += grow_by;
+    tri.vertices[2].y += grow_by;
 }
 
 fn grow_rectangle(styled_rect: &mut StyledRect) {
-    grow_rectangle_by(styled_rect, 1)
+    grow_rectangle_by(styled_rect, 2)
 }
 
 fn shrink_rectangle(styled_rect: &mut StyledRect) {
-    grow_rectangle_by(styled_rect, -1)
+    grow_rectangle_by(styled_rect, -2)
 }
 
 fn grow_rectangle_by(styled_rect: &mut StyledRect, grow_by: i32) {
-    let mut rect = &mut styled_rect.primitive;
-    rect.top_left.x -= grow_by;
-    rect.top_left.y -= grow_by;
+    let rect = styled_rect.primitive;
+    let new_rect = rect.resized(
+        Size::new(
+            (rect.size.width as i32 + grow_by) as u32,
+            (rect.size.height as i32 + grow_by) as u32,
+        ),
+        AnchorPoint::Center,
+    );
 
-    rect.bottom_right.x += grow_by;
-    rect.bottom_right.y += grow_by;
+    styled_rect.primitive = new_rect;
 }
 
 fn grow_x(styled_x: &mut StyledX) {
-    grow_x_by(styled_x, 1)
+    grow_x_by(styled_x, 2)
 }
 
 fn shrink_x(styled_x: &mut StyledX) {
-    grow_x_by(styled_x, -1)
+    grow_x_by(styled_x, -2)
 }
 
 fn grow_x_by(styled_x: &mut StyledX, grow_by: i32) {

@@ -1,6 +1,5 @@
 #![no_std]
 #![no_main]
-#![feature(slice_fill)]
 #![feature(exclusive_range_pattern)]
 #![feature(half_open_range_patterns)]
 
