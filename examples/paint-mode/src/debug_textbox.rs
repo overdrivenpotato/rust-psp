@@ -6,17 +6,18 @@ use embedded_graphics::{
     pixelcolor::Rgb888,
     prelude::*,
     primitives::{rectangle::Rectangle, PrimitiveStyle, PrimitiveStyleBuilder, Styled},
-    text::Text,
+    text::{Baseline, Text},
 };
 
 use psp::embedded_graphics::Framebuffer;
 use psp::sys::SceCtrlData;
 use psp::{SCREEN_HEIGHT, SCREEN_WIDTH};
 pub fn get_textbox<'a>() -> Text<'a, MonoTextStyle<'a, Rgb888>> {
-    Text::new(
+    Text::with_baseline(
         "",
         get_textbox_top_left(),
         MonoTextStyle::new(&FONT_6X10, Rgb888::WHITE),
+        Baseline::Top,
     )
 }
 
