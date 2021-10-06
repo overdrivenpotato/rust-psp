@@ -1,14 +1,13 @@
 #![no_std]
 #![no_main]
-#![feature(slice_fill)]
 #![feature(exclusive_range_pattern)]
 #![feature(half_open_range_patterns)]
 
 use psp_paint_mode::{
-    convert_analog_to_delta_with_sensitivity_deadzone, draw_debug_textbox, get_background,
-    DrawObject,
+    convert_analog_to_delta_with_sensitivity_deadzone, draw_debug_textbox, DrawObject,
 };
 
+use embedded_graphics::pixelcolor::Rgb888;
 use embedded_graphics::prelude::*;
 
 use psp::embedded_graphics::Framebuffer;
@@ -21,14 +20,13 @@ fn psp_main() {
     psp::enable_home_button();
 
     let disp = &mut Framebuffer::new();
-    let background = get_background();
     let mut cur_size = 1;
     let mut draw_obj = DrawObject::new_circle(get_midpoint(), cur_size);
     let mut cur_location = draw_obj.center();
 
     let mut i = 0;
 
-    background.draw(disp).unwrap();
+    disp.clear(Rgb888::BLACK).unwrap();
 
     unsafe {
         psp::sys::sceCtrlSetSamplingCycle(0);
@@ -44,7 +42,7 @@ fn psp_main() {
 
         if pad_data.buttons.contains(CtrlButtons::START) {
             // Wipe the screen
-            background.draw(disp).unwrap();
+            disp.clear(Rgb888::BLACK).unwrap();
         }
 
         if pad_data.buttons.contains(CtrlButtons::RTRIGGER) {

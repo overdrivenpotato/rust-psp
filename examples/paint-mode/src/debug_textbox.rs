@@ -2,29 +2,34 @@ use core::str;
 use numtoa::NumToA;
 
 use embedded_graphics::{
-    fonts::{Font6x8, Text},
+    mono_font::{ascii::FONT_6X10, MonoTextStyle},
     pixelcolor::Rgb888,
     prelude::*,
-    primitives::rectangle::Rectangle,
-    style::{PrimitiveStyle, PrimitiveStyleBuilder, Styled, TextStyle},
+    primitives::{rectangle::Rectangle, PrimitiveStyle, PrimitiveStyleBuilder, Styled},
+    text::{Baseline, Text},
 };
 
 use psp::embedded_graphics::Framebuffer;
 use psp::sys::SceCtrlData;
 use psp::{SCREEN_HEIGHT, SCREEN_WIDTH};
-pub fn get_textbox<'a>() -> Styled<Text<'a>, TextStyle<Rgb888, Font6x8>> {
-    Text::new("", get_textbox_top_left()).into_styled(TextStyle::new(Font6x8, Rgb888::WHITE))
+pub fn get_textbox<'a>() -> Text<'a, MonoTextStyle<'a, Rgb888>> {
+    Text::with_baseline(
+        "",
+        get_textbox_top_left(),
+        MonoTextStyle::new(&FONT_6X10, Rgb888::WHITE),
+        Baseline::Top,
+    )
 }
 
 fn get_textbox_top_left() -> Point {
-    Point::new(SCREEN_WIDTH as i32 - 42, SCREEN_HEIGHT as i32 - 8)
+    Point::new(SCREEN_WIDTH as i32 - 42, SCREEN_HEIGHT as i32 - 10)
 }
 
 fn get_textbox_wipe_rect() -> Styled<Rectangle, PrimitiveStyle<Rgb888>> {
     let style = PrimitiveStyleBuilder::new()
         .fill_color(Rgb888::BLACK)
         .build();
-    Rectangle::new(
+    Rectangle::with_corners(
         get_textbox_top_left(),
         Point::new(SCREEN_WIDTH as i32, SCREEN_HEIGHT as i32),
     )
@@ -47,7 +52,7 @@ pub fn draw_debug_textbox(disp: &mut Framebuffer, pad_data: &SceCtrlData) {
     // Instantiate our textboxes
     let textbox_wipe = get_textbox_wipe_rect();
     let mut textbox = get_textbox();
-    textbox.primitive.text = pad_debug_data_str;
+    textbox.text = pad_debug_data_str;
 
     // Actually clear and redraw the textbox on screen
     textbox_wipe.draw(disp).unwrap();
