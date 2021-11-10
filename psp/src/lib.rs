@@ -1,5 +1,6 @@
 #![allow(stable_features)]
 #![feature(
+    asm_experimental_arch,
     alloc_error_handler,
     llvm_asm,
     global_asm,

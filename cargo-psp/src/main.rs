@@ -118,10 +118,11 @@ impl fmt::Display for CommitDate {
     }
 }
 
-const MINIMUM_COMMIT_DATE: CommitDate = CommitDate { year: 2020, month: 06, day: 04 };
+// Minimum 2021-11-08, update version too
+const MINIMUM_COMMIT_DATE: CommitDate = CommitDate { year: 2021, month: 11, day: 08 };
 const MINIMUM_RUSTC_VERSION: Version = Version {
     major: 1,
-    minor: 45,
+    minor: 58,
     patch: 0,
     pre: Vec::new(),
     build: Vec::new(),

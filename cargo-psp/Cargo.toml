@@ -1,6 +1,6 @@
 [package]
 name = "cargo-psp"
-version = "0.1.2"
+version = "0.1.3"
 description = "`cargo build` wrapper for creating Sony PSP executables"
 repository = "https://github.com/overdrivenpotato/rust-psp"
 license = "MIT"
