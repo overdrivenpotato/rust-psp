@@ -2,7 +2,7 @@
 #![no_main]
 
 #![allow(dead_code)]
-#![feature(const_fn)]
+#![feature(const_fn_trait_bound)]
 
 extern crate alloc;
 
