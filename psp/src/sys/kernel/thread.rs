@@ -807,7 +807,7 @@ psp_extern! {
     /// - `info`: Pointer to the info structure to receive the data.
     ///
     ///   Note: The structures size field should be set to
-    ///   `sizeof(SceKernelThreadInfo)` before calling this function.
+    ///   `core::mem::size_of(SceKernelThreadInfo)` before calling this function.
     ///
     /// # Return Value
     ///
@@ -948,6 +948,89 @@ psp_extern! {
     pub fn sceKernelReferSemaStatus(
         sema_id: SceUid,
         info: *mut SceKernelSemaInfo,
+    ) -> i32;
+
+    #[psp(0x19CFF145)]
+    /// Create a lightweight mutex
+    ///
+    /// # Parameters
+    ///
+    /// - `work_area`: The pointer to the workarea
+    /// - `name`: The name of the lightweight mutex
+    /// - `initial_count`: The inital value of the mutex
+    /// - `options_ptr`: Other options for the mutex
+        ///
+    /// # Return Value
+    ///
+    /// 0 on success, otherwise an error code
+    pub fn sceKernelCreateLwMutex(
+        work_area: *mut SceLwMutexWorkarea,
+        name: *const u8,
+        attr: u32,
+        initial_count: i32,
+        options_ptr: u32,
+    ) -> i32;
+
+    #[psp(0x60107536)]
+    /// Delete a lightweight mutex
+    ///
+    /// # Parameters
+    ///
+    /// - `work_area`: The pointer to the workarea
+    ///
+    /// # Return Value
+    ///
+    /// 0 on success, otherwise an error code
+    pub fn sceKernelDeleteLwMutex(work_area: *mut SceLwMutexWorkarea) -> i32;
+
+    #[psp(0xDC692EE3)]
+    /// Try to lock a lightweight mutex
+    ///
+    /// # Parameters
+    ///
+    /// - `work_area`: The pointer to the workarea
+    /// - `lock_count`: value of increase the lock counter
+    ///
+    /// # Return Value
+    ///
+    /// 0 on success, otherwise an error code
+    pub fn sceKernelTryLockLwMutex(
+        work_area: *mut SceLwMutexWorkarea,
+        lock_count: i32,
+    ) -> i32;
+
+    #[psp(0x60107536)]
+    /// Lock a lightweight mutex
+    ///
+    /// # Parameters
+    ///
+    /// - `work_area`: The pointer to the workarea
+    /// - `lock_count`: value of increase the lock counter
+    /// - `timeout_ptr`: The pointer for timeout waiting
+    ///
+    /// # Return Value
+    ///
+    /// 0 on success, otherwise an error code
+    pub fn sceKernelLockLwMutex(
+        work_area: *mut SceLwMutexWorkarea,
+        lock_count: i32,
+        timeout_ptr: *mut u32,
+    ) -> i32;
+
+    #[psp(0x15B6446B)]
+    /// Unlock a lightweight mutex
+    ///
+    /// # Parameters
+    ///
+    /// - `work_area`: The pointer to the workarea
+    /// - `lock_count`: value of decrease the lock counter
+    ///
+    /// # Return Value
+    ///
+    /// 0 on success, otherwise an error code
+    pub fn sceKernelUnlockLwMutex(
+        work_area: *mut SceLwMutexWorkarea,
+        lock_count: i32,
     ) -> i32;
 
     #[psp(0x55C20A00)]
