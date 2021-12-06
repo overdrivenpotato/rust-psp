@@ -421,7 +421,7 @@ pub struct SceKernelCallbackInfo {
 
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
-pub struct SceLwMutex {
+pub struct SceKernelLwMutexWork {
     /// Count
     pub lock_count: i32,
     /// Locking thread
@@ -967,18 +967,18 @@ psp_extern! {
     /// - `attr`: Attributes of the lightweight mutex
     /// TODO: what values does this take?
     /// - `initial_count`: The inital value of the mutex
-    /// - `options_ptr`: Other options for the mutex
+    /// - `options`: Other options for the mutex
     /// TODO: what values does this take?
     ///
     /// # Return Value
     ///
     /// 0 on success, otherwise an error code
     pub fn sceKernelCreateLwMutex(
-        mutex: *mut SceLwMutex,
+        mutex: *mut SceKernelLwMutexWork,
         name: *const u8,
         attr: u32,
         initial_count: i32,
-        options_ptr: u32,
+        options: u32,
     ) -> i32;
 
     #[psp(0x60107536)]
@@ -991,7 +991,7 @@ psp_extern! {
     /// # Return Value
     ///
     /// 0 on success, otherwise an error code
-    pub fn sceKernelDeleteLwMutex(mutex: *mut SceLwMutex) -> i32;
+    pub fn sceKernelDeleteLwMutex(mutex: *mut SceKernelLwMutexWork) -> i32;
 
     #[psp(0xDC692EE3)]
     /// Tries to lock a lightweight mutex.
@@ -1005,7 +1005,7 @@ psp_extern! {
     /// # Return Value
     /// SCE_ERROR_OK on success, otherwise SCE_ERROR_KERNEL_LWMUTEX_LOCKED on error.
     pub fn sceKernelTryLockLwMutex(
-        mutex: *mut SceLwMutex,
+        mutex: *mut SceKernelLwMutexWork,
         count: i32,
     ) -> i32;
 
@@ -1016,13 +1016,15 @@ psp_extern! {
     ///
     /// # Parameters
     /// - `mutex`: Pointer to a lightweight mutex structure.
-    /// - `count: The lock counter increment.
+    /// - `count`: The lock counter increment.
+    /// - `timeout`: The timeout to expire after if the mutex cannot be locked.
     ///
     /// # Return Value
     /// SCE_ERROR_OK on success, otherwise <0 on error.
     pub fn sceKernelLockLwMutex(
-        mutex: *mut SceLwMutex,
+        mutex: *mut SceKernelLwMutexWork,
         count: i32,
+        timeout: *mut u32,
     ) -> i32;
 
     #[psp(0x1FC64E09)]
@@ -1036,7 +1038,7 @@ psp_extern! {
     ///
     /// # Return Value
     /// SCE_ERROR_OK on success, otherwise <0 on error.
-    pub fn sceKernelLockMutexCB(mutex: *mut SceLwMutex, count: i32) -> i32;
+    pub fn sceKernelLockMutexCB(mutex: *mut SceKernelLwMutexWork, count: i32) -> i32;
 
     #[psp(0x15B6446B)]
     /// Unlocks a lightweight mutex.
@@ -1050,7 +1052,7 @@ psp_extern! {
     /// # Return Value
     /// SCE_ERROR_OK on success, otherwise <0 on error.
     pub fn sceKernelUnlockLwMutex(
-        mutex: *mut SceLwMutex,
+        mutex: *mut SceKernelLwMutexWork,
         count: i32,
     ) -> i32;
 
@@ -1062,7 +1064,7 @@ psp_extern! {
     /// - `addr`: Unknown.
     /// # Return Value
     /// Unknown, may be SCE_ERROR_OK on success and <0 on error.
-    pub fn sceKernelReferLwMutexStatus(work_area: *mut SceLwMutex, addr: *mut u32) -> i32;
+    pub fn sceKernelReferLwMutexStatus(work_area: *mut SceKernelLwMutexWork, addr: *mut u32) -> i32;
 
     #[psp(0x55C20A00)]
     /// Create an event flag.
