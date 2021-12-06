@@ -1017,7 +1017,7 @@ psp_extern! {
         lock_count: i32,
     ) -> i32;
 
-    #[psp(0x60107536)]
+    #[psp(0x1FC64E09)]
     /// Lock a lightweight mutex
     ///
     /// # Parameters
