@@ -974,9 +974,10 @@ psp_extern! {
     ///
     /// - `work_area`: The pointer to the workarea
     /// - `name`: The name of the lightweight mutex
+    /// - `attr`: Attributes of the lightweight mutex
     /// - `initial_count`: The inital value of the mutex
     /// - `options_ptr`: Other options for the mutex
-        ///
+    ///
     /// # Return Value
     ///
     /// 0 on success, otherwise an error code
