@@ -978,7 +978,7 @@ psp_extern! {
         name: *const u8,
         attr: u32,
         initial_count: i32,
-        options: u32,
+        options: *mut u32,
     ) -> i32;
 
     #[psp(0x60107536)]
