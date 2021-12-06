@@ -6,9 +6,9 @@
 //! extrapolated from symbolic debugging information found in the Japanese
 //! version of Puzzle Bobble.
 
-use core::ffi::c_void;
 use super::SceUid;
 use crate::eabi::i6;
+use core::ffi::c_void;
 
 /// Structure to hold the psp profiler register values
 #[repr(C)]
@@ -85,7 +85,7 @@ bitflags::bitflags! {
     }
 }
 
-bitflags::bitflags!{
+bitflags::bitflags! {
     /// Event flag creation attributes.
     #[repr(transparent)]
     pub struct EventFlagAttributes: u32 {
@@ -246,12 +246,8 @@ pub type SceKernelVTimerHandler = unsafe extern "C" fn(
     arg3: *mut c_void,
 ) -> u32;
 
-pub type SceKernelVTimerHandlerWide = unsafe extern "C" fn(
-    uid: SceUid,
-    arg1: i64,
-    arg2: i64,
-    arg3: *mut c_void,
-) -> u32;
+pub type SceKernelVTimerHandlerWide =
+    unsafe extern "C" fn(uid: SceUid, arg1: i64, arg2: i64, arg3: *mut c_void) -> u32;
 
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
@@ -268,11 +264,8 @@ pub struct SceKernelVTimerInfo {
 }
 
 // TODO: Is this ok? What if the thread has no event handler registered?
-pub type SceKernelThreadEventHandler = unsafe extern "C" fn(
-    mask: i32,
-    thid: SceUid,
-    common: *mut c_void
-) -> i32;
+pub type SceKernelThreadEventHandler =
+    unsafe extern "C" fn(mask: i32, thid: SceUid, common: *mut c_void) -> i32;
 
 /// Struct for event handler info
 #[repr(C)]
@@ -403,11 +396,8 @@ pub struct SceKernelVTimerOptParam {
 }
 
 /// Callback function prototype
-pub type SceKernelCallbackFunction = unsafe extern "C" fn(
-    arg1: i32,
-    arg2: i32,
-    arg: *mut c_void,
-) -> i32;
+pub type SceKernelCallbackFunction =
+    unsafe extern "C" fn(arg1: i32, arg2: i32, arg: *mut c_void) -> i32;
 
 /// Structure to hold the status information for a callback
 #[repr(C)]
@@ -431,9 +421,9 @@ pub struct SceKernelCallbackInfo {
 
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
-pub struct SceLwMutexWorkarea {
+pub struct SceLwMutex {
     /// Count
-    pub lock_level: i32,
+    pub lock_count: i32,
     /// Locking thread
     pub lock_thread: SceUid,
     /// Attributes
@@ -443,7 +433,7 @@ pub struct SceLwMutexWorkarea {
     /// UID
     pub uid: SceUid,
     /// Padding
-    pub pad: [i32;3]
+    pub pad: [i32; 3],
 }
 
 psp_extern! {
@@ -972,17 +962,19 @@ psp_extern! {
     ///
     /// # Parameters
     ///
-    /// - `work_area`: The pointer to the workarea
+    /// - `mutex`: The pointer to the mutex
     /// - `name`: The name of the lightweight mutex
     /// - `attr`: Attributes of the lightweight mutex
+    /// TODO: what values does this take?
     /// - `initial_count`: The inital value of the mutex
     /// - `options_ptr`: Other options for the mutex
+    /// TODO: what values does this take?
     ///
     /// # Return Value
     ///
     /// 0 on success, otherwise an error code
     pub fn sceKernelCreateLwMutex(
-        work_area: *mut SceLwMutexWorkarea,
+        mutex: *mut SceLwMutex,
         name: *const u8,
         attr: u32,
         initial_count: i32,
@@ -994,62 +986,83 @@ psp_extern! {
     ///
     /// # Parameters
     ///
-    /// - `work_area`: The pointer to the workarea
+    /// - `mutex`: Pointer to a lightweight mutex structure.
     ///
     /// # Return Value
     ///
     /// 0 on success, otherwise an error code
-    pub fn sceKernelDeleteLwMutex(work_area: *mut SceLwMutexWorkarea) -> i32;
+    pub fn sceKernelDeleteLwMutex(mutex: *mut SceLwMutex) -> i32;
 
     #[psp(0xDC692EE3)]
-    /// Try to lock a lightweight mutex
+    /// Tries to lock a lightweight mutex.
+    ///
+    /// This function is non-blocking. If the mutex is flagged as recursive, count can be >1. For more information, see http://linux.die.net/man/3/pthread_mutex_trylock
     ///
     /// # Parameters
-    ///
-    /// - `work_area`: The pointer to the workarea
-    /// - `lock_count`: value of increase the lock counter
+    /// - `mutex`: Pointer to a lightweight mutex structure.
+    /// - `count`: The lock counter increment.
     ///
     /// # Return Value
-    ///
-    /// 0 on success, otherwise an error code
+    /// SCE_ERROR_OK on success, otherwise SCE_ERROR_KERNEL_LWMUTEX_LOCKED on error.
     pub fn sceKernelTryLockLwMutex(
-        work_area: *mut SceLwMutexWorkarea,
-        lock_count: i32,
+        mutex: *mut SceLwMutex,
+        count: i32,
     ) -> i32;
 
     #[psp(0xBEA46419)]
-    /// Lock a lightweight mutex
+    /// Locks a lightweight mutex.
+    ///
+    /// This function can be blocking if the mutex is already locked. If the mutex is flagged as recursive, count can be >1. For more information, see http://linux.die.net/man/3/pthread_mutex_lock
     ///
     /// # Parameters
-    ///
-    /// - `work_area`: The pointer to the workarea
-    /// - `lock_count`: value of increase the lock counter
-    /// - `timeout_ptr`: The pointer for timeout waiting
+    /// - `mutex`: Pointer to a lightweight mutex structure.
+    /// - `count: The lock counter increment.
     ///
     /// # Return Value
-    ///
-    /// 0 on success, otherwise an error code
+    /// SCE_ERROR_OK on success, otherwise <0 on error.
     pub fn sceKernelLockLwMutex(
-        work_area: *mut SceLwMutexWorkarea,
-        lock_count: i32,
-        timeout_ptr: *mut u32,
+        mutex: *mut SceLwMutex,
+        count: i32,
     ) -> i32;
 
-    #[psp(0x15B6446B)]
-    /// Unlock a lightweight mutex
+    #[psp(0x1FC64E09)]
+    /// Locks a lightweight mutex (callback).
+    ///
+    /// This function can be blocking if the mutex is already locked. If the mutex is flagged as recursive, count can be >1. For more information, see http://linux.die.net/man/3/pthread_mutex_lock
     ///
     /// # Parameters
-    ///
-    /// - `work_area`: The pointer to the workarea
-    /// - `lock_count`: value of decrease the lock counter
+    /// - `mutex`: Pointer to a lightweight mutex structure.
+    /// - `count`: The lock counter increment.
     ///
     /// # Return Value
+    /// SCE_ERROR_OK on success, otherwise <0 on error.
+    pub fn sceKernelLockMutexCB(mutex: *mut SceLwMutex, count: i32) -> i32;
+
+    #[psp(0x15B6446B)]
+    /// Unlocks a lightweight mutex.
     ///
-    /// 0 on success, otherwise an error code
+    /// This function is non-blocking. If the mutex is flagged as recursive, count can be >1. For more information, see http://linux.die.net/man/3/pthread_mutex_unlock
+    ///
+    /// # Parameters
+    /// - `mutex`: Pointer to a lightweight mutex structure.
+    /// - `count`: The lock counter decrement.
+    ///
+    /// # Return Value
+    /// SCE_ERROR_OK on success, otherwise <0 on error.
     pub fn sceKernelUnlockLwMutex(
-        work_area: *mut SceLwMutexWorkarea,
-        lock_count: i32,
+        mutex: *mut SceLwMutex,
+        count: i32,
     ) -> i32;
+
+    #[psp(0xC1734599)]
+    /// TODO: Refers the lightweight mutex's status.
+    ///
+    /// # Parameters
+    /// - `mutex`: Pointer to a lightweight mutex structure.
+    /// - `addr`: Unknown.
+    /// # Return Value
+    /// Unknown, may be SCE_ERROR_OK on success and <0 on error.
+    pub fn sceKernelReferLwMutexStatus(work_area: *mut SceLwMutex, addr: *mut u32) -> i32;
 
     #[psp(0x55C20A00)]
     /// Create an event flag.
