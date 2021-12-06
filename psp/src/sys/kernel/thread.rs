@@ -429,6 +429,23 @@ pub struct SceKernelCallbackInfo {
     pub notify_arg: i32,
 }
 
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct SceLwMutexWorkarea {
+    /// Count
+    pub lock_level: i32,
+    /// Locking thread
+    pub lock_thread: SceUid,
+    /// Attributes
+    pub attr: i32,
+    /// Number of waiting threads
+    pub num_wait_threads: i32,
+    /// UID
+    pub uid: SceUid,
+    /// Padding
+    pub pad: [i32;3]
+}
+
 psp_extern! {
     #![name = "ThreadManForUser"]
     #![flags = 0x4001]
