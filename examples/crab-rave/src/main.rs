@@ -17,11 +17,11 @@ use psp::{
     Align16, BUF_WIDTH, SCREEN_HEIGHT, SCREEN_WIDTH,
 };
 
-static CRAB_VERTICES: Align16<[u8; 664416]> = Align16(*include_bytes!("../assets/crab.raw"));
+static CRAB_VERTICES: Align16<[u8; 455328]> = Align16(*include_bytes!("../assets/rustacean1.raw"));
 
 psp::module!("crab-rave", 1, 1);
 
-const LIGHT_DISTANCE: f32 = 5.0;
+const LIGHT_DISTANCE: f32 = -10.0;
 
 static mut LIST: Align16<[u32; 0x40000]> = Align16([0; 0x40000]);
 
@@ -127,7 +127,7 @@ fn psp_main() {
             for i in 0..4 {
                 let pos = ScePspFVector3 {
                     x: cosf32(i as f32 * (PI / 2.0) + val as f32 * (PI / 180.0)) * LIGHT_DISTANCE,
-                    y: 0.0,
+                    y: 25.0,
                     z: (sinf32(i as f32 * (PI / 2.0) + val as f32 * (PI / 180.0)) * LIGHT_DISTANCE),
                 };
                 sys::sceGuLight(
@@ -138,10 +138,14 @@ fn psp_main() {
                 );
                 sys::sceGuLightColor(i, LightComponent::DIFFUSE, 0xff00_ffff);
                 sys::sceGuLightColor(i, LightComponent::SPECULAR, 0xffff_ffff);
-                sys::sceGuLightAtt(i, 0.0, 1.0, 0.0);
+                sys::sceGuLightAtt(i, 0.0, 0.66, 0.0);
             }
 
-            sys::sceGuSpecular(12.0);
+            /*sys::sceGuSpecular(1000.0);
+            sys::sceGuSendCommandf(psp::sys::GeCommand::Light0Diffuse, 0.0);
+            sys::sceGuSendCommandf(psp::sys::GeCommand::Light1Diffuse, 0.0);
+            sys::sceGuSendCommandf(psp::sys::GeCommand::Light2Diffuse, 0.0);
+            sys::sceGuSendCommandf(psp::sys::GeCommand::Light3Diffuse, 0.0);*/
             sys::sceGuAmbient(0x0022_2222);
 
             sys::sceGumMatrixMode(MatrixMode::Projection);
@@ -152,7 +156,7 @@ fn psp_main() {
             let pos = ScePspFVector3 {
                 x: 0.0,
                 y: 0.0,
-                z: -9.0,
+                z: -50.0,
             };
             sys::sceGumLoadIdentity();
             sys::sceGumTranslate(&pos);
