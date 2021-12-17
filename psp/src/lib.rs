@@ -4,9 +4,9 @@
     alloc_error_handler,
     global_asm,
     untagged_unions,
-    core_intrinsics,
     const_loop,
     const_if_match,
+    core_intrinsics,
     c_variadic,
     lang_items
 )]
