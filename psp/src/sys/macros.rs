@@ -22,7 +22,7 @@ macro_rules! count {
 #[cfg(target_os = "psp")]
 macro_rules! stub {
     ($name:ident, $section:expr) => {
-        global_asm!(concat!(
+        core::arch::global_asm!(concat!(
             "
                 .section ", $section, ", \"ax\", @progbits
                 .global ", stringify!($name), "

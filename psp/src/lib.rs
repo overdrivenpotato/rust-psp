@@ -72,7 +72,7 @@ pub mod embedded_graphics;
 pub struct Align16<T>(pub T);
 
 #[cfg(all(target_os = "psp", not(feature = "stub-only")))]
-global_asm!(
+core::arch::global_asm!(
     r#"
         .section .lib.ent.top, "a", @progbits
         .align 2

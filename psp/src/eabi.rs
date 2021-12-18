@@ -1,3 +1,5 @@
+use core::arch::global_asm;
+
 extern {
     /// Call a function accepting 5 32-bit integer arguments via the MIPS-EABI ABI.
     ///
