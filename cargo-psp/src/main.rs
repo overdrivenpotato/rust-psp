@@ -193,7 +193,7 @@ fn main() {
 
     // FIXME: This is a workaround. This should eventually be removed.
     let rustflags = env::var("RUSTFLAGS").unwrap_or("".into())
-        + " -C link-dead-code -C opt-level=3";
+        + " -C link-dead-code";
 
     let mut process = Command::new("cargo")
         .arg("build")

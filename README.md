@@ -159,11 +159,6 @@ xmb_music_at3 = "path/to/ATRAC3_audio.at3"
 
 More options can be found in the schema defintion [here](/cargo-psp/src/main.rs#L11-L91).
 
-## Known Bugs
-
-This crate **breaks** on builds with `opt-level=0`. Likely due to a bug in EABI
-interop. `cargo-psp` patches over this by passing `-C opt-level=3`.
-
 ## `error[E0460]: found possibly newer version of crate ...`
 
 If you get an error like this:
