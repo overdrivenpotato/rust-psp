@@ -249,6 +249,7 @@ macro_rules! vfpu_asm_next {
 /// This macro automatically converts register names (`a0`, `t4`, `s2`, etc) to
 /// corresponding numbers (`$4`, `$12`, etc).
 #[macro_export]
+#[doc(hidden)]
 macro_rules! stringify_asm {
     // Catch double braces.
     ({{ $($t1:tt)* }} $($($t2:tt)+)?) => {
@@ -329,6 +330,7 @@ macro_rules! psp_asm_discard {
 }
 
 #[macro_export]
+#[doc(hidden)]
 macro_rules! try_stringify_reg {
     (($) $b:tt $($($t:tt)+)?) => {
         concat!("$", stringify!($b) $(, " ", $crate::stringify_asm!($($t)+))? )
