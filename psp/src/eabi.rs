@@ -1,5 +1,3 @@
-use core::arch::global_asm;
-
 extern {
     /// Call a function accepting 5 32-bit integer arguments via the MIPS-EABI ABI.
     ///
@@ -39,7 +37,7 @@ extern {
 // return pointer insertion). The locations within the stack frame used for
 // arguments are called the home locations.
 #[cfg(target_os = "psp")]
-global_asm!(
+core::arch::global_asm!(
     r#"
         .section .text
         .global i5

@@ -2,7 +2,6 @@
 #![feature(
     asm_experimental_arch,
     alloc_error_handler,
-    llvm_asm,
     global_asm,
     untagged_unions,
     core_intrinsics,
@@ -48,6 +47,9 @@ pub mod sys;
 
 #[cfg(not(feature = "stub-only"))] mod constants;
 #[cfg(not(feature = "stub-only"))] pub use constants::*;
+
+#[doc(hidden)]
+pub use unstringify::unstringify;
 
 #[cfg(not(feature = "std"))]
 #[cfg(feature = "stub-only")]

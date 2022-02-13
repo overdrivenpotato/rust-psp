@@ -2927,7 +2927,7 @@ pub unsafe extern "C" fn sceGuTexLevelMode(mode: TextureLevelMode, bias: f32) {
     #[cfg(target_os = "psp")]
     #[allow(deprecated)]
     unsafe extern fn truncf(mut x: f32) -> f32 {
-        llvm_asm!("cvt.w.s $0, $0" : "+f"(x));
+        core::arch::asm!("cvt.w.s {0}, {0}", inout(freg) x);
         x
     }
 

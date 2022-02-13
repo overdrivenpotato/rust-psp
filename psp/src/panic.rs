@@ -75,7 +75,7 @@ fn panic_impl(info: &PanicInfo) -> ! {
 
     let loc = info.location().unwrap();
     let msg = info.message().unwrap();
-    rust_panic_with_hook(&mut PanicPayload::new(msg), info.message(), loc);
+    rust_panic_with_hook(&mut PanicPayload::new(msg), info.message(), loc, true);
 }
 
 /// Central point for dispatching panics.
@@ -88,6 +88,7 @@ fn rust_panic_with_hook(
     payload: &mut dyn BoxMeUp,
     message: Option<&fmt::Arguments<'_>>,
     location: &Location<'_>,
+    can_unwind: bool,
 ) -> ! {
     let panics = update_panic_count(1);
 
@@ -95,7 +96,7 @@ fn rust_panic_with_hook(
         print_and_die("thread panicked while processing panic. aborting.".into());
     }
 
-    let mut info = PanicInfo::internal_constructor(message, location);
+    let mut info = PanicInfo::internal_constructor(message, location, can_unwind);
     info.set_payload(payload.get());
 
     dprintln!("{}", info.to_string());
@@ -220,7 +221,7 @@ mod libunwind_shims {
     #[no_mangle]
     #[allow(deprecated)]
     unsafe extern "C" fn abort() {
-        loop { llvm_asm!("" :::: "volatile"); }
+        loop { core::arch::asm!(""); }
     }
 
     #[no_mangle]

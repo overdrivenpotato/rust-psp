@@ -5,15 +5,17 @@ pub unsafe extern "C" fn cosf32(rad: f32) -> f32 {
     let out;
 
     vfpu_asm!(
-        .mips "mfc1 $$t0, $1";
-        mtv t0, S000;
-        vcst_s S001, VFPU_2_PI;
-        vmul_s S000, S000, S001;
-        vcos_s S000, S000;
-        mfv t0, S000;
-        .mips "mtc1 $$t0, $0";
-
-        : "=f"(out) : "f"(rad) : "$8", "memory" : "volatile"
+        "mtv {1}, S000",
+        "vcst.s S001, VFPU_2_PI",
+        "vmul.s S000, S000, S001",
+        "vcos.s S000, S000",
+        "mfv {tmp}, S000",
+        "mtc1 {tmp}, {0}",
+        "nop",
+        out(freg) out,
+        in(reg) rad,
+        tmp = out(reg) _, 
+        options(nostack),
     );
 
     out

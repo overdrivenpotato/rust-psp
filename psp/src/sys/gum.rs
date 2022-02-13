@@ -5,9 +5,6 @@ use crate::sys::{
     vfpu_context::{Context, MatrixSet},
 };
 
-// TODO: Change all register names in `llvm_asm` to register numbers. Fixes
-// assembler bug.
-
 static mut MATRIX_STACK: [[ScePspFMatrix4; 32]; 4] = {
     let zero_vector = ScePspFVector4 { x: 0.0, y: 0.0, z: 0.0, w: 0.0 };
     let zero_matrix = ScePspFMatrix4 {
@@ -130,13 +127,12 @@ pub unsafe extern "C" fn sceGumFastInverse() {
     get_context_unchecked().prepare(MatrixSet::VMAT3, MatrixSet::VMAT0 | MatrixSet::VMAT1);
 
     vfpu_asm!(
-        vmidt_q M000;
-        vmmov_t M000, E300;
-        vneg_t  C100, C330;
-        vtfm3_t C030, M300, C100;
-        vmmov_q M300, M000;
-
-        : : : : "volatile"
+        "vmidt.q M000",
+        "vmmov.t M000, E300",
+        "vneg.t  C100, C330",
+        "vtfm3.t C030, M300, C100",
+        "vmmov.q M300, M000",
+        options(nostack, nomem),
     );
 
     CURRENT_MATRIX_UPDATE = 1;
@@ -150,23 +146,23 @@ pub unsafe extern "C" fn sceGumFullInverse() {
     get_context_unchecked().prepare(MatrixSet::VMAT3, MatrixSet::VMAT0 | MatrixSet::VMAT1);
 
     vfpu_asm!(
-        sv_q C300, a0;
-        sv_q C310, 16(a0);
-        sv_q C320, 32(a0);
-        sv_q C330, 48(a0);
-
-        : : "{$4}"(t.as_mut_ptr()) : "memory" : "volatile"
+        "sv.q C300,  0({0})",
+        "sv.q C310, 16({0})",
+        "sv.q C320, 32({0})",
+        "sv.q C330, 48({0})",
+        in(reg) (t.as_mut_ptr()),
+        options(nostack),
     );
 
     let t = gum_fast_inverse(&*t.as_ptr());
 
     vfpu_asm!(
-        lv_q C300, t0;
-        lv_q C310, 16(t0);
-        lv_q C320, 32(t0);
-        lv_q C330, 48(a0);
-
-        : : "{$8}"(&t) : "memory" : "volatile"
+        "lv.q C300,  0({0})",
+        "lv.q C310, 16({0})",
+        "lv.q C320, 32({0})",
+        "lv.q C330, 48({0})",
+        in(reg) (&t),
+        options(nostack),
     );
 
     CURRENT_MATRIX_UPDATE = 1;
@@ -187,7 +183,10 @@ pub unsafe extern "C" fn sceGumLoadIdentity() {
         .get_or_insert_with(Context::new)
         .prepare(MatrixSet::VMAT3, MatrixSet::empty());
 
-    vfpu_asm!(vmidt_q M300; : : : : "volatile");
+    vfpu_asm!(
+        "vmidt.q M300",
+        options(nostack, nomem),
+    );
 
     CURRENT_MATRIX_UPDATE = 1;
 }
@@ -205,12 +204,12 @@ pub unsafe extern "C" fn sceGumLoadMatrix(m: &ScePspFMatrix4) {
         .prepare(MatrixSet::VMAT3, MatrixSet::empty());
 
     vfpu_asm!(
-        lv_q C300,  0(a0);
-        lv_q C310, 16(a0);
-        lv_q C320, 32(a0);
-        lv_q C330, 48(a0);
-
-        : : "{$4}"(m) : "memory" : "volatile"
+        "lv.q C300,  0({0})",
+        "lv.q C310, 16({0})",
+        "lv.q C320, 32({0})",
+        "lv.q C330, 48({0})",
+        in(reg) m,
+        options(nostack),
     );
 
     CURRENT_MATRIX_UPDATE = 1;
@@ -225,14 +224,14 @@ pub unsafe extern "C" fn sceGumLookAt(eye: &ScePspFVector3, center: &ScePspFVect
     get_context_unchecked().prepare(MatrixSet::VMAT3, MatrixSet::VMAT0 | MatrixSet::VMAT1);
 
     vfpu_asm!(
-        lv_q C000, t0;
-        lv_q C010, 16(t0);
-        lv_q C020, 32(t0);
-        lv_q C030, 48(t0);
-        vmmul_q M100, M300, M000;
-        vmmov_q M300, M100;
-
-        : : "{$8}"(&t) : : "volatile"
+        "lv.q C000,  0({0})",
+        "lv.q C010, 16({0})",
+        "lv.q C020, 32({0})",
+        "lv.q C030, 48({0})",
+        "vmmul.q M100, M300, M000",
+        "vmmov.q M300, M100",
+        in(reg) (&t),
+        options(nostack),
     );
 
     CURRENT_MATRIX_UPDATE = 1;
@@ -249,12 +248,12 @@ pub unsafe extern "C" fn sceGumMatrixMode(mode: MatrixMode) {
     get_context_unchecked().prepare(MatrixSet::VMAT3, MatrixSet::empty());
 
     vfpu_asm!(
-        sv_q C300, t0;
-        sv_q C310, 16(t0);
-        sv_q C320, 32(t0);
-        sv_q C330, 48(t0);
-
-        : : "{$8}"(CURRENT_MATRIX) : "memory" : "volatile"
+        "sv.q C300,  0({0})",
+        "sv.q C310, 16({0})",
+        "sv.q C320, 32({0})",
+        "sv.q C330, 48({0})",
+        in(reg) CURRENT_MATRIX,
+        options(nostack),
     );
 
     MATRIX_UPDATE[CURRENT_MODE as usize] = CURRENT_MATRIX_UPDATE;
@@ -264,12 +263,12 @@ pub unsafe extern "C" fn sceGumMatrixMode(mode: MatrixMode) {
     CURRENT_MATRIX_UPDATE = MATRIX_UPDATE[CURRENT_MODE as usize];
 
     vfpu_asm!(
-        lv_q C300, t0;
-        lv_q C310, 16(t0);
-        lv_q C320, 32(t0);
-        lv_q C330, 48(t0);
-
-        : : "{$8}"(CURRENT_MATRIX) : "memory" : "volatile"
+        "lv.q C300,  0({0})",
+        "lv.q C310, 16({0})",
+        "lv.q C320, 32({0})",
+        "lv.q C330, 48({0})",
+        in(reg) CURRENT_MATRIX,
+        options(nostack),
     );
 }
 
@@ -284,15 +283,14 @@ pub unsafe extern "C" fn sceGumMultMatrix(m: &ScePspFMatrix4) {
     get_context_unchecked().prepare(MatrixSet::VMAT3, MatrixSet::VMAT0 | MatrixSet::VMAT1);
 
     vfpu_asm!(
-        lv_q C000,  0(t0);
-        lv_q C010, 16(t0);
-        lv_q C020, 32(t0);
-        lv_q C030, 48(t0);
-
-        vmmul_q M100, M300, M000;
-        vmmov_q M300, M100;
-
-        : : "{$8}"(m) : "memory" : "volatile"
+        "lv.q C000,  0({0})",
+        "lv.q C010, 16({0})",
+        "lv.q C020, 32({0})",
+        "lv.q C030, 48({0})",
+        "vmmul.q M100, M300, M000",
+        "vmmov.q M300, M100",
+        in(reg) m,
+        options(nostack),
     );
 
     CURRENT_MATRIX_UPDATE = 1;
@@ -316,42 +314,40 @@ pub unsafe extern "C" fn sceGumOrtho(
     get_context_unchecked().prepare(MatrixSet::VMAT3, MatrixSet::VMAT0 | MatrixSet::VMAT1);
 
     vfpu_asm!(
-        .mips "mfc1 $$t0, $0";
-        .mips "mfc1 $$t1, $1";
-        .mips "mfc1 $$t2, $2";
-        .mips "mfc1 $$t3, $3";
-        .mips "mfc1 $$t4, $4";
-        .mips "mfc1 $$t5, $5";
+        "vmidt.q M100",                         // set M100 to identity
+        "mtv     {right},  S000",               // C000 = [right, ?,      ?,  ]
+        "mtv     {top},    S001",               // C000 = [right, top,    ?,  ]
+        "mtv     {far},    S002",               // C000 = [right, top,    far ]
+        "mtv     {left},   S010",               // C010 = [left,  ?,      ?,  ]
+        "mtv     {bottom}, S011",               // C010 = [left,  bottom, ?,  ]
+        "mtv     {near},   S012",               // C010 = [left,  bottom, near]
+        "vsub.t  C020, C000, C010",             // C020 = [  dx,   dy,   dz]
+        "vrcp.t  C020, C020",                   // C020 = [1/dx, 1/dy, 1/dz]
 
-        vmidt_q M100;                         // set M100 to identity
-        mtv    t1, S000;                      // C000 = [right, ?,      ?,  ]
-        mtv    t3, S001;                      // C000 = [right, top,    ?,  ]
-        mtv    t5, S002;                      // C000 = [right, top,    far ]
-        mtv    t0, S010;                      // C010 = [left,  ?,      ?,  ]
-        mtv    t2, S011;                      // C010 = [left,  bottom, ?,  ]
-        mtv    t4, S012;                      // C010 = [left,  bottom, near]
-        vsub_t  C020, C000, C010;             // C020 = [  dx,   dy,   dz]
-        vrcp_t  C020, C020;                   // C020 = [1/dx, 1/dy, 1/dz]
+        "vpfxs 2",                              // S100 = m->x.x = 2.0 / dx
+        "vmul.s S100, S100, S020",
 
-        vpfxs [2];                            // S100 = m->x.x = 2.0 / dx
-        vmul_s S100, S100, S020;
+        "vpfxs 2",                              // S110 = m->y.y = 2.0 / dy
+        "vmul.s  S111, S111, S021",
 
-        vpfxs [2];                            // S110 = m->y.y = 2.0 / dy
-        vmul_s  S111, S111, S021;
+        "vpfxs 2",                              // S122 = m->z.z = -2.0 / dz
+        "vpfxt -X",
+        "vmul.s  S122, S122, S022",
 
-        vpfxs [2];                            // S122 = m->z.z = -2.0 / dz
-        vpfxt [-X];
-        vmul_s  S122, S122, S022;
+        "vpfxs -X, -Y, -Z",                     // C130 = m->w[x, y, z] = [-(right+left), -(top+bottom), -(far+near)]
+        "vsub.t  C130, C000, C010",             // we do vsub here since -(a+b) => (-1*a) + (-1*b) => -a - b
 
-        vpfxs [-X], [-Y], [-Z];               // C130 = m->w[x, y, z] = [-(right+left), -(top+bottom), -(far+near)]
-        vsub_t  C130, C000, C010;             // we do vsub here since -(a+b) => (-1*a) + (-1*b) => -a - b
+        "vmul.t  C130, C130, C020",             // C130 = [-(right+left)/dx, -(top+bottom)/dy, -(far+near)/dz]
+        "vmmul.q M000, M300, M100",
+        "vmmov.q M300, M000",
 
-        vmul_t  C130, C130, C020;             // C130 = [-(right+left)/dx, -(top+bottom)/dy, -(far+near)/dz]
-        vmmul_q M000, M300, M100;
-        vmmov_q M300, M000;
-
-        : : "f"(left), "f"(right), "f"(bottom), "f"(top), "f"(near), "f"(far)
-        : "$8", "$9", "$10", "$11", "$12", "$13" : "volatile"
+        left = in(reg) left,
+        right = in(reg) right,
+        bottom = in(reg) bottom,
+        top = in(reg) top,
+        near = in(reg) near,
+        far = in(reg) far,
+        options(nostack, nomem),
     );
 
     CURRENT_MATRIX_UPDATE = 1;
@@ -368,46 +364,44 @@ pub unsafe extern "C" fn sceGumPerspective(fovy: f32, aspect: f32, near: f32, fa
     get_context_unchecked().prepare(MatrixSet::VMAT3, MatrixSet::VMAT0 | MatrixSet::VMAT1);
 
     vfpu_asm!(
-        .mips "mfc1 $$t0, $0";
-        .mips "mfc1 $$t1, $1";
-        .mips "mfc1 $$t2, $2";
-        .mips "mfc1 $$t3, $3";
+        "vmzero.q M100",                   // set M100 to all zeros
+        "mtv     {fovy}, S000",            // S000 = fovy
+        "viim.s  S001, 90",                // S002 = 90.0f
+        "vrcp.s  S001, S001",              // S002 = 1/90
 
-        vmzero_q M100;                   // set M100 to all zeros
-        mtv     t0, S000;                // S000 = fovy
-        viim_s  S001, 90;                // S002 = 90.0f
-        vrcp_s  S001, S001;              // S002 = 1/90
+        "vpfxt 1/2",                       // S000 = fovy * 0.5 = fovy/2
+        "vmul.s  S000, S000, S000",
 
-        vpfxt [1/2];                     // S000 = fovy * 0.5 = fovy/2
-        vmul_s  S000, S000, S000;
+        "vmul.s  S000, S000, S001",        // S000 = (fovy/2)/90
+        "vrot.p  C002, S000, [C, S]",      // S002 = cos(angle), S003 = sin(angle)
+        "vdiv.s  S100, S002, S003",        // S100 = m->x.x = cotangent = cos(angle)/sin(angle)
+        "mtv     {near}, S001",            // S001 = near
+        "mtv     {far}, S002",             // S002 = far
+        "vsub.s  S003, S001, S002",        // S003 = deltaz = near-far
+        "vrcp.s  S003, S003",              // S003 = 1/deltaz
+        "mtv     {aspect}, S000",          // S000 = aspect
+        "vmov.s  S111, S100",              // S111 = m->y.y = cotangent
+        "vdiv.s  S100, S100, S000",        // S100 = m->x.x = cotangent / aspect
+        "vadd.s  S122, S001, S002",        // S122 = m->z.z = far + near
+        "vmul.s  S122, S122, S003",        // S122 = m->z.z = (far+near)/deltaz
+        "vmul.s  S132, S001, S002",        // S132 = m->w.z = far * near
 
-        vmul_s  S000, S000, S001;        // S000 = (fovy/2)/90
-        vrot_p  C002, S000, [C, S];      // S002 = cos(angle), S003 = sin(angle)
-        vdiv_s  S100, S002, S003;        // S100 = m->x.x = cotangent = cos(angle)/sin(angle)
-        mtv     t2, S001;                // S001 = near
-        mtv     t3, S002;                // S002 = far
-        vsub_s  S003, S001, S002;        // S003 = deltaz = near-far
-        vrcp_s  S003, S003;              // S003 = 1/deltaz
-        mtv     t1, S000;                // S000 = aspect
-        vmov_s  S111, S100;              // S111 = m->y.y = cotangent
-        vdiv_s  S100, S100, S000;        // S100 = m->x.x = cotangent / aspect
-        vadd_s  S122, S001, S002;        // S122 = m->z.z = far + near
-        vmul_s  S122, S122, S003;        // S122 = m->z.z = (far+near)/deltaz
-        vmul_s  S132, S001, S002;        // S132 = m->w.z = far * near
+        "vpfxt 2",                         // S132 = m->w.z = 2 * (far*near)
+        "vmul.s  S132, S132, S132",
 
-        vpfxt [2];                       // S132 = m->w.z = 2 * (far*near)
-        vmul_s  S132, S132, S132;
+        "vmul.s  S132, S132, S003",        // S132 = m->w.z = 2 * (far*near) / deltaz
 
-        vmul_s  S132, S132, S003;        // S132 = m->w.z = 2 * (far*near) / deltaz
+        "vpfxt 1",                         // S123 = m->z.w = -1.0
+        "vsub.s  S123, S123, S123",
 
-        vpfxt [1];                       // S123 = m->z.w = -1.0
-        vsub_s  S123, S123, S123;
+        "vmmul.q M000, M300, M100",
+        "vmmov.q M300, M000",
 
-        vmmul_q M000, M300, M100;
-        vmmov_q M300, M000;
-
-        : : "f"(fovy), "f"(aspect), "f"(near), "f"(far)
-        : "$8", "$9", "$10", "$11" : "volatile"
+        fovy = in(reg) fovy,
+        aspect = in(reg) aspect,
+        near = in(reg) near,
+        far = in(reg) far,
+        options(nostack, nomem),
     );
 
     CURRENT_MATRIX_UPDATE = 1;
@@ -421,12 +415,12 @@ pub unsafe extern "C" fn sceGumPopMatrix() {
     get_context_unchecked().prepare(MatrixSet::VMAT3, MatrixSet::empty());
 
     vfpu_asm!(
-        lv_q C300,  0(t0);
-        lv_q C310, 16(t0);
-        lv_q C320, 32(t0);
-        lv_q C330, 48(t0);
-
-        : : "{$8}"(CURRENT_MATRIX) : : "volatile"
+        "lv.q C300,  0({0})",
+        "lv.q C310, 16({0})",
+        "lv.q C320, 32({0})",
+        "lv.q C330, 48({0})",
+        in(reg) CURRENT_MATRIX,
+        options(nostack),
     );
 
     CURRENT_MATRIX_UPDATE = 1;
@@ -440,12 +434,12 @@ pub unsafe extern "C" fn sceGumPushMatrix() {
     get_context_unchecked().prepare(MatrixSet::VMAT3, MatrixSet::empty());
 
     vfpu_asm!(
-        sv_q C300,  0(t0);
-        sv_q C310, 16(t0);
-        sv_q C320, 32(t0);
-        sv_q C330, 48(t0);
-
-        : : "{$8}"(CURRENT_MATRIX) : "memory" : "volatile"
+        "sv.q C300,  0({0})",
+        "sv.q C310, 16({0})",
+        "sv.q C320, 32({0})",
+        "sv.q C330, 48({0})",
+        in(reg) CURRENT_MATRIX,
+        options(nostack),
     );
 }
 
@@ -460,17 +454,16 @@ pub unsafe extern "C" fn sceGumRotateX(angle: f32) {
     get_context_unchecked().prepare(MatrixSet::VMAT3, MatrixSet::VMAT0 | MatrixSet::VMAT1);
 
     vfpu_asm!(
-        .mips "mfc1 $$t0, $0";
-        vmidt_q M000;
-        mtv t0, S100;
-        vcst_s S101, VFPU_2_PI;
-        vmul_s S100, S101, S100;
-        vrot_q C010, S100, [0, C, S, 0];
-        vrot_q C020, S100, [0, -S, C, 0];
-        vmmul_q M100, M300, M000;
-        vmmov_q M300, M100;
-
-        : : "f"(angle) : "$8" : "volatile"
+        "vmidt.q M000",
+        "mtv {}, S100",
+        "vcst.s S101, VFPU_2_PI",
+        "vmul.s S100, S101, S100",
+        "vrot.q C010, S100, [0, C, S, 0]",
+        "vrot.q C020, S100, [0, -S, C, 0]",
+        "vmmul.q M100, M300, M000",
+        "vmmov.q M300, M100",
+        in(reg) angle,
+        options(nostack, nomem),
     );
 
     CURRENT_MATRIX_UPDATE = 1;
@@ -487,17 +480,16 @@ pub unsafe extern "C" fn sceGumRotateY(angle: f32) {
     get_context_unchecked().prepare(MatrixSet::VMAT3, MatrixSet::VMAT0 | MatrixSet::VMAT1);
 
     vfpu_asm!(
-        .mips "mfc1 $$t0, $0";
-        vmidt_q M000;
-        mtv     t0, S100;
-        vcst_s  S101, VFPU_2_PI;
-        vmul_s  S100, S101, S100;
-        vrot_q  C000, S100, [C, 0,-S, 0];
-        vrot_q  C020, S100, [S, 0, C, 0];
-        vmmul_q M100, M300, M000;
-        vmmov_q M300, M100;
-
-        : : "f"(angle) : "$8" : "volatile"
+        "vmidt.q M000",
+        "mtv     {}, S100",
+        "vcst.s  S101, VFPU_2_PI",
+        "vmul.s  S100, S101, S100",
+        "vrot.q  C000, S100, [C, 0,-S, 0]",
+        "vrot.q  C020, S100, [S, 0, C, 0]",
+        "vmmul.q M100, M300, M000",
+        "vmmov.q M300, M100",
+        in(reg) angle,
+        options(nostack, nomem),
     );
 
     CURRENT_MATRIX_UPDATE = 1;
@@ -514,17 +506,16 @@ pub unsafe extern "C" fn sceGumRotateZ(angle: f32) {
     get_context_unchecked().prepare(MatrixSet::VMAT3, MatrixSet::VMAT0 | MatrixSet::VMAT1);
 
     vfpu_asm!(
-        .mips "mfc1 $$t0, $0";
-        vmidt_q M000;
-        mtv     t0, S100;
-        vcst_s  S101, VFPU_2_PI;
-        vmul_s  S100, S101, S100;
-        vrot_q  C000, S100, [ C, S, 0, 0];
-        vrot_q  C010, S100, [-S, C, 0, 0];
-        vmmul_q M100, M300, M000;
-        vmmov_q M300, M100;
-
-        : : "f"(angle) : "$8" : "volatile"
+        "vmidt.q M000",
+        "mtv     {}, S100",
+        "vcst.s  S101, VFPU_2_PI",
+        "vmul.s  S100, S101, S100",
+        "vrot.q  C000, S100, [ C, S, 0, 0]",
+        "vrot.q  C010, S100, [-S, C, 0, 0]",
+        "vmmul.q M100, M300, M000",
+        "vmmov.q M300, M100",
+        in(reg) angle,
+        options(nostack, nomem),
     );
 
     CURRENT_MATRIX_UPDATE = 1;
@@ -567,12 +558,12 @@ pub unsafe extern "C" fn sceGumScale(v: &ScePspFVector3) {
     get_context_unchecked().prepare(MatrixSet::VMAT3, MatrixSet::VMAT0);
 
     vfpu_asm!(
-        lv_q C000, a0;
-        vscl_t C300, C300, S000;
-        vscl_t C310, C310, S001;
-        vscl_t C320, C320, S002;
-
-        : : "{$4}"(v) : : "volatile"
+        "lv.q C000, {}",
+        "vscl.t C300, C300, S000",
+        "vscl.t C310, C310, S001",
+        "vscl.t C320, C320, S002",
+        in(reg) v,
+        options(nostack),
     );
 
     CURRENT_MATRIX_UPDATE = 1;
@@ -589,12 +580,12 @@ pub unsafe extern "C" fn sceGumStoreMatrix(m: &mut ScePspFMatrix4) {
     get_context_unchecked().prepare(MatrixSet::VMAT3, MatrixSet::VMAT0);
 
     vfpu_asm!(
-        sv_q C300,  0(a0);
-        sv_q C310, 16(a0);
-        sv_q C320, 32(a0);
-        sv_q C330, 48(a0);
-
-        : : "{$4}"(m) : "memory" : "volatile"
+        "sv.q C300,  0({0})",
+        "sv.q C310, 16({0})",
+        "sv.q C320, 32({0})",
+        "sv.q C330, 48({0})",
+        in(reg) m,
+        options(nostack),
     );
 }
 
@@ -609,13 +600,13 @@ pub unsafe extern "C" fn sceGumTranslate(v: &ScePspFVector3) {
     get_context_unchecked().prepare(MatrixSet::VMAT3, MatrixSet::VMAT0 | MatrixSet::VMAT1);
 
     vfpu_asm!(
-        vmidt_q M000;
-        lv_q    C100, a0;
-        vmov_t  C030, C100;
-        vmmul_q M100, M300, M000;
-        vmmov_q M300, M100;
-
-        : : "{$4}"(v) : "memory" : "volatile"
+        "vmidt.q M000",
+        "lv.q    C100, {}",
+        "vmov.t  C030, C100",
+        "vmmul.q M100, M300, M000",
+        "vmmov.q M300, M100",
+        in(reg) v,
+        options(nostack),
     );
 
     CURRENT_MATRIX_UPDATE = 1;
@@ -631,12 +622,12 @@ pub unsafe extern "C" fn sceGumUpdateMatrix() {
         get_context_unchecked().prepare(MatrixSet::VMAT3, MatrixSet::empty());
 
         vfpu_asm!(
-            sv_q C300,  0(t0);
-            sv_q C310, 16(t0);
-            sv_q C320, 32(t0);
-            sv_q C330, 48(t0);
-
-            : : "{$8}"(CURRENT_MATRIX) : "memory" : "volatile"
+            "sv.q C300,  0({0})",
+            "sv.q C310, 16({0})",
+            "sv.q C320, 32({0})",
+            "sv.q C330, 48({0})",
+            in(reg) CURRENT_MATRIX,
+            options(nostack),
         );
 
         MATRIX_UPDATE[CURRENT_MODE as usize] = CURRENT_MATRIX_UPDATE;
@@ -733,22 +724,24 @@ unsafe fn gum_translate(m: &mut ScePspFMatrix4, v: &ScePspFVector3) {
     );
 
     vfpu_asm!(
-        lv_q C100,  0(a0);
-        lv_q C110, 16(a0);
-        lv_q C120, 32(a0);
-        lv_q C130, 48(a0);
+        "lv.q C100,  0({m})",
+        "lv.q C110, 16({m})",
+        "lv.q C120, 32({m})",
+        "lv.q C130, 48({m})",
 
-        vmidt_q M000;
-        lv_q    C200, a1;
-        vmov_t  C030, C200;
-        vmmul_q M200, M100, M000;
+        "vmidt.q M000",
+        "lv.q    C200, {v}",
+        "vmov.t  C030, C200",
+        "vmmul.q M200, M100, M000",
 
-        sv_q C200,  0(a0);
-        sv_q C210, 16(a0);
-        sv_q C220, 32(a0);
-        sv_q C230, 48(a0);
+        "sv.q C200,  0({m})",
+        "sv.q C210, 16({m})",
+        "sv.q C220, 32({m})",
+        "sv.q C230, 48({m})",
 
-        : : "{$4}"(m), "{$5}"(v) : "memory" : "volatile"
+        m = in(reg) m,
+        v = in(reg) v,
+        options(nostack),
     );
 }
 
@@ -758,13 +751,13 @@ unsafe fn gum_load_identity() -> ScePspFMatrix4 {
     let mut out = MaybeUninit::uninit();
 
     vfpu_asm!(
-        vmidt_q M000;
-        sv_q C000,  0(a0);
-        sv_q C010, 16(a0);
-        sv_q C020, 32(a0);
-        sv_q C030, 48(a0);
-
-        : : "{$4}"(out.as_mut_ptr()) : "memory" : "volatile"
+        "vmidt.q M000",
+        "sv.q C000,  0({0})",
+        "sv.q C010, 16({0})",
+        "sv.q C020, 32({0})",
+        "sv.q C030, 48({0})",
+        in(reg) (out.as_mut_ptr()),
+        options(nostack),
     );
 
     out.assume_init()
@@ -779,22 +772,24 @@ unsafe fn gum_fast_inverse(a: &ScePspFMatrix4) -> ScePspFMatrix4 {
     let mut out = MaybeUninit::uninit();
 
     vfpu_asm!(
-        lv_q C200,  0(a1);
-        lv_q C210, 16(a1);
-        lv_q C220, 32(a1);
-        lv_q C230, 48(a1);
+        "lv.q C200,  0({a})",
+        "lv.q C210, 16({a})",
+        "lv.q C220, 32({a})",
+        "lv.q C230, 48({a})",
 
-        vmidt_q M000;
-        vmmov_t M000, E200;
-        vneg_t C100, C230;
-        vtfm3_t C030, M200, C100;
+        "vmidt.q M000",
+        "vmmov.t M000, E200",
+        "vneg.t C100, C230",
+        "vtfm3.t C030, M200, C100",
 
-        sv_q C000,  0(a0);
-        sv_q C010, 16(a0);
-        sv_q C020, 32(a0);
-        sv_q C030, 48(a0);
+        "sv.q C000,  0({out})",
+        "sv.q C010, 16({out})",
+        "sv.q C020, 32({out})",
+        "sv.q C030, 48({out})",
 
-        : : "{$4}"(out.as_mut_ptr()), "{$5}"(a) : "memory" : "volatile"
+        out = in(reg) (out.as_mut_ptr()),
+        a = in(reg) a,
+        options(nostack),
     );
 
     out.assume_init()
@@ -809,24 +804,27 @@ unsafe fn gum_mult_matrix(a: &ScePspFMatrix4, b: &ScePspFMatrix4) -> ScePspFMatr
     let mut out = MaybeUninit::uninit();
 
     vfpu_asm!(
-        lv_q C000,  0(a1);
-        lv_q C010, 16(a1);
-        lv_q C020, 32(a1);
-        lv_q C030, 48(a1);
+        "lv.q C000,  0({a})",
+        "lv.q C010, 16({a})",
+        "lv.q C020, 32({a})",
+        "lv.q C030, 48({a})",
 
-        lv_q C100,  0(a2);
-        lv_q C110, 16(a2);
-        lv_q C120, 32(a2);
-        lv_q C130, 48(a2);
+        "lv.q C100,  0({b})",
+        "lv.q C110, 16({b})",
+        "lv.q C120, 32({b})",
+        "lv.q C130, 48({b})",
 
-        vmmul_q M200, M000, M100;
+        "vmmul.q M200, M000, M100",
 
-        sv_q C200,  0(a0);
-        sv_q C210, 16(a0);
-        sv_q C220, 32(a0);
-        sv_q C230, 48(a0);
+        "sv.q C200,  0({out})",
+        "sv.q C210, 16({out})",
+        "sv.q C220, 32({out})",
+        "sv.q C230, 48({out})",
 
-        : : "{$4}"(&mut out), "{$5}"(a), "{$6}"(b) : "memory" : "volatile"
+        out = in(reg) (&mut out),
+        a = in(reg) a,
+        b = in(reg) b,
+        options(nostack),
     );
 
     out.assume_init()

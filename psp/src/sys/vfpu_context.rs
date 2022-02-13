@@ -65,12 +65,12 @@ impl Context {
         macro_rules! restore {
             ($restore_addr:expr, $c0:ident, $c1:ident, $c2:ident, $c3:ident) => {
                 vfpu_asm! {
-                    lv_q $c0, t0;
-                    lv_q $c1, 16(t0);
-                    lv_q $c2, 32(t0);
-                    lv_q $c3, 48(t0);
-
-                    : : "{$8}"($restore_addr) : "memory" : "volatile"
+                    stringify!(lv.q $c0,  0({0})),
+                    stringify!(lv.q $c1, 16({0})),
+                    stringify!(lv.q $c2, 32({0})),
+                    stringify!(lv.q $c3, 48({0})),
+                    in(reg)($restore_addr),
+                    options(nostack),
                 }
             }
         }
@@ -98,12 +98,12 @@ impl Context {
         macro_rules! save {
             ($save_addr:expr, $c0:ident, $c1:ident, $c2:ident, $c3:ident) => {
                 vfpu_asm! {
-                    sv_q $c0, t0;
-                    sv_q $c1, 16(t0);
-                    sv_q $c2, 32(t0);
-                    sv_q $c3, 48(t0);
-
-                    : : "{$8}"($save_addr) : "memory" : "volatile"
+                    stringify!(sv.q $c0,  0({0})),
+                    stringify!(sv.q $c1, 16({0})),
+                    stringify!(sv.q $c2, 32({0})),
+                    stringify!(sv.q $c3, 48({0})),
+                    in(reg) ($save_addr),
+                    options(nostack),
                 }
             }
         }
