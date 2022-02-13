@@ -12,7 +12,7 @@ image_resource:
 
 params:
   RUSTFLAGS: "-C link-dead-code"
-  RUSTUP_TOOLCHAIN: nightly-2021-11-08
+  RUSTUP_TOOLCHAIN: nightly-2022-01-23
 
 inputs:
   - name: repo
