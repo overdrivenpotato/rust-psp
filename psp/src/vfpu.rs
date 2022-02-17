@@ -9,6 +9,22 @@
 ///
 /// - Currently, registers cannot be specified by name in operands. For example
 ///   this is invalid: `out("t0") _`, instead you must use `out("$8")`.
+///
+/// # A note on transposed matrices
+///
+/// While some documentation online suggests that the `M___` registers represent
+/// matrices, and the adjacent `E___` registers represent their inverse, this is
+/// somewhat wrong.
+///
+/// It can be better said that `M___` interprets the registers as being stored
+/// in row-major format, and `E___` interprets the registers as being stored in
+/// column-major format. While many instructions (`vmmov`, `vmidt`, `vmzero`)
+/// aren't sensitive to matrix transpositions, this matters for `vtfm_` and
+/// `vhtfm_`.
+///
+/// `vmmul` is an exception to this rule. See [this comment] for more details.
+///
+/// [this comment]: https://github.com/overdrivenpotato/rust-psp/issues/112#issuecomment-1043535976
 #[macro_export]
 macro_rules! vfpu_asm {
     // Kickstart the parser.
