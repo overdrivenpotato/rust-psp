@@ -109,8 +109,14 @@ usage guides for those programs.
 
 ### Debugging
 
-`psp-gdb` is currently too old to support printing Rust types. `rust-lldb` may
-be possible but it has not be experimented with yet.
+Using the latest version of psplink and psp-gdb from the [pspdev github organization](https://github.com/pspdev) (`GNU gdb (GDB) 11.0.50.20210718-git` or later), Rust types are fully supported, providing a rich debugging experience. Enable debug symbols in your release binaries
+
+`Cargo.toml`
+```toml
+[profile.release]
+debug = true
+```
+and follow the instructions in part 6 of [the PSPlink manual](https://usermanual.wiki/Document/psplinkmanual.1365336729/)
 
 ## Usage
 
