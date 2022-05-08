@@ -109,7 +109,7 @@ usage guides for those programs.
 
 ### Debugging
 
-Using the latest version of psplink and psp-gdb from the [pspdev github organization](https://github.com/pspdev) (`GNU gdb (GDB) 11.0.50.20210718-git` or later), Rust types are fully supported, providing a rich debugging experience. Enable debug symbols in your release binaries
+Using the latest version of psplink and psp-gdb from the [pspdev github organization](https://github.com/pspdev) (`psplinkusb v3.1.0 and GNU gdb (GDB) 11.0.50.20210718-git` or later), Rust types are fully supported, providing a rich debugging experience. Enable debug symbols in your release binaries
 
 `Cargo.toml`
 ```toml
