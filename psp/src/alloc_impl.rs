@@ -107,3 +107,15 @@ unsafe extern fn memmove(dst: *mut u8, src: *mut u8, num: isize) -> *mut u8 {
 
     dst
 }
+
+#[no_mangle]
+#[cfg(not(feature = "stub-only"))]
+unsafe extern fn strlen(s: *mut u8) -> usize {
+    let mut len = 0;
+
+    while *s.add(len) != 0 {
+        len += 1;
+    }
+
+    len
+}
