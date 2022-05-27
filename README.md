@@ -56,7 +56,7 @@ implementations of graphics functions, and the addition of missing libraries.
 ## Dependencies
 
 To compile for the PSP, you will need a Rust **nightly** version equal to or
-later than `2022-01-23` and the `rust-src` component. Please install Rust using
+later than `2022-05-22` and the `rust-src` component. Please install Rust using
 https://rustup.rs/
 
 Use the following if you are new to Rust. (Feel free to set an override manually
