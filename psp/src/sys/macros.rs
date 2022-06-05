@@ -1,62 +1,53 @@
-/// Generate a zero-sized sentinel value.
-///
-/// Used to mark the top of a section, e.g. `.sceStub.text.ThreadManForUser`.
 #[cfg(target_os = "psp")]
-macro_rules! sentinel {
-    ($name:ident, $section:expr) => {
-        #[link_section = $section]
-        #[no_mangle]
-        static $name: () = ();
+use crate::sys::SceStubLibraryEntry;
+
+/// A macro that enables the use of `concat!` inside the `#[link_section = ...]`
+/// attribute.
+#[cfg(target_os = "psp")]
+macro_rules! link_section_concat {
+    ($(#[link_section = $section:expr] $item:item)*) => {
+        $(
+            #[link_section = $section]
+            $item
+        )*
     }
 }
 
 #[cfg(target_os = "psp")]
-macro_rules! count {
-    ($single:ident) => { 1 };
-    ($first:ident, $($rest:ident),*) => { 1 + count!($($rest),*) };
-}
-
-/// Generate a PSP function stub.
-///
-/// This generates an assembly stub with the given section and name.
-#[cfg(target_os = "psp")]
-macro_rules! stub {
-    ($name:ident, $section:expr) => {
-        core::arch::global_asm!(concat!(
-            "
-                .section ", $section, ", \"ax\", @progbits
-                .global ", stringify!($name), "
-                ", stringify!($name), ":
-                    jr $ra
-            "
-        ));
+pub(crate) fn black_box<T>(dummy: T) -> T {
+    // This is taken from core::hint::black_box.
+    unsafe {
+        core::arch::asm!("/* {0} */", in(reg)(&dummy));
+        dummy
     }
 }
 
-/// Generate a PSP function NID.
+/// A "function" stub.
 ///
-/// This macro is split from `psp_extern!` to allow for `concat!`-based
-/// generation. If you try to generate a NID like so...
+/// This is a very dirty trick for LTO. Essentially, the PSP OS takes the
+/// address of a stub and inserts 2 instructions (8 bytes) which are `jr $ra`
+/// and `syscall xxx`. Traditionally, the C/C++ toolchain stores the initial
+/// data here as just an empty function that immediately returns (8 bytes,
+/// `jr $ra; nop`). However, we use it to store 2 references: to the NID and to
+/// the library stub.
 ///
-/// ```ignore
-/// #[link_section = concat!(".foo", ".bar")]
-/// static FOO: u32 = 123;
-/// ```
-///
-/// ... you will receive an error. However, calling this macro in place works
-/// fine:
-///
-/// ```ignore
-/// nid!(FOO, concat!(".foo", ".bar"), 123);
-/// ```
+/// This results in LTO builds compiling in the NID and library stubs whenever a
+/// function is called, as this struct references them. Thus, this struct
+/// definition creates a dependency between the function call, and the NID + lib
+/// stub. As mentioned earlier, these two addresses (8 bytes) are replaced with
+/// two instructions (also 8 bytes) at runtime, so they are not actually called
+/// as a function. With this method, nothing has to be marked `#[used]`, so LLVM
+/// can automatically remove unreferenced NIDs and library stubs during LTO.
+/// Compiling with LTO then only links the functions that are called, and no
+/// more.
 #[cfg(target_os = "psp")]
-macro_rules! nid {
-    ($name:ident, $section:expr, $value:expr) => {
-        #[no_mangle]
-        #[link_section = $section]
-        #[used]
-        static $name: u32 = $value;
-    }
+#[derive(Copy, Clone)]
+pub(crate) struct Stub {
+    // These are never read, but need to be written into as static items.
+    #[allow(dead_code)]
+    pub(crate) lib_addr: &'static SceStubLibraryEntry,
+    #[allow(dead_code)]
+    pub(crate) nid_addr: &'static u32,
 }
 
 /// Calculate the padded length for a library name.
@@ -90,28 +81,31 @@ pub const fn lib_name_bytes<const T: usize>(name: &str) -> [u8; T] {
 /// A complex macro used to define and link a PSP system library.
 macro_rules! psp_extern {
     // Generate body with default ABI.
-    (__BODY $name:ident ($($arg:ident : $arg_ty:ty),*) $(-> $ret:ty)?) => {
-        expr! {
-            extern {
-                fn [< __ $name _stub >]($($arg : $arg_ty),*) $(-> $ret)?;
-            }
+    (__BODY $name:ident ($($arg:ident : $arg_ty:ty),*) $(-> $ret:ty)?) => {{
+        type Func = fn($($arg : $arg_ty),*) $(-> $ret)?;
 
-            [< __ $name _stub >] ($($arg),*)
+        paste! {
+            // Black box to prevent LLVM from peeking inside this "function".
+            // TODO: Is this black box even necessary?
+            let stub_addr = $crate::sys::macros::black_box(&[< __ $name _stub >]);
+            let func = core::mem::transmute::<_, Func>(stub_addr);
+            func($($arg),*)
         }
-    };
+    }};
 
     // Generate body with an ABI mapper
     (__BODY $abi:ident $name:ident ($($arg:ident : $arg_ty:ty),*) $(-> $ret:ty)?) => {{
-        expr! {
-            extern {
-                fn [< __ $name _stub >]($($arg : $arg_ty),*) $(-> $ret)?;
-            }
+        type Func = fn($($arg : $arg_ty),*) $(-> $ret)?;
+
+        paste! {
+            let stub_addr = $crate::sys::macros::black_box(&[< __ $name _stub >]);
+            let func = core::mem::transmute::<_, Func>(stub_addr);
 
             // The transmutes here are for newtypes that fit into a single
             // register.
             core::mem::transmute($abi(
                 $(core::mem::transmute($arg)),*,
-                core::mem::transmute([< __ $name _stub >] as usize),
+                core::mem::transmute(func),
             ))
         }
     }};
@@ -128,83 +122,104 @@ macro_rules! psp_extern {
             $(-> $ret:ty)?;
         )*
     ) => {
-        item! {
-            // Just passed to the linker, not used anywhere else.
-            #[cfg(target_os = "psp")]
+        paste! {
             #[allow(non_snake_case)]
             mod [< __ $lib_name _mod >] {
-                #[link_section = ".rodata.sceResident"]
-                #[no_mangle]
-                #[used]
-                static [< __ $lib_name _RESIDENT >] : [u8; $crate::sys::macros::lib_name_bytes_len($lib_name)] = $crate::sys::macros::lib_name_bytes($lib_name);
+                #[allow(unused)]
+                use super::*;
 
-                #[link_section = ".lib.stub"]
-                #[no_mangle]
-                #[used]
-                static [< __ $lib_name _STUB >] : $crate::sys::SceStubLibraryEntry = $crate::sys::SceStubLibraryEntry {
-                    name: expr! { & [< __ $lib_name _RESIDENT >] [0] },
-                    version: [$lib_minor_version, $lib_major_version],
-                    flags: $lib_flags,
-                    len: 5,
-                    v_stub_count: 0,
-                    stub_count: count!($($name),*),
-                    nid_table: & [< __ $lib_name _NID_START >] as *const () as *const _,
-                    stub_table: & [< __ $lib_name _STUB_START >] as *const () as *const _,
-                };
+                #[cfg(target_os = "psp")]
+                link_section_concat! {
+                    #[link_section = concat!(".rodata.sceResident.", $lib_name)]
+                    #[allow(non_upper_case_globals)]
+                    static [< __ $lib_name _RESIDENT >] : [u8; $crate::sys::macros::lib_name_bytes_len($lib_name)] = $crate::sys::macros::lib_name_bytes($lib_name);
 
-                sentinel!(
-                    [< __ $lib_name _NID_START >],
-                    concat!(".rodata.sceNid.", $lib_name)
-                );
+                    #[link_section = concat!(".rodata.sceNid.", $lib_name)]
+                    #[allow(non_upper_case_globals)]
+                    static [< __ $lib_name _NID_START >] : () = ();
 
-                sentinel!(
-                    [< __ $lib_name _STUB_START >],
-                    concat!(".sceStub.text.", $lib_name)
-                );
+                    #[link_section = concat!(".sceStub.text.", $lib_name)]
+                    #[allow(non_upper_case_globals)]
+                    static [< __ $lib_name _STUB_START >] : () = ();
+
+                    #[link_section = concat!(".lib.stub.entry.", $lib_name)]
+                    #[allow(non_upper_case_globals)]
+                    static [< __ $lib_name _STUB >] : $crate::sys::SceStubLibraryEntry = $crate::sys::SceStubLibraryEntry {
+                        name: paste! { & [< __ $lib_name _RESIDENT >] [0] },
+                        version: [$lib_minor_version, $lib_major_version],
+                        flags: $lib_flags,
+                        len: 5,
+                        v_stub_count: 0,
+
+                        // This is to be fixed up later by patching the ELF file,
+                        // in cargo-psp. The reason we cannot determine this
+                        // statically is that the real number of imported stubs
+                        // is found during link time.
+                        //
+                        // For example, in LTO builds, imports can be removed at link
+                        // time if they are not ever called. There may be (?) a way
+                        // to get the linker to handle this, but I have not found a
+                        // working method.
+                        stub_count: 0,
+
+                        nid_table: & [< __ $lib_name _NID_START >] as *const () as *const _,
+                        stub_table: & [< __ $lib_name _STUB_START >] as *const () as *const _,
+                    };
+                }
 
                 $(
-                    stub!(
-                        [< __ $name _stub >],
-                        concat!(
-                            ".sceStub.text.", $lib_name,
-                            ".", stringify!($name)
-                        )
-                    );
+                    #[allow(unused)]
+                    use super::*;
 
-                    nid!(
-                        [< __ $name _NID >],
-                        concat!(
+                    #[cfg(target_os = "psp")]
+                    link_section_concat! {
+                        #[link_section = concat!(
                             ".rodata.sceNid.", $lib_name,
                             ".", stringify!($name)
-                        ),
-                        $nid
-                    );
+                        )]
+                        #[allow(non_upper_case_globals)]
+                        static [< __ $name _NID >]: u32 = $nid;
+
+                        #[link_section = concat!(
+                            ".sceStub.text.", $lib_name,
+                            ".", stringify!($name)
+                        )]
+                        #[allow(non_upper_case_globals)]
+                        static [< __ $name _stub >]: $crate::sys::macros::Stub = $crate::sys::macros::Stub {
+                            lib_addr: &[< __ $lib_name _STUB >],
+                            nid_addr: &[< __ $name _NID >],
+                        };
+                    }
+
+                    $(#[$attr])*
+                    #[allow(non_snake_case)]
+                    #[cfg_attr(feature = "stub-only", no_mangle)]
+                    pub unsafe extern fn $name($($arg : $arg_ty),*) $(-> $ret)? {
+                        #[cfg(target_os = "psp")]
+                        {
+                            psp_extern!(
+                                __BODY $($abi)?
+                                $name($($arg : $arg_ty),*) $(-> $ret)?
+                            )
+                        }
+
+                        #[cfg(not(target_os = "psp"))]
+                        {
+                            // Get rid of warnings
+                            $(let _arg = $arg;)*
+                            $(let _abi = $abi;)?
+
+                            panic!("tried to call PSP system function on non-PSP target");
+                        }
+                    }
                 )*
             }
         }
 
-        $(
-            $(#[$attr])*
-            #[allow(non_snake_case)]
-            #[no_mangle]
-            pub unsafe extern fn $name($($arg : $arg_ty),*) $(-> $ret)? {
-                #[cfg(target_os = "psp")]
-                {
-                    psp_extern!(
-                        __BODY $($abi)?
-                        $name($($arg : $arg_ty),*) $(-> $ret)?
-                    )
-                }
-
-                #[cfg(not(target_os = "psp"))]
-                {
-                    // Get rid of warnings
-                    $(let _arg = $arg;)*
-                    $(let _abi = $abi;)?
-
-                    panic!("tried to call PSP system function on non-PSP target");
-                }
-            }
-        )*
+        paste! {
+            $(
+                pub use self :: [< __ $lib_name _mod >] :: $name;
+            )*
+        }
     }
 }

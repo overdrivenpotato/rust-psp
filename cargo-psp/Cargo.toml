@@ -29,4 +29,5 @@ rustc_version = "0.2.3"
 
 serde = "1.0.111"
 serde_derive = "1.0.111"
+bincode = "1.3.1"
 toml = "0.5.6"
