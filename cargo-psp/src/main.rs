@@ -187,7 +187,7 @@ fn main() {
             "build-std"
         },
         Err(_) => {
-            "build-std=core,compiler_builtins,alloc,panic_unwind"
+            "build-std=core,compiler_builtins,alloc,panic_unwind,panic_abort"
         },
     };
 
