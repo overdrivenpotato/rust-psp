@@ -1,7 +1,9 @@
 use crate::sys::TexturePixelFormat;
 use crate::sys::{sceGeEdramGetAddr, sceGeEdramGetSize};
+use core::marker::PhantomData;
 use core::mem::size_of;
 use core::ptr::null_mut;
+use core::sync::atomic::{AtomicU32, Ordering};
 
 type VramAllocator = SimpleVramAllocator;
 
@@ -27,14 +29,20 @@ impl VramAllocatorSingleton {
     }
 }
 
-pub struct VramMemChunk {
+pub struct VramMemChunk<'a> {
     start: u32,
     len: u32,
+    // Needed since VramMemChunk has a lifetime, but doesn't contain references
+    vram: PhantomData<&'a mut ()>,
 }
 
-impl VramMemChunk {
+impl VramMemChunk<'_> {
     fn new(start: u32, len: u32) -> Self {
-        Self { start, len }
+        Self {
+            start,
+            len,
+            vram: PhantomData,
+        }
     }
 
     pub fn as_mut_ptr_from_zero(&self) -> *mut u8 {
@@ -54,20 +62,37 @@ impl VramMemChunk {
 // TODO: pin?
 #[derive(Debug)]
 pub struct SimpleVramAllocator {
-    offset: u32,
+    offset: AtomicU32,
 }
 
 impl SimpleVramAllocator {
     const fn new() -> Self {
-        Self { offset: 0 }
+        Self {
+            offset: AtomicU32::new(0),
+        }
+    }
+
+    /// Frees all previously allocated VRAM chunks.
+    ///
+    /// This resets the allocator's counter, but does not change the contents of
+    /// VRAM. Since this method requires `&mut Self`, it cannot overlap with any
+    /// previously allocated `VramMemChunk`s since they have the lifetime of the
+    /// `&Self` that allocated them.
+    pub fn free_all(&mut self) {
+        self.offset.store(0, Ordering::Relaxed);
     }
 
     // TODO: return a Result instead of panicking
-    pub fn alloc(&mut self, size: u32) -> VramMemChunk {
-        let old_offset = self.offset;
-        self.offset += size;
+    /// Allocates `size` bytes of VRAM
+    ///
+    /// The returned VRAM chunk has the same lifetime as the
+    /// `SimpleVramAllocator` borrow (i.e. `&self`) that allocated it.
+    pub fn alloc<'a>(&'a self, size: u32) -> VramMemChunk<'a> {
+        let old_offset = self.offset.load(Ordering::Relaxed);
+        let new_offset = old_offset + size;
+        self.offset.store(new_offset, Ordering::Relaxed);
 
-        if self.offset > self.total_mem() {
+        if new_offset > self.total_mem() {
             panic!("Total VRAM size exceeded!");
         }
 
@@ -75,17 +100,17 @@ impl SimpleVramAllocator {
     }
 
     // TODO: ensure 16-bit alignment?
-    pub fn alloc_sized<T: Sized>(&mut self, count: u32) -> VramMemChunk {
+    pub fn alloc_sized<'a, T: Sized>(&'a self, count: u32) -> VramMemChunk<'a> {
         let size = size_of::<T>() as u32;
         self.alloc(count * size)
     }
 
-    pub fn alloc_texture_pixels(
-        &mut self,
+    pub fn alloc_texture_pixels<'a>(
+        &'a self,
         width: u32,
         height: u32,
         psm: TexturePixelFormat,
-    ) -> VramMemChunk {
+    ) -> VramMemChunk<'a> {
         let size = get_memory_size(width, height, psm);
         self.alloc(size)
     }
