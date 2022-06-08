@@ -7,14 +7,18 @@ use core::sync::atomic::{AtomicU32, Ordering};
 
 type VramAllocator = SimpleVramAllocator;
 
+// TODO: implement some traits
 #[derive(Debug)]
 pub struct VramAllocatorInUseError {}
 
 static mut VRAM_ALLOCATOR: VramAllocatorSingleton = VramAllocatorSingleton {
-    alloc: Some(VramAllocator::new()),
+    alloc: Some(VramAllocator::new_()),
 };
 
+// TODO: rename using `take` verb
+// TODO: static method
 pub fn get_vram_allocator() -> Result<VramAllocator, VramAllocatorInUseError> {
+    // TODO: this unsafe is not thread-safe
     let opt_alloc = unsafe { VRAM_ALLOCATOR.get_vram_alloc() };
     opt_alloc.ok_or(VramAllocatorInUseError {})
 }
@@ -37,7 +41,7 @@ pub struct VramMemChunk<'a> {
 }
 
 impl VramMemChunk<'_> {
-    fn new(start: u32, len: u32) -> Self {
+    fn new_(start: u32, len: u32) -> Self {
         Self {
             start,
             len,
@@ -59,14 +63,17 @@ impl VramMemChunk<'_> {
 }
 
 // A dead-simple VRAM bump allocator.
-// TODO: pin?
+// There could be only one value of this type
+// WARNING: should be instantiated only via [`VramAllocator::new`]
+// TODO: remove Debug
 #[derive(Debug)]
 pub struct SimpleVramAllocator {
     offset: AtomicU32,
 }
 
 impl SimpleVramAllocator {
-    const fn new() -> Self {
+    // WARNING: should only be callsed inside of [`get_vram_allocator`]
+    const fn new_() -> Self {
         Self {
             offset: AtomicU32::new(0),
         }
@@ -75,7 +82,8 @@ impl SimpleVramAllocator {
     /// Frees all previously allocated VRAM chunks.
     ///
     /// This resets the allocator's counter, but does not change the contents of
-    /// VRAM. Since this method requires `&mut Self`, it cannot overlap with any
+    /// VRAM. Since this method requires `&mut Self` and there are no other
+    /// `SimpleVramAllocator` values to be swapped with, it cannot overlap with any
     /// previously allocated `VramMemChunk`s since they have the lifetime of the
     /// `&Self` that allocated them.
     pub fn free_all(&mut self) {
@@ -84,6 +92,7 @@ impl SimpleVramAllocator {
     }
 
     // TODO: return a Result instead of panicking
+    // TODO: handle alignment
     /// Allocates `size` bytes of VRAM
     ///
     /// The returned VRAM chunk has the same lifetime as the
@@ -97,7 +106,7 @@ impl SimpleVramAllocator {
             })
             .unwrap_or_else(|_| panic!("Total VRAM size exceeded!"));
 
-        VramMemChunk::new(old_offset, size)
+        VramMemChunk::new_(old_offset, size)
     }
 
     // TODO: ensure 16-bit alignment?
