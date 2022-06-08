@@ -7,9 +7,14 @@ use core::sync::atomic::{AtomicBool, AtomicU32, Ordering};
 
 type VramAllocator = SimpleVramAllocator;
 
-// TODO: implement some traits
-#[derive(Debug)]
-pub struct VramAllocatorInUseError {}
+#[derive(Copy, Clone, Debug)]
+pub struct VramAllocatorInUseError;
+
+impl core::fmt::Display for VramAllocatorInUseError {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        f.write_str("ownership of `VramAllocator` already taken")
+    }
+}
 
 // WARNING: should only be used in [`get_vram_allocator`] and [`<SimpleVramAllocator as Drop>::drop`]
 static VRAM_ALLOCATOR_IS_TAKEN: AtomicBool = AtomicBool::new(false);
@@ -21,7 +26,7 @@ pub fn get_vram_allocator() -> Result<VramAllocator, VramAllocatorInUseError> {
         // new and empty, since old one droped and cannot have any references to it
         Ok(VramAllocator::new_())
     } else {
-        Err(VramAllocatorInUseError {})
+        Err(VramAllocatorInUseError)
     }
 }
 
@@ -63,6 +68,15 @@ pub struct SimpleVramAllocator {
     offset: AtomicU32,
 }
 
+#[derive(Copy, Clone, Debug)]
+pub struct VramAllocError;
+
+impl core::fmt::Display for VramAllocError {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        f.write_str("Total VRAM size exceeded")
+    }
+}
+
 impl SimpleVramAllocator {
     // WARNING: should only be callsed inside of [`get_vram_allocator`]
     const fn new_() -> Self {
@@ -89,20 +103,23 @@ impl SimpleVramAllocator {
     ///
     /// The returned VRAM chunk has the same lifetime as the
     /// `SimpleVramAllocator` borrow (i.e. `&self`) that allocated it.
-    pub fn alloc<'a>(&'a self, size: u32) -> VramMemChunk<'a> {
+    pub fn alloc<'a>(&'a self, size: u32) -> Result<VramMemChunk<'a>, VramAllocError> {
         // Atomically bump offset, no ordering required
         let old_offset = self
             .offset
             .fetch_update(Ordering::Relaxed, Ordering::Relaxed, |old| {
                 old.checked_add(size).filter(|new| *new <= self.total_mem())
             })
-            .unwrap_or_else(|_| panic!("Total VRAM size exceeded!"));
+            .map_err(|_| VramAllocError)?;
 
-        VramMemChunk::new_(old_offset, size)
+        Ok(VramMemChunk::new_(old_offset, size))
     }
 
     // TODO: ensure 16-bit alignment?
-    pub fn alloc_sized<'a, T: Sized>(&'a self, count: u32) -> VramMemChunk<'a> {
+    pub fn alloc_sized<'a, T: Sized>(
+        &'a self,
+        count: u32,
+    ) -> Result<VramMemChunk<'a>, VramAllocError> {
         let size = size_of::<T>() as u32;
         self.alloc(count * size)
     }
@@ -112,20 +129,20 @@ impl SimpleVramAllocator {
         width: u32,
         height: u32,
         psm: TexturePixelFormat,
-    ) -> VramMemChunk<'a> {
+    ) -> Result<VramMemChunk<'a>, VramAllocError> {
         let size = get_memory_size(width, height, psm);
         self.alloc(size)
     }
 
     // TODO: write, or write_volatile?
-    // TODO: result instead of unwrap?
+    // TODO: panic instead of result?
     // TODO: Keep track of the allocated chunk
     // TODO: determine unsafety of this
-    pub unsafe fn move_to_vram<T: Sized>(&mut self, obj: T) -> &mut T {
-        let chunk = self.alloc_sized::<T>(1);
+    pub unsafe fn move_to_vram<T: Sized>(&mut self, obj: T) -> Result<&mut T, VramAllocError> {
+        let chunk = self.alloc_sized::<T>(1)?;
         let ptr = chunk.as_mut_ptr_direct_to_vram() as *mut T;
         ptr.write(obj);
-        ptr.as_mut().unwrap()
+        Ok(&mut *ptr)
     }
 
     fn total_mem(&self) -> u32 {
