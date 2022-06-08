@@ -11,12 +11,13 @@ type VramAllocator = SimpleVramAllocator;
 #[derive(Debug)]
 pub struct VramAllocatorInUseError {}
 
+// WARNING: should only be used in [`get_vram_allocator`] and [`<SimpleVramAllocator as Drop>::drop`]
+static VRAM_ALLOCATOR_IS_TAKEN: AtomicBool = AtomicBool::new(false);
+
 // TODO: rename using `take` verb
 // TODO: static method
 pub fn get_vram_allocator() -> Result<VramAllocator, VramAllocatorInUseError> {
-    static IS_TAKEN: AtomicBool = AtomicBool::new(false);
-
-    if !IS_TAKEN.swap(true, Ordering::Relaxed) {
+    if !VRAM_ALLOCATOR_IS_TAKEN.swap(true, Ordering::Relaxed) {
         // new and empty, since old one droped and cannot have any references to it
         Ok(VramAllocator::new_())
     } else {
@@ -129,6 +130,12 @@ impl SimpleVramAllocator {
 
     fn total_mem(&self) -> u32 {
         total_vram_size()
+    }
+}
+
+impl Drop for SimpleVramAllocator {
+    fn drop(&mut self) {
+        VRAM_ALLOCATOR_IS_TAKEN.store(false, Ordering::Relaxed)
     }
 }
 
