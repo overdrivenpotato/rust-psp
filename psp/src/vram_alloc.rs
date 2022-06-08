@@ -5,7 +5,7 @@ use core::mem::size_of;
 use core::ptr::null_mut;
 use core::sync::atomic::{AtomicU32, Ordering};
 
-type VramAllocator = SimpleVramAllocator;
+pub type VramAllocator = SimpleVramAllocator;
 
 #[derive(Copy, Clone, Debug)]
 pub struct VramAllocatorInUseError;
