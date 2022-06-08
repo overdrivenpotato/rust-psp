@@ -79,7 +79,8 @@ impl SimpleVramAllocator {
     /// previously allocated `VramMemChunk`s since they have the lifetime of the
     /// `&Self` that allocated them.
     pub fn free_all(&mut self) {
-        self.offset.store(0, Ordering::Relaxed);
+        // Store is required to occure after all previous bumps and before any next bumps, so SeqCst
+        self.offset.store(0, Ordering::SeqCst);
     }
 
     // TODO: return a Result instead of panicking
@@ -88,13 +89,13 @@ impl SimpleVramAllocator {
     /// The returned VRAM chunk has the same lifetime as the
     /// `SimpleVramAllocator` borrow (i.e. `&self`) that allocated it.
     pub fn alloc<'a>(&'a self, size: u32) -> VramMemChunk<'a> {
-        let old_offset = self.offset.load(Ordering::Relaxed);
-        let new_offset = old_offset + size;
-        self.offset.store(new_offset, Ordering::Relaxed);
-
-        if new_offset > self.total_mem() {
-            panic!("Total VRAM size exceeded!");
-        }
+        // Atomically bump offset, no ordering required
+        let old_offset = self
+            .offset
+            .fetch_update(Ordering::Relaxed, Ordering::Relaxed, |old| {
+                old.checked_add(size).filter(|new| *new <= self.total_mem())
+            })
+            .unwrap_or_else(|_| panic!("Total VRAM size exceeded!"));
 
         VramMemChunk::new(old_offset, size)
     }
