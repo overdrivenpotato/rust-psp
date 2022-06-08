@@ -3,7 +3,7 @@ use crate::sys::{sceGeEdramGetAddr, sceGeEdramGetSize};
 use core::marker::PhantomData;
 use core::mem::size_of;
 use core::ptr::null_mut;
-use core::sync::atomic::{AtomicU32, Ordering};
+use core::sync::atomic::{AtomicBool, AtomicU32, Ordering};
 
 type VramAllocator = SimpleVramAllocator;
 
@@ -11,25 +11,16 @@ type VramAllocator = SimpleVramAllocator;
 #[derive(Debug)]
 pub struct VramAllocatorInUseError {}
 
-static mut VRAM_ALLOCATOR: VramAllocatorSingleton = VramAllocatorSingleton {
-    alloc: Some(VramAllocator::new_()),
-};
-
 // TODO: rename using `take` verb
 // TODO: static method
 pub fn get_vram_allocator() -> Result<VramAllocator, VramAllocatorInUseError> {
-    // TODO: this unsafe is not thread-safe
-    let opt_alloc = unsafe { VRAM_ALLOCATOR.get_vram_alloc() };
-    opt_alloc.ok_or(VramAllocatorInUseError {})
-}
+    static IS_TAKEN: AtomicBool = AtomicBool::new(false);
 
-pub struct VramAllocatorSingleton {
-    alloc: Option<VramAllocator>,
-}
-
-impl VramAllocatorSingleton {
-    pub fn get_vram_alloc(&mut self) -> Option<VramAllocator> {
-        self.alloc.take()
+    if !IS_TAKEN.swap(true, Ordering::Relaxed) {
+        // new and empty, since old one droped and cannot have any references to it
+        Ok(VramAllocator::new_())
+    } else {
+        Err(VramAllocatorInUseError {})
     }
 }
 
