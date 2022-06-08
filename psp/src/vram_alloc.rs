@@ -3,7 +3,7 @@ use crate::sys::{sceGeEdramGetAddr, sceGeEdramGetSize};
 use core::marker::PhantomData;
 use core::mem::size_of;
 use core::ptr::null_mut;
-use core::sync::atomic::{AtomicBool, AtomicU32, Ordering};
+use core::sync::atomic::{AtomicU32, Ordering};
 
 type VramAllocator = SimpleVramAllocator;
 
@@ -16,17 +16,29 @@ impl core::fmt::Display for VramAllocatorInUseError {
     }
 }
 
-// WARNING: should only be used in [`get_vram_allocator`] and [`<SimpleVramAllocator as Drop>::drop`]
-static VRAM_ALLOCATOR_IS_TAKEN: AtomicBool = AtomicBool::new(false);
+mod vram_allocator_singleton {
+    use super::{SimpleVramAllocator, VramAllocator, VramAllocatorInUseError};
+    use core::sync::atomic::{AtomicBool, AtomicU32, Ordering};
 
-// TODO: rename using `take` verb
-// TODO: static method
-pub fn get_vram_allocator() -> Result<VramAllocator, VramAllocatorInUseError> {
-    if !VRAM_ALLOCATOR_IS_TAKEN.swap(true, Ordering::Relaxed) {
-        // new and empty, since old one droped and cannot have any references to it
-        Ok(VramAllocator::new_())
-    } else {
-        Err(VramAllocatorInUseError)
+    static VRAM_ALLOCATOR_IS_TAKEN: AtomicBool = AtomicBool::new(false);
+
+    impl VramAllocator {
+        pub fn take() -> Result<VramAllocator, VramAllocatorInUseError> {
+            if !VRAM_ALLOCATOR_IS_TAKEN.swap(true, Ordering::Relaxed) {
+                // new and empty, since old one droped and cannot have any references to it
+                Ok(VramAllocator {
+                    offset: AtomicU32::new(0),
+                })
+            } else {
+                Err(VramAllocatorInUseError)
+            }
+        }
+    }
+
+    impl Drop for SimpleVramAllocator {
+        fn drop(&mut self) {
+            VRAM_ALLOCATOR_IS_TAKEN.store(false, Ordering::Relaxed)
+        }
     }
 }
 
@@ -61,7 +73,7 @@ impl VramMemChunk<'_> {
 
 // A dead-simple VRAM bump allocator.
 // There could be only one value of this type
-// WARNING: should be instantiated only via [`VramAllocator::new`]
+// WARNING: should be instantiated only within [`vram_allocator_singleton`] private module
 // TODO: remove Debug
 #[derive(Debug)]
 pub struct SimpleVramAllocator {
@@ -78,13 +90,6 @@ impl core::fmt::Display for VramAllocError {
 }
 
 impl SimpleVramAllocator {
-    // WARNING: should only be callsed inside of [`get_vram_allocator`]
-    const fn new_() -> Self {
-        Self {
-            offset: AtomicU32::new(0),
-        }
-    }
-
     /// Frees all previously allocated VRAM chunks.
     ///
     /// This resets the allocator's counter, but does not change the contents of
@@ -97,7 +102,6 @@ impl SimpleVramAllocator {
         self.offset.store(0, Ordering::SeqCst);
     }
 
-    // TODO: return a Result instead of panicking
     // TODO: handle alignment
     /// Allocates `size` bytes of VRAM
     ///
@@ -147,12 +151,6 @@ impl SimpleVramAllocator {
 
     fn total_mem(&self) -> u32 {
         total_vram_size()
-    }
-}
-
-impl Drop for SimpleVramAllocator {
-    fn drop(&mut self) {
-        VRAM_ALLOCATOR_IS_TAKEN.store(false, Ordering::Relaxed)
     }
 }
 
