@@ -87,6 +87,7 @@ pub enum SceUtilityOskInputType {
 }
 
 #[derive(Debug, Clone, Copy)]
+#[repr(u32)]
 pub enum SceUtilityOskState {
     None,
     Initializing,
@@ -97,6 +98,7 @@ pub enum SceUtilityOskState {
 }
 
 #[derive(Debug, Clone, Copy)]
+#[repr(u32)]
 pub enum SceUtilityOskResult {
     Unchanged,
     Cancelled,
@@ -290,6 +292,7 @@ pub enum NetParam {
 }
 
 #[derive(Debug, Copy, Clone)]
+#[repr(i32)]
 pub enum UtilityNetconfAction {
     ConnectAP,
     DisplayStatus,
@@ -297,6 +300,7 @@ pub enum UtilityNetconfAction {
 }
 
 bitflags::bitflags! {
+    #[repr(transparent)]
     pub struct UtilityMsgDialogOption: i32 {
         /// Error message (why two flags?)
         const ERROR = 0;
@@ -416,7 +420,7 @@ pub struct UtilitySavedataListSaveNewData {
     pub title: *mut u8,
 }
 
-/// Structure to hold the parameters for the ::sceUtilitySavedataInitStart function.
+/// Structure to hold the parameters for the `sceUtilitySavedataInitStart` function.
 #[repr(C)]
 #[derive(Copy, Clone)]
 pub struct SceUtilitySavedataParam {
@@ -492,11 +496,11 @@ pub struct UtilityGameSharingParams {
     pub unknown5: i32,
     /// Return value
     pub result: i32,
-    /// File path if UtilityGamesharingDataType::File specified
+    /// File path if `UtilityGameSharingDataType::File` specified
     pub filepath: *mut u8,
-    /// Send mode. One of ::UtilityGameSharingMode
+    /// Send mode. One of `UtilityGameSharingMode`
     pub mode: UtilityGameSharingMode,
-    /// Data type. One of ::UtilityGameSharingDataType
+    /// Data type. One of `UtilityGameSharingDataType`
     pub datatype: UtilityGameSharingDataType,
     /// Pointer to the EBOOT data in memory
     pub data: *mut c_void,
@@ -621,6 +625,7 @@ pub enum UtilityHtmlViewerDisconnectMode {
 }
 
 bitflags::bitflags! {
+    #[repr(C)]
     pub struct UtilityHtmlViewerOption: u32 {
         /// Open SCE net start page
     const OPEN_SCE_START_PAGE  = 0x000001;
@@ -657,11 +662,11 @@ pub struct SceUtilityOskData {
     pub unk_00: i32,
     /// Unknown. Pass 0.
     pub unk_04: i32,
-    /// One of ::SceUtilityOskInputLanguage
+    /// One of `SceUtilityOskInputLanguage`
     pub language: SceUtilityOskInputLanguage,
     /// Unknown. Pass 0.
     pub unk_12: i32,
-    /// One or more of ::SceUtilityOskInputType (types that are selectable by pressing SELECT)
+    /// One or more of `SceUtilityOskInputType` (types that are selectable by pressing SELECT)
     pub inputtype: SceUtilityOskInputType,
     /// Number of lines
     pub lines: i32,
@@ -675,7 +680,7 @@ pub struct SceUtilityOskData {
     pub outtextlength: i32,
     /// Pointer to the output text
     pub outtext: *mut u16,
-    /// Result. One of ::SceUtilityOskResult
+    /// Result. One of `SceUtilityOskResult`
     pub result: SceUtilityOskResult,
     /// The max text that can be input
     pub outtextlimit: i32,
@@ -690,7 +695,7 @@ pub struct SceUtilityOskParams {
     pub datacount: i32,
     /// Pointer to the start of the data for the input fields
     pub data: *mut SceUtilityOskData,
-    /// The local OSK state, one of ::SceUtilityOskState
+    /// The local OSK state, one of `SceUtilityOskState`
     pub state: SceUtilityOskState,
     /// Unknown. Pass 0
     pub unk_60: i32,

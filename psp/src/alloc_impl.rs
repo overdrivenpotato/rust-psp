@@ -54,14 +54,18 @@ unsafe impl GlobalAlloc for SystemAlloc {
 #[global_allocator]
 static ALLOC: SystemAlloc = SystemAlloc;
 
+#[cfg(not(feature = "std"))]
 #[alloc_error_handler]
 fn aeh(_: Layout) -> ! { loop {} }
 
 #[no_mangle]
 #[cfg(not(feature = "stub-only"))]
 unsafe extern fn memset(ptr: *mut u8, value: u32, num: usize) -> *mut u8 {
-    for i in 0..num {
-        *ptr.add(i) = value as u8;
+    let mut i = 0;
+
+    while i < num {
+        *((ptr as usize + i) as *mut u8) = value as u8;
+        i += 1;
     }
 
     ptr
@@ -70,8 +74,11 @@ unsafe extern fn memset(ptr: *mut u8, value: u32, num: usize) -> *mut u8 {
 #[no_mangle]
 #[cfg(not(feature = "stub-only"))]
 unsafe extern fn memcpy(dst: *mut u8, src: *const u8, num: isize) -> *mut u8 {
-    for i in 0..num {
-        *dst.offset(i) = *src.offset(i);
+    let mut i = 0;
+
+    while i < num {
+        *((dst as isize + i) as *mut u8) = *((src as isize + i) as *mut u8);
+        i += 1;
     }
 
     dst
@@ -80,12 +87,16 @@ unsafe extern fn memcpy(dst: *mut u8, src: *const u8, num: isize) -> *mut u8 {
 #[no_mangle]
 #[cfg(not(feature = "stub-only"))]
 unsafe extern fn memcmp(ptr1: *mut u8, ptr2: *mut u8, num: isize) -> i32 {
-    for i in 0..num {
-        let diff = ptr1.offset(i) as i32 - ptr2.offset(i) as i32;
+    let mut i = 0;
+
+    while i < num as i32 {
+        let diff = (ptr1 as i32 + i) - (ptr2 as i32 + i);
 
         if diff != 0 {
             return diff;
         }
+
+        i += 1;
     }
 
     0
@@ -95,14 +106,32 @@ unsafe extern fn memcmp(ptr1: *mut u8, ptr2: *mut u8, num: isize) -> i32 {
 #[cfg(not(feature = "stub-only"))]
 unsafe extern fn memmove(dst: *mut u8, src: *mut u8, num: isize) -> *mut u8 {
     if dst < src {
-        for i in 0..num {
-            *dst.offset(i) = *src.offset(i);
+        let mut i = 0;
+
+        while i < num {
+            *((dst as isize + i) as *mut u8) = *((src as isize + i) as *mut u8);
+            i += 1;
         }
     } else {
-        for i in num-1..=0 {
-            *dst.offset(i) = *src.offset(i);
+        let mut i = num - 1;
+
+        while i >= 0 {
+            *((dst as isize + i) as *mut u8) = *((src as isize + i) as *mut u8);
+            i -= 1;
         }
     }
 
     dst
+}
+
+#[no_mangle]
+#[cfg(not(feature = "stub-only"))]
+unsafe extern fn strlen(s: *mut u8) -> usize {
+    let mut len = 0;
+
+    while *s.add(len) != 0 {
+        len += 1;
+    }
+
+    len
 }

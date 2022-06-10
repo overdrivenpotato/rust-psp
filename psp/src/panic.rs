@@ -3,14 +3,24 @@
 // Most of the code here is lifted from `rustc/src/libstd/panicking.rs`. It has
 // been adapted to run on the PSP.
 
+#[cfg(not(feature = "std"))]
 use crate::sys;
+
+#[cfg(feature = "std")]
+use core::{mem::ManuallyDrop, any::Any};
+#[cfg(not(feature = "std"))]
 use core::{mem::{self, ManuallyDrop}, any::Any, panic::{PanicInfo, BoxMeUp, Location}};
+
+#[cfg(not(feature = "std"))]
 use core::fmt;
+
+#[cfg(not(feature = "std"))]
 use alloc::{boxed::Box, string::{String, ToString}};
 
 #[link(name = "unwind", kind = "static")]
 extern {}
 
+#[cfg(not(feature = "std"))]
 fn print_and_die(s: String) -> ! {
     dprintln!("{}", s);
 
@@ -20,6 +30,7 @@ fn print_and_die(s: String) -> ! {
     }
 }
 
+#[cfg(not(feature = "std"))]
 #[panic_handler]
 #[inline(never)]
 fn panic(info: &PanicInfo) -> ! {
@@ -28,6 +39,7 @@ fn panic(info: &PanicInfo) -> ! {
 
 #[inline(always)]
 #[cfg_attr(not(target_os = "psp"), allow(unused))]
+#[cfg(not(feature = "std"))]
 fn panic_impl(info: &PanicInfo) -> ! {
     struct PanicPayload<'a> {
         inner: &'a fmt::Arguments<'a>,
@@ -63,7 +75,7 @@ fn panic_impl(info: &PanicInfo) -> ! {
 
     let loc = info.location().unwrap();
     let msg = info.message().unwrap();
-    rust_panic_with_hook(&mut PanicPayload::new(msg), info.message(), loc);
+    rust_panic_with_hook(&mut PanicPayload::new(msg), info.message(), loc, true);
 }
 
 /// Central point for dispatching panics.
@@ -71,10 +83,12 @@ fn panic_impl(info: &PanicInfo) -> ! {
 /// Executes the primary logic for a panic, including checking for recursive
 /// panics, panic hooks, and finally dispatching to the panic runtime to either
 /// abort or unwind.
+#[cfg(not(feature = "std"))]
 fn rust_panic_with_hook(
     payload: &mut dyn BoxMeUp,
     message: Option<&fmt::Arguments<'_>>,
     location: &Location<'_>,
+    can_unwind: bool,
 ) -> ! {
     let panics = update_panic_count(1);
 
@@ -82,7 +96,7 @@ fn rust_panic_with_hook(
         print_and_die("thread panicked while processing panic. aborting.".into());
     }
 
-    let mut info = PanicInfo::internal_constructor(message, location);
+    let mut info = PanicInfo::internal_constructor(message, location, can_unwind);
     info.set_payload(payload.get());
 
     dprintln!("{}", info.to_string());
@@ -111,16 +125,20 @@ fn update_panic_count(amt: isize) -> usize {
 #[allow(improper_ctypes)]
 extern "C" {
     fn __rust_panic_cleanup(payload: *mut u8) -> *mut (dyn Any + Send + 'static);
-    #[unwind(allowed)]
+}
+
+#[allow(improper_ctypes)]
+extern "C-unwind" {
     fn __rust_start_panic(payload: usize) -> u32;
 }
 
 #[inline(never)]
 #[no_mangle]
-extern fn rust_panic(mut msg: &mut dyn BoxMeUp) -> ! {
+#[cfg(not(feature = "std"))]
+fn rust_panic(mut msg: &mut dyn BoxMeUp) -> ! {
     let code = unsafe {
         let obj = &mut msg as *mut &mut dyn BoxMeUp;
-        panic_unwind::__rust_start_panic(obj as usize)
+        panic_unwind::__rust_start_panic(obj as _)
     };
 
     print_and_die(alloc::format!("failed to initiate panic, error {}", code))
@@ -128,6 +146,7 @@ extern fn rust_panic(mut msg: &mut dyn BoxMeUp) -> ! {
 
 #[cfg(not(test))]
 #[no_mangle]
+#[cfg(not(feature = "std"))]
 extern "C" fn __rust_drop_panic() -> ! {
     print_and_die("Rust panics must be rethrown".into());
 }
@@ -200,8 +219,9 @@ mod libunwind_shims {
     }
 
     #[no_mangle]
+    #[allow(deprecated)]
     unsafe extern "C" fn abort() {
-        loop { llvm_asm!("" :::: "volatile"); }
+        loop { core::arch::asm!(""); }
     }
 
     #[no_mangle]

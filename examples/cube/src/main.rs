@@ -1,15 +1,16 @@
 #![no_std]
 #![no_main]
 
-use core::{ptr, ffi::c_void, f32::consts::PI};
+use core::{ptr, f32::consts::PI};
 use psp::Align16;
-use psp::{BUF_WIDTH, SCREEN_WIDTH, SCREEN_HEIGHT};
 use psp::sys::{
     self, ScePspFVector3, DisplayPixelFormat, GuContextType, GuSyncMode, GuSyncBehavior,
     GuPrimitive, TextureFilter, TextureEffect, TextureColorComponent,
     FrontFaceDirection, ShadingModel, GuState, TexturePixelFormat, DepthFunc,
     VertexType, ClearBuffer, MipmapLevel,
 };
+use psp::vram_alloc::get_vram_allocator;
+use psp::{BUF_WIDTH, SCREEN_WIDTH, SCREEN_HEIGHT};
 
 psp::module!("sample_cube", 1, 1);
 
@@ -80,35 +81,6 @@ static VERTICES: Align16<[Vertex; 12 * 3]> = Align16([
     Vertex { u: 0.0, v: 1.0, x:  1.0, y: -1.0, z: -1.0}, // 5
 ]);
 
-fn get_memory_size(width: u32, height: u32, psm: TexturePixelFormat) -> u32 {
-    match psm {
-        TexturePixelFormat::PsmT4 => (width * height) >> 1,
-        TexturePixelFormat::PsmT8 => width * height,
-
-        TexturePixelFormat::Psm5650
-        | TexturePixelFormat::Psm5551
-        | TexturePixelFormat::Psm4444
-        | TexturePixelFormat::PsmT16 => {
-            2 * width * height
-        }
-
-        TexturePixelFormat::Psm8888 | TexturePixelFormat::PsmT32 => 4 * width * height,
-
-        _ => 0,
-    }
-}
-
-unsafe fn get_static_vram_buffer(width: u32, height: u32, psm: TexturePixelFormat) -> *mut c_void {
-    static mut STATIC_OFFSET: u32 = 0;
-
-    let mem_size = get_memory_size(width, height, psm);
-    let result = STATIC_OFFSET as *mut _;
-
-    STATIC_OFFSET += mem_size;
-
-    result
-}
-
 fn psp_main() {
     unsafe { psp_main_inner() }
 }
@@ -116,18 +88,22 @@ fn psp_main() {
 unsafe fn psp_main_inner() {
     psp::enable_home_button();
 
-    let fbp0 = get_static_vram_buffer(BUF_WIDTH, SCREEN_HEIGHT, TexturePixelFormat::Psm8888);
-    let fbp1 = get_static_vram_buffer(BUF_WIDTH, SCREEN_HEIGHT, TexturePixelFormat::Psm8888);
-    let zbp = get_static_vram_buffer(BUF_WIDTH, SCREEN_HEIGHT, TexturePixelFormat::Psm4444);
+    let mut allocator = get_vram_allocator().unwrap();
+    let fbp0 = allocator.alloc_texture_pixels(BUF_WIDTH, SCREEN_HEIGHT, TexturePixelFormat::Psm8888);
+    let fbp1 = allocator.alloc_texture_pixels(BUF_WIDTH, SCREEN_HEIGHT, TexturePixelFormat::Psm8888);
+    let zbp = allocator.alloc_texture_pixels(BUF_WIDTH, SCREEN_HEIGHT, TexturePixelFormat::Psm4444);
+    // Attempting to free the three VRAM chunks at this point would give a
+    // compile-time error since fbp0, fbp1 and zbp are used later on
+    //allocator.free_all();
 
     sys::sceGumLoadIdentity();
 
     sys::sceGuInit();
 
     sys::sceGuStart(GuContextType::Direct, &mut LIST.0 as *mut [u32; 0x40000] as *mut _);
-    sys::sceGuDrawBuffer(DisplayPixelFormat::Psm8888, fbp0, BUF_WIDTH as i32);
-    sys::sceGuDispBuffer(SCREEN_WIDTH as i32, SCREEN_HEIGHT as i32, fbp1, BUF_WIDTH as i32);
-    sys::sceGuDepthBuffer(zbp, BUF_WIDTH as i32);
+    sys::sceGuDrawBuffer(DisplayPixelFormat::Psm8888, fbp0.as_mut_ptr_from_zero() as _, BUF_WIDTH as i32);
+    sys::sceGuDispBuffer(SCREEN_WIDTH as i32, SCREEN_HEIGHT as i32, fbp1.as_mut_ptr_from_zero() as _, BUF_WIDTH as i32);
+    sys::sceGuDepthBuffer(zbp.as_mut_ptr_from_zero() as _, BUF_WIDTH as i32);
     sys::sceGuOffset(2048 - (SCREEN_WIDTH / 2), 2048 - (SCREEN_HEIGHT / 2));
     sys::sceGuViewport(2048, 2048, SCREEN_WIDTH as i32, SCREEN_HEIGHT as i32);
     sys::sceGuDepthRange(65535, 0);

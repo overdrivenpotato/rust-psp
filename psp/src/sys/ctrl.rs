@@ -5,6 +5,8 @@ bitflags::bitflags! {
     ///
     /// Home, Note, Screen, VolUp, VolDown, Disc, WlanUp, Remote, and MS can only be
     /// read in kernel mode.
+    #[derive(Default)]
+    #[repr(transparent)]
     pub struct CtrlButtons: u32 {
         /// Select button.
         const SELECT = 0x000001;
@@ -59,10 +61,11 @@ pub enum CtrlMode {
     /// Digital.
     Digital = 0,
     /// Analog.
-    Analaog
+    Analog
 }
 
 #[repr(C)]
+#[derive(Debug, Clone, Copy, Default)]
 /// Returned controller data
 pub struct SceCtrlData {
     /// The current read frame.
@@ -78,6 +81,7 @@ pub struct SceCtrlData {
 }
 
 #[repr(C)]
+#[derive(Debug, Clone, Copy, Default)]
 pub struct SceCtrlLatch {
     pub ui_make: u32,
     pub ui_break: u32,

@@ -1,6 +1,7 @@
 //! Headphone Remote
 
 bitflags::bitflags! {
+    #[repr(transparent)]
     pub struct Key: u32 {
         const PLAY_PAUSE  = 0x1;
         const FORWARD     = 0x4;

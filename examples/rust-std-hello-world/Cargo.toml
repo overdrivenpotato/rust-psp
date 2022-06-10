@@ -1,0 +1,8 @@
+[package]
+name = "rust-std-hello-world"
+version = "0.1.0"
+authors = ["Glenn Hope <glenn.alexander.hope@gmail.com>"]
+edition = "2018"
+
+[dependencies]
+psp = { path = "../../psp", features = ["std"] }

@@ -59,6 +59,7 @@ pub struct SceKernelThreadOptParam {
 
 bitflags::bitflags! {
     /// Attributes for threads.
+    #[repr(transparent)]
     pub struct ThreadAttributes: u32 {
         /// Enable VFPU access for the thread.
         const VFPU = 0x00004000;
@@ -86,6 +87,7 @@ bitflags::bitflags! {
 
 bitflags::bitflags!{
     /// Event flag creation attributes.
+    #[repr(transparent)]
     pub struct EventFlagAttributes: u32 {
         /// Allow the event flag to be waited upon by multiple threads.
         const WAIT_MULTIPLE = 0x200;
@@ -94,6 +96,7 @@ bitflags::bitflags!{
 
 bitflags::bitflags! {
     /// Event flag wait types
+    #[repr(transparent)]
     pub struct EventFlagWaitTypes: u32 {
         /// Wait for all bits in the pattern to be set
         const AND = 0;

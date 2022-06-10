@@ -1,0 +1,10 @@
+[package]
+name = "psp-paint-mode"
+version = "0.1.0"
+authors = ["Glenn Hope <glenn.alexander.hope@gmail.com>"]
+edition = "2018"
+
+[dependencies]
+psp = { path = "../../psp", features = ["embedded-graphics"] }
+embedded-graphics = { version = "0.7.1", features = ["fixed_point"]}
+numtoa = "0.2"

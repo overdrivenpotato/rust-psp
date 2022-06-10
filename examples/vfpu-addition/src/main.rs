@@ -1,42 +1,51 @@
+#![recursion_limit = "256"]
 #![no_std]
+#![feature(asm_experimental_arch)]
 #![no_main]
-#![feature(llvm_asm)]
 
 psp::module!("vfpu_test", 1, 1);
 
 fn vfpu_add(a: i32, b: i32) -> i32 {
-    let out;
+    let ret_val;
 
     unsafe {
         psp::vfpu_asm! (
             // Convert `a` to float
-            .mips "mtc1 $$a0, $3";
-            .mips "cvt.s.w $3, $3";
-            .mips "mfc1 $$a0, $3";
+            "mtc1 {a}, {ftmp}",
+            "nop",
+            "cvt.s.w {ftmp}, {ftmp}",
+            "mfc1 {a}, {ftmp}",
+            "nop",
 
             // Convert `b` to float
-            .mips "mtc1 $$a1, $3";
-            .mips "cvt.s.w $3, $3";
-            .mips "mfc1 $$a1, $3";
+            "mtc1 {b}, {ftmp}",
+            "nop",
+            "cvt.s.w {ftmp}, {ftmp}",
+            "mfc1 {b}, {ftmp}",
+            "nop",
 
             // Perform addition
-            mtv a0, S000;
-            mtv a1, S001;
-            vadd_s S000, S000, S001;
-            mfv v0, S000;
+            "mtv {a}, S000",
+            "mtv {b}, S001",
+            "vadd.s S000, S000, S001",
+            "mfv {ret}, S000",
 
             // Convert result to `i32`
-            .mips "mtc1 $$v0, $3";
-            .mips "cvt.w.s $3, $3";
-            .mips "mfc1 $$v0, $3";
+            "mtc1 {ret}, {ftmp}",
+            "nop",
+            "cvt.w.s {ftmp}, {ftmp}",
+            "mfc1 {ret}, {ftmp}",
+            "nop",
 
-            : "={2}"(out)
-            : "{4}"(a), "{5}"(b)
-            : "f"
+            ftmp = out(freg) _,
+            a = inout(reg) a => _,
+            b = inout(reg) b => _,
+            ret = out(reg) ret_val,
+            options(nostack, nomem),
         );
     }
 
-    out
+    ret_val
 }
 
 fn psp_main() {

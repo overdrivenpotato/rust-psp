@@ -28,14 +28,26 @@ fn main() {
                 .help("Output PRX file")
                 .required(true)
         )
+        .arg(
+            Arg::with_name("minfo")
+                .long("minfo")
+                .takes_value(true)
+                .default_value(".rodata.sceModuleInfo")
+                .help("Alternative name for .rodata.sceModuleInfo section")
+        )
         .get_matches();
 
-    let mut prx_gen = PrxGen::load(matches.value_of("in_file.elf").unwrap());
+    let in_file = matches.value_of("in_file.elf").unwrap();
+    let mod_info_sh_name = matches.value_of("minfo").unwrap();
+
+    let mut prx_gen = PrxGen::load(in_file, mod_info_sh_name);
     prx_gen.modify();
     prx_gen.save(matches.value_of("out_file.prx").unwrap());
 }
 
-struct PrxGen {
+struct PrxGen<'a> {
+    mod_info_sh_name: &'a str,
+
     elf_bytes: Vec<u8>,
 
     header: Header,
@@ -46,9 +58,9 @@ struct PrxGen {
     relocations: HashMap<usize, Vec<Rel>>,
 }
 
-impl PrxGen {
+impl<'a> PrxGen<'a> {
     /// Load the input ELF file and parse important structures.
-    fn load<P: AsRef<Path>>(path: P) -> Self {
+    fn load<P: AsRef<Path>>(path: P, mod_info_sh_name: &'a str) -> Self {
         let bytes = fs::read(path).unwrap();
         let header = Header::parse(&bytes).unwrap();
         let section_headers = SectionHeader::from_bytes(
@@ -79,6 +91,7 @@ impl PrxGen {
             .collect();
 
         Self {
+            mod_info_sh_name,
             elf_bytes: bytes,
             header,
             section_headers,
@@ -116,33 +129,31 @@ impl PrxGen {
             }
         }
 
-        // Change first program header physical address to `.rodata.sceModuleInfo` file offset
+        // Change first program header physical address to module info file offset
         // TODO: Kernel mode support
         self.program_headers[0].p_paddr = {
-            let section_names = {
-                // Section header string table
-                let sh_string_table = self.section_headers[self.header.e_shstrndx as usize];
+            // Section header string table
+            let sh_string_table = self.section_headers[self.header.e_shstrndx as usize];
 
-                let start_idx = sh_string_table.sh_offset as usize;
-                let end_idx = start_idx + sh_string_table.sh_size as usize;
+            let start_idx = sh_string_table.sh_offset as usize;
+            let end_idx = start_idx + sh_string_table.sh_size as usize;
 
-                let strings = &self.elf_bytes[start_idx..end_idx];
+            let section_names = &self.elf_bytes[start_idx..end_idx];
 
-                strings
-                    .split(|b| *b == 0)
-                    .map(Vec::from)
-                    .map(String::from_utf8)
-                    // All section header names should be utf8 or something is
-                    // severely wrong.
-                    .map(Result::unwrap)
-                    .collect::<Vec<_>>()
-            };
-
-            section_headers
+            self.section_headers
                 .iter()
-                .enumerate()
-                .find_map(|(i, sh)| {
-                    if section_names[i] == ".rodata.sceModuleInfo" {
+                .find_map(|sh| {
+                    let name = &section_names[sh.sh_name as usize..]
+                        .split(|b| *b == 0)
+                        .next()
+                        .map(Vec::from)
+                        .map(String::from_utf8)
+                        // All section header names should be utf8 or something is
+                        // severely wrong.
+                        .map(Result::unwrap)
+                        .unwrap();
+
+                    if name == self.mod_info_sh_name {
                         Some(sh.sh_offset)
                     } else {
                         None
@@ -156,11 +167,11 @@ impl PrxGen {
         // and that the first segment is loaded at virtual address 0. Assertions
         // ensure this is the case.
         {
-            // First segment needs to be loaded to 0.
-            assert_eq!(0, self.program_headers[0].p_vaddr);
-
             let load_segments = || self.program_headers.iter()
                 .filter(|ph| ph.p_type == PT_LOAD);
+
+            // First segment needs to be loaded to 0.
+            assert_eq!(0, load_segments().next().unwrap().p_vaddr);
 
             let start_offset = load_segments().next().unwrap().p_offset;
 

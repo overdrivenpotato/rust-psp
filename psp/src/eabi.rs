@@ -13,6 +13,16 @@ extern {
     ///
     /// This is not safe to call with a function that expects any other ABI.
     pub fn i7(a: u32, b: u32, c: u32, d: u32, e: u32, f: u32, g: u32, ptr: extern fn(u32, u32, u32, u32, u32, u32, u32) -> u32) -> u32;
+
+    /// Call a function with the signature `fn(i32, i64, i32) -> i64` via the MIPS-EABI ABI.
+    ///
+    /// This is not safe to call with a function that expects any other ABI.
+    pub fn i_ii_i_rii(a: u32, b: u64, c: u32, ptr: extern fn(u32, u64, u32) -> u64) -> u64;
+
+    /// Call a function with the signature `fn(i32, i64, i32) -> i32` via the MIPS-EABI ABI.
+    ///
+    /// This is not safe to call with a function that expects any other ABI.
+    pub fn i_ii_i_ri(a: u32, b: u64, c: u32, ptr: extern fn(u32, u64, u32) -> u32) -> u32;
 }
 
 // Potential resource:
@@ -27,7 +37,7 @@ extern {
 // return pointer insertion). The locations within the stack frame used for
 // arguments are called the home locations.
 #[cfg(target_os = "psp")]
-global_asm!(
+core::arch::global_asm!(
     r#"
         .section .text
         .global i5
@@ -74,6 +84,21 @@ global_asm!(
 
             lw $t3, 60($sp)
             jalr $t3
+
+            lw $ra, 8($sp)
+            addiu $sp, 32
+            jr $ra
+
+        .global i_ii_i_rii
+        .global i_ii_i_ri
+        i_ii_i_rii:
+        i_ii_i_ri:
+            addiu $sp, -32
+            sw $ra, 8($sp)
+
+            lw $t0, 48($sp)
+            lw $t1, 52($sp)
+            jalr $t1
 
             lw $ra, 8($sp)
             addiu $sp, 32

@@ -1,7 +1,8 @@
 use cargo_metadata::MetadataCommand;
+use rustc_version::{Version, Channel};
 use std::{
-    env, fs, thread,
-    io::{self, ErrorKind, Read, Write},
+    env, fs, fmt,
+    io::ErrorKind,
     process::{self, Command, Stdio},
 };
 
@@ -29,6 +30,8 @@ struct PspConfig {
     xmb_background_overlay_png: Option<String>,
 
     /// Path to ATRAC3 audio file played in the XMB menu.
+    ///
+    /// Must be 66kbps, under 500KB and under 55 seconds.
     xmb_music_at3: Option<String>,
 
     /// Path to associated PSAR data stored in the EBOOT.
@@ -90,23 +93,75 @@ struct PspConfig {
     updater_version: Option<String>,
 }
 
-const SUBPROCESS_ENV_VAR: &str = "__CARGO_PSP_RUN_XARGO";
+#[derive(Ord, PartialOrd, PartialEq, Eq, Debug)]
+struct CommitDate {
+    year: i32,
+    month: i32,
+    day: i32,
+}
+
+impl CommitDate {
+    fn parse(date: &str) -> Option<Self> {
+        let mut iter = date.split("-");
+
+        let year = iter.next()?.parse().ok()?;
+        let month = iter.next()?.parse().ok()?;
+        let day = iter.next()?.parse().ok()?;
+
+        Some(Self { year, month, day })
+    }
+}
+
+impl fmt::Display for CommitDate {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{:04}-{:02}-{:02}", self.year, self.month, self.day)
+    }
+}
+
+// Minimum 2022-05-22, remember to update both commit date and version too, below.
+const MINIMUM_COMMIT_DATE: CommitDate = CommitDate { year: 2022, month: 05, day: 22 };
+const MINIMUM_RUSTC_VERSION: Version = Version {
+    major: 1,
+    minor: 62,
+    patch: 0,
+    pre: Vec::new(),
+    build: Vec::new(),
+};
 
 fn main() {
-    if env::var(SUBPROCESS_ENV_VAR).is_ok() {
-        return xargo::main_inner(xargo::XargoMode::Build);
+    let rustc_version = rustc_version::version_meta().unwrap();
+
+    if rustc_version.channel > Channel::Nightly {
+        println!("cargo-psp requires a nightly rustc version.");
+        println!(
+            "Please run `rustup override set nightly` to use nightly in the \
+            current directory."
+        );
+        process::exit(1);
     }
 
-    // Ensure there is no `Xargo.toml` file already.
-    match fs::metadata("Xargo.toml") {
-        Err(e) if e.kind() == ErrorKind::NotFound => {},
-        Err(e) => panic!("{}", e),
-        Ok(_) => {
-            println!("Found Xargo.toml file.");
-            println!("Please remove this to coninue, as it interferes with `cargo-psp`.");
+    let old_version = MINIMUM_RUSTC_VERSION > Version {
+        // Remove `-nightly` pre-release tag for comparison.
+        pre: Vec::new(),
+        ..rustc_version.semver.clone()
+    };
 
-            process::exit(1);
-        }
+    let old_commit = match rustc_version.commit_date {
+        None => false,
+        Some(date) => MINIMUM_COMMIT_DATE > CommitDate::parse(&date)
+            .expect("could not parse `rustc --version` commit date"),
+    };
+
+    if old_version || old_commit {
+        println!(
+            "cargo-psp requires rustc nightly version >= {}",
+            MINIMUM_COMMIT_DATE,
+        );
+        println!(
+            "Please run `rustup update nightly` to upgrade your nightly version"
+        );
+
+        process::exit(1);
     }
 
     let config = match fs::read(CONFIG_NAME) {
@@ -126,61 +181,33 @@ fn main() {
     // Skip `cargo psp`
     let args = env::args().skip(2);
 
-    let xargo_toml = "\
-        [target.mipsel-sony-psp.dependencies.core]\n\
-        [target.mipsel-sony-psp.dependencies.alloc]\n\
-        [target.mipsel-sony-psp.dependencies.panic_unwind]\n\
-        stage = 1\n\
-    ";
-
-    fs::write("Xargo.toml", xargo_toml).unwrap();
+    let build_std_flag = match env::var("RUST_PSP_BUILD_STD") {
+        Ok(_) => {
+            eprintln!("[NOTE]: Detected RUST_PSP_BUILD_STD env var, using \"build-std\".");
+            "build-std"
+        },
+        Err(_) => {
+            "build-std=core,compiler_builtins,alloc,panic_unwind,panic_abort"
+        },
+    };
 
     // FIXME: This is a workaround. This should eventually be removed.
     let rustflags = env::var("RUSTFLAGS").unwrap_or("".into())
-        + " -C link-dead-code -C opt-level=3";
+        + " -C link-dead-code";
 
-    let mut process = Command::new("cargo-psp")
-        // Relaunch as xargo wrapper.
-        .env(SUBPROCESS_ENV_VAR, "1")
+    let mut process = Command::new("cargo")
         .arg("build")
+        .arg("-Z")
+        .arg(build_std_flag)
         .arg("--target")
         .arg("mipsel-sony-psp")
         .args(args)
         .env("RUSTFLAGS", rustflags)
         .stdin(Stdio::inherit())
-        .stdout(Stdio::piped())
+        .stdout(Stdio::inherit())
         .stderr(Stdio::inherit())
         .spawn()
         .unwrap();
-
-    let xargo_stdout = process.stdout.take();
-
-    // This is a pretty big hack. We wait until `xargo` starts printing and then
-    // remove the toml. Then we have to manually pipe the output to our stdout.
-    //
-    // Ideally we could just set `XARGO_TOML_PATH` to some temporary file.
-    thread::spawn(move || {
-        let mut xargo_stdout = xargo_stdout.unwrap();
-        let mut stdout = io::stdout();
-        let mut removed_xargo_toml = false;
-        let mut buf = vec![0; 8192];
-
-        loop {
-            let bytes = xargo_stdout.read(&mut buf).unwrap();
-
-            if !removed_xargo_toml {
-                fs::remove_file("Xargo.toml").unwrap();
-                removed_xargo_toml = true;
-            }
-
-            if bytes == 0 {
-                break
-            }
-
-            stdout.write_all(&buf[0..bytes]).unwrap();
-        }
-    });
-
 
     let status = process.wait().unwrap();
 
@@ -275,13 +302,13 @@ fn main() {
                     .arg(&sfo_path)
                     .arg(config.xmb_icon_png.clone().unwrap_or("NULL".into()))
                     .arg(config.xmb_icon_pmf.clone().unwrap_or("NULL".into()))
-                    .arg(config.xmb_background_png.clone().unwrap_or("NULL".into()))
                     .arg(
                         config
                             .xmb_background_overlay_png
                             .clone()
                             .unwrap_or("NULL".into()),
                     )
+                    .arg(config.xmb_background_png.clone().unwrap_or("NULL".into()))
                     .arg(config.xmb_music_at3.clone().unwrap_or("NULL".into()))
                     .arg(&prx_path)
                     .arg(config.psar.clone().unwrap_or("NULL".into()))

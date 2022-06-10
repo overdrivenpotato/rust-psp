@@ -1,6 +1,6 @@
 use crate::sys::SceUid;
 use crate::sys::ScePspDateTime;
-use crate::eabi::i6;
+use crate::eabi::{i6, i_ii_i_rii, i_ii_i_ri};
 use core::ffi::c_void;
 
 /// Describes a single directory entry
@@ -35,6 +35,7 @@ pub struct SceIoStat {
 }
 
 bitflags::bitflags! {
+    #[repr(transparent)]
     pub struct IoStatMode: i32 {
         /// Symbolic Link
         const IFLNK = 0x4000;
@@ -70,6 +71,7 @@ bitflags::bitflags! {
 }
 
 bitflags::bitflags! {
+    #[repr(transparent)]
     pub struct IoStatAttr: u32 {
         /// Symlink
         const IFLNK = 0x0008;
@@ -102,6 +104,7 @@ pub enum IoWhence {
 }
 
 bitflags::bitflags! {
+    #[repr(transparent)]
     pub struct IoOpenFlags: i32 {
         const RD_ONLY = 0x0001;
         const WR_ONLY = 0x0002;
@@ -240,7 +243,7 @@ psp_extern! {
     pub fn sceIoWriteAsync(fd: SceUid, data: *const c_void, size: u32)
      -> i32;
 
-    #[psp(0x27EB27B8)]
+    #[psp(0x27EB27B8, i_ii_i_rii)]
     /// Reposition read/write file descriptor offset
     ///
     /// # Parameters
@@ -256,7 +259,7 @@ psp_extern! {
     /// The position in the file after the seek.
     pub fn sceIoLseek(fd: SceUid, offset: i64, whence: IoWhence) -> i64;
 
-    #[psp(0x71B19E77)]
+    #[psp(0x71B19E77, i_ii_i_ri)]
     /// Reposition read/write file descriptor offset (asynchronous)
     ///
     /// # Parameters

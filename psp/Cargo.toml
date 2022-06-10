@@ -1,6 +1,6 @@
 [package]
 name = "psp"
-version = "0.1.1"
+version = "0.2.2"
 description = "A library for building full PSP modules, including both PRX plugins and regular homebrew apps."
 readme = "../README.md"
 repository = "https://github.com/overdrivenpotato/rust-psp"
@@ -16,6 +16,8 @@ build = "build.rs"
 crate-type = ["lib", "staticlib"]
 
 [features]
+default = []
+std = []
 # Compile this library as a stub provider. Useful to compile this as a static
 # library for other projects.
 stub-only = []
@@ -23,7 +25,8 @@ stub-only = []
 [dependencies]
 paste = "0.1.12"
 bitflags = "1.2.1"
-embedded-graphics = { version = "0.6.2", optional = true }
+embedded-graphics = { version = "0.7.1", optional = true, features = ["fixed_point"] }
+unstringify = "0.1.4"
 
 [dependencies.num_enum]
 version = "0.5.0"

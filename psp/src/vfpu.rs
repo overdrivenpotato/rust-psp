@@ -1,89 +1,361 @@
 //! VFPU support.
 
 /// A macro-based VFPU assembler.
+///
+/// This follows the standard Rust `asm!` macro syntax, with support for VFPU
+/// instructions.
+///
+/// Limitations:
+///
+/// - Currently, registers cannot be specified by name in operands. For example
+///   this is invalid: `out("t0") _`, instead you must use `out("$8")`.
+///
+/// # A note on transposed matrices
+///
+/// While some documentation online suggests that the `M___` registers represent
+/// matrices, and the adjacent `E___` registers represent their inverse, this is
+/// somewhat wrong.
+///
+/// It can be better said that `M___` interprets the registers as being stored
+/// in row-major format, and `E___` interprets the registers as being stored in
+/// column-major format. While many instructions (`vmmov`, `vmidt`, `vmzero`)
+/// aren't sensitive to matrix transpositions, this matters for `vtfm_` and
+/// `vhtfm_`.
+///
+/// `vmmul` is an exception to this rule. See [this comment] for more details.
+///
+/// [this comment]: https://github.com/overdrivenpotato/rust-psp/issues/112#issuecomment-1043535976
 #[macro_export]
 macro_rules! vfpu_asm {
+    // Kickstart the parser.
+    ($($t:tt)*) => {{
+        $crate::vfpu_asm_next!((asm:) () $($t)*)
+    }};
+}
+
+#[doc(hidden)]
+#[macro_export]
+macro_rules! vfpu_asm_next {
+    // Extract an assembly literal.
+    ((asm: $($a:tt)* ) () $code2:literal $(, $($t:tt)*)?) => {
+        $crate::unstringify!(let $tokens = unstringify!($code2) in {
+            $crate::vfpu_asm_next!((asm: $($a)* ($crate::instruction!($tokens))) () $($($t)*)?)
+        })
+    };
+
+    // Extract a stringified assembly literal.
+    ((asm: $($a:tt)* ) () stringify!( $($token:tt)* ) $(, $($t:tt)*)?) => {
+        $crate::vfpu_asm_next!((asm: $($a)* ($crate::instruction!($($token)*))) () $($($t)*)?)
+    };
+
+    // If the next token isn't a directive, start parsing operands.
+    ((asm: $($a:tt)* ) () $($t:tt)*) => {
+        $crate::vfpu_asm_next!((asm: $($a)* ) (ops: ) $($t)*)
+    };
+
+    // Extract an option directive.
+    ((asm: $($a:tt)* ) (ops: $($b:tt)* ) options($($option:ident),+) $(, $($t:tt)*)?) => {
+        $crate::vfpu_asm_next!((asm: $($a)* ) (ops: $($b)* (options ($($option),+);) ) $($($t),*)? )
+    };
+
+    // Extract an unaliased register operand.
+    ((asm: $($a:tt)* ) (ops: $($b:tt)* ) $op:ident($reg:tt) $place1:tt $(=> $place2:tt)? $(, $($t:tt)*)?) => {
+        $crate::vfpu_asm_next!((asm: $($a)* ) (ops: $($b)* (regop $op($reg) $place1 $(=> $place2)? ;) ) $($($t)*)? )
+    };
+
+    // Extract an aliased register operand.
+    ((asm: $($a:tt)* ) (ops: $($b:tt)* ) $alias:ident = $op:ident($reg:tt) $place1:tt $(=> $place2:tt)? $(, $($t:tt)*)?) => {
+        $crate::vfpu_asm_next!((asm: $($a)* ) (ops: $($b)* (regop [$alias =] $op($reg) $place1 $(=> $place2)? ;) ) $($($t)*)? )
+    };
+
+    // Extract an unaliased const operand.
+    ((asm: $($a:tt)* ) (ops: $($b:tt)* ) const $val:expr $(, $($t:tt)*)?) => {
+        $crate::vfpu_asm_next!((asm: $($a)* ) (ops: $($b)* (const_ $val ;) ) $($($t)*)? )
+    };
+
+    // Extract an aliased const operand.
+    ((asm: $($a:tt)* ) (ops: $($b:tt)* ) $alias:ident = const $ex:expr $(, $($t:tt)*)?) => {
+        $crate::vfpu_asm_next!((asm: $($a)* ) (ops: $($b)* (const_ [$alias =] $ex ;) ) $($($t)*)? )
+    };
+
+    // Extract an unaliased sym operand.
+    ((asm: $($a:tt)* ) (ops: $($b:tt)* ) sym $pa:path $(, $($t:tt)*)?) => {
+        $crate::vfpu_asm_next!((asm: $($a)* ) (ops: $($b)* (sym $pa ;) ) $($($t)*)? )
+    };
+
+    // Extract an aliased sym operand.
+    ((asm: $($a:tt)* ) (ops: $($b:tt)* ) $alias:ident = sym $pa:path $(, $($t:tt)*)?) => {
+        $crate::vfpu_asm_next!((asm: $($a)* ) (ops: $($b)* (sym [$alias =] $pa ;) ) $($($t)*)? )
+    };
+
+    // No more tokens to parse. Build the assembly.
     (
-        $(
-            $($opcode:ident $($arg:tt $(($base:ident))?),*)?
-            $(.mips $asm:literal)?
-        );*;
-
-        // Optional in / out constraints
-        $(
-
-            // Output constraints
-            : $($out_constraint:literal ($out_expr:expr)),*
-
-            // Input constraints
-            $(
-                : $($in_constraint:literal ($in_expr:expr)),*
-
-                // Clobbers
-                $(
-                    : $($clobber:literal),*
-
-                    // Options
-                    $(
-                        : $($option:literal),*
-                    )?
-                )?
-            )?
-        )?
+        (asm: $( ( $($asm:tt)* ) )+)
+        $((ops:
+            $((
+                $(regop  $([$io_name:tt =])? $op:ident($io_reg:tt) $io_p1:tt $(=> $io_p2:tt)? ;)?
+                $(const_ $([$c_name:tt =])? $c_expr:expr ;)?
+                $(sym    $([$s_name:tt =])? $s_path:path ;)?
+                $(options ($($option:ident),+) ;)?
+            ))*
+        ))?
     ) => {{
         #[cfg(target_os = "psp")]
         {
-            llvm_asm!(
-                concat!(
-                    ".set push\n",
-                    ".set noreorder\n",
-                    ".align 2\n",
-                    $(
-                        $($crate::instruction!($opcode $($arg $(($base))?),*))?
-                        $($crate::instruction!(mips $asm))?
+            core::arch::asm!(
+                ".set push",
+                ".set noreorder",
+                ".set noat",
 
-                        , "\n"
-                    ),*,
-                    ".set pop"
-                )
+                ".set __psp_regnum_$0, 0",
+                ".set __psp_regnum_$1, 1",
+                ".set __psp_regnum_$2, 2",
+                ".set __psp_regnum_$3, 3",
+                ".set __psp_regnum_$4, 4",
+                ".set __psp_regnum_$5, 5",
+                ".set __psp_regnum_$6, 6",
+                ".set __psp_regnum_$7, 7",
+                ".set __psp_regnum_$8, 8",
+                ".set __psp_regnum_$9, 9",
+                ".set __psp_regnum_$10, 10",
+                ".set __psp_regnum_$11, 11",
+                ".set __psp_regnum_$12, 12",
+                ".set __psp_regnum_$13, 13",
+                ".set __psp_regnum_$14, 14",
+                ".set __psp_regnum_$15, 15",
+                ".set __psp_regnum_$16, 16",
+                ".set __psp_regnum_$17, 17",
+                ".set __psp_regnum_$18, 18",
+                ".set __psp_regnum_$19, 19",
+                ".set __psp_regnum_$20, 20",
+                ".set __psp_regnum_$21, 21",
+                ".set __psp_regnum_$22, 22",
+                ".set __psp_regnum_$23, 23",
+                ".set __psp_regnum_$24, 24",
+                ".set __psp_regnum_$25, 25",
+                ".set __psp_regnum_$26, 26",
+                ".set __psp_regnum_$27, 27",
+                ".set __psp_regnum_$28, 28",
+                ".set __psp_regnum_$29, 29",
+                ".set __psp_regnum_$30, 30",
+                ".set __psp_regnum_$31, 31",
 
+                // TODO: Can VFPU instructions ever even access coproc1 registers?
+                // If not, this part can be removed.
+                //
+                ".set __psp_regnum_$f0, 0",
+                ".set __psp_regnum_$f1, 1",
+                ".set __psp_regnum_$f2, 2",
+                ".set __psp_regnum_$f3, 3",
+                ".set __psp_regnum_$f4, 4",
+                ".set __psp_regnum_$f5, 5",
+                ".set __psp_regnum_$f6, 6",
+                ".set __psp_regnum_$f7, 7",
+                ".set __psp_regnum_$f8, 8",
+                ".set __psp_regnum_$f9, 9",
+                ".set __psp_regnum_$f10, 10",
+                ".set __psp_regnum_$f11, 11",
+                ".set __psp_regnum_$f12, 12",
+                ".set __psp_regnum_$f13, 13",
+                ".set __psp_regnum_$f14, 14",
+                ".set __psp_regnum_$f15, 15",
+                ".set __psp_regnum_$f16, 16",
+                ".set __psp_regnum_$f17, 17",
+                ".set __psp_regnum_$f18, 18",
+                ".set __psp_regnum_$f19, 19",
+                ".set __psp_regnum_$f20, 20",
+                ".set __psp_regnum_$f21, 21",
+                ".set __psp_regnum_$f22, 22",
+                ".set __psp_regnum_$f23, 23",
+                ".set __psp_regnum_$f24, 24",
+                ".set __psp_regnum_$f25, 25",
+                ".set __psp_regnum_$f26, 26",
+                ".set __psp_regnum_$f27, 27",
+                ".set __psp_regnum_$f28, 28",
+                ".set __psp_regnum_$f29, 29",
+                ".set __psp_regnum_$f30, 30",
+                ".set __psp_regnum_$f31, 31",
+
+                // This block defines a macro, and a symbol to guard that macro so
+                // that it is only defined once. The macro is equivalent to:
+                //
+                // __psp_reg_or(register, left shift, orval)
+                //
+                // Arguments:
+                // - register: The register name, as spit out by the rust assembler.
+                //   E.g. $1, $5, or $f0, $f13, etc..
+                // - left shift: The mount to shift the register number left by
+                // - orval: The value to or the shifted register with
+                //
+                // Once invoked, the macro defines a .word value, so it can be used
+                // with an instruction template to create VFPU instructions.
+                //
+                // The registers are converted to numbers with the use of the above
+                // variables, following the `__psp_regnum_$N` pattern, where N is
+                // the register number, (0, 5, f0, f13).
+                ".ifndef __psp_reg_or_defined",
+                ".set __psp_reg_or_defined, 1",
+                ".macro __psp_reg_or reg lshift orval",
+                ".word ((__psp_regnum_\\()\\reg\\() << \\lshift)|\\orval)",
+                ".endm",
+                ".endif",
+
+                ".align 2",
+                $( $($asm)* ),*,
+                ".set pop",
                 $(
-                    : $($out_constraint ($out_expr)),*
-
                     $(
-                        :$($in_constraint ($in_expr)),*
-
-                        $(
-                            : $($clobber),*
-
-                            $(
-                                : $($option),*
-                            )?
-                        )?
-                    )?
+                        $($($io_name =)? $op($io_reg) $io_p1 $(=> $io_p2)?)?
+                        $($($c_name =)? const $c_expr)?
+                        $($($s_name =)? sym $s_path)?
+                        $(options ($($option),*))?
+                    ),*
                 )?
-            );
+            )
         }
 
         #[cfg(not(target_os = "psp"))]
         {
-            $(
-                $(let _ = $out_expr;)*
-
-                $(
-                    $(let _ = $in_expr;)*
-                )?
-            )?
-
-            // Fixes many warnings if we extract this into a sub-function
+            // The type signature here lets you obtain any value, which avoids
+            // dead code warnings.
+            //
+            // Adding `unsafe` ensures that the macro caller always calls PSP
+            // assembly in an unsafe context.
             #[inline(always)]
-            fn die() {
+            unsafe fn die<T>() -> T {
                 panic!("tried running vfpu_asm on a non-PSP platform");
             }
 
-            die();
+            die::<()>();
+
+            // Fix errors for output variables which are never assigned). The
+            // type can be anything due to the signature of `die`.
+
+            $(
+                $(
+                    {
+                        $($crate::psp_asm_discard!(regop $op $io_p1 $(=> $io_p2)?);)?
+                        $($crate::psp_asm_discard!(const_ $c_expr);)?
+                    }
+                )*
+            )?
         }
-    }}
+    }};
+}
+
+/// Like `stringify!`, but with several extra features:
+///
+/// # Preserves assembly string templates
+///
+/// Assembly strings break when spaces are added, i.e.:
+///
+/// ```rust,compile_fail
+/// asm!("xor { }, { }", out("eax") _);
+/// ```
+///
+/// This macro preserves format strings, and also understands double braces:
+///
+/// ```
+/// let s = format!(stringify_asm!(op {  }, { 2 : ? }, {{{1}}}), 123, 456, "test");
+/// assert_eq!(s, r#"op 123 , "test" , { 456 }"#));
+/// ```
+///
+/// # Register names
+///
+/// This macro automatically converts register names (`a0`, `t4`, `s2`, etc) to
+/// corresponding numbers (`$4`, `$12`, etc).
+#[macro_export]
+#[doc(hidden)]
+macro_rules! stringify_asm {
+    // Catch double braces.
+    ({{ $($t1:tt)* }} $($($t2:tt)+)?) => {
+        concat!("{{ ", concat!($crate::stringify_asm!($($t1)*)), " }}" $(, " ", $crate::stringify_asm!($($t2)+))?)
+    };
+
+    // Catch fmt directives.
+    ({ $($t1:tt)* } $($($t2:tt)+)?) => {
+        concat!("{", concat!($(stringify!($t1)),*), "}" $(, " ", $crate::stringify_asm!($($t2)+))?)
+    };
+
+    // Catch preprocessor directives
+    (. $a:ident $($($t2:tt)+)?) => {
+        concat!(
+            ".", stringify!($a)
+            $(, " ", $crate::stringify_asm!($($t2)+))?
+        )
+    };
+
+    // Catch mnemonics with 3 dots
+    ($a:ident . $b:ident . $c:ident $($($t2:tt)+)?) => {
+        concat!(
+            stringify!($a), ".", stringify!($b), ".", stringify!($c)
+            $(, " ", $crate::stringify_asm!($($t2)+))?
+        )
+    };
+
+    // We can't make a rule for dollar signs due to macro limitations. This is
+    // a workaround that attempts to parse a dollar sign anyways.
+    ($t1:tt $t2:tt $($t3:tt)*) => {
+        $crate::try_stringify_reg!(($t1) $t2 $($t3)*)
+    };
+
+
+
+    // Base case.
+    ($token:tt) => { $crate::try_stringify_mips_reg!($token) };
+}
+
+#[macro_export]
+#[doc(hidden)]
+macro_rules! psp_asm_discard {
+    (regop inout $io_p1:tt => _) => {
+        let _ = $io_p1;
+    };
+
+    (regop inout $io_p1:tt => $io_p2:tt) => {
+        let _ = $io_p1;
+        $io_p2 = die();
+    };
+
+    (regop inlateout $io_p1:tt => _) => {
+        let _ = $io_p1;
+    };
+
+    (regop inlateout $io_p1:tt => $io_p2:tt) => {
+        let _ = $io_p1;
+        $io_p2 = die();
+    };
+
+    (regop out _) => {};
+
+    (regop out $io_p1:tt) => {
+        $io_p1 = die();
+    };
+
+    (regop lateout $io_p1:tt) => {
+        $io_p1 = die();
+    };
+
+    (regop in $io_p1:tt) => {
+        let _ = $io_p1;
+    };
+
+    (regop const_ $c_expr:expr) => {
+        let _ = $c_expr;
+    };
+}
+
+#[macro_export]
+#[doc(hidden)]
+macro_rules! try_stringify_reg {
+    (($) $b:tt $($($t:tt)+)?) => {
+        concat!("$", stringify!($b) $(, " ", $crate::stringify_asm!($($t)+))? )
+    };
+
+    // If nothing else, try to interpret this as a register mnemonic.
+    (($a:tt) $b:tt $($t:tt)*) => {
+        concat!($crate::try_stringify_mips_reg!($a), " ", $crate::stringify_asm!($b $($t)*) )
+    };
 }
 
 // The instruction encodings here were mainly obtained from the following link:
@@ -97,87 +369,96 @@ macro_rules! vfpu_asm {
 #[doc(hidden)]
 macro_rules! instruction {
     // No offset
-    (lv_q $t:ident, $s:ident) => { $crate::instruction!(lv_q $t, 0($s)) };
+    (lv.q $t:ident, $s:tt) => { $crate::instruction!(lv.q $t, 0($s)) };
 
     // lv.q 110110ss sssttttt oooooooo oooooo0t
-    (lv_q $t:ident, $offset:literal ( $s:ident )) => {
+    (lv.q $t:ident, $offset:literal ( $s:tt )) => {
         concat!(
-            "\n.byte (((", stringify!($offset), " / 4) << 2) & 0xff) | ((",
-                $crate::register_quad!($t), " >> 5) & 1)",
-            "\n.byte (", stringify!($offset), " / 4) >> 6",
-            "\n.byte ((", $crate::register_mips!($s), " << 5) & 0xff) | (",
-                $crate::register_quad!($t), "& 0b11111)",
-            "\n.byte 0b11011000 | (", $crate::register_mips!($s), " >> 3)",
+            "__psp_reg_or ", $crate::stringify_asm!($s), " (16+5) ", " (",
+                "(0b11011000 << 24) | ",
+                "((", $crate::register_quad!($t), "& 0b11111) << 16) | ",
+                "((((", stringify!($offset), " / 4) >> 6) & 0xff) << 8) | ",
+                "(((", stringify!($offset), " / 4) << 2) & 0xff) | ((", $crate::register_quad!($t), " >> 5) & 1)",
+            ")",
         )
     };
 
     // No offset, no writeback
-    (sv_q $t:ident, $s:ident) => {
-        $crate::instruction!(sv_q $t, 0($s), wb:0)
+    (sv.q $t:ident, $s:tt) => {
+        $crate::instruction!(sv.q $t, 0($s), wb:0)
     };
 
     // No offset, has writeback
-    (sv_q $t:ident, $s:ident, wb) => {
-        $crate::instruction!(sv_q $t, 0($s), wb:1)
+    (sv.q $t:ident, $s:tt, wb) => {
+        $crate::instruction!(sv.q $t, 0($s), wb:1)
     };
 
     // Has offset, no writeback
-    (sv_q $t:ident, $offset:literal ( $s:ident )) => {
-        $crate::instruction!(sv_q $t, $offset ($s), wb:0)
+    (sv.q $t:ident, $offset:literal ( $s:tt )) => {
+        $crate::instruction!(sv.q $t, $offset ($s), wb:0)
     };
 
     // Has offset, has writeback
-    (sv_q $t:ident, $offset:literal ( $s:ident ), wb) => {
-        $crate::instruction!(sv_q $t, $offset ($s), wb:1)
+    (sv.q $t:ident, $offset:literal ( $s:tt ), wb) => {
+        $crate::instruction!(sv.q $t, $offset ($s), wb:1)
     };
 
     // sv.q 111110ss sssttttt oooooooo oooooowt
-    (sv_q $t:ident, $offset:literal ( $s:ident ), wb:$wb:literal) => {
+    (sv.q $t:ident, $offset:literal ( $s:tt ), wb:$wb:literal) => {
         concat!(
-            "\n.byte (((", stringify!($offset), " / 4) << 2) & 0xff) | ((",
-                $crate::register_quad!($t), " >> 5) & 1)",
-                " | (", stringify!($wb), " << 1)",
-            "\n.byte (", stringify!($offset), " / 4) >> 6",
-            "\n.byte ((", $crate::register_mips!($s), " << 5) & 0xff) | (",
-                $crate::register_quad!($t), " & 0b11111)",
-            "\n.byte 0b11111000 | (", $crate::register_mips!($s), " >> 3)",
+            "__psp_reg_or ", $crate::stringify_asm!($s), " (16+5) (",
+                "(0b11111000 << 24) | ",
+                "((", $crate::register_quad!($t), " & 0b11111) << 16) | ",
+                "((((", stringify!($offset), " / 4) >> 6) & 0xff) << 8) | ",
+                "(((", stringify!($offset), " / 4) << 2) & 0xff) | ",
+                    "((", $crate::register_quad!($t), " >> 5) & 1) | ",
+                    "(", stringify!($wb), " << 1)",
+            ")",
         )
     };
 
     // mtv 0100 1000 111 sssss 0000 0000 0 ddddddd
-    (mtv $s:ident, $d:ident) => {
+    (mtv $s:tt, $d:ident) => {
         concat!(
-            ".byte ", $crate::register_single!($d),
-            "\n.byte 0\n",
-            ".byte 0b11100000 | ", $crate::register_mips!($s),
-            "\n.byte 0b01001000\n",
+            "__psp_reg_or ", $crate::stringify_asm!($s), " 16 (",
+                "(0b01001000 << 24) | ",
+                "(0b11100000 << 16) | ",
+                "(0 << 8) |",
+                $crate::register_single!($d),
+            ")",
         )
     };
 
     // mfv 0100 1000 011 ddddd 000000000 sssssss
-    (mfv $d:ident, $s:ident) => {
+    (mfv $d:tt, $s:ident) => {
         concat!(
-            ".byte ", $crate::register_single!($s),
-            "\n.byte 0\n",
-            ".byte 0b01100000 | ", $crate::register_mips!($d),
-            "\n.byte 0b01001000\n",
+            "__psp_reg_or ", $crate::stringify_asm!($d), " 16 (",
+                "(0b01001000 << 24) | ",
+                "(0b01100000 << 16) | ",
+                "(0 << 8) |",
+                $crate::register_single!($s),
+            ")",
         )
     };
 
-    (vpfxd [$($x:tt)*]) => {
-        $crate::instruction!(vpfxd [$($x)*], [])
+    (vpfxd $($t:tt)*) => {
+        $crate::vpfx_instr!(_vpfxd_internal (stack:) (cur:) $($t)*);
     };
 
-    (vpfxd [$($x:tt)*], [$($y:tt)*]) => {
-        $crate::instruction!(vpfxd [$($x)*], [$($y)*], [])
+    (_vpfxd_internal [$($x:tt)*]) => {
+        $crate::instruction!(_vpfxd_internal [$($x)*], [])
     };
 
-    (vpfxd [$($x:tt)*], [$($y:tt)*], [$($z:tt)*]) => {
-        $crate::instruction!(vpfxd [$($x)*], [$($y)*], [$($z)*], [])
+    (_vpfxd_internal [$($x:tt)*], [$($y:tt)*]) => {
+        $crate::instruction!(_vpfxd_internal [$($x)*], [$($y)*], [])
+    };
+
+    (_vpfxd_internal [$($x:tt)*], [$($y:tt)*], [$($z:tt)*]) => {
+        $crate::instruction!(_vpfxd_internal [$($x)*], [$($y)*], [$($z)*], [])
     };
 
     // vpfxd 1101 1110 iiiiiiii iiiiiiii iiiiiiii
-    (vpfxd [$($x:tt)*], [$($y:tt)*], [$($z:tt)*], [$($w:tt)*]) => {
+    (_vpfxd_internal [$($x:tt)*], [$($y:tt)*], [$($z:tt)*], [$($w:tt)*]) => {
         concat!(
             ".word (0b11011110 << 24)",
 
@@ -195,20 +476,17 @@ macro_rules! instruction {
         )
     };
 
-    (vpfxs [$($x:tt)+]) => {
-        $crate::instruction!(vpfxs [$($x)+], [Y])
-    };
 
-    (vpfxs [$($x:tt)+], [$($y:tt)+]) => {
-        $crate::instruction!(vpfxs [$($x)+], [$($y)+], [Z])
-    };
 
-    (vpfxs [$($x:tt)+], [$($y:tt)+], [$($z:tt)+]) => {
-        $crate::instruction!(vpfxs [$($x)+], [$($y)+], [$($z)+], [W])
+    // Internal pre-parse variants of this prefix instruction. Arguments are
+    // surrounded by square brackets for easy use.
+
+    (vpfxs $($x:tt)+) => {
+        $crate::vpfx_instr!(_vpfxs_internal (stack:) (cur:) $($x)+)
     };
 
     // vpfxs 1101 1100 iiiiiiii iiiiiiii iiiiiiii
-    (vpfxs [$($x:tt)+], [$($y:tt)+], [$($z:tt)+], [$($w:tt)+]) => {
+    (_vpfxs_internal [$($x:tt)+], [$($y:tt)+], [$($z:tt)+], [$($w:tt)+]) => {
         concat!(
             ".word (0b11011100 << 24)",
 
@@ -226,20 +504,38 @@ macro_rules! instruction {
         )
     };
 
-    (vpfxt [$($x:tt)+]) => {
-        $crate::instruction!(vpfxt [$($x)+], [Y])
+    (_vpfxs_internal [$($x:tt)+]) => {
+        $crate::instruction!(_vpfxs_internal [$($x)+], [Y])
     };
 
-    (vpfxt [$($x:tt)+], [$($y:tt)+]) => {
-        $crate::instruction!(vpfxt [$($x)+], [$($y)+], [Z])
+    (_vpfxs_internal [$($x:tt)+], [$($y:tt)+]) => {
+        $crate::instruction!(_vpfxs_internal [$($x)+], [$($y)+], [Z])
     };
 
-    (vpfxt [$($x:tt)+], [$($y:tt)+], [$($z:tt)+]) => {
-        $crate::instruction!(vpfxt [$($x)+], [$($y)+], [$($z)+], [W])
+    (_vpfxs_internal [$($x:tt)+], [$($y:tt)+], [$($z:tt)+]) => {
+        $crate::instruction!(_vpfxs_internal [$($x)+], [$($y)+], [$($z)+], [W])
+    };
+
+
+
+    (vpfxt $($x:tt)+) => {
+        $crate::vpfx_instr!(_vpfxt_internal (stack:) (cur:) $($x)+)
+    };
+
+    (_vpfxt_internal [$($x:tt)+]) => {
+        $crate::instruction!(_vpfxt_internal [$($x)+], [Y])
+    };
+
+    (_vpfxt_internal [$($x:tt)+], [$($y:tt)+]) => {
+        $crate::instruction!(_vpfxt_internal [$($x)+], [$($y)+], [Z])
+    };
+
+    (_vpfxt_internal [$($x:tt)+], [$($y:tt)+], [$($z:tt)+]) => {
+        $crate::instruction!(_vpfxt_internal [$($x)+], [$($y)+], [$($z)+], [W])
     };
 
     // vpfxs 1101 1101 iiiiiiii iiiiiiii iiiiiiii
-    (vpfxt [$($x:tt)+], [$($y:tt)+], [$($z:tt)+], [$($w:tt)+]) => {
+    (_vpfxt_internal [$($x:tt)+], [$($y:tt)+], [$($z:tt)+], [$($w:tt)+]) => {
         concat!(
             ".word (0b11011101 << 24)",
 
@@ -258,7 +554,7 @@ macro_rules! instruction {
     };
 
     // vadd.s 0110 0000 0 ttttttt 0 sssssss 0 ddddddd
-    (vadd_s $d:ident, $s:ident, $t:ident) => {
+    (vadd.s $d:ident, $s:ident, $t:ident) => {
         concat!(
             "\n.byte ", $crate::register_single!($d),
             "\n.byte ", $crate::register_single!($s),
@@ -268,7 +564,7 @@ macro_rules! instruction {
     };
 
     // vadd.p 0110 0000 0 ttttttt 0 sssssss 1 ddddddd
-    (vadd_p $d:ident, $s:ident, $t:ident) => {
+    (vadd.p $d:ident, $s:ident, $t:ident) => {
         concat!(
             "\n.byte 0x80 | ", $crate::register_pair!($d),
             "\n.byte ", $crate::register_pair!($s),
@@ -278,7 +574,7 @@ macro_rules! instruction {
     };
 
     // vadd.t 0110 0000 0 ttttttt 1 sssssss 0 ddddddd
-    (vadd_t $d:ident, $s:ident, $t:ident) => {
+    (vadd.t $d:ident, $s:ident, $t:ident) => {
         concat!(
             "\n.byte ", $crate::register_triple!($d),
             "\n.byte 0x80 | ", $crate::register_triple!($s),
@@ -288,7 +584,7 @@ macro_rules! instruction {
     };
 
     // vadd.q 0110 0000 0 ttttttt 1 sssssss 1 ddddddd
-    (vadd_q $d:ident, $s:ident, $t:ident) => {
+    (vadd.q $d:ident, $s:ident, $t:ident) => {
         concat!(
             "\n.byte 0x80 | ", $crate::register_quad!($d),
             "\n.byte 0x80 | ", $crate::register_quad!($s),
@@ -298,7 +594,7 @@ macro_rules! instruction {
     };
 
     // vsub.s 0110 0000 1 ttttttt 0 sssssss 0 ddddddd
-    (vsub_s $d:ident, $s:ident, $t:ident) => {
+    (vsub.s $d:ident, $s:ident, $t:ident) => {
         concat!(
             "\n.byte ", $crate::register_single!($d),
             "\n.byte ", $crate::register_single!($s),
@@ -308,7 +604,7 @@ macro_rules! instruction {
     };
 
     // vsub.p 0110 0000 1 ttttttt 0 sssssss 1 ddddddd
-    (vsub_p $d:ident, $s:ident, $t:ident) => {
+    (vsub.p $d:ident, $s:ident, $t:ident) => {
         concat!(
             "\n.byte 0x80 | ", $crate::register_pair!($d),
             "\n.byte ", $crate::register_pair!($s),
@@ -318,7 +614,7 @@ macro_rules! instruction {
     };
 
     // vsub.t 0110 0000 1 ttttttt 1 sssssss 0 ddddddd
-    (vsub_t $d:ident, $s:ident, $t:ident) => {
+    (vsub.t $d:ident, $s:ident, $t:ident) => {
         concat!(
             "\n.byte ", $crate::register_triple!($d),
             "\n.byte 0x80 | ", $crate::register_triple!($s),
@@ -328,7 +624,7 @@ macro_rules! instruction {
     };
 
     // vsub.q 0110 0000 1 ttttttt 1 sssssss 1 ddddddd
-    (vsub_q $d:ident, $s:ident, $t:ident) => {
+    (vsub.q $d:ident, $s:ident, $t:ident) => {
         concat!(
             "\n.byte 0x80 | ", $crate::register_quad!($d),
             "\n.byte 0x80 | ", $crate::register_quad!($s),
@@ -338,7 +634,7 @@ macro_rules! instruction {
     };
 
     // vdiv.s 0110 0011 1 ttttttt 0 sssssss 0 ddddddd
-    (vdiv_s $d:ident, $s:ident, $t:ident) => {
+    (vdiv.s $d:ident, $s:ident, $t:ident) => {
         concat!(
             "\n.byte ", $crate::register_single!($d),
             "\n.byte ", $crate::register_single!($s),
@@ -348,7 +644,7 @@ macro_rules! instruction {
     };
 
     // vdiv.p 0110 0011 1 ttttttt 0 sssssss 1 ddddddd
-    (vdiv_p $d:ident, $s:ident, $t:ident) => {
+    (vdiv.p $d:ident, $s:ident, $t:ident) => {
         concat!(
             "\n.byte 0x80 | ", $crate::register_pair!($d),
             "\n.byte ", $crate::register_pair!($s),
@@ -358,7 +654,7 @@ macro_rules! instruction {
     };
 
     // vdiv.t 0110 0011 1 ttttttt 1 sssssss 0 ddddddd
-    (vdiv_t $d:ident, $s:ident, $t:ident) => {
+    (vdiv.t $d:ident, $s:ident, $t:ident) => {
         concat!(
             "\n.byte ", $crate::register_triple!($d),
             "\n.byte 0x80 | ", $crate::register_triple!($s),
@@ -368,7 +664,7 @@ macro_rules! instruction {
     };
 
     // vdiv.q 0110 0011 1 ttttttt 1 sssssss 1 ddddddd
-    (vdiv_q $d:ident, $s:ident, $t:ident) => {
+    (vdiv.q $d:ident, $s:ident, $t:ident) => {
         concat!(
             "\n.byte 0x80 | ", $crate::register_quad!($d),
             "\n.byte 0x80 | ", $crate::register_quad!($s),
@@ -378,7 +674,7 @@ macro_rules! instruction {
     };
 
     // vmul.s 0110 0100 0 ttttttt 0 sssssss 0 ddddddd
-    (vmul_s $d:ident, $s:ident, $t:ident) => {
+    (vmul.s $d:ident, $s:ident, $t:ident) => {
         concat!(
             "\n.byte ", $crate::register_single!($d),
             "\n.byte ", $crate::register_single!($s),
@@ -388,7 +684,7 @@ macro_rules! instruction {
     };
 
     // vmul.p 0110 0100 0 ttttttt 0 sssssss 1 ddddddd
-    (vmul_p $d:ident, $s:ident, $t:ident) => {
+    (vmul.p $d:ident, $s:ident, $t:ident) => {
         concat!(
             "\n.byte 0x80 | ", $crate::register_pair!($d),
             "\n.byte ", $crate::register_pair!($s),
@@ -398,7 +694,7 @@ macro_rules! instruction {
     };
 
     // vmul.t 0110 0100 0 ttttttt 1 sssssss 0 ddddddd
-    (vmul_t $d:ident, $s:ident, $t:ident) => {
+    (vmul.t $d:ident, $s:ident, $t:ident) => {
         concat!(
             "\n.byte ", $crate::register_triple!($d),
             "\n.byte 0x80 | ", $crate::register_triple!($s),
@@ -408,7 +704,7 @@ macro_rules! instruction {
     };
 
     // vmul.q 0110 0100 0 ttttttt 1 sssssss 1 ddddddd
-    (vmul_q $d:ident, $s:ident, $t:ident) => {
+    (vmul.q $d:ident, $s:ident, $t:ident) => {
         concat!(
             "\n.byte 0x80 | ", $crate::register_quad!($d),
             "\n.byte 0x80 | ", $crate::register_quad!($s),
@@ -418,7 +714,7 @@ macro_rules! instruction {
     };
 
     // vdot.p 0110 0100 1 ttttttt 0 sssssss 1 ddddddd
-    (vdot_p $d:ident, $s:ident, $t:ident) => {
+    (vdot.p $d:ident, $s:ident, $t:ident) => {
         concat!(
             "\n.byte 0x80 | ", $crate::register_pair!($d),
             "\n.byte ", $crate::register_pair!($s),
@@ -428,7 +724,7 @@ macro_rules! instruction {
     };
 
     // vdot.t 0110 0100 1 ttttttt 1 sssssss 0 ddddddd
-    (vdot_t $d:ident, $s:ident, $t:ident) => {
+    (vdot.t $d:ident, $s:ident, $t:ident) => {
         concat!(
             "\n.byte ", $crate::register_triple!($d),
             "\n.byte 0x80 | ", $crate::register_triple!($s),
@@ -438,7 +734,7 @@ macro_rules! instruction {
     };
 
     // vdot.q 0110 0100 1 ttttttt 1 sssssss 1 ddddddd
-    (vdot_q $d:ident, $s:ident, $t:ident) => {
+    (vdot.q $d:ident, $s:ident, $t:ident) => {
         concat!(
             "\n.byte 0x80 | ", $crate::register_quad!($d),
             "\n.byte 0x80 | ", $crate::register_quad!($s),
@@ -448,7 +744,7 @@ macro_rules! instruction {
     };
 
     // vhdp.p 0110 0110 0 ttttttt 0 sssssss 1 ddddddd
-    (vhdp_p $d:ident, $s:ident, $t:ident) => {
+    (vhdp.p $d:ident, $s:ident, $t:ident) => {
         concat!(
             "\n.byte 0x80 | ", $crate::register_pair!($d),
             "\n.byte ", $crate::register_pair!($s),
@@ -458,7 +754,7 @@ macro_rules! instruction {
     };
 
     // vhdp.t 0110 0110 0 ttttttt 1 sssssss 0 ddddddd
-    (vhdp_t $d:ident, $s:ident, $t:ident) => {
+    (vhdp.t $d:ident, $s:ident, $t:ident) => {
         concat!(
             "\n.byte ", $crate::register_triple!($d),
             "\n.byte 0x80 | ", $crate::register_triple!($s),
@@ -468,7 +764,7 @@ macro_rules! instruction {
     };
 
     // vhdp.q 0110 0110 0 ttttttt 1 sssssss 1 ddddddd
-    (vhdp_q $d:ident, $s:ident, $t:ident) => {
+    (vhdp.q $d:ident, $s:ident, $t:ident) => {
         concat!(
             "\n.byte 0x80 | ", $crate::register_quad!($d),
             "\n.byte 0x80 | ", $crate::register_quad!($s),
@@ -478,7 +774,7 @@ macro_rules! instruction {
     };
 
     // vmin.s 0110 1101 0 ttttttt 0 sssssss 0 ddddddd
-    (vmin_s $d:ident, $s:ident, $t:ident) => {
+    (vmin.s $d:ident, $s:ident, $t:ident) => {
         concat!(
             "\n.byte ", $crate::register_single!($d),
             "\n.byte ", $crate::register_single!($s),
@@ -488,7 +784,7 @@ macro_rules! instruction {
     };
 
     // vmin.p 0110 1101 0 ttttttt 0 sssssss 1 ddddddd
-    (vmin_p $d:ident, $s:ident, $t:ident) => {
+    (vmin.p $d:ident, $s:ident, $t:ident) => {
         concat!(
             "\n.byte 0x80 | ", $crate::register_pair!($d),
             "\n.byte ", $crate::register_pair!($s),
@@ -498,7 +794,7 @@ macro_rules! instruction {
     };
 
     // vmin.t 0110 1101 0 ttttttt 1 sssssss 0 ddddddd
-    (vmin_t $d:ident, $s:ident, $t:ident) => {
+    (vmin.t $d:ident, $s:ident, $t:ident) => {
         concat!(
             "\n.byte ", $crate::register_triple!($d),
             "\n.byte 0x80 | ", $crate::register_triple!($s),
@@ -508,7 +804,7 @@ macro_rules! instruction {
     };
 
     // vmin.q 0110 1101 0 ttttttt 1 sssssss 1 ddddddd
-    (vmin_q $d:ident, $s:ident, $t:ident) => {
+    (vmin.q $d:ident, $s:ident, $t:ident) => {
         concat!(
             "\n.byte 0x80 | ", $crate::register_quad!($d),
             "\n.byte 0x80 | ", $crate::register_quad!($s),
@@ -518,7 +814,7 @@ macro_rules! instruction {
     };
 
     // vmax.s 0110 1101 1 ttttttt 0 sssssss 0 ddddddd
-    (vmax_s $d:ident, $s:ident, $t:ident) => {
+    (vmax.s $d:ident, $s:ident, $t:ident) => {
         concat!(
             "\n.byte ", $crate::register_single!($d),
             "\n.byte ", $crate::register_single!($s),
@@ -528,7 +824,7 @@ macro_rules! instruction {
     };
 
     // vmax.p 0110 1101 1 ttttttt 0 sssssss 1 ddddddd
-    (vmax_p $d:ident, $s:ident, $t:ident) => {
+    (vmax.p $d:ident, $s:ident, $t:ident) => {
         concat!(
             "\n.byte 0x80 | ", $crate::register_pair!($d),
             "\n.byte ", $crate::register_pair!($s),
@@ -538,7 +834,7 @@ macro_rules! instruction {
     };
 
     // vmax.t 0110 1101 1 ttttttt 1 sssssss 0 ddddddd
-    (vmax_t $d:ident, $s:ident, $t:ident) => {
+    (vmax.t $d:ident, $s:ident, $t:ident) => {
         concat!(
             "\n.byte ", $crate::register_triple!($d),
             "\n.byte 0x80 | ", $crate::register_triple!($s),
@@ -548,7 +844,7 @@ macro_rules! instruction {
     };
 
     // vmax.q 0110 1101 1 ttttttt 1 sssssss 1 ddddddd
-    (vmax_q $d:ident, $s:ident, $t:ident) => {
+    (vmax.q $d:ident, $s:ident, $t:ident) => {
         concat!(
             "\n.byte 0x80 | ", $crate::register_quad!($d),
             "\n.byte 0x80 | ", $crate::register_quad!($s),
@@ -558,7 +854,7 @@ macro_rules! instruction {
     };
 
     // vabs.s 1101 0000 0 0000001 0 sssssss 0 ddddddd
-    (vabs_s $d:ident, $s:ident) => {
+    (vabs.s $d:ident, $s:ident) => {
         concat!(
             "\n.byte ", $crate::register_single!($d),
             "\n.byte ", $crate::register_single!($s),
@@ -568,7 +864,7 @@ macro_rules! instruction {
     };
 
     // vabs.p 1101 0000 0 0000001 0 sssssss 1 ddddddd
-    (vabs_p $d:ident, $s:ident) => {
+    (vabs.p $d:ident, $s:ident) => {
         concat!(
             "\n.byte 0x80 | ", $crate::register_pair!($d),
             "\n.byte ", $crate::register_pair!($s),
@@ -578,7 +874,7 @@ macro_rules! instruction {
     };
 
     // vabs.t 1101 0000 0 0000001 1 sssssss 0 ddddddd
-    (vabs_t $d:ident, $s:ident) => {
+    (vabs.t $d:ident, $s:ident) => {
         concat!(
             "\n.byte ", $crate::register_triple!($d),
             "\n.byte 0x80 | ", $crate::register_triple!($s),
@@ -588,7 +884,7 @@ macro_rules! instruction {
     };
 
     // vabs.q 1101 0000 0 0000001 1 sssssss 1 ddddddd
-    (vabs_q $d:ident, $s:ident) => {
+    (vabs.q $d:ident, $s:ident) => {
         concat!(
             "\n.byte 0x80 | ", $crate::register_quad!($d),
             "\n.byte 0x80 | ", $crate::register_quad!($s),
@@ -598,7 +894,7 @@ macro_rules! instruction {
     };
 
     // vneg.s 1101 0000 0 0000010 0 sssssss 0 ddddddd
-    (vneg_s $d:ident, $s:ident) => {
+    (vneg.s $d:ident, $s:ident) => {
         concat!(
             "\n.byte ", $crate::register_single!($d),
             "\n.byte ", $crate::register_single!($s),
@@ -608,7 +904,7 @@ macro_rules! instruction {
     };
 
     // vneg.p 1101 0000 0 0000010 0 sssssss 1 ddddddd
-    (vneg_p $d:ident, $s:ident) => {
+    (vneg.p $d:ident, $s:ident) => {
         concat!(
             "\n.byte 0x80 | ", $crate::register_pair!($d),
             "\n.byte ", $crate::register_pair!($s),
@@ -618,7 +914,7 @@ macro_rules! instruction {
     };
 
     // vneg.t 1101 0000 0 0000010 1 sssssss 0 ddddddd
-    (vneg_t $d:ident, $s:ident) => {
+    (vneg.t $d:ident, $s:ident) => {
         concat!(
             "\n.byte ", $crate::register_triple!($d),
             "\n.byte 0x80 | ", $crate::register_triple!($s),
@@ -628,7 +924,7 @@ macro_rules! instruction {
     };
 
     // vneg.q 1101 0000 0 0000010 1 sssssss 1 ddddddd
-    (vneg_q $d:ident, $s:ident) => {
+    (vneg.q $d:ident, $s:ident) => {
         concat!(
             "\n.byte 0x80 | ", $crate::register_quad!($d),
             "\n.byte 0x80 | ", $crate::register_quad!($s),
@@ -638,7 +934,7 @@ macro_rules! instruction {
     };
 
     // vidt.p 1101 0000 0 0000011 0 0000000 1 ddddddd
-    (vidt_p $d:ident) => {
+    (vidt.p $d:ident) => {
         concat!(
             "\n.byte 0x80 | ", $crate::register_pair!($d),
             "\n.byte 0b00000000",
@@ -648,7 +944,7 @@ macro_rules! instruction {
     };
 
     // vidt.t 1101 0000 0 0000011 1 0000000 0 ddddddd
-    (vidt_t $d:ident) => {
+    (vidt.t $d:ident) => {
         concat!(
             "\n.byte ", $crate::register_triple!($d),
             "\n.byte 0x80",
@@ -658,7 +954,7 @@ macro_rules! instruction {
     };
 
     // vidt.q 1101 0000 0 0000011 1 0000000 1 ddddddd
-    (vidt_q $d:ident) => {
+    (vidt.q $d:ident) => {
         concat!(
             "\n.byte 0x80 | ", $crate::register_quad!($d),
             "\n.byte 0x80",
@@ -668,7 +964,7 @@ macro_rules! instruction {
     };
 
     // vzero.s 1101 0000 0 0000110 0 0000000 0 ddddddd
-    (vzero_s $d:ident) => {
+    (vzero.s $d:ident) => {
         concat!(
             "\n.byte ", $crate::register_single!($d),
             "\n.byte 0b00000000",
@@ -678,7 +974,7 @@ macro_rules! instruction {
     };
 
     // vzero.p 1101 0000 0 0000110 0 0000000 1 ddddddd
-    (vzero_p $d:ident) => {
+    (vzero.p $d:ident) => {
         concat!(
             "\n.byte 0x80 | ", $crate::register_pair!($d),
             "\n.byte 0b00000000",
@@ -688,7 +984,7 @@ macro_rules! instruction {
     };
 
     // vzero.t 1101 0000 0 0000110 1 0000000 0 ddddddd
-    (vzero_t $d:ident) => {
+    (vzero.t $d:ident) => {
         concat!(
             "\n.byte ", $crate::register_triple!($d),
             "\n.byte 0x80",
@@ -698,7 +994,7 @@ macro_rules! instruction {
     };
 
     // vzero.q 1101 0000 0 0000110 1 0000000 1 ddddddd
-    (vzero_q $d:ident) => {
+    (vzero.q $d:ident) => {
         concat!(
             "\n.byte 0x80 | ", $crate::register_quad!($d),
             "\n.byte 0x80",
@@ -708,7 +1004,7 @@ macro_rules! instruction {
     };
 
     // vone.s 1101 0000 0 0000111 0 0000000 0 ddddddd
-    (vone_s $d:ident) => {
+    (vone.s $d:ident) => {
         concat!(
             "\n.byte ", $crate::register_single!($d),
             "\n.byte 0b00000000",
@@ -718,7 +1014,7 @@ macro_rules! instruction {
     };
 
     // vone.p 1101 0000 0 0000111 0 0000000 1 ddddddd
-    (vone_p $d:ident) => {
+    (vone.p $d:ident) => {
         concat!(
             "\n.byte 0x80 | ", $crate::register_pair!($d),
             "\n.byte 0b00000000",
@@ -728,7 +1024,7 @@ macro_rules! instruction {
     };
 
     // vone.t 1101 0000 0 0000111 1 0000000 0 ddddddd
-    (vone_t $d:ident) => {
+    (vone.t $d:ident) => {
         concat!(
             "\n.byte ", $crate::register_triple!($d),
             "\n.byte 0x80",
@@ -738,7 +1034,7 @@ macro_rules! instruction {
     };
 
     // vone.q 1101 0000 0 0000111 1 0000000 1 ddddddd
-    (vone_q $d:ident) => {
+    (vone.q $d:ident) => {
         concat!(
             "\n.byte 0x80 | ", $crate::register_quad!($d),
             "\n.byte 0x80",
@@ -748,7 +1044,7 @@ macro_rules! instruction {
     };
 
     // vrcp.s 1101 0000 0 0010000 0 sssssss 0 ddddddd
-    (vrcp_s $s:ident, $d:ident) => {
+    (vrcp.s $s:ident, $d:ident) => {
         concat!(
             "\n.byte ", $crate::register_single!($d),
             "\n.byte ", $crate::register_single!($s),
@@ -758,7 +1054,7 @@ macro_rules! instruction {
     };
 
     // vrcp.p 1101 0000 0 0010000 0 sssssss 1 ddddddd
-    (vrcp_p $s:ident, $d:ident) => {
+    (vrcp.p $s:ident, $d:ident) => {
         concat!(
             "\n.byte 0x80 | ", $crate::register_pair!($d),
             "\n.byte ", $crate::register_pair!($s),
@@ -768,7 +1064,7 @@ macro_rules! instruction {
     };
 
     // vrcp.t 1101 0000 0 0010000 1 sssssss 0 ddddddd
-    (vrcp_t $s:ident, $d:ident) => {
+    (vrcp.t $s:ident, $d:ident) => {
         concat!(
             "\n.byte ", $crate::register_triple!($d),
             "\n.byte 0x80 | ", $crate::register_triple!($s),
@@ -778,7 +1074,7 @@ macro_rules! instruction {
     };
 
     // vrcp.q 1101 0000 0 0010000 1 sssssss 1 ddddddd
-    (vrcp_q $s:ident, $d:ident) => {
+    (vrcp.q $s:ident, $d:ident) => {
         concat!(
             "\n.byte 0x80 | ", $crate::register_quad!($d),
             "\n.byte 0x80 | ", $crate::register_quad!($s),
@@ -788,7 +1084,7 @@ macro_rules! instruction {
     };
 
     // vrsq.s 1101 0000 0 0010001 0 sssssss 0 ddddddd
-    (vrsq_s $s:ident, $d:ident) => {
+    (vrsq.s $s:ident, $d:ident) => {
         concat!(
             "\n.byte ", $crate::register_single!($d),
             "\n.byte ", $crate::register_single!($s),
@@ -798,7 +1094,7 @@ macro_rules! instruction {
     };
 
     // vrsq.p 1101 0000 0 0010001 0 sssssss 1 ddddddd
-    (vrsq_p $s:ident, $d:ident) => {
+    (vrsq.p $s:ident, $d:ident) => {
         concat!(
             "\n.byte 0x80 | ", $crate::register_pair!($d),
             "\n.byte ", $crate::register_pair!($s),
@@ -808,7 +1104,7 @@ macro_rules! instruction {
     };
 
     // vrsq.t 1101 0000 0 0010001 1 sssssss 0 ddddddd
-    (vrsq_t $s:ident, $d:ident) => {
+    (vrsq.t $s:ident, $d:ident) => {
         concat!(
             "\n.byte ", $crate::register_triple!($d),
             "\n.byte 0x80 | ", $crate::register_triple!($s),
@@ -818,7 +1114,7 @@ macro_rules! instruction {
     };
 
     // vrsq.q 1101 0000 0 0010001 1 sssssss 1 ddddddd
-    (vrsq_q $s:ident, $d:ident) => {
+    (vrsq.q $s:ident, $d:ident) => {
         concat!(
             "\n.byte 0x80 | ", $crate::register_quad!($d),
             "\n.byte 0x80 | ", $crate::register_quad!($s),
@@ -828,7 +1124,7 @@ macro_rules! instruction {
     };
 
     // vsin.s 1101 0000 0 0010010 0 sssssss 0 ddddddd
-    (vsin_s $s:ident, $d:ident) => {
+    (vsin.s $s:ident, $d:ident) => {
         concat!(
             "\n.byte ", $crate::register_single!($d),
             "\n.byte ", $crate::register_single!($s),
@@ -838,7 +1134,7 @@ macro_rules! instruction {
     };
 
     // vsin.p 1101 0000 0 0010010 0 sssssss 1 ddddddd
-    (vsin_p $s:ident, $d:ident) => {
+    (vsin.p $s:ident, $d:ident) => {
         concat!(
             "\n.byte 0x80 | ", $crate::register_pair!($d),
             "\n.byte ", $crate::register_pair!($s),
@@ -848,7 +1144,7 @@ macro_rules! instruction {
     };
 
     // vsin.t 1101 0000 0 0010010 1 sssssss 0 ddddddd
-    (vsin_t $s:ident, $d:ident) => {
+    (vsin.t $s:ident, $d:ident) => {
         concat!(
             "\n.byte ", $crate::register_triple!($d),
             "\n.byte 0x80 | ", $crate::register_triple!($s),
@@ -858,7 +1154,7 @@ macro_rules! instruction {
     };
 
     // vsin.q 1101 0000 0 0010010 1 sssssss 1 ddddddd
-    (vsin_q $s:ident, $d:ident) => {
+    (vsin.q $s:ident, $d:ident) => {
         concat!(
             "\n.byte 0x80 | ", $crate::register_quad!($d),
             "\n.byte 0x80 | ", $crate::register_quad!($s),
@@ -868,7 +1164,7 @@ macro_rules! instruction {
     };
 
     // vcos.s 1101 0000 0 0010011 0 sssssss 0 ddddddd
-    (vcos_s $s:ident, $d:ident) => {
+    (vcos.s $s:ident, $d:ident) => {
         concat!(
             "\n.byte ", $crate::register_single!($d),
             "\n.byte ", $crate::register_single!($s),
@@ -878,7 +1174,7 @@ macro_rules! instruction {
     };
 
     // vcos.p 1101 0000 0 0010011 0 sssssss 1 ddddddd
-    (vcos_p $s:ident, $d:ident) => {
+    (vcos.p $s:ident, $d:ident) => {
         concat!(
             "\n.byte 0x80 | ", $crate::register_pair!($d),
             "\n.byte ", $crate::register_pair!($s),
@@ -888,7 +1184,7 @@ macro_rules! instruction {
     };
 
     // vcos.t 1101 0000 0 0010011 1 sssssss 0 ddddddd
-    (vcos_t $s:ident, $d:ident) => {
+    (vcos.t $s:ident, $d:ident) => {
         concat!(
             "\n.byte ", $crate::register_triple!($d),
             "\n.byte 0x80 | ", $crate::register_triple!($s),
@@ -898,7 +1194,7 @@ macro_rules! instruction {
     };
 
     // vcos.q 1101 0000 0 0010011 1 sssssss 1 ddddddd
-    (vcos_q $s:ident, $d:ident) => {
+    (vcos.q $s:ident, $d:ident) => {
         concat!(
             "\n.byte 0x80 | ", $crate::register_quad!($d),
             "\n.byte 0x80 | ", $crate::register_quad!($s),
@@ -908,7 +1204,7 @@ macro_rules! instruction {
     };
 
     // vexp2.s 1101 0000 0 0010100 0 sssssss 0 ddddddd
-    (vexp2_s $s:ident, $d:ident) => {
+    (vexp2.s $s:ident, $d:ident) => {
         concat!(
             "\n.byte ", $crate::register_single!($d),
             "\n.byte ", $crate::register_single!($s),
@@ -918,7 +1214,7 @@ macro_rules! instruction {
     };
 
     // vexp2.p 1101 0000 0 0010100 0 sssssss 1 ddddddd
-    (vexp2_p $s:ident, $d:ident) => {
+    (vexp2.p $s:ident, $d:ident) => {
         concat!(
             "\n.byte 0x80 | ", $crate::register_pair!($d),
             "\n.byte ", $crate::register_pair!($s),
@@ -928,7 +1224,7 @@ macro_rules! instruction {
     };
 
     // vexp2.t 1101 0000 0 0010100 1 sssssss 0 ddddddd
-    (vexp2_t $s:ident, $d:ident) => {
+    (vexp2.t $s:ident, $d:ident) => {
         concat!(
             "\n.byte ", $crate::register_triple!($d),
             "\n.byte 0x80 | ", $crate::register_triple!($s),
@@ -938,7 +1234,7 @@ macro_rules! instruction {
     };
 
     // vexp2.q 1101 0000 0 0010100 1 sssssss 1 ddddddd
-    (vexp2_q $s:ident, $d:ident) => {
+    (vexp2.q $s:ident, $d:ident) => {
         concat!(
             "\n.byte 0x80 | ", $crate::register_quad!($d),
             "\n.byte 0x80 | ", $crate::register_quad!($s),
@@ -948,7 +1244,7 @@ macro_rules! instruction {
     };
 
     // vlog2.s 1101 0000 0 0010101 0 sssssss 0 ddddddd
-    (vlog2_s $s:ident, $d:ident) => {
+    (vlog2.s $s:ident, $d:ident) => {
         concat!(
             "\n.byte ", $crate::register_single!($d),
             "\n.byte ", $crate::register_single!($s),
@@ -958,7 +1254,7 @@ macro_rules! instruction {
     };
 
     // vlog2.p 1101 0000 0 0010101 0 sssssss 1 ddddddd
-    (vlog2_p $s:ident, $d:ident) => {
+    (vlog2.p $s:ident, $d:ident) => {
         concat!(
             "\n.byte 0x80 | ", $crate::register_pair!($d),
             "\n.byte ", $crate::register_pair!($s),
@@ -968,7 +1264,7 @@ macro_rules! instruction {
     };
 
     // vlog2.t 1101 0000 0 0010101 1 sssssss 0 ddddddd
-    (vlog2_t $s:ident, $d:ident) => {
+    (vlog2.t $s:ident, $d:ident) => {
         concat!(
             "\n.byte ", $crate::register_triple!($d),
             "\n.byte 0x80 | ", $crate::register_triple!($s),
@@ -978,7 +1274,7 @@ macro_rules! instruction {
     };
 
     // vlog2.q 1101 0000 0 0010101 1 sssssss 1 ddddddd
-    (vlog2_q $s:ident, $d:ident) => {
+    (vlog2.q $s:ident, $d:ident) => {
         concat!(
             "\n.byte 0x80 | ", $crate::register_quad!($d),
             "\n.byte 0x80 | ", $crate::register_quad!($s),
@@ -988,7 +1284,7 @@ macro_rules! instruction {
     };
 
     // vsqrt.s 1101 0000 0 0010110 0 sssssss 0 ddddddd
-    (vsqrt_s $s:ident, $d:ident) => {
+    (vsqrt.s $s:ident, $d:ident) => {
         concat!(
             "\n.byte ", $crate::register_single!($d),
             "\n.byte ", $crate::register_single!($s),
@@ -998,7 +1294,7 @@ macro_rules! instruction {
     };
 
     // vsqrt.p 1101 0000 0 0010110 0 sssssss 1 ddddddd
-    (vsqrt_p $s:ident, $d:ident) => {
+    (vsqrt.p $s:ident, $d:ident) => {
         concat!(
             "\n.byte 0x80 | ", $crate::register_pair!($d),
             "\n.byte ", $crate::register_pair!($s),
@@ -1008,7 +1304,7 @@ macro_rules! instruction {
     };
 
     // vsqrt.t 1101 0000 0 0010110 1 sssssss 0 ddddddd
-    (vsqrt_t $s:ident, $d:ident) => {
+    (vsqrt.t $s:ident, $d:ident) => {
         concat!(
             "\n.byte ", $crate::register_triple!($d),
             "\n.byte 0x80 | ", $crate::register_triple!($s),
@@ -1018,7 +1314,7 @@ macro_rules! instruction {
     };
 
     // vsqrt.q 1101 0000 0 0010110 1 sssssss 1 ddddddd
-    (vsqrt_q $s:ident, $d:ident) => {
+    (vsqrt.q $s:ident, $d:ident) => {
         concat!(
             "\n.byte 0x80 | ", $crate::register_quad!($d),
             "\n.byte 0x80 | ", $crate::register_quad!($s),
@@ -1028,7 +1324,7 @@ macro_rules! instruction {
     };
 
     // vasin.s 1101 0000 0 0010111 0 sssssss 0 ddddddd
-    (vasin_s $s:ident, $d:ident) => {
+    (vasin.s $s:ident, $d:ident) => {
         concat!(
             "\n.byte ", $crate::register_single!($d),
             "\n.byte ", $crate::register_single!($s),
@@ -1038,7 +1334,7 @@ macro_rules! instruction {
     };
 
     // vasin.p 1101 0000 0 0010111 0 sssssss 1 ddddddd
-    (vasin_p $s:ident, $d:ident) => {
+    (vasin.p $s:ident, $d:ident) => {
         concat!(
             "\n.byte 0x80 | ", $crate::register_pair!($d),
             "\n.byte ", $crate::register_pair!($s),
@@ -1048,7 +1344,7 @@ macro_rules! instruction {
     };
 
     // vasin.t 1101 0000 0 0010111 1 sssssss 0 ddddddd
-    (vasin_t $s:ident, $d:ident) => {
+    (vasin.t $s:ident, $d:ident) => {
         concat!(
             "\n.byte ", $crate::register_triple!($d),
             "\n.byte 0x80 | ", $crate::register_triple!($s),
@@ -1058,7 +1354,7 @@ macro_rules! instruction {
     };
 
     // vasin.q 1101 0000 0 0010111 1 sssssss 1 ddddddd
-    (vasin_q $s:ident, $d:ident) => {
+    (vasin.q $s:ident, $d:ident) => {
         concat!(
             "\n.byte 0x80 | ", $crate::register_quad!($d),
             "\n.byte 0x80 | ", $crate::register_quad!($s),
@@ -1068,7 +1364,7 @@ macro_rules! instruction {
     };
 
     // vnrcp.s 1101 0000 0 0011000 0 sssssss 0 ddddddd
-    (vnrcp_s $s:ident, $d:ident) => {
+    (vnrcp.s $s:ident, $d:ident) => {
         concat!(
             "\n.byte ", $crate::register_single!($d),
             "\n.byte ", $crate::register_single!($s),
@@ -1078,7 +1374,7 @@ macro_rules! instruction {
     };
 
     // vnrcp.p 1101 0000 0 0011000 0 sssssss 1 ddddddd
-    (vnrcp_p $s:ident, $d:ident) => {
+    (vnrcp.p $s:ident, $d:ident) => {
         concat!(
             "\n.byte 0x80 | ", $crate::register_pair!($d),
             "\n.byte ", $crate::register_pair!($s),
@@ -1088,7 +1384,7 @@ macro_rules! instruction {
     };
 
     // vnrcp.t 1101 0000 0 0011000 1 sssssss 0 ddddddd
-    (vnrcp_t $s:ident, $d:ident) => {
+    (vnrcp.t $s:ident, $d:ident) => {
         concat!(
             "\n.byte ", $crate::register_triple!($d),
             "\n.byte 0x80 | ", $crate::register_triple!($s),
@@ -1098,7 +1394,7 @@ macro_rules! instruction {
     };
 
     // vnrcp.q 1101 0000 0 0011000 1 sssssss 1 ddddddd
-    (vnrcp_q $s:ident, $d:ident) => {
+    (vnrcp.q $s:ident, $d:ident) => {
         concat!(
             "\n.byte 0x80 | ", $crate::register_quad!($d),
             "\n.byte 0x80 | ", $crate::register_quad!($s),
@@ -1108,7 +1404,7 @@ macro_rules! instruction {
     };
 
     // vnsin.s 1101 0000 0 0011010 0 sssssss 0 ddddddd
-    (vnsin_s $s:ident, $d:ident) => {
+    (vnsin.s $s:ident, $d:ident) => {
         concat!(
             "\n.byte ", $crate::register_single!($d),
             "\n.byte ", $crate::register_single!($s),
@@ -1118,7 +1414,7 @@ macro_rules! instruction {
     };
 
     // vnsin.p 1101 0000 0 0011010 0 sssssss 1 ddddddd
-    (vnsin_p $s:ident, $d:ident) => {
+    (vnsin.p $s:ident, $d:ident) => {
         concat!(
             "\n.byte 0x80 | ", $crate::register_pair!($d),
             "\n.byte ", $crate::register_pair!($s),
@@ -1128,7 +1424,7 @@ macro_rules! instruction {
     };
 
     // vnsin.t 1101 0000 0 0011010 1 sssssss 0 ddddddd
-    (vnsin_t $s:ident, $d:ident) => {
+    (vnsin.t $s:ident, $d:ident) => {
         concat!(
             "\n.byte ", $crate::register_triple!($d),
             "\n.byte 0x80 | ", $crate::register_triple!($s),
@@ -1138,7 +1434,7 @@ macro_rules! instruction {
     };
 
     // vnsin.q 1101 0000 0 0011010 1 sssssss 1 ddddddd
-    (vnsin_q $s:ident, $d:ident) => {
+    (vnsin.q $s:ident, $d:ident) => {
         concat!(
             "\n.byte 0x80 | ", $crate::register_quad!($d),
             "\n.byte 0x80 | ", $crate::register_quad!($s),
@@ -1148,7 +1444,7 @@ macro_rules! instruction {
     };
 
     // vrexp2.s 1101 0000 0 0011100 0 sssssss 0 ddddddd
-    (vrexp2_s $s:ident, $d:ident) => {
+    (vrexp2.s $s:ident, $d:ident) => {
         concat!(
             "\n.byte ", $crate::register_single!($d),
             "\n.byte ", $crate::register_single!($s),
@@ -1158,7 +1454,7 @@ macro_rules! instruction {
     };
 
     // vrexp2.p 1101 0000 0 0011100 0 sssssss 1 ddddddd
-    (vrexp2_p $s:ident, $d:ident) => {
+    (vrexp2.p $s:ident, $d:ident) => {
         concat!(
             "\n.byte 0x80 | ", $crate::register_pair!($d),
             "\n.byte ", $crate::register_pair!($s),
@@ -1168,7 +1464,7 @@ macro_rules! instruction {
     };
 
     // vrexp2.t 1101 0000 0 0011100 1 sssssss 0 ddddddd
-    (vrexp2_t $s:ident, $d:ident) => {
+    (vrexp2.t $s:ident, $d:ident) => {
         concat!(
             "\n.byte ", $crate::register_triple!($d),
             "\n.byte 0x80 | ", $crate::register_triple!($s),
@@ -1178,7 +1474,7 @@ macro_rules! instruction {
     };
 
     // vrexp2.q 1101 0000 0 0011100 1 sssssss 1 ddddddd
-    (vrexp2_q $s:ident, $d:ident) => {
+    (vrexp2.q $s:ident, $d:ident) => {
         concat!(
             "\n.byte 0x80 | ", $crate::register_quad!($d),
             "\n.byte 0x80 | ", $crate::register_quad!($s),
@@ -1188,7 +1484,7 @@ macro_rules! instruction {
     };
 
     // vi2uc.q 1101 0000 0 0111100 1 sssssss 1 ddddddd
-    (vi2uc_q $d:ident, $s:ident) => {
+    (vi2uc.q $d:ident, $s:ident) => {
         concat!(
             "\n.byte 0x80 | ", $crate::register_quad!($d),
             "\n.byte 0x80 | ", $crate::register_quad!($s),
@@ -1198,7 +1494,7 @@ macro_rules! instruction {
     };
 
     // vi2s.p 1101 0000 0 0111111 0 sssssss 1 ddddddd
-    (vi2s_p $d:ident, $s:ident) => {
+    (vi2s.p $d:ident, $s:ident) => {
         concat!(
             "\n.byte 0x80 | ", $crate::register_pair!($d),
             "\n.byte ", $crate::register_pair!($s),
@@ -1208,7 +1504,7 @@ macro_rules! instruction {
     };
 
     // vi2s.q 1101 0000 0 0111111 1 sssssss 1 ddddddd
-    (vi2s_q $d:ident, $s:ident) => {
+    (vi2s.q $d:ident, $s:ident) => {
         concat!(
             "\n.byte 0x80 | ", $crate::register_quad!($d),
             "\n.byte 0x80 | ", $crate::register_quad!($s),
@@ -1218,7 +1514,7 @@ macro_rules! instruction {
     };
 
     // vsgn.s 1101 0000 0 1001010 0 sssssss 0 ddddddd
-    (vsgn_s $d:ident, $s:ident) => {
+    (vsgn.s $d:ident, $s:ident) => {
         concat!(
             "\n.byte ", $crate::register_single!($d),
             "\n.byte ", $crate::register_single!($s),
@@ -1228,7 +1524,7 @@ macro_rules! instruction {
     };
 
     // vsgn.p 1101 0000 0 1001010 0 sssssss 1 ddddddd
-    (vsgn_p $d:ident, $s:ident) => {
+    (vsgn.p $d:ident, $s:ident) => {
         concat!(
             "\n.byte 0x80 | ", $crate::register_pair!($d),
             "\n.byte ", $crate::register_pair!($s),
@@ -1238,7 +1534,7 @@ macro_rules! instruction {
     };
 
     // vsgn.t 1101 0000 0 1001010 1 sssssss 0 ddddddd
-    (vsgn_t $d:ident, $s:ident) => {
+    (vsgn.t $d:ident, $s:ident) => {
         concat!(
             "\n.byte ", $crate::register_triple!($d),
             "\n.byte 0x80 | ", $crate::register_triple!($s),
@@ -1248,7 +1544,7 @@ macro_rules! instruction {
     };
 
     // vsgn.q 1101 0000 0 1001010 1 sssssss 1 ddddddd
-    (vsgn_q $d:ident, $s:ident) => {
+    (vsgn.q $d:ident, $s:ident) => {
         concat!(
             "\n.byte 0x80 | ", $crate::register_quad!($d),
             "\n.byte 0x80 | ", $crate::register_quad!($s),
@@ -1258,7 +1554,7 @@ macro_rules! instruction {
     };
 
     // vcst.s 1101 0000 0 11aaaaa 0 0000000 0 ddddddd
-    (vcst_s $d:ident, $a:ident) => {
+    (vcst.s $d:ident, $a:ident) => {
         concat!(
             "\n.byte ", $crate::register_single!($d),
             "\n.byte 0b00000000",
@@ -1268,7 +1564,7 @@ macro_rules! instruction {
     };
 
     // vcst.p 1101 0000 0 11aaaaa 0 0000000 1 ddddddd
-    (vcst_p $d:ident, $a:ident) => {
+    (vcst.p $d:ident, $a:ident) => {
         concat!(
             "\n.byte 0x80 | ", $crate::register_pair!($d),
             "\n.byte 0b00000000",
@@ -1278,7 +1574,7 @@ macro_rules! instruction {
     };
 
     // vcst.t 1101 0000 0 11aaaaa 1 0000000 0 ddddddd
-    (vcst_t $d:ident, $a:ident) => {
+    (vcst.t $d:ident, $a:ident) => {
         concat!(
             "\n.byte ", $crate::register_triple!($d),
             "\n.byte 0x80",
@@ -1288,7 +1584,7 @@ macro_rules! instruction {
     };
 
     // vcst.q 1101 0000 0 11aaaaa 1 0000000 1 ddddddd
-    (vcst_q $d:ident, $a:ident) => {
+    (vcst.q $d:ident, $a:ident) => {
         concat!(
             "\n.byte 0x80 | ", $crate::register_quad!($d),
             "\n.byte 0x80",
@@ -1299,7 +1595,7 @@ macro_rules! instruction {
 
     // Float to int, rounds to nearest
     // vf2in.s 1101 0010 0 SSSSSSS 0 sssssss 0 ddddddd
-    (vf2in_s $d:ident, $s:ident, $scale:expr) => {
+    (vf2in.s $d:ident, $s:ident, $scale:expr) => {
         concat!(
             "\n.byte ", $crate::register_single!($d),
             "\n.byte ", $crate::register_single!($s),
@@ -1309,7 +1605,7 @@ macro_rules! instruction {
     };
 
     // vf2in.p 1101 0010 0 SSSSSSS 0 sssssss 1 ddddddd
-    (vf2in_p $d:ident, $s:ident, $scale:expr) => {
+    (vf2in.p $d:ident, $s:ident, $scale:expr) => {
         concat!(
             "\n.byte 0x80 | ", $crate::register_pair!($d),
             "\n.byte ", $crate::register_pair!($s),
@@ -1319,7 +1615,7 @@ macro_rules! instruction {
     };
 
     // vf2in.t 1101 0010 0 SSSSSSS 1 sssssss 0 ddddddd
-    (vf2in_t $d:ident, $s:ident, $scale:expr) => {
+    (vf2in.t $d:ident, $s:ident, $scale:expr) => {
         concat!(
             "\n.byte ", $crate::register_triple!($d),
             "\n.byte 0x80 | ", $crate::register_triple!($s),
@@ -1329,7 +1625,7 @@ macro_rules! instruction {
     };
 
     // vf2in.q 1101 0010 0 SSSSSSS 1 sssssss 1 ddddddd
-    (vf2in_q $d:ident, $s:ident, $scale:expr) => {
+    (vf2in.q $d:ident, $s:ident, $scale:expr) => {
         concat!(
             "\n.byte 0x80 | ", $crate::register_quad!($d),
             "\n.byte 0x80 | ", $crate::register_quad!($s),
@@ -1339,7 +1635,7 @@ macro_rules! instruction {
     };
 
     // vi2f.s 1101 0010 1 SSSSSSS 0 sssssss 0 ddddddd
-    (vi2f_s $d:ident, $s:ident, $scale:expr) => {
+    (vi2f.s $d:ident, $s:ident, $scale:expr) => {
         concat!(
             "\n.byte ", $crate::register_single!($d),
             "\n.byte ", $crate::register_single!($s),
@@ -1349,7 +1645,7 @@ macro_rules! instruction {
     };
 
     // vi2f.p 1101 0010 1 SSSSSSS 0 sssssss 1 ddddddd
-    (vi2f_p $d:ident, $s:ident, $scale:expr) => {
+    (vi2f.p $d:ident, $s:ident, $scale:expr) => {
         concat!(
             "\n.byte 0x80 | ", $crate::register_pair!($d),
             "\n.byte ", $crate::register_pair!($s),
@@ -1359,7 +1655,7 @@ macro_rules! instruction {
     };
 
     // vi2f.t 1101 0010 1 SSSSSSS 1 sssssss 0 ddddddd
-    (vi2f_t $d:ident, $s:ident, $scale:expr) => {
+    (vi2f.t $d:ident, $s:ident, $scale:expr) => {
         concat!(
             "\n.byte ", $crate::register_triple!($d),
             "\n.byte 0x80 | ", $crate::register_triple!($s),
@@ -1369,7 +1665,7 @@ macro_rules! instruction {
     };
 
     // vi2f.q 1101 0010 1 SSSSSSS 1 sssssss 1 ddddddd
-    (vi2f_q $d:ident, $s:ident, $scale:expr) => {
+    (vi2f.q $d:ident, $s:ident, $scale:expr) => {
         concat!(
             "\n.byte 0x80 | ", $crate::register_quad!($d),
             "\n.byte 0x80 | ", $crate::register_quad!($s),
@@ -1379,7 +1675,7 @@ macro_rules! instruction {
     };
 
     // vmmul.p 1111 0000 0 ttttttt 0 sSsssss 1 ddddddd (*inverted 5th S bit)
-    (vmmul_p $d:ident, $s:ident, $t:ident) => {
+    (vmmul.p $d:ident, $s:ident, $t:ident) => {
         concat!(
             "\n.byte 0x80 | ", $crate::register_mpair!($d),
             "\n.byte ", $crate::register_mpair!($s), " ^ 0b0100000",
@@ -1389,7 +1685,7 @@ macro_rules! instruction {
     };
 
     // vmmul.t 1111 0000 0 ttttttt 1 sSsssss 0 ddddddd (*inverted 5th S bit)
-    (vmmul_t $d:ident, $s:ident, $t:ident) => {
+    (vmmul.t $d:ident, $s:ident, $t:ident) => {
         concat!(
             "\n.byte ", $crate::register_mtriple!($d),
             "\n.byte 0x80 | ", $crate::register_mtriple!($s), " ^ 0b0100000",
@@ -1399,7 +1695,7 @@ macro_rules! instruction {
     };
 
     // vmmul.q 1111 0000 0 ttttttt 1 sSsssss 1 ddddddd (*inverted 5th S bit)
-    (vmmul_q $d:ident, $s:ident, $t:ident) => {
+    (vmmul.q $d:ident, $s:ident, $t:ident) => {
         concat!(
             "\n.byte 0x80 | ", $crate::register_mquad!($d),
             "\n.byte 0x80 | ", $crate::register_mquad!($s), " ^ 0b0100000",
@@ -1409,7 +1705,7 @@ macro_rules! instruction {
     };
 
     // vhtfm2.p 1111 0000 1 ttttttt 0 sssssss 0 ddddddd
-    (vhtfm2_p $d:ident, $s:ident, $t:ident) => {
+    (vhtfm2.p $d:ident, $s:ident, $t:ident) => {
         concat!(
             "\n.byte ", $crate::register_pair!($d),
             "\n.byte ", $crate::register_mpair!($s),
@@ -1419,7 +1715,7 @@ macro_rules! instruction {
     };
 
     // vtfm2.p 1111 0000 1 ttttttt 0 sssssss 1 ddddddd
-    (vtfm2_p $d:ident, $s:ident, $t:ident) => {
+    (vtfm2.p $d:ident, $s:ident, $t:ident) => {
         concat!(
             "\n.byte 0x80 | ", $crate::register_pair!($d),
             "\n.byte ", $crate::register_mpair!($s),
@@ -1429,7 +1725,7 @@ macro_rules! instruction {
     };
 
     // vhtfm3.t 1111 0001 0 ttttttt 0 sssssss 1 ddddddd
-    (vhtfm3_t $d:ident, $s:ident, $t:ident) => {
+    (vhtfm3.t $d:ident, $s:ident, $t:ident) => {
         concat!(
             "\n.byte 0x80 | ", $crate::register_triple!($d),
             "\n.byte ", $crate::register_mtriple!($s),
@@ -1439,7 +1735,7 @@ macro_rules! instruction {
     };
 
     // vtfm3.t 1111 0001 0 ttttttt 1 sssssss 0 ddddddd
-    (vtfm3_t $d:ident, $s:ident, $t:ident) => {
+    (vtfm3.t $d:ident, $s:ident, $t:ident) => {
         concat!(
             "\n.byte ", $crate::register_triple!($d),
             "\n.byte 0x80 | ", $crate::register_mtriple!($s),
@@ -1449,7 +1745,7 @@ macro_rules! instruction {
     };
 
     // vhtfm4.q 1111 0001 1 ttttttt 1 sssssss 0 ddddddd
-    (vhtfm4_q $d:ident, $s:ident, $t:ident) => {
+    (vhtfm4.q $d:ident, $s:ident, $t:ident) => {
         concat!(
             "\n.byte ", $crate::register_quad!($d),
             "\n.byte 0x80 | ", $crate::register_mquad!($s),
@@ -1459,7 +1755,7 @@ macro_rules! instruction {
     };
 
     // vtfm4.q 1111 0001 1 ttttttt 1 sssssss 1 ddddddd
-    (vtfm4_q $d:ident, $s:ident, $t:ident) => {
+    (vtfm4.q $d:ident, $s:ident, $t:ident) => {
         concat!(
             "\n.byte 0x80 | ", $crate::register_quad!($d),
             "\n.byte 0x80 | ", $crate::register_mquad!($s),
@@ -1469,7 +1765,7 @@ macro_rules! instruction {
     };
 
     // vmidt.p 1111 0011 1 0000011 0 0000000 1 ddddddd
-    (vmidt_p $d:ident) => {
+    (vmidt.p $d:ident) => {
         concat!(
             "\n.byte 0x80 | ", $crate::register_mpair!($d),
             "\n.byte 0b00000000",
@@ -1479,7 +1775,7 @@ macro_rules! instruction {
     };
 
     // vmidt.t 1111 0011 1 0000011 1 0000000 0 ddddddd
-    (vmidt_t $d:ident) => {
+    (vmidt.t $d:ident) => {
         concat!(
             "\n.byte ", $crate::register_mtriple!($d),
             "\n.byte 0x80",
@@ -1489,7 +1785,7 @@ macro_rules! instruction {
     };
 
     // vmidt.q 1111 0011 1 0000011 1 0000000 1 ddddddd
-    (vmidt_q $d:ident) => {
+    (vmidt.q $d:ident) => {
         concat!(
             "\n.byte 0x80 | ", $crate::register_mquad!($d),
             "\n.byte 0x80",
@@ -1499,7 +1795,7 @@ macro_rules! instruction {
     };
 
     // vmzero.p 1111 0011 1 0000110 0 0000000 1 ddddddd
-    (vmzero_p $d:ident) => {
+    (vmzero.p $d:ident) => {
         concat!(
             "\n.byte 0x80 | ", $crate::register_mpair!($d),
             "\n.byte 0b00000000",
@@ -1509,7 +1805,7 @@ macro_rules! instruction {
     };
 
     // vmzero.t 1111 0011 1 0000110 1 0000000 0 ddddddd
-    (vmzero_t $d:ident) => {
+    (vmzero.t $d:ident) => {
         concat!(
             "\n.byte ", $crate::register_mtriple!($d),
             "\n.byte 0x80",
@@ -1519,7 +1815,7 @@ macro_rules! instruction {
     };
 
     // vmzero.q 1111 0011 1 0000110 1 0000000 1 ddddddd
-    (vmzero_q $d:ident) => {
+    (vmzero.q $d:ident) => {
         concat!(
             "\n.byte 0x80 | ", $crate::register_mquad!($d),
             "\n.byte 0x80",
@@ -1529,7 +1825,7 @@ macro_rules! instruction {
     };
 
     // vscl.p 0110 0101 0 ttttttt 0 sssssss 1 ddddddd
-    (vscl_p $d:ident, $s:ident, $t:ident) => {
+    (vscl.p $d:ident, $s:ident, $t:ident) => {
         concat!(
             "\n.byte 0x80 | ", $crate::register_pair!($d),
             "\n.byte ", $crate::register_pair!($s),
@@ -1539,7 +1835,7 @@ macro_rules! instruction {
     };
 
     // vscl.t 0110 0101 0 ttttttt 1 sssssss 0 ddddddd
-    (vscl_t $d:ident, $s:ident, $t:ident) => {
+    (vscl.t $d:ident, $s:ident, $t:ident) => {
         concat!(
             "\n.byte ", $crate::register_triple!($d),
             "\n.byte 0x80 | ", $crate::register_triple!($s),
@@ -1549,7 +1845,7 @@ macro_rules! instruction {
     };
 
     // vscl.q 0110 0101 0 ttttttt 1 sssssss 1 ddddddd
-    (vscl_q $d:ident, $s:ident, $t:ident) => {
+    (vscl.q $d:ident, $s:ident, $t:ident) => {
         concat!(
             "\n.byte 0x80 | ", $crate::register_quad!($d),
             "\n.byte 0x80 | ", $crate::register_quad!($s),
@@ -1559,7 +1855,7 @@ macro_rules! instruction {
     };
 
     // vmov.s 1101 0000 0 0000000 0 sssssss 0 ddddddd
-    (vmov_s $d:ident, $s:ident) => {
+    (vmov.s $d:ident, $s:ident) => {
         concat!(
             "\n.byte ", $crate::register_single!($d),
             "\n.byte ", $crate::register_single!($s),
@@ -1569,7 +1865,7 @@ macro_rules! instruction {
     };
 
     // vmov.p 1101 0000 00000000 0 sssssss 1 ddddddd
-    (vmov_p $d:ident, $s:ident) => {
+    (vmov.p $d:ident, $s:ident) => {
         concat!(
             "\n.byte 0x80 | ", $crate::register_pair!($d),
             "\n.byte ", $crate::register_pair!($s),
@@ -1579,7 +1875,7 @@ macro_rules! instruction {
     };
 
     // vmov.t 1101 0000 00000000 1 sssssss 0 ddddddd
-    (vmov_t $d:ident, $s:ident) => {
+    (vmov.t $d:ident, $s:ident) => {
         concat!(
             "\n.byte ", $crate::register_triple!($d),
             "\n.byte 0x80 | ", $crate::register_triple!($s),
@@ -1589,7 +1885,7 @@ macro_rules! instruction {
     };
 
     // vmov.q 1101 0000 00000000 1 sssssss 1 ddddddd
-    (vmov_q $d:ident, $s:ident) => {
+    (vmov.q $d:ident, $s:ident) => {
         concat!(
             "\n.byte 0x80 | ", $crate::register_quad!($d),
             "\n.byte 0x80 | ", $crate::register_quad!($s),
@@ -1599,7 +1895,7 @@ macro_rules! instruction {
     };
 
     // vmmov.p 1111 0011 1 0000000 0 sssssss 1 ddddddd
-    (vmmov_p $d:ident, $s:ident) => {
+    (vmmov.p $d:ident, $s:ident) => {
         concat!(
             "\n.byte 0x80 | ", $crate::register_mpair!($d),
             "\n.byte ", $crate::register_mpair!($s),
@@ -1609,7 +1905,7 @@ macro_rules! instruction {
     };
 
     // vmmov.t 1111 0011 1 0000000 1 sssssss 0 ddddddd
-    (vmmov_t $d:ident, $s:ident) => {
+    (vmmov.t $d:ident, $s:ident) => {
         concat!(
             "\n.byte ", $crate::register_mtriple!($d),
             "\n.byte 0x80 | ", $crate::register_mtriple!($s),
@@ -1619,7 +1915,7 @@ macro_rules! instruction {
     };
 
     // vmmov.q 1111 0011 1 0000000 1 sssssss 1 ddddddd
-    (vmmov_q $d:ident, $s:ident) => {
+    (vmmov.q $d:ident, $s:ident) => {
         concat!(
             "\n.byte 0x80 | ", $crate::register_mquad!($d),
             "\n.byte 0x80 | ", $crate::register_mquad!($s),
@@ -1629,7 +1925,7 @@ macro_rules! instruction {
     };
 
     // viim.s 1101 1111 0 ddddddd iiiiiiii iiiiiiii
-    (viim_s $d:ident, $i:literal) => {
+    (viim.s $d:ident, $i:literal) => {
         concat!(
             "\n.byte ", stringify!($i), " & 0xff",
             "\n.byte ", stringify!($i), " >> 8",
@@ -1639,7 +1935,7 @@ macro_rules! instruction {
     };
 
     // vrot.p 1111 0011 101iiiii 0 sssssss 1 ddddddd
-    (vrot_p $d:ident, $s:ident, [ $($tt:tt)* ]) => {
+    (vrot.p $d:ident, $s:ident, [ $($tt:tt)* ]) => {
         concat!(
             "\n.byte 0x80 | ", $crate::register_pair!($d),
             "\n.byte ", $crate::register_single!($s),
@@ -1649,7 +1945,7 @@ macro_rules! instruction {
     };
 
     // vrot.t 1111 0011 101iiiii 1 sssssss 0 ddddddd
-    (vrot_t $d:ident, $s:ident, [ $($tt:tt)* ]) => {
+    (vrot.t $d:ident, $s:ident, [ $($tt:tt)* ]) => {
         concat!(
             "\n.byte ", $crate::register_triple!($d),
             "\n.byte 0x80 | ", $crate::register_single!($s),
@@ -1659,7 +1955,7 @@ macro_rules! instruction {
     };
 
     // vrot.q 1111 0011 101iiiii 1 sssssss 1 ddddddd
-    (vrot_q $d:ident, $s:ident, [ $($tt:tt)* ]) => {
+    (vrot.q $d:ident, $s:ident, [ $($tt:tt)* ]) => {
         concat!(
             "\n.byte 0x80 | ", $crate::register_quad!($d),
             "\n.byte 0x80 | ", $crate::register_single!($s),
@@ -1668,54 +1964,123 @@ macro_rules! instruction {
         )
     };
 
-    // Raw MIPS assembly code.
-    (mips $expr:expr) => {
-        concat!("\n", $expr, "\n")
-    }
+    // Regular ASM fallback.
+    ($($t:tt)*) => {
+        $crate::stringify_asm!($($t)*)
+    };
 }
 
+#[doc(hidden)]
+#[macro_export]
+macro_rules! vpfx_instr {
+    ($callback:tt (stack: ) (cur: $($c:tt)+)) => {
+        $crate::instruction!(
+            $callback
+            [$($c)+]
+        )
+    };
+
+    ($callback:tt (stack: $( ( $($t:tt)+ ) )*) (cur: $($($c:tt)+)?)) => {
+        $crate::instruction!(
+            $callback
+            $([ $($t)+ ]),*
+            $(, [$($c)+] )?
+        )
+    };
+
+    // When encountering a comma, dump the current symbol list onto the stack.
+    ($callback:tt (stack: $($s:tt)*) (cur: $($c:tt)*) , $($t2:tt)*) => {
+        $crate::vpfx_instr!($callback (stack: $($s)* ($($c)*)) (cur: ) $($t2)*)
+    };
+
+    // Add a token to the running list.
+    ($callback:tt $stack:tt (cur: $($t:tt)*) $token:tt $($t2:tt)*) => {
+        $crate::vpfx_instr!($callback $stack (cur: $($t)* $token) $($t2)*)
+    };
+}
+
+/// Try to stringify a register name to its number.
+///
+/// Falls back to just re-emitting the same token stringified.
 #[macro_export]
 #[doc(hidden)]
-macro_rules! register_mips {
-    (zero) => {"0"};
-    (at) => {"1"};
+macro_rules! try_stringify_mips_reg {
+    (zero) => {"$0"};
+    (at) => {"$1"};
 
-    (v0) => {"2"};
-    (v1) => {"3"};
+    (v0) => {"$2"};
+    (v1) => {"$3"};
 
-    (a0) => {"4"};
-    (a1) => {"5"};
-    (a2) => {"6"};
-    (a3) => {"7"};
+    (a0) => {"$4"};
+    (a1) => {"$5"};
+    (a2) => {"$6"};
+    (a3) => {"$7"};
 
-    (t0) => {"8"};
-    (t1) => {"9"};
-    (t2) => {"10"};
-    (t3) => {"11"};
-    (t4) => {"12"};
-    (t5) => {"13"};
-    (t6) => {"14"};
-    (t7) => {"15"};
+    (t0) => {"$8"};
+    (t1) => {"$9"};
+    (t2) => {"$10"};
+    (t3) => {"$11"};
+    (t4) => {"$12"};
+    (t5) => {"$13"};
+    (t6) => {"$14"};
+    (t7) => {"$15"};
 
-    (s0) => {"16"};
-    (s1) => {"17"};
-    (s2) => {"18"};
-    (s3) => {"19"};
-    (s4) => {"20"};
-    (s5) => {"21"};
-    (s6) => {"22"};
-    (s7) => {"23"};
+    (s0) => {"$16"};
+    (s1) => {"$17"};
+    (s2) => {"$18"};
+    (s3) => {"$19"};
+    (s4) => {"$20"};
+    (s5) => {"$21"};
+    (s6) => {"$22"};
+    (s7) => {"$23"};
 
-    (t8) => {"24"};
-    (t9) => {"25"};
+    (t8) => {"$24"};
+    (t9) => {"$25"};
 
-    (k0) => {"26"};
-    (k1) => {"27"};
+    (k0) => {"$26"};
+    (k1) => {"$27"};
 
-    (gp) => {"28"};
-    (sp) => {"29"};
-    (fp) => {"30"};
-    (ra) => {"31"};
+    (gp) => {"$28"};
+    (sp) => {"$29"};
+    (fp) => {"$30"};
+    (ra) => {"$31"};
+
+    (f0) => {"$0"};
+    (f1) => {"$1"};
+    (f2) => {"$2"};
+    (f3) => {"$3"};
+    (f4) => {"$4"};
+    (f5) => {"$5"};
+    (f6) => {"$6"};
+    (f7) => {"$7"};
+    (f8) => {"$8"};
+    (f9) => {"$9"};
+    (f10) => {"$10"};
+    (f11) => {"$11"};
+    (f12) => {"$12"};
+    (f13) => {"$13"};
+    (f14) => {"$14"};
+    (f15) => {"$15"};
+    (f16) => {"$16"};
+    (f17) => {"$17"};
+    (f18) => {"$18"};
+    (f19) => {"$19"};
+    (f20) => {"$20"};
+    (f21) => {"$21"};
+    (f22) => {"$22"};
+    (f23) => {"$23"};
+    (f24) => {"$24"};
+    (f25) => {"$25"};
+    (f26) => {"$26"};
+    (f27) => {"$27"};
+    (f28) => {"$28"};
+    (f29) => {"$29"};
+    (f30) => {"$30"};
+    (f31) => {"$31"};
+
+    // Fallthrough case, in case this is e.g. an assembler format literal or
+    // something else.
+    ($($t:tt)+) => {stringify!($($t)+)};
 }
 
 // The registers here were obtained by disassembling test programs built with
@@ -1942,6 +2307,7 @@ macro_rules! vfpu_const {
     (VFPU_LOG10TWO) => {"17"};
     (VFPU_LOG2TEN) => {"18"};
     (VFPU_SQRT3_2) => {"19"};
+    (VFPU_SQRT4_3) => {"20"};
 }
 
 #[doc(hidden)]

@@ -1,23 +1,24 @@
+#![allow(stable_features)]
 #![feature(
+    asm_experimental_arch,
     alloc_error_handler,
-    llvm_asm,
     global_asm,
     untagged_unions,
     core_intrinsics,
     const_loop,
     const_if_match,
-    const_generics,
     c_variadic,
+    lang_items,
 )]
 
 // For unwinding support
-#![feature(std_internals, panic_info_message, panic_internals, unwind_attributes)]
+#![feature(std_internals, panic_info_message, panic_internals, c_unwind)]
 #![cfg_attr(not(feature = "stub-only"), feature(panic_unwind))]
 
 // For the `const_generics` feature.
 #![allow(incomplete_features)]
 
-#![no_std]
+#![cfg_attr(not(feature = "std"), no_std)]
 
 #[macro_use] extern crate paste;
 #[cfg(not(feature = "stub-only"))] extern crate alloc;
@@ -30,7 +31,10 @@ pub mod debug;
 
 #[macro_use] mod vfpu;
 mod eabi;
+pub mod math;
 pub mod sys;
+#[cfg(not(feature = "stub-only"))] pub mod test_runner;
+#[cfg(not(feature = "stub-only"))] pub mod vram_alloc;
 
 #[cfg(not(feature = "stub-only"))] mod alloc_impl;
 #[cfg(not(feature = "stub-only"))] pub mod panic;
@@ -44,18 +48,33 @@ pub mod sys;
 #[cfg(not(feature = "stub-only"))] mod constants;
 #[cfg(not(feature = "stub-only"))] pub use constants::*;
 
+#[doc(hidden)]
+pub use unstringify::unstringify;
+
+#[cfg(not(feature = "std"))]
 #[cfg(feature = "stub-only")]
 #[panic_handler]
 fn panic(_: &core::panic::PanicInfo) -> ! { loop {} }
+
+#[cfg(not(feature = "std"))]
+#[no_mangle]
+extern "C" fn __rust_foreign_exception() -> ! { loop {} }
+
+#[cfg(feature = "std")]
+pub use std::panic::catch_unwind;
+
+#[cfg(all(not(feature = "std"), not(feature = "stub-only")))]
+pub use panic::catch_unwind;
 
 #[cfg(feature="embedded-graphics")]
 pub mod embedded_graphics;
 
 #[repr(align(16))]
+#[derive(Copy, Clone)]
 pub struct Align16<T>(pub T);
 
 #[cfg(all(target_os = "psp", not(feature = "stub-only")))]
-global_asm!(
+core::arch::global_asm!(
     r#"
         .section .lib.ent.top, "a", @progbits
         .align 2
@@ -147,7 +166,7 @@ macro_rules! module {
                 unsafe {
                     extern fn main_thread(_argc: usize, _argv: *mut c_void) -> i32 {
                         // TODO: Maybe print any error to debug screen?
-                        let _ = $crate::panic::catch_unwind(|| {
+                        let _ = $crate::catch_unwind(|| {
                             super::psp_main();
                         });
 

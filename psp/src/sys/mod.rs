@@ -101,6 +101,9 @@ pub use utility::*;
 mod net;
 pub use net::*;
 
+mod font;
+pub use font::*;
+
 mod psmf;
 pub use psmf::*;
 
