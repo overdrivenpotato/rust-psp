@@ -120,11 +120,13 @@ impl fmt::Display for CommitDate {
     }
 }
 
-// Minimum 2022-05-22, remember to update both commit date and version too, below.
-const MINIMUM_COMMIT_DATE: CommitDate = CommitDate { year: 2022, month: 05, day: 22 };
+// Minimum 2022-06-11, remember to update both commit date and version too,
+// below. Note that the `day` field lags by one day, as the toolchain always
+// contains the previous days' nightly rustc.
+const MINIMUM_COMMIT_DATE: CommitDate = CommitDate { year: 2022, month: 06, day: 10 };
 const MINIMUM_RUSTC_VERSION: Version = Version {
     major: 1,
-    minor: 62,
+    minor: 63,
     patch: 0,
     pre: Vec::new(),
     build: Vec::new(),
