@@ -6,6 +6,8 @@ use std::{
     process::{self, Command, Stdio},
 };
 
+mod fix_imports;
+
 const CONFIG_NAME: &str = "Psp.toml";
 
 #[derive(serde_derive::Deserialize, Default)]
@@ -118,11 +120,13 @@ impl fmt::Display for CommitDate {
     }
 }
 
-// Minimum 2022-05-22, remember to update both commit date and version too, below.
-const MINIMUM_COMMIT_DATE: CommitDate = CommitDate { year: 2022, month: 05, day: 22 };
+// Minimum 2022-06-11, remember to update both commit date and version too,
+// below. Note that the `day` field lags by one day, as the toolchain always
+// contains the previous days' nightly rustc.
+const MINIMUM_COMMIT_DATE: CommitDate = CommitDate { year: 2022, month: 06, day: 10 };
 const MINIMUM_RUSTC_VERSION: Version = Version {
     major: 1,
-    minor: 62,
+    minor: 63,
     patch: 0,
     pre: Vec::new(),
     build: Vec::new(),
@@ -191,10 +195,6 @@ fn main() {
         },
     };
 
-    // FIXME: This is a workaround. This should eventually be removed.
-    let rustflags = env::var("RUSTFLAGS").unwrap_or("".into())
-        + " -C link-dead-code";
-
     let mut process = Command::new("cargo")
         .arg("build")
         .arg("-Z")
@@ -202,7 +202,6 @@ fn main() {
         .arg("--target")
         .arg("mipsel-sony-psp")
         .args(args)
-        .env("RUSTFLAGS", rustflags)
         .stdin(Stdio::inherit())
         .stdout(Stdio::inherit())
         .stderr(Stdio::inherit())
@@ -239,6 +238,7 @@ fn main() {
     for id in metadata.clone().workspace_members {
         let package = metadata[&id].clone();
 
+        // TODO: Error if no bin is ever found.
         for target in package.targets {
             if target.kind.iter().any(|k| k == "bin") {
                 let elf_path = bin_dir.join(&target.name);
@@ -246,6 +246,8 @@ fn main() {
 
                 let sfo_path = bin_dir.join("PARAM.SFO");
                 let pbp_path = bin_dir.join("EBOOT.PBP");
+
+                fix_imports::fix(&elf_path);
 
                 Command::new("prxgen")
                     .arg(&elf_path)

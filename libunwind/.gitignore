@@ -1,4 +1,4 @@
 src
 include
-libunwind.a
+libunwind*.a
 *.o
