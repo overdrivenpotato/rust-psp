@@ -13,15 +13,6 @@ macro_rules! link_section_concat {
     }
 }
 
-#[cfg(target_os = "psp")]
-pub(crate) fn black_box<T>(dummy: T) -> T {
-    // This is taken from core::hint::black_box.
-    unsafe {
-        core::arch::asm!("/* {0} */", in(reg)(&dummy));
-        dummy
-    }
-}
-
 /// A "function" stub.
 ///
 /// This is a very dirty trick for LTO. Essentially, the PSP OS takes the
@@ -85,9 +76,7 @@ macro_rules! psp_extern {
         type Func = fn($($arg : $arg_ty),*) $(-> $ret)?;
 
         paste! {
-            // Black box to prevent LLVM from peeking inside this "function".
-            // TODO: Is this black box even necessary?
-            let stub_addr = $crate::sys::macros::black_box(&[< __ $name _stub >]);
+            let stub_addr = &[< __ $name _stub >];
             let func = core::mem::transmute::<_, Func>(stub_addr);
             func($($arg),*)
         }
@@ -98,7 +87,7 @@ macro_rules! psp_extern {
         type Func = fn($($arg : $arg_ty),*) $(-> $ret)?;
 
         paste! {
-            let stub_addr = $crate::sys::macros::black_box(&[< __ $name _stub >]);
+            let stub_addr = &[< __ $name _stub >];
             let func = core::mem::transmute::<_, Func>(stub_addr);
 
             // The transmutes here are for newtypes that fit into a single
