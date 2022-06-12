@@ -5,16 +5,19 @@ pub unsafe extern "C" fn fminf(
 ) -> f32 {
     let out: f32;
     vfpu_asm! (
-        "mfc1 $t0, {x}",
-        "mfc1 $t1, {y}",
-        "mtv t0, S000",
-        "mtv t1, S001",
+        "mfc1 {tmp1}, {x}",
+        "mfc1 {tmp2}, {y}",
+        "mtv {tmp1}, S000",
+        "mtv {tmp2}, S001",
         "vmin.s S000, S000, S001",
-        "mfv t0, S000",
-        "mtc1 $t0, {out}",
-        x = inout(reg) x => _,
-        y = inout(reg) y => _,
-        out = out(reg) out,
+        "mfv {tmp1}, S000",
+        "mtc1 {tmp1}, {out}",
+        "nop",
+        x = in(freg) x,
+        y = in(freg) y,
+        tmp1 = out(reg) _,
+        tmp2 = out(reg) _,
+        out = out(freg) out,
         options(nostack, nomem),
     );
     out
@@ -27,16 +30,19 @@ pub unsafe extern "C" fn fmaxf(
 ) -> f32 {
     let out: f32;
     vfpu_asm! (
-        "mfc1 $t0, {x}",
-        "mfc1 $t1, {y}",
-        "mtv t0, S000",
-        "mtv t1, S001",
+        "mfc1 {tmp1}, {x}",
+        "mfc1 {tmp2}, {y}",
+        "mtv {tmp1}, S000",
+        "mtv {tmp2}, S001",
         "vmax.s S000, S000, S001",
-        "mfv t0, S000",
-        "mtc1 $t0, {out}",
-        x = inout(reg) x => _,
-        y = inout(reg) y => _,
-        out = out(reg) out,
+        "mfv {tmp1}, S000",
+        "mtc1 {tmp1}, {out}",
+        "nop",
+        x = in(freg) x,
+        y = in(freg) y,
+        tmp1 = out(reg) _,
+        tmp2 = out(reg) _,
+        out = out(freg) out,
         options(nostack, nomem),
     );
     out
@@ -48,15 +54,17 @@ pub unsafe extern "C" fn cosf(
 ) -> f32 {
     let out: f32;
     vfpu_asm! (
-        "mfc1 $t0, {scalar}",
-        "mtv t0, S000",
+        "mfc1 {tmp}, {scalar}",
+        "mtv {tmp}, S000",
+        "nop",
         "vcst.s S001, VFPU_2_PI",
         "vmul.s S000, S000, S001",
         "vcos.s S000, S000",
-        "mfv t0, S000",
-        "mtc1 $t0, {out}",
-        scalar = inout(reg) scalar => _,
-        out = out(reg) out,
+        "mfv {tmp}, S000",
+        "mtc1 {tmp}, {scalar}",
+        "nop",
+        scalar = inlateout(freg) scalar => out,
+        tmp = out(reg) _,
         options(nostack, nomem),
     );
     out
@@ -68,20 +76,21 @@ pub unsafe extern "C" fn sinf(
 ) -> f32 {
     let out: f32;
     vfpu_asm! (
-        "mfc1 $t0, {scalar}",
-        "mtv t0, S000",
+        "mfc1 {tmp}, {scalar}",
+        "mtv {tmp}, S000",
+        "nop",
         "vcst.s S001, VFPU_2_PI",
         "vmul.s S000, S000, S001",
         "vsin.s S000, S000",
-        "mfv t0, S000",
-        "mtc1 $t0, {out}",
-        scalar = inout(reg) scalar => _,
-        out = out(reg) out,
+        "mfv {tmp}, S000",
+        "mtc1 {tmp}, {scalar}",
+        "nop",
+        scalar = inlateout(freg) scalar => out,
+        tmp = out(reg) _,
         options(nostack, nomem),
     );
     out
 }
-
 // borrowed from https://github.com/samcrow/cmsis_dsp.rs/blob/master/src/libm_c.rs
 macro_rules! forward {
     // One argument, argument and return types are the same
