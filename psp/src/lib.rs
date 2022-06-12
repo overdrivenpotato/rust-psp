@@ -18,8 +18,6 @@
 // For the `const_generics` feature.
 #![allow(incomplete_features)]
 
-#![recursion_limit = "256"]
-
 #![cfg_attr(not(feature = "std"), no_std)]
 
 #[macro_use] extern crate paste;
