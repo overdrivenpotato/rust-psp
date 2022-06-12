@@ -25,7 +25,7 @@
 //!     - `sceMp3`: MP3 decoder API
 //!     - `sceRegistry`: PSP OS Registry API
 //!     - `sceOpenPSID`: Console identification API (unique to every console)
-//!     - `sceUtility`: Various utilities such as msg dialogs and savedata 
+//!     - `sceUtility`: Various utilities such as msg dialogs and savedata
 
 use core::{mem, ptr};
 
@@ -203,7 +203,7 @@ bitflags::bitflags! {
 pub struct SceLibraryEntryTable {
     pub module_start_nid: u32,
     pub module_info_nid: u32,
-    pub module_start: unsafe extern "C" fn(isize, *const *const u8) -> isize,
+    pub module_start: unsafe extern "C" fn(usize, *mut c_void) -> isize,
     pub module_info: *const SceModuleInfo,
 }
 
