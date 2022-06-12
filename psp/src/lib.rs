@@ -217,7 +217,7 @@ macro_rules! module {
                         32,
                         // 256kb stack
                         256 * 1024,
-                        ThreadAttributes::USER,
+                        ThreadAttributes::USER | ThreadAttributes::VFPU,
                         core::ptr::null_mut(),
                     );
 
