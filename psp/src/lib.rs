@@ -4,9 +4,9 @@
     alloc_error_handler,
     global_asm,
     untagged_unions,
-    core_intrinsics,
     const_loop,
     const_if_match,
+    core_intrinsics,
     c_variadic,
     lang_items
 )]
@@ -217,7 +217,7 @@ macro_rules! module {
                         32,
                         // 256kb stack
                         256 * 1024,
-                        ThreadAttributes::USER,
+                        ThreadAttributes::USER | ThreadAttributes::VFPU,
                         core::ptr::null_mut(),
                     );
 

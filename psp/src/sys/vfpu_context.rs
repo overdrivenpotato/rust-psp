@@ -27,14 +27,8 @@ pub struct Context {
 }
 
 impl Context {
+    /// Threads which call this must have ThreadAttributes::VFPU set
     pub fn new() -> Self {
-        unsafe {
-            use crate::sys::{self, ThreadAttributes};
-
-            // TODO: Handle errors.
-            sys::sceKernelChangeCurrentThreadAttr(0, ThreadAttributes::VFPU);
-        }
-
         let zero_vector = ScePspFVector4 { x: 0.0, y: 0.0, z: 0.0, w: 0.0 };
         let zero_matrix = ScePspFMatrix4 {
             x: zero_vector,
