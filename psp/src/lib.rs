@@ -8,45 +8,56 @@
     const_loop,
     const_if_match,
     c_variadic,
-    lang_items,
+    lang_items
 )]
-
 // For unwinding support
 #![feature(std_internals, panic_info_message, panic_internals, c_unwind)]
 #![cfg_attr(not(feature = "stub-only"), feature(panic_unwind))]
-
 // For the `const_generics` feature.
 #![allow(incomplete_features)]
-
 #![cfg_attr(not(feature = "std"), no_std)]
 
-#[macro_use] extern crate paste;
-#[cfg(not(feature = "stub-only"))] extern crate alloc;
-#[cfg(not(feature = "stub-only"))] extern crate panic_unwind;
+#[macro_use]
+extern crate paste;
+#[cfg(not(feature = "stub-only"))]
+extern crate alloc;
+#[cfg(not(feature = "stub-only"))]
+extern crate panic_unwind;
 
 #[macro_use]
 #[doc(hidden)]
 #[cfg(not(feature = "stub-only"))]
 pub mod debug;
 
-#[macro_use] mod vfpu;
+#[macro_use]
+mod vfpu;
 mod eabi;
 pub mod math;
 pub mod sys;
-#[cfg(not(feature = "stub-only"))] pub mod test_runner;
-#[cfg(not(feature = "stub-only"))] pub mod vram_alloc;
+#[cfg(not(feature = "stub-only"))]
+pub mod test_runner;
+#[cfg(not(feature = "stub-only"))]
+pub mod vram_alloc;
 
-#[cfg(not(feature = "stub-only"))] mod alloc_impl;
-#[cfg(not(feature = "stub-only"))] pub mod panic;
+#[cfg(not(feature = "stub-only"))]
+mod alloc_impl;
+#[cfg(not(feature = "stub-only"))]
+pub mod panic;
 
-#[cfg(not(feature = "stub-only"))] mod screenshot;
-#[cfg(not(feature = "stub-only"))] pub use screenshot::*;
+#[cfg(not(feature = "stub-only"))]
+mod screenshot;
+#[cfg(not(feature = "stub-only"))]
+pub use screenshot::*;
 
-#[cfg(not(feature = "stub-only"))] mod benchmark;
-#[cfg(not(feature = "stub-only"))] pub use benchmark::*;
+#[cfg(not(feature = "stub-only"))]
+mod benchmark;
+#[cfg(not(feature = "stub-only"))]
+pub use benchmark::*;
 
-#[cfg(not(feature = "stub-only"))] mod constants;
-#[cfg(not(feature = "stub-only"))] pub use constants::*;
+#[cfg(not(feature = "stub-only"))]
+mod constants;
+#[cfg(not(feature = "stub-only"))]
+pub use constants::*;
 
 #[doc(hidden)]
 pub use unstringify::unstringify;
@@ -54,11 +65,15 @@ pub use unstringify::unstringify;
 #[cfg(not(feature = "std"))]
 #[cfg(feature = "stub-only")]
 #[panic_handler]
-fn panic(_: &core::panic::PanicInfo) -> ! { loop {} }
+fn panic(_: &core::panic::PanicInfo) -> ! {
+    loop {}
+}
 
 #[cfg(not(feature = "std"))]
 #[no_mangle]
-extern "C" fn __rust_foreign_exception() -> ! { loop {} }
+extern "C" fn __rust_foreign_exception() -> ! {
+    loop {}
+}
 
 #[cfg(feature = "std")]
 pub use std::panic::catch_unwind;
@@ -66,7 +81,7 @@ pub use std::panic::catch_unwind;
 #[cfg(all(not(feature = "std"), not(feature = "stub-only")))]
 pub use panic::catch_unwind;
 
-#[cfg(feature="embedded-graphics")]
+#[cfg(feature = "embedded-graphics")]
 pub mod embedded_graphics;
 
 #[repr(align(16))]
@@ -112,8 +127,8 @@ macro_rules! module {
             #[no_mangle]
             #[link_section = ".rodata.sceModuleInfo"]
             #[used]
-            static MODULE_INFO: $crate::Align16<$crate::sys::SceModuleInfo> = $crate::Align16(
-                $crate::sys::SceModuleInfo {
+            static MODULE_INFO: $crate::Align16<$crate::sys::SceModuleInfo> =
+                $crate::Align16($crate::sys::SceModuleInfo {
                     mod_attribute: 0,
                     mod_version: [$version_major, $version_minor],
                     mod_name: $crate::sys::SceModuleInfo::name($name),
@@ -123,10 +138,9 @@ macro_rules! module {
                     stub_end: unsafe { &__lib_stub_bottom },
                     ent_top: unsafe { &__lib_ent_top },
                     ent_end: unsafe { &__lib_ent_bottom },
-                }
-            );
+                });
 
-            extern {
+            extern "C" {
                 static _gp: u8;
                 static __lib_ent_bottom: u8;
                 static __lib_ent_top: u8;
@@ -151,30 +165,53 @@ macro_rules! module {
             #[no_mangle]
             #[link_section = ".rodata.sceResident"]
             #[used]
-            static LIB_ENT_TABLE: $crate::sys::SceLibraryEntryTable = $crate::sys::SceLibraryEntryTable {
-                module_start_nid: 0xd632acdb, // module_start
-                module_info_nid: 0xf01d73a7, // SceModuleInfo
-                module_start: module_start,
-                module_info: &MODULE_INFO.0,
-            };
+            static LIB_ENT_TABLE: $crate::sys::SceLibraryEntryTable =
+                $crate::sys::SceLibraryEntryTable {
+                    module_start_nid: 0xd632acdb, // module_start
+                    module_info_nid: 0xf01d73a7,  // SceModuleInfo
+                    module_start: module_start,
+                    module_info: &MODULE_INFO.0,
+                };
+
+            use core::ffi::c_void;
 
             #[no_mangle]
-            extern "C" fn module_start(_argc: isize, _argv: *const *const u8) -> isize {
+            extern "C" fn module_start(argc_bytes: usize, argv: *mut c_void) -> isize {
                 use $crate::sys::ThreadAttributes;
-                use core::ffi::c_void;
 
-                unsafe {
-                    extern fn main_thread(_argc: usize, _argv: *mut c_void) -> i32 {
-                        // TODO: Maybe print any error to debug screen?
-                        let _ = $crate::catch_unwind(|| {
-                            super::psp_main();
-                        });
-
-                        0
+                unsafe fn init_cwd(arg0: *mut u8) {
+                    let mut len = 0;
+                    while *arg0.add(len) != 0 {
+                        len += 1;
                     }
 
+                    // Truncate until last '/'
+                    while len > 0 && *arg0.add(len - 1) != b'/' {
+                        len -= 1;
+                    }
+
+                    if len > 0 {
+                        let tmp = *arg0.add(len);
+                        *arg0.add(len) = 0;
+                        $crate::sys::sceIoChdir(arg0 as *const u8);
+                        *arg0.add(len) = tmp;
+                    }
+                }
+
+                extern "C" fn main_thread(argc_bytes: usize, argv: *mut c_void) -> i32 {
+                    if argc_bytes > 0 {
+                        unsafe { init_cwd(argv as *mut u8) };
+                    }
+
+                    // TODO: Maybe print any error to debug screen?
+                    let _ = $crate::catch_unwind(super::psp_main);
+
+                    0
+                }
+
+                unsafe {
                     let id = $crate::sys::sceKernelCreateThread(
-                        &b"main_thread\0"[0],
+                        b"main_thread\0".as_ptr(),
                         main_thread,
                         // default priority of 32.
                         32,
@@ -184,13 +221,13 @@ macro_rules! module {
                         core::ptr::null_mut(),
                     );
 
-                    $crate::sys::sceKernelStartThread(id, 0, core::ptr::null_mut());
+                    $crate::sys::sceKernelStartThread(id, argc_bytes, argv);
                 }
 
                 0
             }
         }
-    }
+    };
 }
 
 /// Enable the home button.
@@ -198,12 +235,12 @@ macro_rules! module {
 /// This API does not have destructor support yet. You can manually setup an
 /// exit callback if you need this, see the source code of this function.
 pub fn enable_home_button() {
-    use core::{ptr, ffi::c_void};
+    use core::{ffi::c_void, ptr};
     use sys::ThreadAttributes;
 
     unsafe {
-        unsafe extern fn exit_thread(_args: usize, _argp: *mut c_void) -> i32 {
-            unsafe extern fn exit_callback(_arg1: i32, _arg2: i32, _arg: *mut c_void) -> i32 {
+        unsafe extern "C" fn exit_thread(_args: usize, _argp: *mut c_void) -> i32 {
+            unsafe extern "C" fn exit_callback(_arg1: i32, _arg2: i32, _arg: *mut c_void) -> i32 {
                 sys::sceKernelExitGame();
                 0
             }
