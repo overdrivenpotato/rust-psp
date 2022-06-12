@@ -4,22 +4,33 @@ pub unsafe extern "C" fn fminf(
     y: f32,
 ) -> f32 {
     let out: f32;
-    vfpu_asm! (
-        "mfc1 {tmp1}, {x}",
-        "mfc1 {tmp2}, {y}",
-        "mtv {tmp1}, S000",
-        "mtv {tmp2}, S001",
-        "vmin.s S000, S000, S001",
-        "mfv {tmp1}, S000",
-        "mtc1 {tmp1}, {out}",
-        "nop",
-        x = in(freg) x,
-        y = in(freg) y,
-        tmp1 = out(reg) _,
-        tmp2 = out(reg) _,
-        out = out(freg) out,
-        options(nostack, nomem),
-    );
+    if x.is_nan() && !y.is_nan() {
+        out = y;
+    }
+    else if y.is_nan() && !x.is_nan() {
+        out = x;
+    }
+    else if x.is_nan() && y.is_nan() {
+        out = core::f32::NAN;
+    }
+    else {
+        vfpu_asm! (
+            "mfc1 {tmp1}, {x}",
+            "mfc1 {tmp2}, {y}",
+            "mtv {tmp1}, S000",
+            "mtv {tmp2}, S001",
+            "vmin.s S000, S000, S001",
+            "mfv {tmp1}, S000",
+            "mtc1 {tmp1}, {out}",
+            "nop",
+            x = in(freg) x,
+            y = in(freg) y,
+            tmp1 = out(reg) _,
+            tmp2 = out(reg) _,
+            out = out(freg) out,
+            options(nostack, nomem),
+        );
+    }
     out
 }
 
@@ -29,22 +40,33 @@ pub unsafe extern "C" fn fmaxf(
     y: f32,
 ) -> f32 {
     let out: f32;
-    vfpu_asm! (
-        "mfc1 {tmp1}, {x}",
-        "mfc1 {tmp2}, {y}",
-        "mtv {tmp1}, S000",
-        "mtv {tmp2}, S001",
-        "vmax.s S000, S000, S001",
-        "mfv {tmp1}, S000",
-        "mtc1 {tmp1}, {out}",
-        "nop",
-        x = in(freg) x,
-        y = in(freg) y,
-        tmp1 = out(reg) _,
-        tmp2 = out(reg) _,
-        out = out(freg) out,
-        options(nostack, nomem),
-    );
+    if x.is_nan() && !y.is_nan() {
+        out = y;
+    }
+    else if y.is_nan() && !x.is_nan() {
+        out = x;
+    }
+    else if x.is_nan() && y.is_nan() {
+        out = core::f32::NAN;
+    }
+    else {
+        vfpu_asm! (
+            "mfc1 {tmp1}, {x}",
+            "mfc1 {tmp2}, {y}",
+            "mtv {tmp1}, S000",
+            "mtv {tmp2}, S001",
+            "vmax.s S000, S000, S001",
+            "mfv {tmp1}, S000",
+            "mtc1 {tmp1}, {out}",
+            "nop",
+            x = in(freg) x,
+            y = in(freg) y,
+            tmp1 = out(reg) _,
+            tmp2 = out(reg) _,
+            out = out(freg) out,
+            options(nostack, nomem),
+        );
+    }
     out
 }
 
