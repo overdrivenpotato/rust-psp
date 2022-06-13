@@ -8,18 +8,18 @@ use core::fmt;
 /// Like `println!`, but prints to the PSP screen.
 #[macro_export]
 macro_rules! dprintln {
-    ($($arg:tt)*) => {
+    ($($arg:tt)*) => {{
         $crate::debug::print_args(core::format_args!($($arg)*));
         $crate::debug::print_args(core::format_args!("\n"));
-    }
+    }}
 }
 
 /// Like `print!`, but prints to the PSP screen.
 #[macro_export]
 macro_rules! dprint {
-    ($($arg:tt)*) => {
+    ($($arg:tt)*) => {{
         $crate::debug::print_args(core::format_args!($($arg)*))
-    }
+    }}
 }
 
 // TODO: Wrap this in some kind of a mutex.
@@ -192,7 +192,7 @@ impl CharBuffer {
             }
 
             _ => {
-                if self.current_line().len == COLS  {
+                if self.current_line().len == COLS {
                     self.advance();
                 }
 
@@ -204,10 +204,7 @@ impl CharBuffer {
     }
 
     fn lines(&self) -> LineIter<'_> {
-        LineIter {
-            buf: self,
-            pos: 0,
-        }
+        LineIter { buf: self, pos: 0 }
     }
 }
 
