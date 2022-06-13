@@ -8,10 +8,13 @@ use core::fmt;
 /// Like `println!`, but prints to the PSP screen.
 #[macro_export]
 macro_rules! dprintln {
+    () => {
+        $crate::dprint("\n")
+    };
     ($($arg:tt)*) => {{
-        $crate::debug::print_args(core::format_args!($($arg)*));
-        $crate::debug::print_args(core::format_args!("\n"));
-    }}
+        $crate::dprint!($($arg)*);
+        $crate::dprint!("\n");
+    }};
 }
 
 /// Like `print!`, but prints to the PSP screen.
