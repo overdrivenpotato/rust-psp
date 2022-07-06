@@ -1,9 +1,8 @@
+use core::sync::atomic::AtomicPtr;
+use core::{alloc, mem, ptr};
+
 use crate::sys::TexturePixelFormat;
 use crate::sys::{sceGeEdramGetAddr, sceGeEdramGetSize};
-use core::marker::PhantomData;
-use core::mem::size_of;
-use core::ptr::null_mut;
-use core::sync::atomic::{AtomicU32, Ordering};
 
 pub type VramAllocator = SimpleVramAllocator;
 
@@ -16,68 +15,140 @@ impl core::fmt::Display for VramAllocatorInUseError {
     }
 }
 
+#[cfg(feature = "std")]
+impl std::error::Error for VramAllocatorInUseError {}
+
 mod vram_allocator_singleton {
-    use super::{SimpleVramAllocator, VramAllocator, VramAllocatorInUseError};
-    use core::sync::atomic::{AtomicBool, AtomicU32, Ordering};
+    use super::{
+        total_vram_size, vram_base_ptr, SimpleVramAllocator, VramAllocError,
+        VramAllocatorInUseError, VramBox,
+    };
+    use core::{
+        alloc,
+        ptr::{self, NonNull},
+        sync::atomic::{self, AtomicBool, AtomicPtr, AtomicUsize},
+    };
 
-    static VRAM_ALLOCATOR_IS_TAKEN: AtomicBool = AtomicBool::new(false);
+    /// Indicates VRAM ownership is free for anyone to acquire
+    static VRAM_OWNERSHIP: AtomicBool = AtomicBool::new(true);
 
-    impl VramAllocator {
-        pub fn take() -> Result<VramAllocator, VramAllocatorInUseError> {
-            if !VRAM_ALLOCATOR_IS_TAKEN.swap(true, Ordering::Relaxed) {
-                // new and empty, since old one droped and cannot have any references to it
-                Ok(VramAllocator {
-                    offset: AtomicU32::new(0),
+    impl SimpleVramAllocator {
+        /// # Safety
+        ///
+        /// No other code should assume it can borrow or access VRAM.
+        /// Allocator assumes ownership over VRAM (or at least
+        /// over memory allocated by it).
+        pub unsafe fn take() -> Result<Self, VramAllocatorInUseError> {
+            let direct_base = vram_base_ptr();
+            VRAM_OWNERSHIP
+                .fetch_update(atomic::Ordering::Acquire, atomic::Ordering::Relaxed, |t| {
+                    (!t).then(|| false)
                 })
-            } else {
-                Err(VramAllocatorInUseError)
+                .map_err(|_| VramAllocatorInUseError)?;
+
+            // fresh new allocator, there should be no active allocations
+            // to vram at this point
+            Ok(SimpleVramAllocator {
+                vram_direct_base: direct_base,
+                cursor: direct_base,
+                vram_size: total_vram_size(),
+            })
+        }
+
+        /// Frees all previously allocated VRAM.
+        pub fn reset(&mut self) {
+            *self.cursor.get_mut() = self.vram_direct_base.get();
+        }
+
+        // TODO: handle alignment
+        /// Allocates `size` bytes TODO
+        ///
+        /// The returned VRAM chunk has the same lifetime as the
+        /// `SimpleVramAllocator` borrow (i.e. `&self`) that allocated it.
+        pub fn alloc_box<T>(&self, value: T) -> Result<VramBox<'_, T>, VramAllocError> {
+            // SAFETY: Creating a (unique) mutable VRAM byte slice, see
+            //         [`VramAllocator::take`] safety section.
+            Ok(VramBox {
+                inner: unsafe {
+                    core::slice::from_raw_parts_mut(vram_base_ptr().add(old_offset), size)
+                },
+            })
+        }
+
+        pub fn alloc_boxed_slice<I>(
+            &self,
+            iter: I,
+        ) -> Result<VramBox<'_, [I::Item]>, VramAllocError>
+        where
+            I: Iterator + ExactSizeIterator,
+        {
+            self.alloc(alloc::Layout::new::<I::Item>());
+        }
+
+        /// # Safety
+        ///
+        /// Returned memory blocks point to valid memory and retain
+        /// their validity until the allocator is dropped or
+        /// [`SimpleVramAllocator::free_all`] is called.
+        pub fn allocate(&self, layout: alloc::Layout) -> Result<NonNull<u8>, VramAllocError> {
+            // Atomically bump a cursor, no order required
+            let mut ptr = NonNull::dangling();
+
+            // ZSTs get dangling pointers
+            if layout.size() == 0 {
+                return Ok(ptr);
             }
+
+            let old = self
+                .cursor
+                .fetch_update(
+                    atomic::Ordering::Relaxed,
+                    atomic::Ordering::Relaxed,
+                    |mut old| {
+                        let offset = old.align_offset(layout.align());
+
+                        // SAFETY: `cursor` and `vram_direct_base` fields
+                        //         come from the same place pointer
+                        let spare_capacity = unsafe {
+                            self.vram_direct_base
+                                .as_ptr()
+                                .add(self.vram_size)
+                                .offset_from(old) as usize
+                        };
+
+                        offset
+                            <= (spare_capacity as usize)
+                                .checked_sub(layout.size())?
+                                .then(|| {
+                                    // SAFETY: performed in-bounds check above
+                                    ptr = unsafe { old.add(offset) };
+                                    ptr.add(layout.size())
+                                })
+                    },
+                )
+                .map_err(|_| VramAllocError)?;
+
+            Ok(ptr)
         }
     }
 
     impl Drop for SimpleVramAllocator {
         fn drop(&mut self) {
-            VRAM_ALLOCATOR_IS_TAKEN.store(false, Ordering::Relaxed)
+            // all mem chunks at this point are no longer used, releasing
+            // vram ownership
+            VRAM_OWNERSHIP.store(true, atomic::Ordering::Release);
         }
-    }
-}
-
-pub struct VramMemChunk<'a> {
-    start: u32,
-    len: u32,
-    // Needed since VramMemChunk has a lifetime, but doesn't contain references
-    vram: PhantomData<&'a mut ()>,
-}
-
-impl VramMemChunk<'_> {
-    fn new_(start: u32, len: u32) -> Self {
-        Self {
-            start,
-            len,
-            vram: PhantomData,
-        }
-    }
-
-    pub fn as_mut_ptr_from_zero(&self) -> *mut u8 {
-        unsafe { vram_start_addr_zero().add(self.start as usize) }
-    }
-
-    pub fn as_mut_ptr_direct_to_vram(&self) -> *mut u8 {
-        unsafe { vram_start_addr_direct().add(self.start as usize) }
-    }
-
-    pub fn len(&self) -> u32 {
-        self.len
     }
 }
 
 // A dead-simple VRAM bump allocator.
-// There could be only one value of this type
-// WARNING: should be instantiated only within [`vram_allocator_singleton`] private module
-// TODO: remove Debug
-#[derive(Debug)]
+// There could be only one instance of this type
+// WARNING: should be instantiated only within [`vram_allocator_singleton`]
+//          private module
 pub struct SimpleVramAllocator {
-    offset: AtomicU32,
+    vram_direct_base: ptr::NonNull<u8>,
+    cursor: AtomicPtr<u8>,
+    vram_size: usize,
 }
 
 #[derive(Copy, Clone, Debug)]
@@ -89,89 +160,144 @@ impl core::fmt::Display for VramAllocError {
     }
 }
 
+#[cfg(feature = "std")]
+impl std::error::Error for VramAllocError {}
+
 impl SimpleVramAllocator {
-    /// Frees all previously allocated VRAM chunks.
-    ///
-    /// This resets the allocator's counter, but does not change the contents of
-    /// VRAM. Since this method requires `&mut Self` and there are no other
-    /// `SimpleVramAllocator` values to be swapped with, it cannot overlap with any
-    /// previously allocated `VramMemChunk`s since they have the lifetime of the
-    /// `&Self` that allocated them.
-    pub fn free_all(&mut self) {
-        // Store is required to occure after all previous bumps and before any next bumps, so SeqCst
-        self.offset.store(0, Ordering::SeqCst);
-    }
-
-    // TODO: handle alignment
-    /// Allocates `size` bytes of VRAM
-    ///
-    /// The returned VRAM chunk has the same lifetime as the
-    /// `SimpleVramAllocator` borrow (i.e. `&self`) that allocated it.
-    pub fn alloc<'a>(&'a self, size: u32) -> Result<VramMemChunk<'a>, VramAllocError> {
-        // Atomically bump offset, no ordering required
-        let old_offset = self
-            .offset
-            .fetch_update(Ordering::Relaxed, Ordering::Relaxed, |old| {
-                old.checked_add(size).filter(|new| *new <= self.total_mem())
-            })
-            .map_err(|_| VramAllocError)?;
-
-        Ok(VramMemChunk::new_(old_offset, size))
-    }
-
-    // TODO: ensure 16-bit alignment?
-    pub fn alloc_sized<'a, T: Sized>(
-        &'a self,
-        count: u32,
-    ) -> Result<VramMemChunk<'a>, VramAllocError> {
-        let size = size_of::<T>() as u32;
-        self.alloc(count * size)
-    }
-
-    pub fn alloc_texture_pixels<'a>(
-        &'a self,
+    pub fn alloc_texture_pixels(
+        &self,
         width: u32,
         height: u32,
         psm: TexturePixelFormat,
-    ) -> Result<VramMemChunk<'a>, VramAllocError> {
+    ) -> Result<VramBox<'_>, VramAllocError> {
         let size = get_memory_size(width, height, psm);
         self.alloc(size)
     }
 
-    // TODO: write, or write_volatile?
-    // TODO: panic instead of result?
-    // TODO: Keep track of the allocated chunk
-    // TODO: determine unsafety of this
-    pub unsafe fn move_to_vram<T: Sized>(&mut self, obj: T) -> Result<&mut T, VramAllocError> {
-        let chunk = self.alloc_sized::<T>(1)?;
-        let ptr = chunk.as_mut_ptr_direct_to_vram() as *mut T;
-        ptr.write(obj);
-        Ok(&mut *ptr)
-    }
-
-    fn total_mem(&self) -> u32 {
+    /// Total capacity of `SimpleVramAllocator`, equals to total VRAM
+    fn capacity(&self) -> usize {
         total_vram_size()
     }
 }
 
-fn total_vram_size() -> u32 {
-    unsafe { sceGeEdramGetSize() }
+pub struct VramBox<'a, T: ?Sized> {
+    inner: &'a mut mem::ManuallyDrop<T>,
 }
 
-// NOTE: VRAM actually starts at 0x4000000, as returned by sceGeEdramGetAddr.
-//       The Gu functions take that into account, and start their pointer
-//       indices at 0. See GE_EDRAM_ADDRESS in gu.rs for that offset being used.
-fn vram_start_addr_zero() -> *mut u8 {
-    null_mut()
+impl<T: ?Sized> Drop for VramBox<'_, T> {
+    fn drop(&mut self) {
+        // SAFETY: `VramBox` assumes ownership over the inner value.
+        //         Dropped value isn't accessable to anyone after, because
+        //         it's in the `Drop::drop` implementation.
+        unsafe { mem::ManuallyDrop::drop(self.inner) }
+    }
 }
 
-fn vram_start_addr_direct() -> *mut u8 {
-    unsafe { sceGeEdramGetAddr() }
+impl<'a, T: ?Sized> VramBox<'a, T> {
+    fn into_inner(boxed: VramBox<'a, T>) -> T {
+        // SAFETY: `VramBox` assumes ownership over the inner value.
+        //         `boxed` isn't accessable to anyone after, because
+        //         function call owns it and then forgets it to avoid a
+        //         double free.
+        unsafe { mem::ManuallyDrop::take(boxed.inner) };
+        mem::forget(boxed);
+    }
 }
 
-fn get_memory_size(width: u32, height: u32, psm: TexturePixelFormat) -> u32 {
-    match psm {
-        TexturePixelFormat::PsmT4 => (width * height) >> 1,
+impl<T: ?Sized> core::ops::Deref for VramBox<'_, T> {
+    type Target = T;
+
+    fn deref(&self) -> &Self::Target {
+        self.inner
+    }
+}
+
+impl<T: ?Sized> core::ops::DerefMut for VramBox<'_, T> {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        self.inner
+    }
+}
+
+// See GE_EDRAM_ADDRESS in src/sys/gu.rs for that offset being used.
+//
+/// Converion trait for vram pointers.
+///
+/// **Direct** VRAM addresses start at 0x4000000, as returned by
+/// sceGeEdramGetAddr. You can work with direct VRAM like it's regular
+/// memory.
+///
+/// On the other hand, **zero-based** VRAM adresses start at 0x0 instead.
+/// These pointers are used with `sys::sceGu*` functions, but outside of
+/// that you cannot do anything until you convert them back to a direct
+/// VRAM pointer.
+///
+/// # Non-volatile access to direct VRAM
+///
+/// Writes to and reads from VRAM are not required to be volatile.
+///
+/// Volatile reads and writes are guaranteed to not be reordered,
+/// combined, or eliminated. This stands from requirement for memory
+/// mapped io, as there can be side effects before individual reads or
+/// after individual writes.
+///
+/// Provenance of VRAM's direct pointer comes from `sceGeEdramGetAddr`,
+/// which is actually a stub function generated via `global_asm!` macro,
+/// and because of this the compiler cannot infer pointer proviance any
+/// further. It is assumed that the proviance of direct VRAM pointers
+/// may be accessable to any unreachable to the compiler code. This
+/// means the compiler is obligated to actually perform write before
+/// any call to undefined (or stub) function.
+pub trait VramConvPtr {
+    fn vram_direct_into_zero_based(self) -> Self;
+
+    fn vram_zero_based_into_direct(self) -> Self;
+}
+
+impl<T> VramConvPtr for *mut T {
+    fn vram_direct_into_zero_based(self) -> Self {
+        self.cast::<u8>()
+            .wrapping_sub(vram_base_ptr() as usize)
+            .cast::<T>()
+    }
+
+    fn vram_zero_based_into_direct(self) -> Self {
+        self.cast::<u8>()
+            .wrapping_add(vram_base_ptr() as usize)
+            .cast::<T>()
+    }
+}
+
+impl<T> VramConvPtr for *const T {
+    fn vram_direct_into_zero_based(self) -> Self {
+        self.cast::<u8>()
+            .wrapping_sub(vram_base_ptr() as usize)
+            .cast::<T>()
+    }
+
+    fn vram_zero_based_into_direct(self) -> Self {
+        self.cast::<u8>()
+            .wrapping_add(vram_base_ptr() as usize)
+            .cast::<T>()
+    }
+}
+
+/// A direct VRAM pointer
+fn vram_base_ptr() -> ptr::NonNull<u8> {
+    // We assume the returned pointer is not null, panic if we are wrong.
+    // If you would like to eliminate (probably unused) code for this panic for this panic but this
+    ptr::NonNull::new(unsafe { sceGeEdramGetAddr() })
+        .expect("`sceGeEdramGetAddr` returned a null pointer")
+}
+
+fn total_vram_size() -> usize {
+    unsafe { sceGeEdramGetSize() as usize }
+}
+
+// TODO: Add checks for width and height values, or mark as unsafe
+fn get_memory_size(width: u32, height: u32, psm: TexturePixelFormat) -> usize {
+    (match psm {
+        // Want to eliminate modulo? Solve the todo!
+        TexturePixelFormat::PsmT4 => (width * height) / 2 + (width * height) % 2,
         TexturePixelFormat::PsmT8 => width * height,
 
         TexturePixelFormat::Psm5650
@@ -182,5 +308,5 @@ fn get_memory_size(width: u32, height: u32, psm: TexturePixelFormat) -> u32 {
         TexturePixelFormat::Psm8888 | TexturePixelFormat::PsmT32 => 4 * width * height,
 
         _ => unimplemented!(),
-    }
+    }) as usize
 }

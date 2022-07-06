@@ -107,22 +107,19 @@ unsafe fn psp_main_inner() {
 
     sys::sceGuInit();
 
-    sys::sceGuStart(
-        GuContextType::Direct,
-        &mut LIST.0 as *mut [u32; 0x40000] as *mut _,
-    );
+    sys::sceGuStart(GuContextType::Direct, &mut LIST.0 as *mut _);
     sys::sceGuDrawBuffer(
         DisplayPixelFormat::Psm8888,
-        fbp0.as_mut_ptr_from_zero() as _,
+        fbp0.as_mut_ptr_from_zero().cast(),
         BUF_WIDTH as i32,
     );
     sys::sceGuDispBuffer(
         SCREEN_WIDTH as i32,
         SCREEN_HEIGHT as i32,
-        fbp1.as_mut_ptr_from_zero() as _,
+        fbp1.as_mut_ptr_from_zero().cast(),
         BUF_WIDTH as i32,
     );
-    sys::sceGuDepthBuffer(zbp.as_mut_ptr_from_zero() as _, BUF_WIDTH as i32);
+    sys::sceGuDepthBuffer(zbp.as_mut_ptr_from_zero().cast(), BUF_WIDTH as i32);
     sys::sceGuOffset(2048 - (SCREEN_WIDTH / 2), 2048 - (SCREEN_HEIGHT / 2));
     sys::sceGuViewport(2048, 2048, SCREEN_WIDTH as i32, SCREEN_HEIGHT as i32);
     sys::sceGuDepthRange(65535, 0);
@@ -188,13 +185,7 @@ unsafe fn psp_main_inner() {
         // setup texture
 
         sys::sceGuTexMode(TexturePixelFormat::Psm8888, 0, 0, 0);
-        sys::sceGuTexImage(
-            MipmapLevel::None,
-            128,
-            128,
-            128,
-            &FERRIS as *const _ as *const _,
-        );
+        sys::sceGuTexImage(MipmapLevel::None, 128, 128, 128, &FERRIS as *const _);
         sys::sceGuTexFunc(TextureEffect::Replace, TextureColorComponent::Rgb);
         sys::sceGuTexFilter(TextureFilter::Linear, TextureFilter::Linear);
         sys::sceGuTexScale(1.0, 1.0);
@@ -207,7 +198,7 @@ unsafe fn psp_main_inner() {
             VertexType::TEXTURE_32BITF | VertexType::VERTEX_32BITF | VertexType::TRANSFORM_3D,
             12 * 3,
             ptr::null_mut(),
-            &VERTICES as *const Align16<_> as *const _,
+            &VERTICES as *const _,
         );
 
         sys::sceGuFinish();

@@ -8,45 +8,59 @@
     const_loop,
     const_if_match,
     c_variadic,
-    lang_items,
+    lang_items
 )]
-
 // For unwinding support
 #![feature(std_internals, panic_info_message, panic_internals, c_unwind)]
 #![cfg_attr(not(feature = "stub-only"), feature(panic_unwind))]
-
 // For the `const_generics` feature.
 #![allow(incomplete_features)]
-
 #![cfg_attr(not(feature = "std"), no_std)]
+#![cfg_attr(not(feature = "stub-only"), feature(strict_provenance))]
 
-#[macro_use] extern crate paste;
-#[cfg(not(feature = "stub-only"))] extern crate alloc;
-#[cfg(not(feature = "stub-only"))] extern crate panic_unwind;
+#![cfg_attr(not(feature = "stub-only"), feature(strict_provenance))]
+
+#[macro_use]
+extern crate paste;
+#[cfg(not(feature = "stub-only"))]
+extern crate alloc;
+#[cfg(not(feature = "stub-only"))]
+extern crate panic_unwind;
 
 #[macro_use]
 #[doc(hidden)]
 #[cfg(not(feature = "stub-only"))]
 pub mod debug;
 
-#[macro_use] mod vfpu;
+#[macro_use]
+mod vfpu;
 mod eabi;
 pub mod math;
 pub mod sys;
-#[cfg(not(feature = "stub-only"))] pub mod test_runner;
-#[cfg(not(feature = "stub-only"))] pub mod vram_alloc;
+#[cfg(not(feature = "stub-only"))]
+pub mod test_runner;
+#[cfg(not(feature = "stub-only"))]
+pub mod vram_alloc;
 
-#[cfg(not(feature = "stub-only"))] mod alloc_impl;
-#[cfg(not(feature = "stub-only"))] pub mod panic;
+#[cfg(not(feature = "stub-only"))]
+mod alloc_impl;
+#[cfg(not(feature = "stub-only"))]
+pub mod panic;
 
-#[cfg(not(feature = "stub-only"))] mod screenshot;
-#[cfg(not(feature = "stub-only"))] pub use screenshot::*;
+#[cfg(not(feature = "stub-only"))]
+mod screenshot;
+#[cfg(not(feature = "stub-only"))]
+pub use screenshot::*;
 
-#[cfg(not(feature = "stub-only"))] mod benchmark;
-#[cfg(not(feature = "stub-only"))] pub use benchmark::*;
+#[cfg(not(feature = "stub-only"))]
+mod benchmark;
+#[cfg(not(feature = "stub-only"))]
+pub use benchmark::*;
 
-#[cfg(not(feature = "stub-only"))] mod constants;
-#[cfg(not(feature = "stub-only"))] pub use constants::*;
+#[cfg(not(feature = "stub-only"))]
+mod constants;
+#[cfg(not(feature = "stub-only"))]
+pub use constants::*;
 
 #[doc(hidden)]
 pub use unstringify::unstringify;
@@ -54,11 +68,15 @@ pub use unstringify::unstringify;
 #[cfg(not(feature = "std"))]
 #[cfg(feature = "stub-only")]
 #[panic_handler]
-fn panic(_: &core::panic::PanicInfo) -> ! { loop {} }
+fn panic(_: &core::panic::PanicInfo) -> ! {
+    loop {}
+}
 
 #[cfg(not(feature = "std"))]
 #[no_mangle]
-extern "C" fn __rust_foreign_exception() -> ! { loop {} }
+extern "C" fn __rust_foreign_exception() -> ! {
+    loop {}
+}
 
 #[cfg(feature = "std")]
 pub use std::panic::catch_unwind;
@@ -66,7 +84,7 @@ pub use std::panic::catch_unwind;
 #[cfg(all(not(feature = "std"), not(feature = "stub-only")))]
 pub use panic::catch_unwind;
 
-#[cfg(feature="embedded-graphics")]
+#[cfg(feature = "embedded-graphics")]
 pub mod embedded_graphics;
 
 #[repr(align(16))]
@@ -112,8 +130,8 @@ macro_rules! module {
             #[no_mangle]
             #[link_section = ".rodata.sceModuleInfo"]
             #[used]
-            static MODULE_INFO: $crate::Align16<$crate::sys::SceModuleInfo> = $crate::Align16(
-                $crate::sys::SceModuleInfo {
+            static MODULE_INFO: $crate::Align16<$crate::sys::SceModuleInfo> =
+                $crate::Align16($crate::sys::SceModuleInfo {
                     mod_attribute: 0,
                     mod_version: [$version_major, $version_minor],
                     mod_name: $crate::sys::SceModuleInfo::name($name),
@@ -123,10 +141,9 @@ macro_rules! module {
                     stub_end: unsafe { &__lib_stub_bottom },
                     ent_top: unsafe { &__lib_ent_top },
                     ent_end: unsafe { &__lib_ent_bottom },
-                }
-            );
+                });
 
-            extern {
+            extern "C" {
                 static _gp: u8;
                 static __lib_ent_bottom: u8;
                 static __lib_ent_top: u8;
@@ -151,20 +168,21 @@ macro_rules! module {
             #[no_mangle]
             #[link_section = ".rodata.sceResident"]
             #[used]
-            static LIB_ENT_TABLE: $crate::sys::SceLibraryEntryTable = $crate::sys::SceLibraryEntryTable {
-                module_start_nid: 0xd632acdb, // module_start
-                module_info_nid: 0xf01d73a7, // SceModuleInfo
-                module_start: module_start,
-                module_info: &MODULE_INFO.0,
-            };
+            static LIB_ENT_TABLE: $crate::sys::SceLibraryEntryTable =
+                $crate::sys::SceLibraryEntryTable {
+                    module_start_nid: 0xd632acdb, // module_start
+                    module_info_nid: 0xf01d73a7,  // SceModuleInfo
+                    module_start: module_start,
+                    module_info: &MODULE_INFO.0,
+                };
 
             #[no_mangle]
             extern "C" fn module_start(_argc: isize, _argv: *const *const u8) -> isize {
-                use $crate::sys::ThreadAttributes;
                 use core::ffi::c_void;
+                use $crate::sys::ThreadAttributes;
 
                 unsafe {
-                    extern fn main_thread(_argc: usize, _argv: *mut c_void) -> i32 {
+                    extern "C" fn main_thread(_argc: usize, _argv: *mut c_void) -> i32 {
                         // TODO: Maybe print any error to debug screen?
                         let _ = $crate::catch_unwind(|| {
                             super::psp_main();
@@ -190,7 +208,7 @@ macro_rules! module {
                 0
             }
         }
-    }
+    };
 }
 
 /// Enable the home button.
@@ -198,12 +216,12 @@ macro_rules! module {
 /// This API does not have destructor support yet. You can manually setup an
 /// exit callback if you need this, see the source code of this function.
 pub fn enable_home_button() {
-    use core::{ptr, ffi::c_void};
+    use core::{ffi::c_void, ptr};
     use sys::ThreadAttributes;
 
     unsafe {
-        unsafe extern fn exit_thread(_args: usize, _argp: *mut c_void) -> i32 {
-            unsafe extern fn exit_callback(_arg1: i32, _arg2: i32, _arg: *mut c_void) -> i32 {
+        unsafe extern "C" fn exit_thread(_args: usize, _argp: *mut c_void) -> i32 {
+            unsafe extern "C" fn exit_callback(_arg1: i32, _arg2: i32, _arg: *mut c_void) -> i32 {
                 sys::sceKernelExitGame();
                 0
             }
