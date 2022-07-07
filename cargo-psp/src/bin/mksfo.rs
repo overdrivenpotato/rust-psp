@@ -6,6 +6,7 @@ use std::io::SeekFrom;
 use std::path::Path;
 
 #[repr(C, packed)]
+#[derive(Clone, Copy)]
 struct SfoHeader {
     magic: u32,
     version: u32,
@@ -196,14 +197,14 @@ fn main() {
 
     if matches.values_of("string").is_some() {
         for s in matches.values_of("string").unwrap() {
-            let key_value_pair: Vec<String> = s.split("=").map(|s: &str| s.to_string()).collect();
+            let key_value_pair: Vec<String> = s.split('=').map(|s: &str| s.to_string()).collect();
             strings.insert(key_value_pair[0].clone(), key_value_pair[1].clone());
         }
     }
 
     if matches.values_of("dword").is_some() {
         for s in matches.values_of("dword").unwrap() {
-            let key_value_pair: Vec<String> = s.split("=").map(|s: &str| s.to_string()).collect();
+            let key_value_pair: Vec<String> = s.split('=').map(|s: &str| s.to_string()).collect();
             dwords.insert(
                 key_value_pair[0].clone(),
                 str::parse::<u32>(&key_value_pair[1]).unwrap(),
@@ -215,7 +216,7 @@ fn main() {
 
     // TODO reduce copypasta
 
-    for (key, _value) in &strings {
+    for key in strings.keys() {
         if !valid.contains_key(key.as_str()) {
             panic!("Invalid option {}", key);
         }
@@ -237,7 +238,7 @@ fn main() {
         }
     }
 
-    for (key, _value) in &dwords {
+    for key in dwords.keys() {
         if !valid.contains_key(key.as_str()) {
             panic!("Invalid option {}", key);
         }

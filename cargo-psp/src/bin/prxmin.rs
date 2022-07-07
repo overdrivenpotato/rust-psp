@@ -209,7 +209,7 @@ fn main() {
         e_shoff: (DATA_OFFSET + body.len()) as u64,
         e_phnum: 1,
         e_shnum: new_sections.len() as u16,
-        ..elf.header.clone()
+        ..elf.header
     };
 
     let ctx = Ctx {

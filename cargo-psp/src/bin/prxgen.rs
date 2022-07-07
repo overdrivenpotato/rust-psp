@@ -79,7 +79,7 @@ impl<'a> PrxGen<'a> {
                 let start_idx = sh.sh_offset as usize;
                 let end_idx = sh.sh_size as usize + start_idx;
 
-                let relocs = (&bytes[start_idx..end_idx])
+                let relocs = bytes[start_idx..end_idx]
                     .chunks(8)
                     .map(|rel_bytes| {
                         Rel::try_from_ctx(rel_bytes, Endian::Little).unwrap().0

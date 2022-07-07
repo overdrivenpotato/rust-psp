@@ -104,7 +104,7 @@ struct CommitDate {
 
 impl CommitDate {
     fn parse(date: &str) -> Option<Self> {
-        let mut iter = date.split("-");
+        let mut iter = date.split('-');
 
         let year = iter.next()?.parse().ok()?;
         let month = iter.next()?.parse().ok()?;
@@ -125,7 +125,7 @@ impl fmt::Display for CommitDate {
 // contains the previous days' nightly rustc.
 const MINIMUM_COMMIT_DATE: CommitDate = CommitDate {
     year: 2022,
-    month: 06,
+    month: 6,
     day: 10,
 };
 const MINIMUM_RUSTC_VERSION: Version = Version {
