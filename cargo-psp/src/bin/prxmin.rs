@@ -1,20 +1,24 @@
 use clap::{App, AppSettings, Arg};
 use goblin::{
-    elf32,
     container::{Container, Ctx, Endian},
     elf::{
         program_header::{PF_R, PF_W, PF_X, PT_LOAD},
         section_header::{SHT_NOBITS, SHT_NULL},
         Elf, Header, ProgramHeader, SectionHeader,
     },
+    elf32,
 };
 use scroll::ctx::{IntoCtx, TryIntoCtx};
-use std::{borrow::Cow, fs::{self, File}, io::Write, iter};
+use std::{
+    borrow::Cow,
+    fs::{self, File},
+    io::Write,
+    iter,
+};
 
 const SHT_PRXREL: u32 = 0x7000_00A0;
 const MODULE_INFO_SECTION: &str = ".rodata.sceModuleInfo";
-const DATA_OFFSET: usize = elf32::header::SIZEOF_EHDR
-    + elf32::program_header::SIZEOF_PHDR;
+const DATA_OFFSET: usize = elf32::header::SIZEOF_EHDR + elf32::program_header::SIZEOF_PHDR;
 
 #[derive(Debug, Clone)]
 struct Section<'a> {
@@ -148,7 +152,7 @@ fn main() {
 
     for section in &mut new_sections {
         if section.header.sh_type == SHT_NULL {
-            continue
+            continue;
         }
 
         let align = section.header.sh_addralign as usize;
@@ -163,7 +167,7 @@ fn main() {
         section.header.to_mut().sh_offset = (DATA_OFFSET + body.len()) as u64;
 
         if section.header.sh_type == SHT_NOBITS {
-            continue
+            continue;
         }
 
         // Fill in the actual bytes.
@@ -185,19 +189,22 @@ fn main() {
 
         p_offset: new_sections[1].header.sh_offset,
 
-        p_filesz: new_sections.iter()
+        p_filesz: new_sections
+            .iter()
             .rev()
             .find(|s| s.header.sh_type != SHT_NOBITS && s.header.is_alloc())
             .map(|s| s.header.sh_offset + s.header.sh_size - text_start)
             .unwrap(),
 
-        p_memsz: new_sections.iter()
+        p_memsz: new_sections
+            .iter()
             .rev()
             .find(|s| s.header.sh_type == SHT_NOBITS)
             .map(|s| s.header.sh_offset + s.header.sh_size - text_start)
             .unwrap(),
 
-        p_align: new_sections.iter()
+        p_align: new_sections
+            .iter()
             .map(|s| s.header.sh_addralign)
             .max()
             .unwrap(),

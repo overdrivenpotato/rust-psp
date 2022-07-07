@@ -1,11 +1,11 @@
 use clap::{App, Arg};
 use std::collections::HashMap;
-use std::path::Path;
 use std::fs::File;
 use std::io::prelude::*;
 use std::io::SeekFrom;
+use std::path::Path;
 
-#[repr(C,packed)]
+#[repr(C, packed)]
 struct SfoHeader {
     magic: u32,
     version: u32,
@@ -15,8 +15,8 @@ struct SfoHeader {
 }
 
 impl SfoHeader {
-    fn to_le_bytes(self) -> [u8;20] {
-        let mut buf = [0u8;20];
+    fn to_le_bytes(self) -> [u8; 20] {
+        let mut buf = [0u8; 20];
 
         buf[0..=3].copy_from_slice(&self.magic.to_le_bytes());
         buf[4..=7].copy_from_slice(&self.version.to_le_bytes());
@@ -28,7 +28,7 @@ impl SfoHeader {
     }
 }
 
-#[repr(C,packed)]
+#[repr(C, packed)]
 #[derive(Default, Debug, Copy, Clone)]
 struct SfoEntry {
     key_offset: u16,
@@ -40,8 +40,8 @@ struct SfoEntry {
 }
 
 impl SfoEntry {
-    fn to_le_bytes(self) -> [u8;16] {
-        let mut buf = [0u8;16];
+    fn to_le_bytes(self) -> [u8; 16] {
+        let mut buf = [0u8; 16];
 
         buf[0..=1].copy_from_slice(&self.key_offset.to_le_bytes());
         buf[2..=2].copy_from_slice(&self.alignment.to_le_bytes());
@@ -72,35 +72,40 @@ fn main() {
         .version("0.1")
         .author("Paul Sajna <sajattack@gmail.com>")
         .about("Creates SFO files used for building Sony PSP EBOOT executables")
-        .arg(Arg::with_name("bare")
-            .long("bare")
-            .help("Do not set any default values. Ignores the <title> value if set.")
+        .arg(
+            Arg::with_name("bare")
+                .long("bare")
+                .help("Do not set any default values. Ignores the <title> value if set."),
         )
-        .arg(Arg::with_name("dword")
-            .short("d")
-            .long("dword")
-            .help("key=VALUE Add a new DWORD value")
-            .multiple(true)
-            .number_of_values(1)
-            .takes_value(true)
+        .arg(
+            Arg::with_name("dword")
+                .short("d")
+                .long("dword")
+                .help("key=VALUE Add a new DWORD value")
+                .multiple(true)
+                .number_of_values(1)
+                .takes_value(true),
         )
-        .arg(Arg::with_name("string")
-            .short("s")
-            .long("string")
-            .help("key=STRING Add a new string value")
-            .multiple(true)
-            .number_of_values(1)
-            .takes_value(true)
+        .arg(
+            Arg::with_name("string")
+                .short("s")
+                .long("string")
+                .help("key=STRING Add a new string value")
+                .multiple(true)
+                .number_of_values(1)
+                .takes_value(true),
         )
-        .arg(Arg::with_name("title")
-            .takes_value(true)
-            .required(true)
-            .help("Display title")
+        .arg(
+            Arg::with_name("title")
+                .takes_value(true)
+                .required(true)
+                .help("Display title"),
         )
-        .arg(Arg::with_name("output")
-            .takes_value(true)
-            .required(true)
-            .help("Output file name")
+        .arg(
+            Arg::with_name("output")
+                .takes_value(true)
+                .required(true)
+                .help("Output file name"),
         )
         .get_matches();
 
@@ -133,17 +138,44 @@ fn main() {
         ("CATEGORY", (EntryType::String_, false, true, true, true)),
         ("DISC_ID", (EntryType::String_, false, false, true, true)),
         ("DISC_NUMBER", (EntryType::Dword, false, false, false, true)),
-        ("DISC_VERSION", (EntryType::String_, false, false, true, true)),
-        ("DRIVER_PATH", (EntryType::String_, false, false, true, false)),
+        (
+            "DISC_VERSION",
+            (EntryType::String_, false, false, true, true),
+        ),
+        (
+            "DRIVER_PATH",
+            (EntryType::String_, false, false, true, false),
+        ),
         ("LANGUAGE", (EntryType::String_, false, false, true, false)),
-        ("PARENTAL_LEVEL", (EntryType::Dword, false, true, true, true)),
-        ("PSP_SYSTEM_VER", (EntryType::String_, false, false, true, true)),
+        (
+            "PARENTAL_LEVEL",
+            (EntryType::Dword, false, true, true, true),
+        ),
+        (
+            "PSP_SYSTEM_VER",
+            (EntryType::String_, false, false, true, true),
+        ),
         ("REGION", (EntryType::Dword, false, false, true, true)),
-        ("SAVEDATA_DETAIL", (EntryType::String_, false, true, false, false)),
-        ("SAVEDATA_DIRECTORY", (EntryType::String_, false, true, false, false)),
-        ("SAVEDATA_FILE_LIST", (EntryType::Binary, false, true, false, false)),
-        ("SAVEDATA_PARAMS", (EntryType::Binary, false, true, false, false)),
-        ("SAVEDATA_TITLE", (EntryType::String_, false, true, false, false)),
+        (
+            "SAVEDATA_DETAIL",
+            (EntryType::String_, false, true, false, false),
+        ),
+        (
+            "SAVEDATA_DIRECTORY",
+            (EntryType::String_, false, true, false, false),
+        ),
+        (
+            "SAVEDATA_FILE_LIST",
+            (EntryType::Binary, false, true, false, false),
+        ),
+        (
+            "SAVEDATA_PARAMS",
+            (EntryType::Binary, false, true, false, false),
+        ),
+        (
+            "SAVEDATA_TITLE",
+            (EntryType::String_, false, true, false, false),
+        ),
         ("TITLE", (EntryType::String_, false, true, true, true)),
         ("TITLE_0", (EntryType::String_, false, true, true, true)),
         ("TITLE_2", (EntryType::String_, false, true, true, true)),
@@ -153,24 +185,28 @@ fn main() {
         ("TITLE_6", (EntryType::String_, false, true, true, true)),
         ("TITLE_7", (EntryType::String_, false, true, true, true)),
         ("TITLE_8", (EntryType::String_, false, true, true, true)),
-        ("UPDATER_VER", (EntryType::String_, false, false, true, false)),
-    ].iter().cloned().collect();
+        (
+            "UPDATER_VER",
+            (EntryType::String_, false, false, true, false),
+        ),
+    ]
+    .iter()
+    .cloned()
+    .collect();
 
     if matches.values_of("string").is_some() {
         for s in matches.values_of("string").unwrap() {
-            let key_value_pair: Vec<String> =
-                s.split("=").map(|s: &str| s.to_string()).collect();
+            let key_value_pair: Vec<String> = s.split("=").map(|s: &str| s.to_string()).collect();
             strings.insert(key_value_pair[0].clone(), key_value_pair[1].clone());
         }
     }
 
     if matches.values_of("dword").is_some() {
         for s in matches.values_of("dword").unwrap() {
-            let key_value_pair: Vec<String> =
-                s.split("=").map(|s: &str| s.to_string()).collect();
+            let key_value_pair: Vec<String> = s.split("=").map(|s: &str| s.to_string()).collect();
             dwords.insert(
                 key_value_pair[0].clone(),
-                str::parse::<u32>(&key_value_pair[1]).unwrap()
+                str::parse::<u32>(&key_value_pair[1]).unwrap(),
             );
         }
     }
@@ -188,16 +224,16 @@ fn main() {
             panic!("Key {} does not take a string value", key)
         }
         if category == "WG" && !wg {
-           panic!("Key {} is not valid for category WG", key);
+            panic!("Key {} is not valid for category WG", key);
         }
         if category == "MS" && !ms {
-           panic!("Key {} is not valid for category MS", key);
+            panic!("Key {} is not valid for category MS", key);
         }
         if category == "MG" && !mg {
-           panic!("Key {} is not valid for category MG", key);
+            panic!("Key {} is not valid for category MG", key);
         }
         if category == "UG" && !ug {
-           panic!("Key {} is not valid for category UG", key);
+            panic!("Key {} is not valid for category UG", key);
         }
     }
 
@@ -210,16 +246,16 @@ fn main() {
             panic!("Key {} does not take a dword value", key)
         }
         if category == "WG" && !wg {
-           panic!("Key {} is not valid for category WG", key);
+            panic!("Key {} is not valid for category WG", key);
         }
         if category == "MS" && !ms {
-           panic!("Key {} is not valid for category MS", key);
+            panic!("Key {} is not valid for category MS", key);
         }
         if category == "MG" && !mg {
-           panic!("Key {} is not valid for category MG", key);
+            panic!("Key {} is not valid for category MG", key);
         }
         if category == "UG" && !ug {
-           panic!("Key {} is not valid for category UG", key);
+            panic!("Key {} is not valid for category UG", key);
         }
     }
 
@@ -235,7 +271,10 @@ fn main() {
 
     let num_options = dwords.len() + strings.len();
     if num_options > MAX_OPTIONS {
-        panic!("Maximum number of options is {}, you have {}", MAX_OPTIONS, num_options);
+        panic!(
+            "Maximum number of options is {}, you have {}",
+            MAX_OPTIONS, num_options
+        );
     }
 
     let mut keys = [0u8; 8192];
@@ -248,10 +287,10 @@ fn main() {
 
     let mut sorted_keys: Vec<String> = Vec::new();
     for (key, _value) in dwords.iter() {
-       sorted_keys.push(key.to_string());
+        sorted_keys.push(key.to_string());
     }
     for (key, _value) in strings.iter() {
-       sorted_keys.push(key.to_string());
+        sorted_keys.push(key.to_string());
     }
     sorted_keys.sort();
 
@@ -267,17 +306,15 @@ fn main() {
                 ..Default::default()
             };
             let idx = key_offset as usize;
-            &keys[idx..idx+key.len()].copy_from_slice(key.as_bytes());
+            &keys[idx..idx + key.len()].copy_from_slice(key.as_bytes());
             key_offset += key.len() as u16 + 1;
             sfo_entry.val_size = 4;
             sfo_entry.total_size = 4;
             let idx = data_offset as usize;
-            data[idx..idx+4].copy_from_slice(&value.to_le_bytes());
+            data[idx..idx + 4].copy_from_slice(&value.to_le_bytes());
             data_offset += 4;
             sfo_entries.push(sfo_entry);
-        }
-
-        else if strings.contains_key(&key) {
+        } else if strings.contains_key(&key) {
             let value = strings.get(&key).unwrap();
             header.count += 1;
             let mut sfo_entry = SfoEntry {
@@ -288,7 +325,7 @@ fn main() {
                 ..Default::default()
             };
             let idx = key_offset as usize;
-            &keys[idx..idx+key.len()].copy_from_slice(key.as_bytes());
+            &keys[idx..idx + key.len()].copy_from_slice(key.as_bytes());
             key_offset += key.len() as u16 + 1;
 
             let val_size = value.len() + 1;
@@ -296,19 +333,14 @@ fn main() {
             sfo_entry.val_size = val_size as u32;
             sfo_entry.total_size = total_size as u32;
             let idx = data_offset as usize;
-            data[idx..idx + value.len()].copy_from_slice(
-                value.as_bytes()
-            );
+            data[idx..idx + value.len()].copy_from_slice(value.as_bytes());
             data_offset += total_size as u32;
             sfo_entries.push(sfo_entry);
         }
     }
 
-    header.key_offset = (
-        core::mem::size_of::<SfoHeader>() +
-        sfo_entries.len() *
-        core::mem::size_of::<SfoEntry>()
-    ) as u32;
+    header.key_offset = (core::mem::size_of::<SfoHeader>()
+        + sfo_entries.len() * core::mem::size_of::<SfoEntry>()) as u32;
 
     let aligned_val_offset = (header.key_offset + key_offset as u32 + 3) & !3;
     header.val_offset = aligned_val_offset;
@@ -319,6 +351,7 @@ fn main() {
         file.write_all(&sfo_entry.to_le_bytes()).unwrap();
     }
     file.write_all(&keys[0..key_offset as usize]).unwrap();
-    file.seek(SeekFrom::Start(aligned_val_offset as u64)).unwrap();
+    file.seek(SeekFrom::Start(aligned_val_offset as u64))
+        .unwrap();
     file.write(&data[0..data_offset as usize]).unwrap();
 }

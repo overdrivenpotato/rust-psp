@@ -1,11 +1,15 @@
-use std::{fs, path::Path, collections::HashMap};
+use clap::{App, AppSettings, Arg};
 use goblin::elf32::{
-    header::Header, reloc::Rel,
-    section_header::{SectionHeader, SHT_REL, SHF_ALLOC},
+    header::Header,
     program_header::{ProgramHeader, PT_LOAD},
+    reloc::Rel,
+    section_header::{SectionHeader, SHF_ALLOC, SHT_REL},
 };
-use scroll::{Endian, ctx::{TryIntoCtx, TryFromCtx}};
-use clap::{App, Arg, AppSettings};
+use scroll::{
+    ctx::{TryFromCtx, TryIntoCtx},
+    Endian,
+};
+use std::{collections::HashMap, fs, path::Path};
 
 const PRX_ELF_TYPE: u16 = 0xffa0;
 const PRX_SHT_REL: u32 = 0x700000A0;
@@ -20,20 +24,20 @@ fn main() {
             Arg::with_name("in_file.elf")
                 .takes_value(true)
                 .help("Input ELF file")
-                .required(true)
+                .required(true),
         )
         .arg(
             Arg::with_name("out_file.prx")
                 .takes_value(true)
                 .help("Output PRX file")
-                .required(true)
+                .required(true),
         )
         .arg(
             Arg::with_name("minfo")
                 .long("minfo")
                 .takes_value(true)
                 .default_value(".rodata.sceModuleInfo")
-                .help("Alternative name for .rodata.sceModuleInfo section")
+                .help("Alternative name for .rodata.sceModuleInfo section"),
         )
         .get_matches();
 
@@ -63,16 +67,13 @@ impl<'a> PrxGen<'a> {
     fn load<P: AsRef<Path>>(path: P, mod_info_sh_name: &'a str) -> Self {
         let bytes = fs::read(path).unwrap();
         let header = Header::parse(&bytes).unwrap();
-        let section_headers = SectionHeader::from_bytes(
-            &bytes[header.e_shoff as usize..],
-            header.e_shnum as usize,
-        );
-        let program_headers = ProgramHeader::from_bytes(
-            &bytes[header.e_phoff as usize..],
-            header.e_phnum as usize,
-        );
+        let section_headers =
+            SectionHeader::from_bytes(&bytes[header.e_shoff as usize..], header.e_shnum as usize);
+        let program_headers =
+            ProgramHeader::from_bytes(&bytes[header.e_phoff as usize..], header.e_phnum as usize);
 
-        let relocations = section_headers.iter()
+        let relocations = section_headers
+            .iter()
             .enumerate()
             .filter(|(_, sh)| sh.sh_type == SHT_REL)
             .map(|(i, sh)| {
@@ -81,9 +82,7 @@ impl<'a> PrxGen<'a> {
 
                 let relocs = (&bytes[start_idx..end_idx])
                     .chunks(8)
-                    .map(|rel_bytes| {
-                        Rel::try_from_ctx(rel_bytes, Endian::Little).unwrap().0
-                    })
+                    .map(|rel_bytes| Rel::try_from_ctx(rel_bytes, Endian::Little).unwrap().0)
                     .collect();
 
                 (i, relocs)
@@ -167,8 +166,11 @@ impl<'a> PrxGen<'a> {
         // and that the first segment is loaded at virtual address 0. Assertions
         // ensure this is the case.
         {
-            let load_segments = || self.program_headers.iter()
-                .filter(|ph| ph.p_type == PT_LOAD);
+            let load_segments = || {
+                self.program_headers
+                    .iter()
+                    .filter(|ph| ph.p_type == PT_LOAD)
+            };
 
             // First segment needs to be loaded to 0.
             assert_eq!(0, load_segments().next().unwrap().p_vaddr);
@@ -197,27 +199,34 @@ impl<'a> PrxGen<'a> {
         let mut bytes = self.elf_bytes;
 
         // Write header to buffer
-        self.header.try_into_ctx(&mut bytes, Endian::Little).unwrap();
+        self.header
+            .try_into_ctx(&mut bytes, Endian::Little)
+            .unwrap();
 
         // Write relocations to buffer
         for (i, rels) in self.relocations {
             let offset = self.section_headers[i].sh_offset as usize;
 
             for (j, rel) in rels.into_iter().enumerate() {
-                rel.try_into_ctx(&mut bytes[offset + j * 8..], Endian::Little).unwrap();
+                rel.try_into_ctx(&mut bytes[offset + j * 8..], Endian::Little)
+                    .unwrap();
             }
         }
 
         // Write section headers to buffer
         for (i, section_header) in self.section_headers.into_iter().enumerate() {
             let offset = self.header.e_shoff as usize + i * self.header.e_shentsize as usize;
-            section_header.try_into_ctx(&mut bytes[offset..], Endian::Little).unwrap();
+            section_header
+                .try_into_ctx(&mut bytes[offset..], Endian::Little)
+                .unwrap();
         }
 
         // Write program headers to buffer
         for (i, program_header) in self.program_headers.into_iter().enumerate() {
             let offset = self.header.e_phoff as usize + i * self.header.e_phentsize as usize;
-            program_header.try_into_ctx(&mut bytes[offset..], Endian::Little).unwrap();
+            program_header
+                .try_into_ctx(&mut bytes[offset..], Endian::Little)
+                .unwrap();
         }
 
         fs::write(output, bytes).unwrap();
