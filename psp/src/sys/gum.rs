@@ -1,12 +1,18 @@
-use core::{mem::MaybeUninit, ffi::c_void};
-use crate::vfpu_asm;
 use crate::sys::{
-    self, ScePspFMatrix4, ScePspFVector3, ScePspFVector4, MatrixMode,
+    self,
     vfpu_context::{Context, MatrixSet},
+    MatrixMode, ScePspFMatrix4, ScePspFVector3, ScePspFVector4,
 };
+use crate::vfpu_asm;
+use core::{ffi::c_void, mem::MaybeUninit};
 
 static mut MATRIX_STACK: [[ScePspFMatrix4; 32]; 4] = {
-    let zero_vector = ScePspFVector4 { x: 0.0, y: 0.0, z: 0.0, w: 0.0 };
+    let zero_vector = ScePspFVector4 {
+        x: 0.0,
+        y: 0.0,
+        z: 0.0,
+        w: 0.0,
+    };
     let zero_matrix = ScePspFMatrix4 {
         x: zero_vector,
         y: zero_vector,
@@ -15,15 +21,38 @@ static mut MATRIX_STACK: [[ScePspFMatrix4; 32]; 4] = {
     };
 
     let stack = [
-        zero_matrix, zero_matrix, zero_matrix, zero_matrix,
-        zero_matrix, zero_matrix, zero_matrix, zero_matrix,
-        zero_matrix, zero_matrix, zero_matrix, zero_matrix,
-        zero_matrix, zero_matrix, zero_matrix, zero_matrix,
-
-        zero_matrix, zero_matrix, zero_matrix, zero_matrix,
-        zero_matrix, zero_matrix, zero_matrix, zero_matrix,
-        zero_matrix, zero_matrix, zero_matrix, zero_matrix,
-        zero_matrix, zero_matrix, zero_matrix, zero_matrix,
+        zero_matrix,
+        zero_matrix,
+        zero_matrix,
+        zero_matrix,
+        zero_matrix,
+        zero_matrix,
+        zero_matrix,
+        zero_matrix,
+        zero_matrix,
+        zero_matrix,
+        zero_matrix,
+        zero_matrix,
+        zero_matrix,
+        zero_matrix,
+        zero_matrix,
+        zero_matrix,
+        zero_matrix,
+        zero_matrix,
+        zero_matrix,
+        zero_matrix,
+        zero_matrix,
+        zero_matrix,
+        zero_matrix,
+        zero_matrix,
+        zero_matrix,
+        zero_matrix,
+        zero_matrix,
+        zero_matrix,
+        zero_matrix,
+        zero_matrix,
+        zero_matrix,
+        zero_matrix,
     ];
 
     [stack, stack, stack, stack]
@@ -42,9 +71,8 @@ const unsafe fn matrix_ref_to_mut_ptr_hack(r: &'static ScePspFMatrix4) -> *mut S
     r as *const _ as _
 }
 
-static mut CURRENT_MATRIX: *mut ScePspFMatrix4 = unsafe {
-    matrix_ref_to_mut_ptr_hack(&MATRIX_STACK[MatrixMode::Projection as usize][0])
-};
+static mut CURRENT_MATRIX: *mut ScePspFMatrix4 =
+    unsafe { matrix_ref_to_mut_ptr_hack(&MATRIX_STACK[MatrixMode::Projection as usize][0]) };
 
 static mut CURRENT_MODE: MatrixMode = MatrixMode::Projection;
 static mut STACK_DEPTH: [*mut ScePspFMatrix4; 4] = unsafe {
@@ -183,10 +211,7 @@ pub unsafe extern "C" fn sceGumLoadIdentity() {
         .get_or_insert_with(Context::new)
         .prepare(MatrixSet::VMAT3, MatrixSet::empty());
 
-    vfpu_asm!(
-        "vmidt.q M300",
-        options(nostack, nomem),
-    );
+    vfpu_asm!("vmidt.q M300", options(nostack, nomem),);
 
     CURRENT_MATRIX_UPDATE = 1;
 }
@@ -217,7 +242,11 @@ pub unsafe extern "C" fn sceGumLoadMatrix(m: &ScePspFMatrix4) {
 
 #[allow(non_snake_case)]
 #[no_mangle]
-pub unsafe extern "C" fn sceGumLookAt(eye: &ScePspFVector3, center: &ScePspFVector3, up: &ScePspFVector3) {
+pub unsafe extern "C" fn sceGumLookAt(
+    eye: &ScePspFVector3,
+    center: &ScePspFVector3,
+    up: &ScePspFVector3,
+) {
     let mut t = gum_load_identity();
     gum_look_at(&mut t, eye, center, up);
 
@@ -309,7 +338,7 @@ pub unsafe extern "C" fn sceGumOrtho(
     bottom: f32,
     top: f32,
     near: f32,
-    far: f32
+    far: f32,
 ) {
     get_context_unchecked().prepare(MatrixSet::VMAT3, MatrixSet::VMAT0 | MatrixSet::VMAT1);
 

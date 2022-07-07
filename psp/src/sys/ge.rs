@@ -3,21 +3,21 @@ use core::ffi::c_void;
 /// Stores the state of the GE.
 #[repr(C)]
 pub struct GeContext {
-    pub context: [u32; 512]
+    pub context: [u32; 512],
 }
 
 #[repr(C)]
 /// Structure storing a stack (for CALL/RET)
 pub struct GeStack {
-    pub stack: [u32;8]
+    pub stack: [u32; 8],
 }
 
 #[repr(C)]
 /// Structure to hold the callback data
 pub struct GeCallbackData {
-    pub signal_func: Option<extern fn(id: i32, arg: *mut c_void)>,
+    pub signal_func: Option<extern "C" fn(id: i32, arg: *mut c_void)>,
     pub signal_arg: *mut c_void,
-    pub finish_func: Option<extern fn(id: i32, arg: *mut c_void)>,
+    pub finish_func: Option<extern "C" fn(id: i32, arg: *mut c_void)>,
     pub finish_arg: *mut c_void,
 }
 
@@ -30,13 +30,13 @@ pub struct GeListArgs {
 }
 
 impl Default for GeListArgs {
-   #[inline(always)]
+    #[inline(always)]
     fn default() -> Self {
         Self {
             size: 0,
             context: core::ptr::null_mut(),
             num_stacks: 0,
-            stacks: core::ptr::null_mut()
+            stacks: core::ptr::null_mut(),
         }
     }
 }
@@ -44,7 +44,7 @@ impl Default for GeListArgs {
 #[repr(C)]
 /// Drawing queue interruption parameter
 pub struct GeBreakParam {
-    pub buf: [u32;4]
+    pub buf: [u32; 4],
 }
 
 /// GE matrix types.
@@ -157,7 +157,7 @@ pub enum GeCommand {
     ReverseNormal = 0x51,
     MaterialUpdate = 0x53,
     MaterialEmissive = 0x54, // not sure about these but this makes sense
-    MaterialAmbient = 0x55, // gotta try enabling lighting and check :)
+    MaterialAmbient = 0x55,  // gotta try enabling lighting and check :)
     MaterialDiffuse = 0x56,
     MaterialSpecular = 0x57,
     MaterialAlpha = 0x58,

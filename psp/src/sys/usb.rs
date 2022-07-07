@@ -1,5 +1,5 @@
-use core::ffi::c_void;
 use crate::sys::SceUid;
+use core::ffi::c_void;
 
 /// For use with `sceUsbActivate` and `sceUsbDeactivate`.
 pub const USB_CAM_PID: i32 = 0x282;
@@ -242,15 +242,15 @@ pub struct UsbCamSetupVideoExParam {
 #[repr(i32)]
 #[derive(Copy, Clone, Debug)]
 pub enum UsbCamResolution {
-    Px160_120  = 0,
-    Px176_144  = 1,
-    Px320_240  = 2,
-    Px352_288  = 3,
-    Px640_480  = 4,
+    Px160_120 = 0,
+    Px176_144 = 1,
+    Px320_240 = 2,
+    Px352_288 = 3,
+    Px640_480 = 4,
     Px1024_768 = 5,
     Px1280_960 = 6,
-    Px480_272  = 7,
-    Px360_272  = 8,
+    Px480_272 = 7,
+    Px360_272 = 8,
 }
 
 /// Resolutions for `sceUsbCamSetupStillEx` & `sceUsbCamSetupVideoEx`
@@ -259,13 +259,13 @@ pub enum UsbCamResolution {
 #[derive(Copy, Clone, Debug)]
 #[repr(i32)]
 pub enum UsbCamResolutionEx {
-    Px160_120  = 0,
-    Px176_144  = 1,
-    Px320_240  = 2,
-    Px352_288  = 3,
-    Px360_272  = 4,
-    Px480_272  = 5,
-    Px640_480  = 6,
+    Px160_120 = 0,
+    Px176_144 = 1,
+    Px320_240 = 2,
+    Px352_288 = 3,
+    Px360_272 = 4,
+    Px480_272 = 5,
+    Px640_480 = 6,
     Px1024_768 = 7,
     Px1280_960 = 8,
 }

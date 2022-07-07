@@ -51,7 +51,6 @@ impl<'a> TestRunner<'a> {
         }
     }
 
-
     pub fn run<F: Fn(&mut TestRunner)>(&mut self, f: F) {
         f(self)
     }
@@ -180,7 +179,6 @@ impl<'a> TestRunner<'a> {
             TestRunnerMode::Dprintln => {
                 crate::dprintln!("{}", args);
             }
-
         }
     }
 
@@ -190,9 +188,7 @@ impl<'a> TestRunner<'a> {
                 close_psp_file(fd);
                 quit_game();
             }
-            TestRunnerMode::Dprintln => {
-                loop {}
-            }
+            TestRunnerMode::Dprintln => loop {},
         }
     }
 }
@@ -207,7 +203,8 @@ fn get_test_output_pipe() -> SceUid {
         if fd.0 < 0 {
             panic!(
                 "Unable to open pipe \"{}\" for output! \
-                You must create it yourself with `mkfifo`.", fd.0
+                You must create it yourself with `mkfifo`.",
+                fd.0
             );
         }
         return fd;

@@ -1,5 +1,5 @@
-use core::ffi::c_void;
 use crate::eabi::i5;
+use core::ffi::c_void;
 
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]

@@ -1,6 +1,6 @@
-use crate::sys::SceUid;
+use crate::eabi::{i6, i_ii_i_ri, i_ii_i_rii};
 use crate::sys::ScePspDateTime;
-use crate::eabi::{i6, i_ii_i_rii, i_ii_i_ri};
+use crate::sys::SceUid;
 use core::ffi::c_void;
 
 /// Describes a single directory entry

@@ -1,5 +1,5 @@
-use core::ffi::c_void;
 use crate::eabi::{i5, i6};
+use core::ffi::c_void;
 
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
@@ -1568,7 +1568,6 @@ psp_extern! {
         addr_len: *mut socklen_t,
     ) -> i32;
 }
-
 
 psp_extern! {
     #![name = "sceSsl"]

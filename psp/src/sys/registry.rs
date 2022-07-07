@@ -1,5 +1,5 @@
-use core::ffi::c_void;
 use crate::eabi::i5;
+use core::ffi::c_void;
 
 pub const SYSTEM_REGISTRY: [u8; 7] = *b"/system";
 pub const REG_KEYNAME_SIZE: u32 = 27;

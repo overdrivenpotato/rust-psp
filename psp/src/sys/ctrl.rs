@@ -61,7 +61,7 @@ pub enum CtrlMode {
     /// Digital.
     Digital = 0,
     /// Analog.
-    Analog
+    Analog,
 }
 
 #[repr(C)]

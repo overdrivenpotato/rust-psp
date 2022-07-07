@@ -1,6 +1,6 @@
-use alloc::alloc::{Layout, GlobalAlloc};
-use core::{ptr, mem};
-use crate::sys::{self, SceUid, SceSysMemPartitionId, SceSysMemBlockTypes};
+use crate::sys::{self, SceSysMemBlockTypes, SceSysMemPartitionId, SceUid};
+use alloc::alloc::{GlobalAlloc, Layout};
+use core::{mem, ptr};
 
 /// An allocator that hooks directly into the PSP OS memory allocator.
 struct SystemAlloc;
@@ -42,9 +42,7 @@ unsafe impl GlobalAlloc for SystemAlloc {
     unsafe fn dealloc(&self, ptr: *mut u8, _layout: Layout) {
         let align_padding = *ptr.sub(1);
 
-        let id = *ptr
-            .sub(align_padding as usize)
-            .cast::<SceUid>().offset(-1);
+        let id = *ptr.sub(align_padding as usize).cast::<SceUid>().offset(-1);
 
         // TODO: Error handling.
         sys::sceKernelFreePartitionMemory(id);
@@ -56,11 +54,13 @@ static ALLOC: SystemAlloc = SystemAlloc;
 
 #[cfg(not(feature = "std"))]
 #[alloc_error_handler]
-fn aeh(_: Layout) -> ! { loop {} }
+fn aeh(_: Layout) -> ! {
+    loop {}
+}
 
 #[no_mangle]
 #[cfg(not(feature = "stub-only"))]
-unsafe extern fn memset(ptr: *mut u8, value: u32, num: usize) -> *mut u8 {
+unsafe extern "C" fn memset(ptr: *mut u8, value: u32, num: usize) -> *mut u8 {
     let mut i = 0;
 
     while i < num {
@@ -73,7 +73,7 @@ unsafe extern fn memset(ptr: *mut u8, value: u32, num: usize) -> *mut u8 {
 
 #[no_mangle]
 #[cfg(not(feature = "stub-only"))]
-unsafe extern fn memcpy(dst: *mut u8, src: *const u8, num: isize) -> *mut u8 {
+unsafe extern "C" fn memcpy(dst: *mut u8, src: *const u8, num: isize) -> *mut u8 {
     let mut i = 0;
 
     while i < num {
@@ -86,7 +86,7 @@ unsafe extern fn memcpy(dst: *mut u8, src: *const u8, num: isize) -> *mut u8 {
 
 #[no_mangle]
 #[cfg(not(feature = "stub-only"))]
-unsafe extern fn memcmp(ptr1: *mut u8, ptr2: *mut u8, num: isize) -> i32 {
+unsafe extern "C" fn memcmp(ptr1: *mut u8, ptr2: *mut u8, num: isize) -> i32 {
     let mut i = 0;
 
     while i < num as i32 {
@@ -104,7 +104,7 @@ unsafe extern fn memcmp(ptr1: *mut u8, ptr2: *mut u8, num: isize) -> i32 {
 
 #[no_mangle]
 #[cfg(not(feature = "stub-only"))]
-unsafe extern fn memmove(dst: *mut u8, src: *mut u8, num: isize) -> *mut u8 {
+unsafe extern "C" fn memmove(dst: *mut u8, src: *mut u8, num: isize) -> *mut u8 {
     if dst < src {
         let mut i = 0;
 
@@ -126,7 +126,7 @@ unsafe extern fn memmove(dst: *mut u8, src: *mut u8, num: isize) -> *mut u8 {
 
 #[no_mangle]
 #[cfg(not(feature = "stub-only"))]
-unsafe extern fn strlen(s: *mut u8) -> usize {
+unsafe extern "C" fn strlen(s: *mut u8) -> usize {
     let mut len = 0;
 
     while *s.add(len) != 0 {

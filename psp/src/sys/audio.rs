@@ -27,7 +27,6 @@ pub struct AudioInputParams {
     pub unknown4: i32,
     /// Unknown. Pass 0
     pub unknown5: i32,
-
 }
 
 #[repr(i32)]
@@ -51,7 +50,7 @@ pub enum AudioInputFrequency {
 }
 
 /// Make the given sample count a multiple of 64.
-pub const fn audio_sample_align(sample_count:i32) -> i32 {
+pub const fn audio_sample_align(sample_count: i32) -> i32 {
     (sample_count + 63) & !63
 }
 
