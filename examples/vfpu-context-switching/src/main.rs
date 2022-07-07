@@ -8,7 +8,7 @@ psp::module!("vfpu_context_test", 1, 1);
 
 #[no_mangle]
 #[inline(never)]
-extern fn psp_main() {
+fn psp_main() {
     psp::enable_home_button();
     psp::dprintln!("Testing VFPU context switcher...");
 

@@ -1,5 +1,5 @@
-use std::{mem, path::Path, collections::HashMap};
 use goblin::elf::Elf;
+use std::{collections::HashMap, mem, path::Path};
 
 /// A stub library entry like the one found in the `psp` crate, but with types
 /// changed to be cross-platform.
@@ -23,7 +23,7 @@ struct SceStubLibraryEntry {
 /// completely stripped. This can happen with LTO, for example. Because of this,
 /// we need a way to write the stub count post-linking. This function does
 /// exactly this.
-pub fn fix<T: AsRef<Path>>(path: T) {
+pub fn fix(path: &Path) {
     let mut bytes = std::fs::read(&path).unwrap();
     let elf = Elf::parse(&bytes).unwrap();
 
@@ -36,7 +36,8 @@ pub fn fix<T: AsRef<Path>>(path: T) {
     };
 
     // Map of name -> section header
-    let sections = elf.section_headers
+    let sections = elf
+        .section_headers
         .iter()
         .map(|sh| {
             let name = shstrtab[sh.sh_name..]
@@ -60,10 +61,12 @@ pub fn fix<T: AsRef<Path>>(path: T) {
     // be stripped.
 
     // If we have .lib.stub, then .lib.stub.btm must exist.
-    let lib_stub_btm = sections.get(".lib.stub.btm")
+    let lib_stub_btm = sections
+        .get(".lib.stub.btm")
         .expect("could not find .lib.stub.btm section");
 
-    let rodata_sce_nid = sections.get(".rodata.sceNid")
+    let rodata_sce_nid = sections
+        .get(".rodata.sceNid")
         .expect("Could not find .rodata.sceNid section");
 
     let start = lib_stub.sh_offset as usize;
@@ -89,21 +92,16 @@ pub fn fix<T: AsRef<Path>>(path: T) {
     };
 
     // Iterator of mutable byte slices (of stub lib entries) in raw ELF binary.
-    let stub_entry_bufs = bytes[start..end]
-        .chunks_mut(mem::size_of::<SceStubLibraryEntry>());
+    let stub_entry_bufs = bytes[start..end].chunks_mut(mem::size_of::<SceStubLibraryEntry>());
 
     for (i, stub_entry_buf) in stub_entry_bufs.enumerate() {
         // A NID is a 32-bit value.
         const NID_SIZE: u32 = 4;
 
-        let mut stub: SceStubLibraryEntry = bincode::deserialize(stub_entry_buf)
-            .unwrap();
+        let mut stub: SceStubLibraryEntry = bincode::deserialize(stub_entry_buf).unwrap();
 
-        let nid_end = stubs_nid_sorted.get(
-                1 + stubs_nid_sorted.iter()
-                    .position(|&(j, _)| i == j)
-                    .unwrap()
-            )
+        let nid_end = stubs_nid_sorted
+            .get(1 + stubs_nid_sorted.iter().position(|&(j, _)| i == j).unwrap())
             .map(|(_, s)| s.nid_table)
             .unwrap_or(rodata_sce_nid.sh_addr as u32 + rodata_sce_nid.sh_size as u32);
 
