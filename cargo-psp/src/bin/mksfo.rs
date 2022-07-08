@@ -320,5 +320,5 @@ fn main() {
     }
     file.write_all(&keys[0..key_offset as usize]).unwrap();
     file.seek(SeekFrom::Start(aligned_val_offset as u64)).unwrap();
-    file.write(&data[0..data_offset as usize]).unwrap();
+    file.write_all(&data[0..data_offset as usize]).unwrap();
 }
