@@ -1,5 +1,5 @@
 use cargo_metadata::Message as CargoMessage;
-use rustc_version::{Version, Channel};
+use rustc_version::{Channel, Version};
 use std::{
     env, fmt, fs,
     io::ErrorKind,
@@ -224,7 +224,6 @@ fn main() {
         process::exit(status.code().unwrap_or(1));
     }
 
-
     // TODO: Error if no bin is ever found.
     for elf_path in executables {
         let prx_path = elf_path.with_extension("prx");
@@ -244,7 +243,11 @@ fn main() {
             ("-s", "DISC_ID", config.disc_id.clone()),
             ("-s", "DISC_VERSION", config.disc_version.clone()),
             ("-s", "LANGUAGE", config.language.clone()),
-            ("-d", "PARENTAL_LEVEL", config.parental_level.as_ref().map(u32::to_string)),
+            (
+                "-d",
+                "PARENTAL_LEVEL",
+                config.parental_level.as_ref().map(u32::to_string),
+            ),
             ("-s", "PSP_SYSTEM_VER", config.psp_system_ver.clone()),
             ("-d", "REGION", config.region.as_ref().map(u32::to_string)),
             ("-s", "TITLE_0", config.title_jp.clone()),
@@ -263,17 +266,19 @@ fn main() {
             .args({
                 config_args
                     .into_iter()
-
                     // Filter through all the values that are not `None`
                     .filter_map(|(f, k, v)| v.map(|v| (f, k, v)))
-
                     // Map into 2 arguments, e.g. "-s" "NAME=VALUE"
-                    .flat_map(|(flag, key, value)| vec![
-                        flag.into(),
-                        format!("{}={}", key, value),
-                    ])
+                    .flat_map(|(flag, key, value)| vec![flag.into(), format!("{}={}", key, value)])
             })
-            .arg(config.title.as_ref().map(|s| s.as_ref()).or_else(|| elf_path.file_stem()).unwrap())
+            .arg(
+                config
+                    .title
+                    .as_ref()
+                    .map(|s| s.as_ref())
+                    .or_else(|| elf_path.file_stem())
+                    .unwrap(),
+            )
             .arg(&sfo_path)
             .status()
             .expect("failed to run mksfo");
