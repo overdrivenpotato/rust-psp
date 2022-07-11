@@ -2348,7 +2348,6 @@ pub unsafe extern "C" fn sceGuLightSpot(
 #[no_mangle]
 pub unsafe extern "C" fn sceGuClear(flags: ClearBuffer) {
     let context = &mut CONTEXTS[CURR_CONTEXT as usize];
-    let filter: u32;
 
     struct Vertex {
         color: u32,
@@ -2358,18 +2357,18 @@ pub unsafe extern "C" fn sceGuClear(flags: ClearBuffer) {
         _pad: u16,
     }
 
-    match DRAW_BUFFER.pixel_size {
-        DisplayPixelFormat::Psm5650 => filter = context.clear_color & 0xffffff,
+    let filter: u32 = match DRAW_BUFFER.pixel_size {
+        DisplayPixelFormat::Psm5650 => context.clear_color & 0xffffff,
         DisplayPixelFormat::Psm5551 => {
-            filter = (context.clear_color & 0xffffff) | (context.clear_stencil << 31);
+            (context.clear_color & 0xffffff) | (context.clear_stencil << 31)
         }
         DisplayPixelFormat::Psm4444 => {
-            filter = (context.clear_color & 0xffffff) | (context.clear_stencil << 28);
+            (context.clear_color & 0xffffff) | (context.clear_stencil << 28)
         }
         DisplayPixelFormat::Psm8888 => {
-            filter = (context.clear_color & 0xffffff) | (context.clear_stencil << 24);
+            (context.clear_color & 0xffffff) | (context.clear_stencil << 24)
         }
-    }
+    };
 
     let vertices;
     let count;
@@ -3532,8 +3531,6 @@ pub unsafe extern "C" fn sceGuDebugPrint(x: i32, mut y: i32, mut color: u32, mut
     let mut cur_char: u8;
     let mut uVar1: u32;
     let iVar2: i32;
-    let uVar3: u32;
-    let iVar4: i32;
     let mut cur_x: i32;
     let mut char_struct_ptr: *mut DebugCharStruct =
         &mut CHAR_BUFFER as *mut _ as *mut DebugCharStruct;
@@ -3543,8 +3540,8 @@ pub unsafe extern "C" fn sceGuDebugPrint(x: i32, mut y: i32, mut color: u32, mut
         return;
     }
     uVar1 = color >> 8 & 0xff;
-    uVar3 = color >> 16 & 0xff;
-    iVar4 = (uVar3 >> 3) as i32;
+    let uVar3 = color >> 16 & 0xff;
+    let iVar4 = (uVar3 >> 3) as i32;
     cur_x = x;
     match DRAW_BUFFER.pixel_size {
         DisplayPixelFormat::Psm5650 => {
