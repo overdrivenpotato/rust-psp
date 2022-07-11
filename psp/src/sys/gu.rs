@@ -3552,35 +3552,35 @@ pub unsafe extern "C" fn sceGuDebugPrint(x: i32, mut y: i32, mut color: u32, mut
             uVar1 = (iVar4 as u32) << 0xb;
             uVar1 = (uVar1 | iVar2 as u32) << 5;
             color = (color & 0xff) >> 3;
-            color = uVar1 | color;
+            color |= uVar1;
         }
         DisplayPixelFormat::Psm5551 => {
             iVar2 = (uVar1 >> 3) as i32;
             uVar1 = (((color >> 24) >> 7) << 0xf | (iVar4 as u32) << 10) as u32;
             uVar1 = (uVar1 | iVar2 as u32) << 5;
             color = (color & 0xff) >> 3;
-            color = uVar1 | color;
+            color |= uVar1;
         }
         DisplayPixelFormat::Psm8888 => {}
         DisplayPixelFormat::Psm4444 => {
             uVar1 = ((color >> 0x18) >> 4) << 0xc | (uVar3 >> 4) << 8 | (uVar1 >> 4) << 4;
-            color = color & 0xff >> 4;
-            color = uVar1 | color;
+            color &= 0xff >> 4;
+            color |= uVar1;
         }
     }
     cur_char = *msg;
     while cur_char != b'\0' {
         if cur_char == b'\n' {
-            y = y + 8;
+            y += 8;
             cur_x = x;
         } else {
             (*char_struct_ptr).x = cur_x;
-            i = i + 1;
+            i += 1;
             (*char_struct_ptr).character = cur_char - 0x20;
             (*char_struct_ptr).y = y;
             (*char_struct_ptr).color = color;
             char_struct_ptr = (char_struct_ptr as u32 + 16) as *mut DebugCharStruct;
-            cur_x = cur_x + 8;
+            cur_x += 8;
         }
         msg = msg.add(1);
         cur_char = *msg;
@@ -3650,9 +3650,9 @@ pub unsafe extern "C" fn sceGuDebugFlush() {
                                 *((pos as u32 + 0x4000_0002) as *mut u16) = color as u16;
                             }
                         }
-                        x_pixel_counter = x_pixel_counter - 1;
-                        glyph_pos = glyph_pos << 1;
-                        pos = pos + 4;
+                        x_pixel_counter -= 1;
+                        glyph_pos <<= 1;
+                        pos += 4;
                         if !(-1 < x_pixel_counter) {
                             break;
                         }
@@ -3663,7 +3663,7 @@ pub unsafe extern "C" fn sceGuDebugFlush() {
                     }
                 }
             }
-            char_buffer_used = char_buffer_used - 1;
+            char_buffer_used -= 1;
             char_struct_ptr = ((char_struct_ptr as u32) + 16) as *mut DebugCharStruct;
             if char_buffer_used == 0 {
                 break;
