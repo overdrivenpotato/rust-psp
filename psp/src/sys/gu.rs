@@ -2190,7 +2190,7 @@ pub unsafe extern "C" fn sceGuDisable(state: GuState) {
             send_command_i(GeCommand::Scissor1, 0);
             send_command_i(
                 GeCommand::Scissor2,
-                ((DRAW_BUFFER.height - 1) << 10) | DRAW_BUFFER.width - 1,
+                ((DRAW_BUFFER.height - 1) << 10) | (DRAW_BUFFER.width - 1),
             );
         }
         GuState::StencilTest => send_command_i(GeCommand::StencilTestEnable, 0),
