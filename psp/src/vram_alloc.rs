@@ -56,6 +56,10 @@ impl VramMemChunk<'_> {
     pub fn len(&self) -> u32 {
         self.len
     }
+
+    pub fn is_empty(&self) -> bool {
+        self.len == 0
+    }
 }
 
 // A dead-simple VRAM bump allocator.
