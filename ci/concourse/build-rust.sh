@@ -19,6 +19,7 @@ if ! rustup component list --installed | grep -q rust-src; then
 fi
 
 # Test formatting
+rustup component add rustfmt
 pushd repo/
 cargo fmt --check
 status=$?
