@@ -181,7 +181,7 @@ macro_rules! psp_extern {
                     }
 
                     $(#[$attr])*
-                    #[allow(non_snake_case)]
+                    #[allow(non_snake_case, clippy::missing_safety_doc)]
                     #[no_mangle]
                     pub unsafe extern fn $name($($arg : $arg_ty),*) $(-> $ret)? {
                         #[cfg(target_os = "psp")]
