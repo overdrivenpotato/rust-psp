@@ -3625,12 +3625,10 @@ pub unsafe extern "C" fn sceGuDebugFlush() {
                         font_glyph =
                             *(((&FONT as *const _ as u32) + char_index as u32) as *const u32);
                         glyph_pos = 1;
-                    } else {
-                        if y_pixel_counter == 4 {
-                            font_glyph = *(((&FONT as *const _ as u32) + 4 + char_index as u32)
-                                as *const u32);
-                            glyph_pos = 1
-                        }
+                    } else if y_pixel_counter == 4 {
+                        font_glyph =
+                            *(((&FONT as *const _ as u32) + 4 + char_index as u32) as *const u32);
+                        glyph_pos = 1
                     }
                     x_pixel_counter = 7;
                     pos = x + (y + y_pixel_counter) * frame_width;
