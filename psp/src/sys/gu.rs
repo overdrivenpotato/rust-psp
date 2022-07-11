@@ -1025,7 +1025,7 @@ pub unsafe extern "C" fn sceGuDispBuffer(
         DRAW_BUFFER.height as usize,
     );
 
-    if DISPLAY_ON == true {
+    if DISPLAY_ON {
         crate::sys::sceDisplaySetFrameBuf(
             (GE_EDRAM_ADDRESS as *mut u8).add(DRAW_BUFFER.disp_buffer as usize),
             dispbw as usize,
