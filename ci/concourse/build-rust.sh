@@ -20,7 +20,7 @@ fi
 
 # Test formatting
 pushd repo/
-cargo fmt check
+cargo fmt --check
 status=$?
 if test $status -ne 0
     echo "Formatting errors: Please run cargo fmt on your changes"
