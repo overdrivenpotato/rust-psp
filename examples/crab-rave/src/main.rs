@@ -4,7 +4,7 @@
 use core::f32::consts::PI;
 
 use psp::{
-    math::{cosf32, sinf32},
+    math::{cosf, sinf},
     sys::{
         self, ClearBuffer, DepthFunc, DisplayPixelFormat, FrontFaceDirection, GuContextType,
         GuPrimitive, GuState, GuSyncBehavior, GuSyncMode, LightComponent, LightType::Pointlight,
@@ -46,7 +46,7 @@ fn psp_main() {
         sys::sceKernelChangeCurrentThreadAttr(0, sys::ThreadAttributes::VFPU);
         sys::sceKernelDcacheWritebackAll();
 
-        let mut allocator = get_vram_allocator().unwrap();
+        let allocator = get_vram_allocator().unwrap();
         let fbp0 = allocator
             .alloc_texture_pixels(BUF_WIDTH, SCREEN_HEIGHT, TexturePixelFormat::Psm8888)
             .as_mut_ptr_from_zero();
@@ -126,9 +126,9 @@ fn psp_main() {
 
             for i in 0..4 {
                 let pos = ScePspFVector3 {
-                    x: cosf32(i as f32 * (PI / 2.0) + val as f32 * (PI / 180.0)) * LIGHT_DISTANCE,
+                    x: cosf(i as f32 * (PI / 2.0) + val as f32 * (PI / 180.0)) * LIGHT_DISTANCE,
                     y: 25.0,
-                    z: (sinf32(i as f32 * (PI / 2.0) + val as f32 * (PI / 180.0)) * LIGHT_DISTANCE),
+                    z: (sinf(i as f32 * (PI / 2.0) + val as f32 * (PI / 180.0)) * LIGHT_DISTANCE),
                 };
                 sys::sceGuLight(
                     i,
@@ -141,11 +141,6 @@ fn psp_main() {
                 sys::sceGuLightAtt(i, 0.0, 0.66, 0.0);
             }
 
-            /*sys::sceGuSpecular(1000.0);
-            sys::sceGuSendCommandf(psp::sys::GeCommand::Light0Diffuse, 0.0);
-            sys::sceGuSendCommandf(psp::sys::GeCommand::Light1Diffuse, 0.0);
-            sys::sceGuSendCommandf(psp::sys::GeCommand::Light2Diffuse, 0.0);
-            sys::sceGuSendCommandf(psp::sys::GeCommand::Light3Diffuse, 0.0);*/
             sys::sceGuAmbient(0x0022_2222);
 
             sys::sceGumMatrixMode(MatrixMode::Projection);
