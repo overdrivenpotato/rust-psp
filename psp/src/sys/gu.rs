@@ -1187,9 +1187,7 @@ pub unsafe extern "C" fn sceGuDepthRange(mut near: i32, mut far: i32) {
     send_command_f(GeCommand::ViewportZCenter, z + context.depth_offset as f32);
 
     if near > far {
-        let temp = near;
-        near = far;
-        far = temp;
+        mem::swap(&mut near, &mut far);
     }
 
     send_command_i(GeCommand::MinZ, near);
