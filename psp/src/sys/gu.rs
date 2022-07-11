@@ -3650,12 +3650,12 @@ pub unsafe extern "C" fn sceGuDebugFlush() {
                         x_pixel_counter -= 1;
                         glyph_pos <<= 1;
                         pos += 4;
-                        if !(-1 < x_pixel_counter) {
+                        if x_pixel_counter <= -1 {
                             break;
                         }
                     }
                     y_pixel_counter += 1;
-                    if !(y_pixel_counter < 8) {
+                    if 8 <= y_pixel_counter {
                         break;
                     }
                 }
