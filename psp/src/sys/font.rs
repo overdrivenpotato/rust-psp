@@ -1,7 +1,7 @@
 //! PGF Font Library
 
-use core::ffi::c_void;
 use crate::sys::kernel::SceUid;
+use core::ffi::c_void;
 
 #[repr(u16)]
 #[derive(Debug, Copy, Clone)]
@@ -35,7 +35,7 @@ pub enum SceFontStyleCode {
 
 #[repr(u16)]
 #[derive(Debug, Copy, Clone)]
-pub enum SceFontLanguageCode { 
+pub enum SceFontLanguageCode {
     Default,
     Japanese,
     Latin,
@@ -117,23 +117,23 @@ pub struct SceFontGlyphImage {
 #[repr(C)]
 #[derive(Debug, Copy, Clone, Default)]
 pub struct SceFontCharInfo {
-   pub bitmap_width: u32,
-   pub bitmap_height: u32,
-   pub bitmap_left: u32,
-   pub bitmap_top: u32,
-   // Glyph metrics (in 26.6 signed fixed-point).
-   pub sfp26_width: u32,
-   pub sfp26_height: u32,
-   pub sfp26_ascender: i32,
-   pub sfp26_descender: i32,
-   pub sfp26_bearing_hx: i32,
-   pub sfp26_bearing_hy: i32,
-   pub sfp26_bearing_vx: i32,
-   pub sfp26_bearing_vy: i32,
-   pub sfp26_advance_h: i32,
-   pub sfp26_advance_v: i32,
-   pub shadow_flags: i16,
-   pub shadow_id: i16,
+    pub bitmap_width: u32,
+    pub bitmap_height: u32,
+    pub bitmap_left: u32,
+    pub bitmap_top: u32,
+    // Glyph metrics (in 26.6 signed fixed-point).
+    pub sfp26_width: u32,
+    pub sfp26_height: u32,
+    pub sfp26_ascender: i32,
+    pub sfp26_descender: i32,
+    pub sfp26_bearing_hx: i32,
+    pub sfp26_bearing_hy: i32,
+    pub sfp26_bearing_vx: i32,
+    pub sfp26_bearing_vy: i32,
+    pub sfp26_advance_h: i32,
+    pub sfp26_advance_v: i32,
+    pub shadow_flags: i16,
+    pub shadow_id: i16,
 }
 
 #[repr(C)]
@@ -169,18 +169,18 @@ pub struct SceFontInfo {
     pub num_glyphs: i32,
     /// Number of elements in the font's shadow charmap.
     pub shadow_map_length: i32,
-    
+
     /// Font style (used by font comparison functions).
     pub font_style: SceFontStyle,
     pub bpp: u8,
-    pub pad: [u8; 3]
+    pub pad: [u8; 3],
 }
 
 type UnknownFn = extern "C" fn();
 
 /// The library works with only num_fonts, alloc_func, and free_func set to
 /// non-null values so long as you don't load a font from a file.
-/// Function signatures reversed from 11 Eyes Crossover. 
+/// Function signatures reversed from 11 Eyes Crossover.
 #[repr(C)]
 #[derive(Copy, Clone)]
 pub struct SceFontNewLibParams {
@@ -191,13 +191,21 @@ pub struct SceFontNewLibParams {
     pub alloc_func: Option<extern "C" fn(unk_ptr: *mut c_void, amount: usize) -> *mut c_void>,
     pub free_func: Option<extern "C" fn(unk_ptr: *mut c_void, ptr: *mut c_void)>,
     /// Returns fd of opened file
-    pub open_func: Option<extern "C" fn(unk_ptr: *mut c_void, filename: *const u8, error_code: &mut SceFontErrorCode) -> SceUid>,
+    pub open_func: Option<
+        extern "C" fn(
+            unk_ptr: *mut c_void,
+            filename: *const u8,
+            error_code: &mut SceFontErrorCode,
+        ) -> SceUid,
+    >,
     /// Returns an SceFontErrorCode
     pub close_func: Option<extern "C" fn(unk_ptr: *mut c_void, fd: SceUid) -> SceFontErrorCode>,
     /// Returns number of "type"s read (ie bytes_read / type_size)
-    pub read_func: Option<extern "C" fn(unk_ptr: *mut c_void, data: *mut c_void, type_size: u32) -> u32>,
+    pub read_func:
+        Option<extern "C" fn(unk_ptr: *mut c_void, data: *mut c_void, type_size: u32) -> u32>,
     /// Returns an SceFontErrorCode
-    pub seek_func: Option<extern "C" fn (unk_ptr: *mut c_void, fd: SceUid, offset: i32) -> SceFontErrorCode>,
+    pub seek_func:
+        Option<extern "C" fn(unk_ptr: *mut c_void, fd: SceUid, offset: i32) -> SceFontErrorCode>,
     /// Unknown, pass None
     pub error_func: Option<UnknownFn>,
     /// Unknown, pass None
@@ -238,7 +246,7 @@ psp_extern! {
     pub fn sceFontFindOptimumFont(handle: u32, font_style: &SceFontStyle, error_code: &mut SceFontErrorCode) -> i32;
 
     #[psp(0x681E61A7)]
-    pub fn sceFontFindFont(handle: u32, font_style: &SceFontStyle, error_code: &mut SceFontErrorCode) -> i32; 
+    pub fn sceFontFindFont(handle: u32, font_style: &SceFontStyle, error_code: &mut SceFontErrorCode) -> i32;
 
     #[psp(0x0DA7535E)]
     pub fn sceFontGetFontInfo(handle: u32, font_info: &mut SceFontInfo) -> i32;

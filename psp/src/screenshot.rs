@@ -1,6 +1,6 @@
-use core::{ptr, ffi::c_void};
 use crate::sys::{self, DisplayPixelFormat};
-use crate::{SCREEN_WIDTH, SCREEN_HEIGHT};
+use crate::{SCREEN_HEIGHT, SCREEN_WIDTH};
+use core::{ffi::c_void, ptr};
 
 // RGBA
 const BYTES_PER_PIXEL: usize = 4;
@@ -31,9 +31,7 @@ impl BmpHeader {
     const BYTES: usize = core::mem::size_of::<Self>();
 
     fn to_bytes(self) -> [u8; Self::BYTES] {
-        unsafe {
-            core::mem::transmute(self)
-        }
+        unsafe { core::mem::transmute(self) }
     }
 }
 
@@ -110,7 +108,7 @@ pub fn screenshot_argb_be() -> alloc::vec::Vec<u32> {
                     };
 
                     rgba_to_bgra(rgba)
-                },
+                }
 
                 sys::DisplayPixelFormat::Psm5650 => {
                     let rgb565 = unsafe {
@@ -168,7 +166,7 @@ pub fn screenshot_bmp() -> alloc::vec::Vec<u8> {
         print_resolution_x: 2835, // 72 DPI
         print_resolution_y: 2835, // 72 DPI
         palette_color_count: 0,
-        important_colors: 0
+        important_colors: 0,
     };
 
     screenshot_buffer[0..BmpHeader::BYTES].copy_from_slice(&bmp_header.to_bytes());

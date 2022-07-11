@@ -1,5 +1,8 @@
+use crate::{
+    eabi::{i5, i6, i7},
+    sys,
+};
 use core::ffi::c_void;
-use crate::{sys, eabi::{i5, i6, i7}};
 
 /// A data handle used for various functions.
 ///
@@ -22,9 +25,8 @@ impl SceMpeg {
 pub struct SceMpegStream(*mut c_void);
 
 /// Ringbuffer callback.
-pub type SceMpegRingbufferCb = Option<
-    unsafe extern "C" fn(data: *mut c_void, num_packets: i32, param: *mut c_void) -> i32,
->;
+pub type SceMpegRingbufferCb =
+    Option<unsafe extern "C" fn(data: *mut c_void, num_packets: i32, param: *mut c_void) -> i32>;
 
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]

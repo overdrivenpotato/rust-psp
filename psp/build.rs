@@ -1,4 +1,4 @@
-use std::{env, path::Path, os::unix::prelude::OsStrExt};
+use std::{env, os::unix::prelude::OsStrExt, path::Path};
 
 fn main() {
     println!("cargo:rerun-if-changed=build.rs");

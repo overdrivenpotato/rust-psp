@@ -1,7 +1,7 @@
 use cargo_metadata::MetadataCommand;
-use rustc_version::{Version, Channel};
+use rustc_version::{Channel, Version};
 use std::{
-    env, fs, fmt,
+    env, fmt, fs,
     io::ErrorKind,
     process::{self, Command, Stdio},
 };
@@ -123,7 +123,11 @@ impl fmt::Display for CommitDate {
 // Minimum 2022-06-11, remember to update both commit date and version too,
 // below. Note that the `day` field lags by one day, as the toolchain always
 // contains the previous days' nightly rustc.
-const MINIMUM_COMMIT_DATE: CommitDate = CommitDate { year: 2022, month: 06, day: 10 };
+const MINIMUM_COMMIT_DATE: CommitDate = CommitDate {
+    year: 2022,
+    month: 06,
+    day: 10,
+};
 const MINIMUM_RUSTC_VERSION: Version = Version {
     major: 1,
     minor: 63,
@@ -144,16 +148,19 @@ fn main() {
         process::exit(1);
     }
 
-    let old_version = MINIMUM_RUSTC_VERSION > Version {
-        // Remove `-nightly` pre-release tag for comparison.
-        pre: Vec::new(),
-        ..rustc_version.semver.clone()
-    };
+    let old_version = MINIMUM_RUSTC_VERSION
+        > Version {
+            // Remove `-nightly` pre-release tag for comparison.
+            pre: Vec::new(),
+            ..rustc_version.semver.clone()
+        };
 
     let old_commit = match rustc_version.commit_date {
         None => false,
-        Some(date) => MINIMUM_COMMIT_DATE > CommitDate::parse(&date)
-            .expect("could not parse `rustc --version` commit date"),
+        Some(date) => {
+            MINIMUM_COMMIT_DATE
+                > CommitDate::parse(&date).expect("could not parse `rustc --version` commit date")
+        }
     };
 
     if old_version || old_commit {
@@ -161,9 +168,7 @@ fn main() {
             "cargo-psp requires rustc nightly version >= {}",
             MINIMUM_COMMIT_DATE,
         );
-        println!(
-            "Please run `rustup update nightly` to upgrade your nightly version"
-        );
+        println!("Please run `rustup update nightly` to upgrade your nightly version");
 
         process::exit(1);
     }
@@ -189,10 +194,8 @@ fn main() {
         Ok(_) => {
             eprintln!("[NOTE]: Detected RUST_PSP_BUILD_STD env var, using \"build-std\".");
             "build-std"
-        },
-        Err(_) => {
-            "build-std=core,compiler_builtins,alloc,panic_unwind,panic_abort"
-        },
+        }
+        Err(_) => "build-std=core,compiler_builtins,alloc,panic_unwind,panic_abort",
     };
 
     let mut process = Command::new("cargo")
@@ -262,7 +265,11 @@ fn main() {
                     ("-s", "DISC_ID", config.disc_id.clone()),
                     ("-s", "DISC_VERSION", config.disc_version.clone()),
                     ("-s", "LANGUAGE", config.language.clone()),
-                    ("-d", "PARENTAL_LEVEL", config.parental_level.as_ref().map(u32::to_string)),
+                    (
+                        "-d",
+                        "PARENTAL_LEVEL",
+                        config.parental_level.as_ref().map(u32::to_string),
+                    ),
                     ("-s", "PSP_SYSTEM_VER", config.psp_system_ver.clone()),
                     ("-d", "REGION", config.region.as_ref().map(u32::to_string)),
                     ("-s", "TITLE_0", config.title_jp.clone()),
@@ -281,15 +288,12 @@ fn main() {
                     .args({
                         config_args
                             .into_iter()
-
                             // Filter through all the values that are not `None`
                             .filter_map(|(f, k, v)| v.map(|v| (f, k, v)))
-
                             // Map into 2 arguments, e.g. "-s" "NAME=VALUE"
-                            .flat_map(|(flag, key, value)| vec![
-                                flag.into(),
-                                format!("{}={}", key, value),
-                            ])
+                            .flat_map(|(flag, key, value)| {
+                                vec![flag.into(), format!("{}={}", key, value)]
+                            })
                     })
                     .arg(config.title.clone().unwrap_or(target.name))
                     .arg(&sfo_path)

@@ -1,5 +1,5 @@
 use crate::eabi::i5;
-use core::{fmt, ffi::c_void};
+use core::{ffi::c_void, fmt};
 
 mod thread;
 pub use thread::*;
@@ -470,22 +470,22 @@ psp_extern! {
 
 #[repr(packed, C)]
 pub struct IntrHandlerOptionParam {
-    size: i32,               //+00
-    entry: u32,              //+04
-    common: u32,             //+08
-    gp: u32,                 //+0C
-    intr_code: u16,          //+10
-    sub_count: u16,          //+12
-    intr_level: u16,         //+14
-    enabled: u16,            //+16
-    calls: u32,              //+18
-    field_1c: u32,           //+1C
-    total_clock_lo: u32,     //+20
-    total_clock_hi: u32,     //+24
-    min_clock_lo: u32,       //+28
-    min_clock_hi: u32,       //+2C
-    max_clock_lo: u32,       //+30
-    max_clock_hi: u32,       //+34
+    size: i32,           //+00
+    entry: u32,          //+04
+    common: u32,         //+08
+    gp: u32,             //+0C
+    intr_code: u16,      //+10
+    sub_count: u16,      //+12
+    intr_level: u16,     //+14
+    enabled: u16,        //+16
+    calls: u32,          //+18
+    field_1c: u32,       //+1C
+    total_clock_lo: u32, //+20
+    total_clock_hi: u32, //+24
+    min_clock_lo: u32,   //+28
+    min_clock_hi: u32,   //+2C
+    max_clock_lo: u32,   //+30
+    max_clock_hi: u32,   //+34
 } //=38
 
 #[repr(u32)]
@@ -521,34 +521,38 @@ pub enum Interrupt {
 #[cfg(not(feature = "stub-only"))]
 impl fmt::Display for Interrupt {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        core::write!(f, "{}", match self {
-            Self::Gpio => "GPIO",
-            Self::Ata => "ATA_ATAPI",
-            Self::Umd => "UmdMan",
-            Self::Mscm0 => "MScmNone",
-            Self::Wlan => "Wlan",
-            Self::Audio => "Audio",
-            Self::I2c => "I2C",
-            Self::Sircs => "SIRCS_IrDA",
-            Self::Systimer0 => "SystimerNone",
-            Self::Systimer1 => "Systimer1",
-            Self::Systimer2 => "Systimer2",
-            Self::Systimer3 => "Systimer3",
-            Self::Thread0 => "ThreadNone",
-            Self::Nand => "NAND",
-            Self::Dmacplus => "DMACPLUS",
-            Self::Dma0 => "DMANone",
-            Self::Dma1 => "DMA1",
-            Self::Memlmd => "Memlmd",
-            Self::Ge => "GE",
-            Self::Vblank => "Display",
-            Self::Mecodec => "MeCodec",
-            Self::Hpremote => "HP_Remote",
-            Self::Mscm1 => "MScm1",
-            Self::Mscm2 => "MScm2",
-            Self::Thread1 => "Thread1",
-            Self::Interrupt => "Interrupt",
-        })
+        core::write!(
+            f,
+            "{}",
+            match self {
+                Self::Gpio => "GPIO",
+                Self::Ata => "ATA_ATAPI",
+                Self::Umd => "UmdMan",
+                Self::Mscm0 => "MScmNone",
+                Self::Wlan => "Wlan",
+                Self::Audio => "Audio",
+                Self::I2c => "I2C",
+                Self::Sircs => "SIRCS_IrDA",
+                Self::Systimer0 => "SystimerNone",
+                Self::Systimer1 => "Systimer1",
+                Self::Systimer2 => "Systimer2",
+                Self::Systimer3 => "Systimer3",
+                Self::Thread0 => "ThreadNone",
+                Self::Nand => "NAND",
+                Self::Dmacplus => "DMACPLUS",
+                Self::Dma0 => "DMANone",
+                Self::Dma1 => "DMA1",
+                Self::Memlmd => "Memlmd",
+                Self::Ge => "GE",
+                Self::Vblank => "Display",
+                Self::Mecodec => "MeCodec",
+                Self::Hpremote => "HP_Remote",
+                Self::Mscm1 => "MScm1",
+                Self::Mscm2 => "MScm2",
+                Self::Thread1 => "Thread1",
+                Self::Interrupt => "Interrupt",
+            }
+        )
     }
 }
 

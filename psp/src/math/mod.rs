@@ -1,19 +1,13 @@
 #[no_mangle]
-pub unsafe extern "C" fn fminf(
-    x: f32,
-    y: f32,
-) -> f32 {
+pub unsafe extern "C" fn fminf(x: f32, y: f32) -> f32 {
     let out: f32;
     if x.is_nan() && !y.is_nan() {
         out = y;
-    }
-    else if y.is_nan() && !x.is_nan() {
+    } else if y.is_nan() && !x.is_nan() {
         out = x;
-    }
-    else if x.is_nan() && y.is_nan() {
+    } else if x.is_nan() && y.is_nan() {
         out = core::f32::NAN;
-    }
-    else {
+    } else {
         vfpu_asm! (
             "mfc1 {tmp1}, {x}",
             "mfc1 {tmp2}, {y}",
@@ -35,21 +29,15 @@ pub unsafe extern "C" fn fminf(
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn fmaxf(
-    x: f32,
-    y: f32,
-) -> f32 {
+pub unsafe extern "C" fn fmaxf(x: f32, y: f32) -> f32 {
     let out: f32;
     if x.is_nan() && !y.is_nan() {
         out = y;
-    }
-    else if y.is_nan() && !x.is_nan() {
+    } else if y.is_nan() && !x.is_nan() {
         out = x;
-    }
-    else if x.is_nan() && y.is_nan() {
+    } else if x.is_nan() && y.is_nan() {
         out = core::f32::NAN;
-    }
-    else {
+    } else {
         vfpu_asm! (
             "mfc1 {tmp1}, {x}",
             "mfc1 {tmp2}, {y}",
@@ -71,9 +59,7 @@ pub unsafe extern "C" fn fmaxf(
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn cosf(
-    scalar: f32
-) -> f32 {
+pub unsafe extern "C" fn cosf(scalar: f32) -> f32 {
     let out: f32;
     vfpu_asm! (
         "mfc1 {tmp}, {scalar}",
@@ -93,9 +79,7 @@ pub unsafe extern "C" fn cosf(
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn sinf(
-    scalar: f32
-) -> f32 {
+pub unsafe extern "C" fn sinf(scalar: f32) -> f32 {
     let out: f32;
     vfpu_asm! (
         "mfc1 {tmp}, {scalar}",

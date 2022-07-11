@@ -1,5 +1,5 @@
-use num_enum::TryFromPrimitive;
 use core::ffi::c_void;
+use num_enum::TryFromPrimitive;
 
 #[repr(u32)]
 /// Display mode.
@@ -8,7 +8,6 @@ use core::ffi::c_void;
 pub enum DisplayMode {
     // https://github.com/hrydgard/ppsspp/blob/25197451e5cdb1b83dc69fea14c501bdb1e13b1a/Core/HLE/sceDisplay.cpp#L922
     Lcd = 0,
-
     // TODO: What are the other modes?
 }
 

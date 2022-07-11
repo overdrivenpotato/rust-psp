@@ -1,12 +1,12 @@
-use core::{mem, ffi::c_void, ptr::null_mut};
-use num_enum::TryFromPrimitive;
 use crate::sys::{
     self,
-    ge::{GeContext, GeListArgs, GeCommand, GeListState, GeBreakParam},
-    kernel::SceUid,
     display::DisplayPixelFormat,
+    ge::{GeBreakParam, GeCommand, GeContext, GeListArgs, GeListState},
+    kernel::SceUid,
     types::{ScePspFMatrix4, ScePspFVector3, ScePspIMatrix4, ScePspIVector4},
 };
+use core::{ffi::c_void, mem, ptr::null_mut};
+use num_enum::TryFromPrimitive;
 
 pub const GU_PI: f32 = 3.141593;
 
@@ -569,10 +569,7 @@ pub enum SignalBehavior {
 /// Map 8-bit color channels into one 32-bit value.
 #[inline]
 pub const fn abgr(a: u8, b: u8, g: u8, r: u8) -> u32 {
-    (r as u32)
-    | ((g as u32) << 8)
-    | ((b as u32) << 16)
-    | ((a as u32) << 24)
+    (r as u32) | ((g as u32) << 8) | ((b as u32) << 16) | ((a as u32) << 24)
 }
 
 /// Map 8-bit color channels into one 32-bit value.
@@ -598,8 +595,9 @@ pub fn color(r: f32, g: f32, b: f32, a: f32) -> u32 {
     )
 }
 
-pub type GuCallback = Option<extern fn(id: i32, arg: *mut c_void)>;
-pub type GuSwapBuffersCallback = Option<extern fn(display: *mut *mut c_void, render: *mut *mut c_void)>;
+pub type GuCallback = Option<extern "C" fn(id: i32, arg: *mut c_void)>;
+pub type GuSwapBuffersCallback =
+    Option<extern "C" fn(display: *mut *mut c_void, render: *mut *mut c_void)>;
 
 struct Settings {
     sig: GuCallback,
@@ -876,16 +874,16 @@ unsafe fn send_command_f(cmd: GeCommand, argument: f32) {
 unsafe fn send_command_i_stall(cmd: GeCommand, argument: i32) {
     send_command_i(cmd, argument);
     if let (GuContextType::Direct, 0) = (CURR_CONTEXT, OBJECT_STACK_DEPTH) {
-        crate::sys::sceGeListUpdateStallAddr(
-            GE_LIST_EXECUTED[0],
-            (*LIST).current as *mut c_void,
-        );
+        crate::sys::sceGeListUpdateStallAddr(GE_LIST_EXECUTED[0], (*LIST).current as *mut c_void);
     }
 }
 
 unsafe fn draw_region(x: i32, y: i32, width: i32, height: i32) {
     send_command_i(GeCommand::Region1, (y << 10) | x);
-    send_command_i(GeCommand::Region2, (((y + height) - 1) << 10) | ((x + width) - 1));
+    send_command_i(
+        GeCommand::Region2,
+        (((y + height) - 1) << 10) | ((x + width) - 1),
+    );
 }
 
 unsafe fn reset_values() {
@@ -986,7 +984,10 @@ pub unsafe extern "C" fn sceGuDepthBuffer(zbp: *mut c_void, zbw: i32) {
     }
 
     send_command_i(GeCommand::ZBufPtr, zbp as i32 & 0xffffff);
-    send_command_i(GeCommand::ZBufWidth, (((zbp as u32 & 0xff000000) >> 8) | zbw as u32) as i32);
+    send_command_i(
+        GeCommand::ZBufWidth,
+        (((zbp as u32 & 0xff000000) >> 8) | zbw as u32) as i32,
+    );
 }
 
 /// Set display buffer parameters
@@ -999,7 +1000,12 @@ pub unsafe extern "C" fn sceGuDepthBuffer(zbp: *mut c_void, zbw: i32) {
 /// - `dispbw`: Display buffer width (block aligned)
 #[allow(non_snake_case)]
 #[no_mangle]
-pub unsafe extern "C" fn sceGuDispBuffer(width: i32, height: i32, dispbp: *mut c_void, dispbw: i32) {
+pub unsafe extern "C" fn sceGuDispBuffer(
+    width: i32,
+    height: i32,
+    dispbp: *mut c_void,
+    dispbw: i32,
+) {
     use crate::sys::DisplaySetBufSync;
 
     DRAW_BUFFER.width = width;
@@ -1052,13 +1058,19 @@ pub unsafe extern "C" fn sceGuDrawBuffer(psm: DisplayPixelFormat, fbp: *mut c_vo
     }
 
     send_command_i(GeCommand::FramebufPixFormat, psm as i32);
-    send_command_i(GeCommand::FrameBufPtr, DRAW_BUFFER.frame_buffer as i32 & 0xffffff);
+    send_command_i(
+        GeCommand::FrameBufPtr,
+        DRAW_BUFFER.frame_buffer as i32 & 0xffffff,
+    );
     send_command_i(
         GeCommand::FrameBufWidth,
         ((DRAW_BUFFER.frame_buffer as u32 & 0xff000000) >> 8) as i32
             | DRAW_BUFFER.frame_width as i32,
     );
-    send_command_i(GeCommand::ZBufPtr, DRAW_BUFFER.depth_buffer as i32 & 0xffffff);
+    send_command_i(
+        GeCommand::ZBufPtr,
+        DRAW_BUFFER.depth_buffer as i32 & 0xffffff,
+    );
     send_command_i(
         GeCommand::ZBufWidth,
         ((DRAW_BUFFER.depth_buffer as u32 & 0xff000000) >> 8) as i32
@@ -1078,7 +1090,10 @@ pub unsafe extern "C" fn sceGuDrawBuffer(psm: DisplayPixelFormat, fbp: *mut c_vo
 pub unsafe extern "C" fn sceGuDrawBufferList(psm: DisplayPixelFormat, fbp: *mut c_void, fbw: i32) {
     send_command_i(GeCommand::FramebufPixFormat, psm as i32);
     send_command_i(GeCommand::FrameBufPtr, fbp as i32 & 0xffffff);
-    send_command_i(GeCommand::FrameBufWidth, ((fbp as u32 & 0xff000000) >> 8) as i32 | fbw);
+    send_command_i(
+        GeCommand::FrameBufWidth,
+        ((fbp as u32 & 0xff000000) >> 8) as i32 | fbw,
+    );
 }
 
 /// Turn display on or off
@@ -1455,7 +1470,7 @@ pub unsafe extern "C" fn sceGuInit() {
         (&INIT_LIST as *const _ as u32 & 0x1fffffff) as *const _,
         core::ptr::null_mut(),
         SETTINGS.ge_callback_id as i32,
-        core::ptr::null_mut()
+        core::ptr::null_mut(),
     );
 
     reset_values();
@@ -1464,7 +1479,7 @@ pub unsafe extern "C" fn sceGuInit() {
         b"SceGuSignal\0" as *const u8,
         super::kernel::EventFlagAttributes::WAIT_MULTIPLE,
         3,
-        null_mut()
+        null_mut(),
     );
 
     sys::sceGeListSync(GE_LIST_EXECUTED[0], 0);
@@ -1486,9 +1501,7 @@ pub unsafe extern "C" fn sceGuTerm() {
 #[allow(non_snake_case)]
 #[no_mangle]
 pub unsafe extern "C" fn sceGuBreak(mode: i32) {
-    static mut UNUSED_BREAK: GeBreakParam = GeBreakParam {
-        buf: [0; 4],
-    };
+    static mut UNUSED_BREAK: GeBreakParam = GeBreakParam { buf: [0; 4] };
 
     sys::sceGeBreak(mode, &mut UNUSED_BREAK);
 }
@@ -1544,7 +1557,10 @@ pub unsafe extern "C" fn sceGuSetCallback(
 #[allow(non_snake_case)]
 #[no_mangle]
 pub unsafe extern "C" fn sceGuSignal(behavior: SignalBehavior, signal: i32) {
-    send_command_i(GeCommand::Signal, ((signal & 0xff) << 16) | (behavior as i32 & 0xffff));
+    send_command_i(
+        GeCommand::Signal,
+        ((signal & 0xff) << 16) | (behavior as i32 & 0xffff),
+    );
     send_command_i(GeCommand::End, 0);
 
     if signal == 3 {
@@ -1659,10 +1675,30 @@ pub unsafe extern "C" fn sceGuStart(context_type: GuContextType, list: *mut c_vo
 
     if INIT == 0 {
         static DITHER_MATRIX: ScePspIMatrix4 = ScePspIMatrix4 {
-            x: ScePspIVector4 { x: -4, y:  0, z: -3, w:  1, },
-            y: ScePspIVector4 { x:  2, y: -2, z:  3, w: -1, },
-            z: ScePspIVector4 { x: -3, y:  1, z: -4, w:  0, },
-            w: ScePspIVector4 { x:  3, y: -1, z:  2, w: -2, },
+            x: ScePspIVector4 {
+                x: -4,
+                y: 0,
+                z: -3,
+                w: 1,
+            },
+            y: ScePspIVector4 {
+                x: 2,
+                y: -2,
+                z: 3,
+                w: -1,
+            },
+            z: ScePspIVector4 {
+                x: -3,
+                y: 1,
+                z: -4,
+                w: 0,
+            },
+            w: ScePspIVector4 {
+                x: 3,
+                y: -1,
+                z: 2,
+                w: -2,
+            },
         };
 
         sceGuSetDither(&DITHER_MATRIX);
@@ -1679,7 +1715,10 @@ pub unsafe extern "C" fn sceGuStart(context_type: GuContextType, list: *mut c_vo
 
     if let GuContextType::Direct = CURR_CONTEXT {
         if DRAW_BUFFER.frame_width != 0 {
-            send_command_i(GeCommand::FrameBufPtr, DRAW_BUFFER.frame_buffer as i32 & 0xffffff);
+            send_command_i(
+                GeCommand::FrameBufPtr,
+                DRAW_BUFFER.frame_buffer as i32 & 0xffffff,
+            );
             send_command_i(
                 GeCommand::FrameBufWidth,
                 ((DRAW_BUFFER.frame_buffer as u32 & 0xff00_0000) >> 8) as i32
@@ -1826,7 +1865,11 @@ pub unsafe extern "C" fn sceGuCheckList() -> i32 {
 /// - `context`: Temporary storage for the GE context
 #[allow(non_snake_case)]
 #[no_mangle]
-pub unsafe extern "C" fn sceGuSendList(mode: GuQueueMode, list: *const c_void, context: *mut GeContext) {
+pub unsafe extern "C" fn sceGuSendList(
+    mode: GuQueueMode,
+    list: *const c_void,
+    context: *mut GeContext,
+) {
     SETTINGS.signal_offset = 0;
 
     let mut args = GeListArgs::default();
@@ -1837,12 +1880,7 @@ pub unsafe extern "C" fn sceGuSendList(mode: GuQueueMode, list: *const c_void, c
 
     let list_id = match mode {
         GuQueueMode::Head => {
-            crate::sys::sceGeListEnQueueHead(
-                list,
-                null_mut(),
-                callback as i32,
-                &mut args,
-            )
+            crate::sys::sceGeListEnQueueHead(list, null_mut(), callback as i32, &mut args)
         }
 
         GuQueueMode::Tail => {
@@ -2100,7 +2138,10 @@ pub unsafe extern "C" fn sceGuEnable(state: GuState) {
                 GeCommand::Scissor1,
                 (context.scissor_start[1] << 10) | context.scissor_start[0],
             );
-            send_command_i(GeCommand::Scissor2, (context.scissor_end[1] << 10) | context.scissor_end[0]);
+            send_command_i(
+                GeCommand::Scissor2,
+                (context.scissor_end[1] << 10) | context.scissor_end[0],
+            );
         }
         GuState::StencilTest => send_command_i(GeCommand::StencilTestEnable, 1),
         GuState::Blend => send_command_i(GeCommand::AlphaBlendEnable, 1),
@@ -2210,10 +2251,7 @@ pub unsafe extern "C" fn sceGuLight(
         kind = if components.bits() ^ 6 < 1 { 1 } else { 0 };
     }
 
-    send_command_i(
-        settings.type_,
-        ((type_ as i32 & 0x03) << 8) | kind,
-    );
+    send_command_i(settings.type_, ((type_ as i32 & 0x03) << 8) | kind);
 }
 
 /// Set light attenuation
@@ -2284,7 +2322,12 @@ pub unsafe extern "C" fn sceGuLightMode(mode: LightMode) {
 /// - `cutoff`: Spotlight cutoff angle (in radians)
 #[allow(non_snake_case)]
 #[no_mangle]
-pub unsafe extern "C" fn sceGuLightSpot(light: i32, direction: &ScePspFVector3, exponent: f32, cutoff: f32) {
+pub unsafe extern "C" fn sceGuLightSpot(
+    light: i32,
+    direction: &ScePspFVector3,
+    exponent: f32,
+    cutoff: f32,
+) {
     let settings = &LIGHT_COMMANDS[light as usize];
 
     send_command_f(settings.exponent, exponent);
@@ -2363,11 +2406,10 @@ pub unsafe extern "C" fn sceGuClear(flags: ClearBuffer) {
     }
 
     {
-        let relevant_flags = flags & (
-            ClearBuffer::COLOR_BUFFER_BIT
-            | ClearBuffer::STENCIL_BUFFER_BIT
-            | ClearBuffer::DEPTH_BUFFER_BIT
-        );
+        let relevant_flags = flags
+            & (ClearBuffer::COLOR_BUFFER_BIT
+                | ClearBuffer::STENCIL_BUFFER_BIT
+                | ClearBuffer::DEPTH_BUFFER_BIT);
 
         send_command_i(
             GeCommand::ClearMode,
@@ -2661,33 +2703,33 @@ pub unsafe extern "C" fn sceGuSetDither(matrix: &ScePspIMatrix4) {
     send_command_i(
         GeCommand::Dith0,
         (matrix.x.x & 0x0f)
-        | ((matrix.x.y & 0x0f) << 4)
-        | ((matrix.x.z & 0x0f) << 8)
-        | ((matrix.x.w & 0x0f) << 12),
+            | ((matrix.x.y & 0x0f) << 4)
+            | ((matrix.x.z & 0x0f) << 8)
+            | ((matrix.x.w & 0x0f) << 12),
     );
 
     send_command_i(
         GeCommand::Dith1,
         (matrix.y.x & 0x0f)
-        | ((matrix.y.y & 0x0f) << 4)
-        | ((matrix.y.z & 0x0f) << 8)
-        | ((matrix.y.w & 0x0f) << 12),
+            | ((matrix.y.y & 0x0f) << 4)
+            | ((matrix.y.z & 0x0f) << 8)
+            | ((matrix.y.w & 0x0f) << 12),
     );
 
     send_command_i(
         GeCommand::Dith2,
         (matrix.z.x & 0x0f)
-        | ((matrix.z.y & 0x0f) << 4)
-        | ((matrix.z.z & 0x0f) << 8)
-        | ((matrix.z.w & 0x0f) << 12),
+            | ((matrix.z.y & 0x0f) << 4)
+            | ((matrix.z.z & 0x0f) << 8)
+            | ((matrix.z.w & 0x0f) << 12),
     );
 
     send_command_i(
         GeCommand::Dith3,
         (matrix.w.x & 0x0f)
-        | ((matrix.w.y & 0x0f) << 4)
-        | ((matrix.w.z & 0x0f) << 8)
-        | ((matrix.w.w & 0x0f) << 12),
+            | ((matrix.w.y & 0x0f) << 4)
+            | ((matrix.w.z & 0x0f) << 8)
+            | ((matrix.w.w & 0x0f) << 12),
     );
 }
 
@@ -2862,7 +2904,13 @@ pub unsafe extern "C" fn sceGuTexFunc(tfx: TextureEffect, tcc: TextureColorCompo
 /// horizontally.
 #[allow(non_snake_case)]
 #[no_mangle]
-pub unsafe extern "C" fn sceGuTexImage(mipmap: MipmapLevel, width: i32, height: i32, tbw: i32, tbp: *const c_void) {
+pub unsafe extern "C" fn sceGuTexImage(
+    mipmap: MipmapLevel,
+    width: i32,
+    height: i32,
+    tbw: i32,
+    tbp: *const c_void,
+) {
     use core::intrinsics::ctlz;
 
     const TBP_CMD_TBL: [GeCommand; 8] = [
@@ -2898,10 +2946,7 @@ pub unsafe extern "C" fn sceGuTexImage(mipmap: MipmapLevel, width: i32, height: 
         GeCommand::TexSize7,
     ];
 
-    send_command_i(
-        TBP_CMD_TBL[mipmap as usize],
-        (tbp as i32) & 0xffffff,
-    );
+    send_command_i(TBP_CMD_TBL[mipmap as usize], (tbp as i32) & 0xffffff);
     send_command_i(
         TBW_CMD_TBL[mipmap as usize],
         ((tbp as u32 >> 8) as i32 & 0x0f0000) | tbw as i32,
@@ -2926,7 +2971,7 @@ pub unsafe extern "C" fn sceGuTexLevelMode(mode: TextureLevelMode, bias: f32) {
     #[no_mangle]
     #[cfg(target_os = "psp")]
     #[allow(deprecated)]
-    unsafe extern fn truncf(mut x: f32) -> f32 {
+    unsafe extern "C" fn truncf(mut x: f32) -> f32 {
         core::arch::asm!("cvt.w.s {0}, {0}", inout(freg) x);
         x
     }
@@ -2975,13 +3020,15 @@ pub unsafe extern "C" fn sceGuTexMapMode(mode: TextureMapMode, a1: u32, a2: u32)
 //       of type `MipmapLevel`?
 #[allow(non_snake_case)]
 #[no_mangle]
-pub unsafe extern "C" fn sceGuTexMode(tpsm: TexturePixelFormat, maxmips: i32, a2: i32, swizzle: i32) {
+pub unsafe extern "C" fn sceGuTexMode(
+    tpsm: TexturePixelFormat,
+    maxmips: i32,
+    a2: i32,
+    swizzle: i32,
+) {
     CONTEXTS[CURR_CONTEXT as usize].texture_mode = tpsm;
 
-    send_command_i(
-        GeCommand::TexMode,
-        (maxmips << 16) | (a2 << 8) | swizzle,
-    );
+    send_command_i(GeCommand::TexMode, (maxmips << 16) | (a2 << 8) | swizzle);
 
     send_command_i(GeCommand::TexFormat, tpsm as i32);
     sceGuTexFlush();
@@ -3083,7 +3130,10 @@ pub unsafe extern "C" fn sceGuTexWrap(u: GuTexWrapMode, v: GuTexWrapMode) {
 #[no_mangle]
 pub unsafe extern "C" fn sceGuClutLoad(num_blocks: i32, cbp: *const c_void) {
     send_command_i(GeCommand::ClutAddr, (cbp as i32) & 0xffffff);
-    send_command_i(GeCommand::ClutAddrUpper, ((cbp as u32) >> 8) as i32 & 0xf0000);
+    send_command_i(
+        GeCommand::ClutAddrUpper,
+        ((cbp as u32) >> 8) as i32 & 0xf0000,
+    );
     send_command_i(GeCommand::LoadClut, num_blocks);
 }
 
@@ -3166,7 +3216,10 @@ pub unsafe extern "C" fn sceGuScissor(x: i32, y: i32, w: i32, h: i32) {
             GeCommand::Scissor1,
             (context.scissor_start[1] << 10) | context.scissor_start[0],
         );
-        send_command_i(GeCommand::Scissor2, (context.scissor_end[1] << 10) | context.scissor_end[0]);
+        send_command_i(
+            GeCommand::Scissor2,
+            (context.scissor_end[1] << 10) | context.scissor_end[0],
+        );
     }
 }
 
@@ -3445,16 +3498,13 @@ pub unsafe extern "C" fn sceGuDrawArrayN(
 }
 
 static mut CHAR_BUFFER_USED: u32 = 0;
-static mut CHAR_BUFFER: [DebugCharStruct; 2048] = [
-    DebugCharStruct {
-        x: 0,
-        y: 0,
-        color: 0,
-        character: b'\0',
-        unused: [0,0,0]
-    };
-    2048
-];
+static mut CHAR_BUFFER: [DebugCharStruct; 2048] = [DebugCharStruct {
+    x: 0,
+    y: 0,
+    color: 0,
+    character: b'\0',
+    unused: [0, 0, 0],
+}; 2048];
 static FONT: [u8; 768] = *include_bytes!("./debugfont.bin");
 
 #[repr(C, packed)]
@@ -3464,14 +3514,14 @@ struct DebugCharStruct {
     y: i32,
     color: u32,
     character: u8,
-    unused: [u8; 3]
+    unused: [u8; 3],
 }
 
-/// Add characters to an internal buffer for later printing with sceGuDebugFlush 
+/// Add characters to an internal buffer for later printing with sceGuDebugFlush
 ///
 /// # Parameters
 ///
-/// - `x`: Horizontal start position 
+/// - `x`: Horizontal start position
 /// - `y`: Vertical start position
 /// - `color`: Text color, ABGR
 /// - `msg`: C-style string
@@ -3484,11 +3534,12 @@ pub unsafe extern "C" fn sceGuDebugPrint(x: i32, mut y: i32, mut color: u32, mut
     let uVar3: u32;
     let iVar4: i32;
     let mut cur_x: i32;
-    let mut char_struct_ptr: *mut DebugCharStruct = &mut CHAR_BUFFER as *mut _ as *mut DebugCharStruct;
+    let mut char_struct_ptr: *mut DebugCharStruct =
+        &mut CHAR_BUFFER as *mut _ as *mut DebugCharStruct;
 
     let mut i = CHAR_BUFFER_USED;
     if i >= 0x3ff {
-        return
+        return;
     }
     uVar1 = color >> 8 & 0xff;
     uVar3 = color >> 16 & 0xff;
@@ -3497,11 +3548,11 @@ pub unsafe extern "C" fn sceGuDebugPrint(x: i32, mut y: i32, mut color: u32, mut
     match DRAW_BUFFER.pixel_size {
         DisplayPixelFormat::Psm5650 => {
             iVar2 = (uVar1 as i32) >> 2;
-            uVar1 = (iVar4 as u32) << 0xb; 
+            uVar1 = (iVar4 as u32) << 0xb;
             uVar1 = (uVar1 | iVar2 as u32) << 5;
             color = (color & 0xff) >> 3;
             color = uVar1 | color;
-        },
+        }
         DisplayPixelFormat::Psm5551 => {
             iVar2 = (uVar1 >> 3) as i32;
             uVar1 = (((color >> 24) >> 7) << 0xf | (iVar4 as u32) << 10) as u32;
@@ -3555,7 +3606,8 @@ pub unsafe extern "C" fn sceGuDebugFlush() {
     let mut x: i32;
     let mut char_buffer_used = CHAR_BUFFER_USED;
     let mut y: i32;
-    let mut char_struct_ptr: *mut DebugCharStruct = &mut CHAR_BUFFER as *mut _ as *mut DebugCharStruct; 
+    let mut char_struct_ptr: *mut DebugCharStruct =
+        &mut CHAR_BUFFER as *mut _ as *mut DebugCharStruct;
 
     if char_buffer_used != 0 {
         loop {
@@ -3564,50 +3616,57 @@ pub unsafe extern "C" fn sceGuDebugFlush() {
             pixel_size = DRAW_BUFFER.pixel_size;
             y = (*char_struct_ptr).y;
             x = (*char_struct_ptr).x;
-            if (y + 7 < draw_buffer_height) &&
-                (((x + 7 < DRAW_BUFFER.width) as i32 & !y >> 0x1f) != 0) && -1 < x {
-                    color = (*char_struct_ptr).color;
-                    char_index = ((*char_struct_ptr).character) as i32 * 8;
-                    y_pixel_counter = 0;
-                    loop {
-                        if y_pixel_counter == 0 {
-                            font_glyph = *(((&FONT as *const _ as u32) + char_index as u32) as *const u32);
-                            glyph_pos = 1;
-                        } else {
-                            if y_pixel_counter == 4 {
-                                font_glyph = *(((&FONT as *const _ as u32) + 4 + char_index as u32) as *const u32);
-                                glyph_pos = 1 
-                            }
+            if (y + 7 < draw_buffer_height)
+                && (((x + 7 < DRAW_BUFFER.width) as i32 & !y >> 0x1f) != 0)
+                && -1 < x
+            {
+                color = (*char_struct_ptr).color;
+                char_index = ((*char_struct_ptr).character) as i32 * 8;
+                y_pixel_counter = 0;
+                loop {
+                    if y_pixel_counter == 0 {
+                        font_glyph =
+                            *(((&FONT as *const _ as u32) + char_index as u32) as *const u32);
+                        glyph_pos = 1;
+                    } else {
+                        if y_pixel_counter == 4 {
+                            font_glyph = *(((&FONT as *const _ as u32) + 4 + char_index as u32)
+                                as *const u32);
+                            glyph_pos = 1
                         }
-                        x_pixel_counter = 7;
-                        pos = x + (y + y_pixel_counter) * frame_width;
-                        pos = pos * 4 + edram_address as i32 + frame_buffer as i32;
-                        loop {
-                            match pixel_size {
-                                DisplayPixelFormat::Psm8888 => {
-                                    if font_glyph & glyph_pos != 0 {
-                                        *((pos as u32 + 0x4000_0000) as *mut u32) = color;
-                                    }
-                                },
-                                _ => {
-
-                                    *((pos as u32 + 0x4000_0002) as *mut u16) = color as u16;
+                    }
+                    x_pixel_counter = 7;
+                    pos = x + (y + y_pixel_counter) * frame_width;
+                    pos = pos * 4 + edram_address as i32 + frame_buffer as i32;
+                    loop {
+                        match pixel_size {
+                            DisplayPixelFormat::Psm8888 => {
+                                if font_glyph & glyph_pos != 0 {
+                                    *((pos as u32 + 0x4000_0000) as *mut u32) = color;
                                 }
                             }
-                            x_pixel_counter = x_pixel_counter - 1;
-                            glyph_pos = glyph_pos << 1;
-                            pos = pos + 4;
-                            if !(-1 < x_pixel_counter) { 
-                                break;
+                            _ => {
+                                *((pos as u32 + 0x4000_0002) as *mut u16) = color as u16;
                             }
                         }
-                        y_pixel_counter += 1;
-                        if !(y_pixel_counter < 8) { break; }
+                        x_pixel_counter = x_pixel_counter - 1;
+                        glyph_pos = glyph_pos << 1;
+                        pos = pos + 4;
+                        if !(-1 < x_pixel_counter) {
+                            break;
+                        }
+                    }
+                    y_pixel_counter += 1;
+                    if !(y_pixel_counter < 8) {
+                        break;
                     }
                 }
-                char_buffer_used = char_buffer_used - 1;
-                char_struct_ptr = ((char_struct_ptr as u32) + 16) as *mut DebugCharStruct;
-        if char_buffer_used == 0 { break; }
+            }
+            char_buffer_used = char_buffer_used - 1;
+            char_struct_ptr = ((char_struct_ptr as u32) + 16) as *mut DebugCharStruct;
+            if char_buffer_used == 0 {
+                break;
+            }
         }
         CHAR_BUFFER_USED = 0;
     }

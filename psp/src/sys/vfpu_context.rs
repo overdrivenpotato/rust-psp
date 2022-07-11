@@ -29,7 +29,12 @@ pub struct Context {
 impl Context {
     /// Threads which call this must have ThreadAttributes::VFPU set
     pub fn new() -> Self {
-        let zero_vector = ScePspFVector4 { x: 0.0, y: 0.0, z: 0.0, w: 0.0 };
+        let zero_vector = ScePspFVector4 {
+            x: 0.0,
+            y: 0.0,
+            z: 0.0,
+            w: 0.0,
+        };
         let zero_matrix = ScePspFMatrix4 {
             x: zero_vector,
             y: zero_vector,
@@ -42,7 +47,6 @@ impl Context {
             zero_matrix,
             zero_matrix,
             zero_matrix,
-
             zero_matrix,
             zero_matrix,
             zero_matrix,
@@ -66,7 +70,7 @@ impl Context {
                     in(reg)($restore_addr),
                     options(nostack),
                 }
-            }
+            };
         }
 
         let idx = matrix_idx as usize;
@@ -99,7 +103,7 @@ impl Context {
                     in(reg) ($save_addr),
                     options(nostack),
                 }
-            }
+            };
         }
 
         let idx = matrix_idx as usize;

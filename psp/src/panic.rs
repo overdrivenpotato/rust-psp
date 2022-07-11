@@ -7,18 +7,25 @@
 use crate::sys;
 
 #[cfg(feature = "std")]
-use core::{mem::ManuallyDrop, any::Any};
+use core::{any::Any, mem::ManuallyDrop};
 #[cfg(not(feature = "std"))]
-use core::{mem::{self, ManuallyDrop}, any::Any, panic::{PanicInfo, BoxMeUp, Location}};
+use core::{
+    any::Any,
+    mem::{self, ManuallyDrop},
+    panic::{BoxMeUp, Location, PanicInfo},
+};
 
 #[cfg(not(feature = "std"))]
 use core::fmt;
 
 #[cfg(not(feature = "std"))]
-use alloc::{boxed::Box, string::{String, ToString}};
+use alloc::{
+    boxed::Box,
+    string::{String, ToString},
+};
 
 #[link(name = "unwind", kind = "static")]
-extern {}
+extern "C" {}
 
 #[cfg(not(feature = "std"))]
 fn print_and_die(s: String) -> ! {
@@ -48,7 +55,10 @@ fn panic_impl(info: &PanicInfo) -> ! {
 
     impl<'a> PanicPayload<'a> {
         fn new(inner: &'a fmt::Arguments<'a>) -> PanicPayload<'a> {
-            PanicPayload { inner, string: None }
+            PanicPayload {
+                inner,
+                string: None,
+            }
         }
 
         fn fill(&mut self) -> &mut String {
@@ -163,7 +173,9 @@ pub fn catch_unwind<R, F: FnOnce() -> R>(f: F) -> Result<R, Box<dyn Any + Send>>
         p: ManuallyDrop<Box<dyn Any + Send>>,
     }
 
-    let mut data = Data { f: ManuallyDrop::new(f) };
+    let mut data = Data {
+        f: ManuallyDrop::new(f),
+    };
 
     let data_ptr = &mut data as *mut _ as *mut u8;
 
@@ -221,7 +233,9 @@ mod libunwind_shims {
     #[no_mangle]
     #[allow(deprecated)]
     unsafe extern "C" fn abort() {
-        loop { core::arch::asm!(""); }
+        loop {
+            core::arch::asm!("");
+        }
     }
 
     #[no_mangle]

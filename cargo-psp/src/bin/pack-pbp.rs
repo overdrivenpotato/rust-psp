@@ -1,4 +1,4 @@
-use clap::{App, Arg, AppSettings};
+use clap::{App, AppSettings, Arg};
 use std::{fs, mem};
 
 const SIGNATURE: [u8; 4] = *b"\0PBP";
@@ -36,55 +36,55 @@ fn main() {
             Arg::with_name("output.pbp")
                 .takes_value(true)
                 .help("Output PBP file")
-                .required(true)
+                .required(true),
         )
         .arg(
             Arg::with_name("param.sfo")
                 .takes_value(true)
                 .help("Input PARAM.SFO file created with mksfo")
-                .required(true)
+                .required(true),
         )
         .arg(
             Arg::with_name("icon0.png")
                 .takes_value(true)
                 .help("Optional XMB icon")
-                .required(true)
+                .required(true),
         )
         .arg(
             Arg::with_name("icon1.pmf")
                 .takes_value(true)
                 .help("Optional animated XMB icon")
-                .required(true)
+                .required(true),
         )
         .arg(
             Arg::with_name("pic0.png")
                 .takes_value(true)
                 .help("Optional XMB background (overlayed on top of PIC1.PNG)")
-                .required(true)
+                .required(true),
         )
         .arg(
             Arg::with_name("pic1.png")
                 .takes_value(true)
                 .help("Optional XMB background")
-                .required(true)
+                .required(true),
         )
         .arg(
             Arg::with_name("snd0.at3")
                 .takes_value(true)
                 .help("Optional XMB music (when present, sound from ICON1.PMF is ignored)")
-                .required(true)
+                .required(true),
         )
         .arg(
             Arg::with_name("data.psp")
                 .takes_value(true)
                 .help("Executable file")
-                .required(true)
+                .required(true),
         )
         .arg(
             Arg::with_name("data.psar")
                 .takes_value(true)
                 .help("Optional archive data")
-                .required(true)
+                .required(true),
         )
         .get_matches();
 
