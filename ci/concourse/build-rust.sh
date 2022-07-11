@@ -24,7 +24,7 @@ pushd repo/
 cargo fmt --check
 status=$?
 if test $status -ne 0
-    echo "Formatting errors: Please run cargo fmt on your changes"
+    then echo "Formatting errors: Please run cargo fmt on your changes"
     exit 1
 fi
 
