@@ -95,7 +95,7 @@ impl SimpleVramAllocator {
             panic!("Total VRAM size exceeded!");
         }
 
-        VramMemChunk::new(offset, size)
+        VramMemChunk::new(old_offset, size)
     }
 
     // TODO: ensure 16-bit alignment?
