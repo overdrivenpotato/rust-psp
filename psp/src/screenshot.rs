@@ -8,6 +8,7 @@ const BYTES_PER_PIXEL: usize = 4;
 const NUM_PIXELS: usize = (SCREEN_WIDTH * SCREEN_HEIGHT) as usize;
 
 #[repr(C, packed)]
+#[derive(Clone, Copy)]
 struct BmpHeader {
     pub file_type: [u8; 2],
     pub file_size: u32,
