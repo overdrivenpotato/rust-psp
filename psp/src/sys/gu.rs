@@ -1873,9 +1873,11 @@ pub unsafe extern "C" fn sceGuSendList(
 ) {
     SETTINGS.signal_offset = 0;
 
-    let mut args = GeListArgs::default();
-    args.size = 8;
-    args.context = context;
+    let mut args = GeListArgs {
+        size: 8,
+        context,
+        ..<_>::default()
+    };
 
     let callback = SETTINGS.ge_callback_id;
 
