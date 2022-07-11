@@ -209,7 +209,7 @@ fn get_test_output_pipe() -> SceUid {
                 fd.0
             );
         }
-        return fd;
+        fd
     }
 }
 
@@ -223,7 +223,7 @@ fn get_test_output_file() -> SceUid {
         if fd.0 < 0 {
             panic!("Unable to open file \"{}\" for output!", OUTPUT_FILENAME);
         }
-        return fd;
+        fd
     }
 }
 
