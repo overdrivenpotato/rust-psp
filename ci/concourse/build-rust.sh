@@ -27,6 +27,7 @@ if test $status -ne 0
     then echo "Formatting errors: Please run cargo fmt on your changes"
     exit 1
 fi
+popd
 
 # build cargo-psp
 pushd repo/cargo-psp/
