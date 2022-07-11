@@ -903,8 +903,7 @@ unsafe fn reset_values() {
     DRAW_BUFFER.width = 480;
     DRAW_BUFFER.height = 272;
 
-    for i in 0..3 {
-        let context = &mut CONTEXTS[i];
+    for context in &mut CONTEXTS {
         context.scissor_enable = 0;
         context.scissor_start = [0, 0];
         context.scissor_end = [0, 0];
