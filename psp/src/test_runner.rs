@@ -188,7 +188,9 @@ impl<'a> TestRunner<'a> {
                 close_psp_file(fd);
                 quit_game();
             }
-            TestRunnerMode::Dprintln => loop {},
+            TestRunnerMode::Dprintln => loop {
+                core::hint::spin_loop()
+            },
         }
     }
 }
