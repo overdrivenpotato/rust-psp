@@ -109,8 +109,7 @@ impl<'a> TestRunner<'a> {
                 );
             }
 
-            let mut i = 0;
-            for (li, ri) in l.iter().zip(r.iter()) {
+            for (i, (li, ri)) in l.iter().zip(r.iter()).enumerate() {
                 if li != ri {
                     self.dbg(
                         testcase_name,
@@ -118,7 +117,6 @@ impl<'a> TestRunner<'a> {
                     );
                     break;
                 }
-                i += 1;
             }
 
             self.fail(testcase_name, "Collections were not equal!");
