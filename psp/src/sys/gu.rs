@@ -868,7 +868,7 @@ unsafe fn send_command_i(cmd: GeCommand, argument: i32) {
 
 #[inline]
 unsafe fn send_command_f(cmd: GeCommand, argument: f32) {
-    send_command_i(cmd, (core::mem::transmute::<_, u32>(argument) >> 8) as i32);
+    send_command_i(cmd, (argument.to_bits() >> 8) as i32);
 }
 
 #[inline]
