@@ -18,12 +18,25 @@ if ! rustup component list --installed | grep -q rust-src; then
     rustup component add rust-src
 fi
 
+# Test formatting
+rustup component add rustfmt
+pushd repo/
+cargo fmt --check
+status=$?
+if test $status -ne 0
+    then echo "Formatting errors: Please run cargo fmt on your changes"
+    exit 1
+fi
+popd
+
+# build cargo-psp
 pushd repo/cargo-psp/
 cargo build
 popd
 
 PATH="$(realpath repo)/target/debug:$PATH"
 
+# build the test project
 pushd repo/ci/tests
 cargo psp
 popd
