@@ -19,8 +19,8 @@ pub struct TestRunner<'a> {
 }
 
 enum TestRunnerMode {
-    FIFO(SceUid),
-    FILE(SceUid),
+    Fifo(SceUid),
+    File(SceUid),
     Dprintln,
 }
 
@@ -28,7 +28,7 @@ impl<'a> TestRunner<'a> {
     pub fn new_fifo_runner() -> Self {
         let fd = get_test_output_pipe();
         Self {
-            mode: TestRunnerMode::FIFO(fd),
+            mode: TestRunnerMode::Fifo(fd),
             failure: false,
             failures: Vec::new(),
         }
@@ -37,7 +37,7 @@ impl<'a> TestRunner<'a> {
     pub fn new_file_runner() -> Self {
         let fd = get_test_output_file();
         Self {
-            mode: TestRunnerMode::FILE(fd),
+            mode: TestRunnerMode::File(fd),
             failure: false,
             failures: Vec::new(),
         }
@@ -173,7 +173,7 @@ impl<'a> TestRunner<'a> {
 
     pub fn write_args(&self, args: Arguments) {
         match self.mode {
-            TestRunnerMode::FILE(fd) | TestRunnerMode::FIFO(fd) => {
+            TestRunnerMode::File(fd) | TestRunnerMode::Fifo(fd) => {
                 write_to_psp_output_fd(fd, &format!("{}", args));
             }
             TestRunnerMode::Dprintln => {
@@ -184,7 +184,7 @@ impl<'a> TestRunner<'a> {
 
     fn quit(self) {
         match self.mode {
-            TestRunnerMode::FILE(fd) | TestRunnerMode::FIFO(fd) => {
+            TestRunnerMode::File(fd) | TestRunnerMode::Fifo(fd) => {
                 close_psp_file(fd);
                 quit_game();
             }
