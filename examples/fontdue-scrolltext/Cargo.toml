@@ -6,9 +6,5 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-#psp = "0.1.6"
-psp = { path = "../rust-psp/psp" }
+psp = { path = "../../psp" }
 fontdue = "0.6.2"
-
-#[profile.release]
-#debug = true
