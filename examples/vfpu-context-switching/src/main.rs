@@ -6,8 +6,6 @@ use psp::sys::vfpu_context::{Context, MatrixSet};
 
 psp::module!("vfpu_context_test", 1, 1);
 
-#[no_mangle]
-#[inline(never)]
 fn psp_main() {
     psp::enable_home_button();
     psp::dprintln!("Testing VFPU context switcher...");
