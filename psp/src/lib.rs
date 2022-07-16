@@ -3,7 +3,6 @@
     asm_experimental_arch,
     alloc_error_handler,
     global_asm,
-    untagged_unions,
     const_loop,
     const_if_match,
     core_intrinsics,
