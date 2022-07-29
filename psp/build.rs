@@ -1,8 +1,9 @@
-use std::{env, path::Path};
 #[cfg(target_family = "unix")]
 use std::os::unix::prelude::OsStrExt;
 #[cfg(target_family = "windows")]
 use std::os::windows::prelude::OsStrExt;
+
+use std::{env, path::Path};
 
 fn main() {
     println!("cargo:rerun-if-changed=build.rs");
