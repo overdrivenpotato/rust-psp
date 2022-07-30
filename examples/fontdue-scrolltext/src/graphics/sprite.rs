@@ -1,5 +1,5 @@
-use core::f32::consts::PI;
 use crate::graphics::Align4;
+use core::f32::consts::PI;
 
 #[repr(C, packed)]
 #[derive(Debug, Clone, Copy, Default)]
@@ -33,9 +33,9 @@ impl Sprite {
     /// - `color`: A 32-bit color in Big-Endian ABGR format (little-endian RGBA).
     /// - `x`: Starting horizontal position, in screen coordinates.
     /// - `y`: Starting vertical position, in screen coordinates.
-    /// - `width`: Width of the `Sprite`. Must be a power of 2. 
-    /// - `height`: Height of the `Sprite`. Must be a power of 2. 
-    pub const fn new(color: u32, x: i32, y: i32, width: u32, height: u32) -> Self { 
+    /// - `width`: Width of the `Sprite`. Must be a power of 2.
+    /// - `height`: Height of the `Sprite`. Must be a power of 2.
+    pub const fn new(color: u32, x: i32, y: i32, width: u32, height: u32) -> Self {
         Self {
             color,
             x,
@@ -51,49 +51,46 @@ impl Sprite {
     /// Returns an `Iterator` over the vertices of a `Sprite`. See `Sprite::Vertex`.
     /// Vertices are aligned to 4 bytes.
     pub fn as_vertex_iter(&self) -> impl Iterator<Item = Align4<Vertex>> {
-        Some(Align4(Vertex { 
+        Some(Align4(Vertex {
             u: 0.0,
             v: 0.0,
             color: self.color,
             x: self.x as f32,
             y: self.y as f32,
             z: 0.0,
-        })).into_iter()
-        .chain(
-            Some(Align4(
-                Vertex {
-                    u: self.width as f32,
-                    v: self.height as f32,
-                    color: self.color,
-                    x: self.x as f32 + self.width as f32,
-                    y: self.y as f32 + self.height as f32,
-                    z: 0.0,
-                })
-            )
-        )
+        }))
+        .into_iter()
+        .chain(Some(Align4(Vertex {
+            u: self.width as f32,
+            v: self.height as f32,
+            color: self.color,
+            x: self.x as f32 + self.width as f32,
+            y: self.y as f32 + self.height as f32,
+            z: 0.0,
+        })))
     }
 
     /// Returns an array of 2 vertices that make up the `Sprite`. See `Sprite::Vertex`.
     /// Vertices are aligned to 4 bytes.
-    pub fn as_vertices(&self) -> [Align4<Vertex>;2] {
-        [Align4(Vertex { 
-            u: 0.0,
-            v: 0.0,
-            color: self.color,
-            x: self.x as f32,
-            y: self.y as f32,
-            z: 0.0,
-        }),
-        Align4(
-            Vertex {
+    pub fn as_vertices(&self) -> [Align4<Vertex>; 2] {
+        [
+            Align4(Vertex {
+                u: 0.0,
+                v: 0.0,
+                color: self.color,
+                x: self.x as f32,
+                y: self.y as f32,
+                z: 0.0,
+            }),
+            Align4(Vertex {
                 u: self.width as f32,
                 v: self.height as f32,
                 color: self.color,
                 x: self.x as f32 + self.width as f32,
                 y: self.y as f32 + self.height as f32,
                 z: 0.0,
-            }
-        )]
+            }),
+        ]
     }
 
     /// Sets the position of a `Sprite`. Position is in screen units.
@@ -106,7 +103,7 @@ impl Sprite {
         self.x = x;
         self.y = y;
     }
-    
+
     #[allow(dead_code)]
     /// Gets the position of a `Sprite`. Position is in screen units.
     ///
@@ -124,7 +121,7 @@ impl Sprite {
     /// # Parameters
     ///
     /// - `radians`: Rotation in units of radians.
-    pub fn set_rotation_radians(&mut self, radians: f32) { 
+    pub fn set_rotation_radians(&mut self, radians: f32) {
         self.rotation_radians = radians;
     }
 
@@ -134,7 +131,7 @@ impl Sprite {
     /// # Return value
     ///
     /// Rotation in units of radians.
-    pub fn get_rotation_radians(&mut self) -> f32 { 
+    pub fn get_rotation_radians(&mut self) -> f32 {
         self.rotation_radians
     }
 
@@ -144,7 +141,7 @@ impl Sprite {
     /// # Parameters
     ///
     /// - `degrees`: Rotation in units of degrees.
-    pub fn set_rotation_degrees(&mut self, degrees: f32) { 
+    pub fn set_rotation_degrees(&mut self, degrees: f32) {
         self.rotation_radians = degrees * (PI / 180.0);
     }
 
@@ -154,7 +151,7 @@ impl Sprite {
     /// # Return value
     ///
     /// Rotation in units of degrees.
-    pub fn get_rotation_degrees(&mut self) -> f32 { 
+    pub fn get_rotation_degrees(&mut self) -> f32 {
         self.rotation_radians * (180.0 / PI)
     }
 
@@ -164,12 +161,12 @@ impl Sprite {
     /// # Parameters
     ///
     /// - `scale`: Scale factor, 1.0 is 100% scale.
-    pub fn set_scale(&mut self, scale: f32) { 
+    pub fn set_scale(&mut self, scale: f32) {
         self.scale = scale;
     }
 }
 
-impl  Clone for Sprite {
+impl Clone for Sprite {
     fn clone(&self) -> Self {
         Self {
             color: self.color,
@@ -183,4 +180,4 @@ impl  Clone for Sprite {
     }
 }
 
-impl Copy for Sprite{}
+impl Copy for Sprite {}
