@@ -717,7 +717,7 @@ unsafe fn gum_look_at(
 
     gum_normalize(&mut forward);
 
-    let mut side = gum_cross_product(&forward, &up);
+    let mut side = gum_cross_product(&forward, up);
     gum_normalize(&mut side);
 
     let lup = gum_cross_product(&side, &forward);

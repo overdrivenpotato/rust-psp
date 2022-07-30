@@ -56,6 +56,10 @@ impl VramMemChunk<'_> {
     pub fn len(&self) -> u32 {
         self.len
     }
+
+    pub fn is_empty(&self) -> bool {
+        self.len == 0
+    }
 }
 
 // A dead-simple VRAM bump allocator.
@@ -87,7 +91,7 @@ impl SimpleVramAllocator {
     ///
     /// The returned VRAM chunk has the same lifetime as the
     /// `SimpleVramAllocator` borrow (i.e. `&self`) that allocated it.
-    pub fn alloc<'a>(&'a self, size: u32) -> VramMemChunk<'a> {
+    pub fn alloc(&self, size: u32) -> VramMemChunk<'_> {
         let old_offset = self.offset.load(Ordering::Relaxed);
         let new_offset = old_offset + size;
         self.offset.store(new_offset, Ordering::Relaxed);
@@ -100,17 +104,17 @@ impl SimpleVramAllocator {
     }
 
     // TODO: ensure 16-bit alignment?
-    pub fn alloc_sized<'a, T: Sized>(&'a self, count: u32) -> VramMemChunk<'a> {
+    pub fn alloc_sized<T: Sized>(&self, count: u32) -> VramMemChunk<'_> {
         let size = size_of::<T>() as u32;
         self.alloc(count * size)
     }
 
-    pub fn alloc_texture_pixels<'a>(
-        &'a self,
+    pub fn alloc_texture_pixels(
+        &self,
         width: u32,
         height: u32,
         psm: TexturePixelFormat,
-    ) -> VramMemChunk<'a> {
+    ) -> VramMemChunk<'_> {
         let size = get_memory_size(width, height, psm);
         self.alloc(size)
     }

@@ -66,7 +66,7 @@ fn panic_impl(info: &PanicInfo) -> ! {
             let inner = self.inner;
             self.string.get_or_insert_with(|| {
                 let mut s = String::new();
-                drop(s.write_fmt(*inner));
+                let _ = s.write_fmt(*inner);
                 s
             })
         }

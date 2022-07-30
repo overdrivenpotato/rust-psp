@@ -19,8 +19,8 @@ pub struct TestRunner<'a> {
 }
 
 enum TestRunnerMode {
-    FIFO(SceUid),
-    FILE(SceUid),
+    Fifo(SceUid),
+    File(SceUid),
     Dprintln,
 }
 
@@ -28,7 +28,7 @@ impl<'a> TestRunner<'a> {
     pub fn new_fifo_runner() -> Self {
         let fd = get_test_output_pipe();
         Self {
-            mode: TestRunnerMode::FIFO(fd),
+            mode: TestRunnerMode::Fifo(fd),
             failure: false,
             failures: Vec::new(),
         }
@@ -37,7 +37,7 @@ impl<'a> TestRunner<'a> {
     pub fn new_file_runner() -> Self {
         let fd = get_test_output_file();
         Self {
-            mode: TestRunnerMode::FILE(fd),
+            mode: TestRunnerMode::File(fd),
             failure: false,
             failures: Vec::new(),
         }
@@ -109,8 +109,7 @@ impl<'a> TestRunner<'a> {
                 );
             }
 
-            let mut i = 0;
-            for (li, ri) in l.iter().zip(r.iter()) {
+            for (i, (li, ri)) in l.iter().zip(r.iter()).enumerate() {
                 if li != ri {
                     self.dbg(
                         testcase_name,
@@ -118,7 +117,6 @@ impl<'a> TestRunner<'a> {
                     );
                     break;
                 }
-                i += 1;
             }
 
             self.fail(testcase_name, "Collections were not equal!");
@@ -173,7 +171,7 @@ impl<'a> TestRunner<'a> {
 
     pub fn write_args(&self, args: Arguments) {
         match self.mode {
-            TestRunnerMode::FILE(fd) | TestRunnerMode::FIFO(fd) => {
+            TestRunnerMode::File(fd) | TestRunnerMode::Fifo(fd) => {
                 write_to_psp_output_fd(fd, &format!("{}", args));
             }
             TestRunnerMode::Dprintln => {
@@ -184,11 +182,13 @@ impl<'a> TestRunner<'a> {
 
     fn quit(self) {
         match self.mode {
-            TestRunnerMode::FILE(fd) | TestRunnerMode::FIFO(fd) => {
+            TestRunnerMode::File(fd) | TestRunnerMode::Fifo(fd) => {
                 close_psp_file(fd);
                 quit_game();
             }
-            TestRunnerMode::Dprintln => loop {},
+            TestRunnerMode::Dprintln => loop {
+                core::hint::spin_loop()
+            },
         }
     }
 }
@@ -207,7 +207,7 @@ fn get_test_output_pipe() -> SceUid {
                 fd.0
             );
         }
-        return fd;
+        fd
     }
 }
 
@@ -221,7 +221,7 @@ fn get_test_output_file() -> SceUid {
         if fd.0 < 0 {
             panic!("Unable to open file \"{}\" for output!", OUTPUT_FILENAME);
         }
-        return fd;
+        fd
     }
 }
 

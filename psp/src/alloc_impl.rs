@@ -55,7 +55,9 @@ static ALLOC: SystemAlloc = SystemAlloc;
 #[cfg(not(feature = "std"))]
 #[alloc_error_handler]
 fn aeh(_: Layout) -> ! {
-    loop {}
+    loop {
+        core::hint::spin_loop()
+    }
 }
 
 #[no_mangle]

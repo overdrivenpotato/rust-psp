@@ -27,6 +27,8 @@
 //!     - `sceOpenPSID`: Console identification API (unique to every console)
 //!     - `sceUtility`: Various utilities such as msg dialogs and savedata
 
+#![allow(clippy::missing_safety_doc)]
+
 use core::{mem, ptr};
 
 #[macro_use]

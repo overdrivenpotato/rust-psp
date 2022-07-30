@@ -60,9 +60,7 @@ impl Font for MsxFont {
 
     fn put_char(x: usize, y: usize, color: u32, c: u8) {
         unsafe {
-            let mut ptr = VRAM_BASE
-                .offset(x as isize)
-                .offset((y * BUFFER_WIDTH) as isize);
+            let mut ptr = VRAM_BASE.add(x + y * BUFFER_WIDTH);
 
             for i in 0..8 {
                 for j in 0..8 {
@@ -73,7 +71,7 @@ impl Font for MsxFont {
                     ptr = ptr.offset(1);
                 }
 
-                ptr = ptr.offset(-8).offset(BUFFER_WIDTH as isize);
+                ptr = ptr.add(BUFFER_WIDTH - 8);
             }
         }
     }
