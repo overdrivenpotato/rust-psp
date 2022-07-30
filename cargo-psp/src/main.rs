@@ -198,7 +198,8 @@ fn main() {
         Err(_) => "build-std=core,compiler_builtins,alloc,panic_unwind,panic_abort",
     };
 
-    let mut process = Command::new("cargo")
+    let cargo = env::var_os("CARGO").unwrap_or_else(|| "cargo".into());
+    let mut process = Command::new(cargo)
         .arg("build")
         .arg("-Z")
         .arg(build_std_flag)
