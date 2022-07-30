@@ -1,4 +1,4 @@
-use std::{env, os::unix::prelude::OsStrExt, path::Path};
+use std::{env, path::Path};
 
 fn main() {
     println!("cargo:rerun-if-changed=build.rs");
@@ -10,11 +10,10 @@ fn main() {
     }
 
     // Figure out whether to use the LTO libunwind, or the regular one.
-    let libunwind = if env::var_os("CARGO_ENCODED_RUSTFLAGS")
-        .expect("could not get `CARGO_ENCODED_RUSTFLAGS` variable")
-        .as_bytes()
-        .split(|b| *b == 0x1f)
-        .any(|flags| flags.starts_with(b"-Clinker-plugin-lto"))
+    let libunwind = if env::var("CARGO_ENCODED_RUSTFLAGS")
+        .unwrap()
+        .split('\x1f')
+        .any(|flags| flags.starts_with("-Clinker-plugin-lto"))
     {
         "./libunwind_lto.a"
     } else {
