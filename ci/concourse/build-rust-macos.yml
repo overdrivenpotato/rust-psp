@@ -6,9 +6,6 @@ params:
 inputs:
   - name: repo
 
-outputs:
-  - name: rust-build-dir
-
 caches:
   - path: .cargo
   - path: .xargo

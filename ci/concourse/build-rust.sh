@@ -41,4 +41,8 @@ pushd repo/ci/tests
 cargo psp
 popd
 
+# Make the output directory, in case it is not specified as an output for this
+# concourse task.
+mkdir -p rust-build-dir
+
 cp -r repo/ci/tests/target/mipsel-sony-psp/debug/* rust-build-dir
