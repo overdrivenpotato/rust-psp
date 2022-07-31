@@ -34,7 +34,7 @@ pushd repo/cargo-psp/
 cargo build
 popd
 
-PATH="$(realpath repo)/target/debug:$PATH"
+PATH="$(pwd)/repo/target/debug:$PATH"
 
 # build the test project
 pushd repo/ci/tests
