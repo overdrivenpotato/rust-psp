@@ -10,15 +10,15 @@ if [ -z "${NO_CACHE:-}" ]; then
     # These volumes are named randomly every time, which changes where crate
     # source files are stored. This leads cargo to believe the files were
     # changed, so it triggers a full rebuild. Instead, we can use the default
-    # directory for macOS runners.
+    # directory for macOS runners. The rust-src component is also affected as
+    # well, so we must exclude both CARGO_HOME and RUSTUP_HOME.
     #
     # On Linux, Concourse re-uses container paths so this issue is not relevant.
     # This is probably either a Concourse or Cargo bug.
     if ! [ $(uname) = Darwin ]; then
         export CARGO_HOME="$(pwd)"/.cargo
+        export RUSTUP_HOME="$(pwd)"/.rustup
     fi
-
-    export RUSTUP_HOME="$(pwd)"/.rustup
 fi
 
 rustup set profile minimal
