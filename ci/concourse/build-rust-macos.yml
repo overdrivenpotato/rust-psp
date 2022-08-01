@@ -8,7 +8,6 @@ inputs:
 
 caches:
   - path: .cargo
-  - path: .xargo
   - path: .rustup
   - path: repo/ci/tests/target/
   - path: repo/target/

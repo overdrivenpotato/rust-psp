@@ -6,7 +6,6 @@ set -euo pipefail
 if [ -z "${NO_CACHE:-}" ]; then
     # Cache only for normal builds
     export CARGO_HOME="$(pwd)"/.cargo
-    export XARGO_HOME="$(pwd)"/.xargo
     export RUSTUP_HOME="$(pwd)"/.rustup
 fi
 
