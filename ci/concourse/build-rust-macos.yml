@@ -7,7 +7,6 @@ inputs:
   - name: repo
 
 caches:
-  - path: .cargo
   - path: .rustup
   - path: repo/ci/tests/target/
   - path: repo/target/
