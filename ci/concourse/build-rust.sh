@@ -9,6 +9,12 @@ if [ -z "${NO_CACHE:-}" ]; then
     export RUSTUP_HOME="$(pwd)"/.rustup
 fi
 
+pwd
+echo CARGO_HOME: $CARGO_HOME
+echo RUSTUP_HOME: $RUSTUP_HOME
+
+sleep 1000000
+
 rustup set profile minimal
 rustup update --no-self-update $RUSTUP_TOOLCHAIN
 
