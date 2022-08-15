@@ -224,12 +224,19 @@ fn main() {
         process::exit(status.code().unwrap_or(1));
     }
 
+    let lone = executables.len() == 1;
+
     // TODO: Error if no bin is ever found.
     for elf_path in executables {
         let prx_path = elf_path.with_extension("prx");
 
-        let sfo_path = elf_path.with_extension("param.sfo");
-        let pbp_path = elf_path.with_extension("eboot.pbp");
+        let [sfo_path, pbp_path] = ["PARAM.SFO", "EBOOT.PBP"].map(|e| {
+            if lone {
+                elf_path.with_file_name(e)
+            } else {
+                elf_path.with_extension(e)
+            }
+        });
 
         fix_imports::fix(&elf_path);
 
