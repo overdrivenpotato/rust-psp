@@ -215,6 +215,13 @@ pub fn catch_unwind<R, F: FnOnce() -> R>(f: F) -> Result<R, Box<dyn Any + Send>>
     }
 }
 
+// TODO: EH personality was moved from the panic_unwind crate to std in
+// https://github.com/rust-lang/rust/pull/92845. This no-op implementation
+// should be replaced with the version from std when using no_std.
+#[cfg(not(feature = "std"))]
+#[lang = "eh_personality"]
+unsafe extern "C" fn rust_eh_personality() {}
+
 /// These symbols and functions should not actually be used. `libunwind`,
 /// however, requires them to be present so that it can link.
 // TODO: Patch these out of libunwind instead.
