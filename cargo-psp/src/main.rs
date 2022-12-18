@@ -1,6 +1,7 @@
-use cargo_metadata::Message as CargoMessage;
+use cargo_metadata::{Message as CargoMessage, MetadataCommand};
 use rustc_version::{Channel, Version};
 use std::{
+    collections::HashSet,
     env, fmt, fs,
     io::ErrorKind,
     process::{self, Command, Stdio},
@@ -199,7 +200,7 @@ fn main() {
     };
 
     let cargo = env::var_os("CARGO").unwrap_or_else(|| "cargo".into());
-    let mut process = Command::new(cargo)
+    let mut build_process = Command::new(&cargo)
         .arg("build")
         .arg("-Z")
         .arg(build_std_flag)
@@ -211,23 +212,57 @@ fn main() {
         .spawn()
         .unwrap();
 
-    let reader = std::io::BufReader::new(process.stdout.take().unwrap());
-    let executables: Vec<_> = CargoMessage::parse_stream(reader)
+    let metadata_process = Command::new(cargo)
+        .arg("metadata")
+        .arg("--format-version=1")
+        .arg("--offline")
+        .arg("-Z")
+        .arg(build_std_flag)
+        .stdout(Stdio::piped())
+        .spawn()
+        .unwrap();
+
+    let reader = std::io::BufReader::new(build_process.stdout.take().unwrap());
+    let built_executables: Vec<_> = CargoMessage::parse_stream(reader)
         .flat_map(|msg| match msg.unwrap() {
             CargoMessage::CompilerArtifact(art) => art.executable,
             _ => None,
         })
         .collect();
-    let status = process.wait().unwrap();
 
+    let output = metadata_process.wait_with_output().unwrap();
+    if !output.status.success() {
+        panic!(
+            "`cargo metadata` command exited with status: {:?}",
+            output.status
+        );
+    }
+
+    let metadata = MetadataCommand::parse(
+        std::str::from_utf8(&output.stdout)
+            .expect("`cargo metadata` command returned non UTF-8 bytes"),
+    )
+    .expect("failed to parse `cargo metadata` command's stdout");
+
+    let workspace_members: HashSet<_> = metadata.workspace_members.iter().collect();
+    let total_executables = metadata
+        .packages
+        .iter()
+        .filter(|p| workspace_members.contains(&p.id))
+        .flat_map(|p| &p.targets)
+        .filter(|t| t.crate_types.iter().any(|ct| *ct == "bin"))
+        .count();
+
+    let status = build_process.wait().unwrap();
     if !status.success() {
+        eprintln!("`cargo build` command exited with status: {:?}", status);
         process::exit(status.code().unwrap_or(1));
     }
 
-    let lone = executables.len() == 1;
+    let lone = total_executables == 1;
 
     // TODO: Error if no bin is ever found.
-    for elf_path in executables {
+    for elf_path in built_executables {
         let prx_path = elf_path.with_extension("prx");
 
         let [sfo_path, pbp_path] = ["PARAM.SFO", "EBOOT.PBP"].map(|e| {
