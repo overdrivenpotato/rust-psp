@@ -73,22 +73,24 @@ pub const fn lib_name_bytes<const T: usize>(name: &str) -> [u8; T] {
 macro_rules! psp_extern {
     // Generate body with default ABI.
     (__BODY $name:ident ($($arg:ident : $arg_ty:ty),*) $(-> $ret:ty)?) => {{
-        type Func = fn($($arg : $arg_ty),*) $(-> $ret)?;
-
         paste! {
-            let stub_addr = &[< __ $name _stub >];
-            let func = core::mem::transmute::<_, Func>(stub_addr);
+            extern "C" {
+                pub fn [< __ $name _stub >]($($arg : $arg_ty),*) $(-> $ret)?;
+            }
+            let func = [< __ $name _stub >];
             func($($arg),*)
         }
     }};
 
     // Generate body with an ABI mapper
     (__BODY $abi:ident $name:ident ($($arg:ident : $arg_ty:ty),*) $(-> $ret:ty)?) => {{
-        type Func = fn($($arg : $arg_ty),*) $(-> $ret)?;
+        type Func = unsafe extern "C" fn($($arg : $arg_ty),*) $(-> $ret)?;
 
         paste! {
-            let stub_addr = &[< __ $name _stub >];
-            let func = core::mem::transmute::<_, Func>(stub_addr);
+            extern "C" {
+                pub fn [< __ $name _stub >]($($arg : $arg_ty),*) $(-> $ret)?;
+            }
+            let func = [< __ $name _stub >] as Func;
 
             // The transmutes here are for newtypes that fit into a single
             // register.
@@ -173,6 +175,7 @@ macro_rules! psp_extern {
                             ".sceStub.text.", $lib_name,
                             ".", stringify!($name)
                         )]
+                        #[no_mangle]
                         #[allow(non_upper_case_globals)]
                         static [< __ $name _stub >]: $crate::sys::macros::Stub = $crate::sys::macros::Stub {
                             lib_addr: &[< __ $lib_name _STUB >],
