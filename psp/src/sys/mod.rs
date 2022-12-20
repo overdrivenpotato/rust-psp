@@ -202,6 +202,7 @@ bitflags::bitflags! {
     }
 }
 
+#[repr(C)]
 pub struct SceLibraryEntryTable {
     pub module_start_nid: u32,
     pub module_info_nid: u32,
