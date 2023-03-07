@@ -216,7 +216,6 @@ fn main() {
         let output = Command::new(cargo)
             .arg("metadata")
             .arg("--format-version=1")
-            .arg("--offline")
             .arg("-Z")
             .arg(build_std_flag)
             .stderr(Stdio::inherit())
