@@ -1,6 +1,7 @@
-use cargo_metadata::MetadataCommand;
+use cargo_metadata::{Message as CargoMessage, MetadataCommand};
 use rustc_version::{Channel, Version};
 use std::{
+    collections::HashSet,
     env, fmt, fs,
     io::ErrorKind,
     process::{self, Command, Stdio},
@@ -199,132 +200,147 @@ fn main() {
     };
 
     let cargo = env::var_os("CARGO").unwrap_or_else(|| "cargo".into());
-    let mut process = Command::new(cargo)
+    let mut build_process = Command::new(&cargo)
         .arg("build")
         .arg("-Z")
         .arg(build_std_flag)
         .arg("--target")
         .arg("mipsel-sony-psp")
+        .arg("--message-format=json-render-diagnostics")
         .args(args)
-        .stdin(Stdio::inherit())
-        .stdout(Stdio::inherit())
-        .stderr(Stdio::inherit())
+        .stdout(Stdio::piped())
         .spawn()
         .unwrap();
 
-    let status = process.wait().unwrap();
+    let lone = {
+        let output = Command::new(cargo)
+            .arg("metadata")
+            .arg("--format-version=1")
+            .arg("-Z")
+            .arg(build_std_flag)
+            .stderr(Stdio::inherit())
+            .output()
+            .unwrap();
 
-    if !status.success() {
-        let code = match status.code() {
-            Some(i) => i,
-            None => 1,
-        };
+        if !output.status.success() {
+            panic!(
+                "`cargo metadata` command exited with status: {:?}",
+                output.status
+            );
+        }
 
-        process::exit(code);
-    }
+        let metadata = MetadataCommand::parse(
+            std::str::from_utf8(&output.stdout)
+                .expect("`cargo metadata` command returned non UTF-8 bytes"),
+        )
+        .expect("failed to parse `cargo metadata` command's stdout");
 
-    let metadata = MetadataCommand::new()
-        .exec()
-        .expect("failed to get cargo metadata");
+        let workspace_members: HashSet<_> = metadata.workspace_members.iter().collect();
+        let total_executables = metadata
+            .packages
+            .iter()
+            .filter(|p| workspace_members.contains(&p.id))
+            .flat_map(|p| &p.targets)
+            .filter(|t| t.crate_types.iter().any(|ct| *ct == "bin"))
+            .count();
 
-    // Is there a better way to do this?
-    let profile_name = if env::args().any(|arg| arg == "--release") {
-        "release"
-    } else {
-        "debug"
+        total_executables == 1
     };
 
-    let bin_dir = metadata
-        .target_directory
-        .join("mipsel-sony-psp")
-        .join(profile_name);
+    let reader = std::io::BufReader::new(build_process.stdout.take().unwrap());
+    let built_executables: Vec<_> = CargoMessage::parse_stream(reader)
+        .flat_map(|msg| match msg.unwrap() {
+            CargoMessage::CompilerArtifact(art) => art.executable,
+            _ => None,
+        })
+        .collect();
 
-    for id in metadata.clone().workspace_members {
-        let package = metadata[&id].clone();
+    let status = build_process.wait().unwrap();
+    if !status.success() {
+        eprintln!("`cargo build` command exited with status: {:?}", status);
+        process::exit(status.code().unwrap_or(1));
+    }
 
-        // TODO: Error if no bin is ever found.
-        for target in package.targets {
-            if target.kind.iter().any(|k| k == "bin") {
-                let elf_path = bin_dir.join(&target.name);
-                let prx_path = bin_dir.join(target.name.clone() + ".prx");
+    // TODO: Error if no bin is ever found.
+    for elf_path in built_executables {
+        let prx_path = elf_path.with_extension("prx");
 
-                let sfo_path = bin_dir.join("PARAM.SFO");
-                let pbp_path = bin_dir.join("EBOOT.PBP");
-
-                fix_imports::fix(&elf_path);
-
-                Command::new("prxgen")
-                    .arg(&elf_path)
-                    .arg(&prx_path)
-                    .stdin(Stdio::inherit())
-                    .stdout(Stdio::inherit())
-                    .stderr(Stdio::inherit())
-                    .output()
-                    .expect("failed to run prxgen");
-
-                let config_args = vec![
-                    ("-s", "DISC_ID", config.disc_id.clone()),
-                    ("-s", "DISC_VERSION", config.disc_version.clone()),
-                    ("-s", "LANGUAGE", config.language.clone()),
-                    (
-                        "-d",
-                        "PARENTAL_LEVEL",
-                        config.parental_level.as_ref().map(u32::to_string),
-                    ),
-                    ("-s", "PSP_SYSTEM_VER", config.psp_system_ver.clone()),
-                    ("-d", "REGION", config.region.as_ref().map(u32::to_string)),
-                    ("-s", "TITLE_0", config.title_jp.clone()),
-                    ("-s", "TITLE_2", config.title_fr.clone()),
-                    ("-s", "TITLE_3", config.title_es.clone()),
-                    ("-s", "TITLE_4", config.title_de.clone()),
-                    ("-s", "TITLE_5", config.title_it.clone()),
-                    ("-s", "TITLE_6", config.title_nl.clone()),
-                    ("-s", "TITLE_7", config.title_pt.clone()),
-                    ("-s", "TITLE_8", config.title_ru.clone()),
-                    ("-s", "UPDATER_VER", config.updater_version.clone()),
-                ];
-
-                Command::new("mksfo")
-                    // Add the optional config args
-                    .args({
-                        config_args
-                            .into_iter()
-                            // Filter through all the values that are not `None`
-                            .filter_map(|(f, k, v)| v.map(|v| (f, k, v)))
-                            // Map into 2 arguments, e.g. "-s" "NAME=VALUE"
-                            .flat_map(|(flag, key, value)| {
-                                vec![flag.into(), format!("{}={}", key, value)]
-                            })
-                    })
-                    .arg(config.title.clone().unwrap_or(target.name))
-                    .arg(&sfo_path)
-                    .stdin(Stdio::inherit())
-                    .stdout(Stdio::inherit())
-                    .stderr(Stdio::inherit())
-                    .output()
-                    .expect("failed to run mksfo");
-
-                Command::new("pack-pbp")
-                    .arg(&pbp_path)
-                    .arg(&sfo_path)
-                    .arg(config.xmb_icon_png.clone().unwrap_or("NULL".into()))
-                    .arg(config.xmb_icon_pmf.clone().unwrap_or("NULL".into()))
-                    .arg(
-                        config
-                            .xmb_background_overlay_png
-                            .clone()
-                            .unwrap_or("NULL".into()),
-                    )
-                    .arg(config.xmb_background_png.clone().unwrap_or("NULL".into()))
-                    .arg(config.xmb_music_at3.clone().unwrap_or("NULL".into()))
-                    .arg(&prx_path)
-                    .arg(config.psar.clone().unwrap_or("NULL".into()))
-                    .stdin(Stdio::inherit())
-                    .stdout(Stdio::inherit())
-                    .stderr(Stdio::inherit())
-                    .output()
-                    .expect("failed to run pack-pbp");
+        let [sfo_path, pbp_path] = ["PARAM.SFO", "EBOOT.PBP"].map(|e| {
+            if lone {
+                elf_path.with_file_name(e)
+            } else {
+                elf_path.with_extension(e)
             }
-        }
+        });
+
+        fix_imports::fix(&elf_path);
+
+        Command::new("prxgen")
+            .arg(&elf_path)
+            .arg(&prx_path)
+            .status()
+            .expect("failed to run prxgen");
+
+        let config_args = vec![
+            ("-s", "DISC_ID", config.disc_id.clone()),
+            ("-s", "DISC_VERSION", config.disc_version.clone()),
+            ("-s", "LANGUAGE", config.language.clone()),
+            (
+                "-d",
+                "PARENTAL_LEVEL",
+                config.parental_level.as_ref().map(u32::to_string),
+            ),
+            ("-s", "PSP_SYSTEM_VER", config.psp_system_ver.clone()),
+            ("-d", "REGION", config.region.as_ref().map(u32::to_string)),
+            ("-s", "TITLE_0", config.title_jp.clone()),
+            ("-s", "TITLE_2", config.title_fr.clone()),
+            ("-s", "TITLE_3", config.title_es.clone()),
+            ("-s", "TITLE_4", config.title_de.clone()),
+            ("-s", "TITLE_5", config.title_it.clone()),
+            ("-s", "TITLE_6", config.title_nl.clone()),
+            ("-s", "TITLE_7", config.title_pt.clone()),
+            ("-s", "TITLE_8", config.title_ru.clone()),
+            ("-s", "UPDATER_VER", config.updater_version.clone()),
+        ];
+
+        Command::new("mksfo")
+            // Add the optional config args
+            .args({
+                config_args
+                    .into_iter()
+                    // Filter through all the values that are not `None`
+                    .filter_map(|(f, k, v)| v.map(|v| (f, k, v)))
+                    // Map into 2 arguments, e.g. "-s" "NAME=VALUE"
+                    .flat_map(|(flag, key, value)| vec![flag.into(), format!("{}={}", key, value)])
+            })
+            .arg(
+                config
+                    .title
+                    .as_ref()
+                    .map(|s| s.as_ref())
+                    .or_else(|| elf_path.file_stem())
+                    .unwrap(),
+            )
+            .arg(&sfo_path)
+            .status()
+            .expect("failed to run mksfo");
+
+        Command::new("pack-pbp")
+            .arg(&pbp_path)
+            .arg(&sfo_path)
+            .arg(config.xmb_icon_png.as_deref().unwrap_or("NULL"))
+            .arg(config.xmb_icon_pmf.as_deref().unwrap_or("NULL"))
+            .arg(
+                config
+                    .xmb_background_overlay_png
+                    .as_deref()
+                    .unwrap_or("NULL"),
+            )
+            .arg(config.xmb_background_png.as_deref().unwrap_or("NULL"))
+            .arg(config.xmb_music_at3.as_deref().unwrap_or("NULL"))
+            .arg(&prx_path)
+            .arg(config.psar.as_deref().unwrap_or("NULL"))
+            .status()
+            .expect("failed to run pack-pbp");
     }
 }
