@@ -1,3 +1,2 @@
-/target
-/cargo-psp/target
+target
 /Cargo.lock
