@@ -145,9 +145,9 @@ extern "C-unwind" {
 #[inline(never)]
 #[no_mangle]
 #[cfg(not(feature = "std"))]
-fn rust_panic(mut msg: &mut dyn BoxMeUp) -> ! {
+fn rust_panic(msg: &mut dyn BoxMeUp) -> ! {
     let code = unsafe {
-        let obj = &mut msg as *mut &mut dyn BoxMeUp;
+        let obj = msg;
         panic_unwind::__rust_start_panic(obj as _)
     };
 
