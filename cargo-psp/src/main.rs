@@ -140,7 +140,7 @@ const MINIMUM_RUSTC_VERSION: Version = Version {
 fn main() {
     let rustc_version = rustc_version::version_meta().unwrap();
 
-    if rustc_version.channel >= Channel::Nightly {
+    if rustc_version.channel > Channel::Nightly {
         println!("cargo-psp requires a nightly rustc version.");
         println!(
             "Please run `rustup override set nightly` to use nightly in the \
