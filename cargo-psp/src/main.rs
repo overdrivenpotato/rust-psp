@@ -140,7 +140,7 @@ const MINIMUM_RUSTC_VERSION: Version = Version {
 fn main() {
     let rustc_version = rustc_version::version_meta().unwrap();
 
-    if rustc_version.channel > Channel::Nightly {
+    if rustc_version.channel >= Channel::Nightly {
         println!("cargo-psp requires a nightly rustc version.");
         println!(
             "Please run `rustup override set nightly` to use nightly in the \
@@ -150,7 +150,7 @@ fn main() {
     }
 
     let old_version = MINIMUM_RUSTC_VERSION
-        > Version {
+        >= Version {
             // Remove `-nightly` pre-release tag for comparison.
             pre: Vec::new(),
             ..rustc_version.semver.clone()
@@ -160,7 +160,7 @@ fn main() {
         None => false,
         Some(date) => {
             MINIMUM_COMMIT_DATE
-                > CommitDate::parse(&date).expect("could not parse `rustc --version` commit date")
+                >= CommitDate::parse(&date).expect("could not parse `rustc --version` commit date")
         }
     };
 
