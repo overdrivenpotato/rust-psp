@@ -179,12 +179,12 @@ fn main() {
     if old_version || old_commit {
         println!(
             "cargo-psp requires rustc nightly version >= {}",
-            MINIMUM_COMMIT_DATE + 
-            CommitDate {
-                year: 0,
-                month: 0,
-                day: 1
-            },
+            MINIMUM_COMMIT_DATE
+                + CommitDate {
+                    year: 0,
+                    month: 0,
+                    day: 1
+                },
         );
         println!("Please run `rustup update nightly` to upgrade your nightly version");
 
