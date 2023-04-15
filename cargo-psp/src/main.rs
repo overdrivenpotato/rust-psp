@@ -143,7 +143,7 @@ const MINIMUM_COMMIT_DATE: CommitDate = CommitDate {
 };
 const MINIMUM_RUSTC_VERSION: Version = Version {
     major: 1,
-    minor: 69,
+    minor: 70,
     patch: 0,
     pre: Vec::new(),
     build: Vec::new(),
