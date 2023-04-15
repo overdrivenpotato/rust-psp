@@ -24,7 +24,7 @@ pub struct SceMp3InitArg {
 
 #[derive(Copy, Clone, Debug)]
 #[repr(transparent)]
-pub struct Handle(pub i32);
+pub struct Mp3Handle(pub i32);
 
 psp_extern! {
     #![name = "sceMp3"]
@@ -51,7 +51,7 @@ psp_extern! {
     /// # Return Value
     ///
     /// 0 if success, < 0 on error.
-    pub fn sceMp3ReleaseMp3Handle(handle: Handle) -> i32;
+    pub fn sceMp3ReleaseMp3Handle(handle: Mp3Handle) -> i32;
 
     #[psp(0x35750070)]
     /// # Return Value
@@ -73,7 +73,7 @@ psp_extern! {
     /// # Return Value
     ///
     /// 0 if success, < 0 on error.
-    pub fn sceMp3Init(handle: Handle) -> i32;
+    pub fn sceMp3Init(handle: Mp3Handle) -> i32;
 
     #[psp(0xD021C0FB)]
     /// # Parameters
@@ -84,7 +84,7 @@ psp_extern! {
     /// # Return Value
     ///
     /// number of bytes in decoded pcm buffer, < 0 on error.
-    pub fn sceMp3Decode(handle: Handle, dst: *mut *mut i16) -> i32;
+    pub fn sceMp3Decode(handle: Mp3Handle, dst: *mut *mut i16) -> i32;
 
     #[psp(0xA703FE0F)]
     /// # Parameters
@@ -98,7 +98,7 @@ psp_extern! {
     ///
     /// 0 if success, < 0 on error.
     pub fn sceMp3GetInfoToAddStreamData(
-        handle: Handle,
+        handle: Mp3Handle,
         dst: *mut *mut u8,
         to_write: *mut i32,
         src_pos: *mut i32,
@@ -113,7 +113,7 @@ psp_extern! {
     /// # Return Value
     ///
     /// 0 if success, < 0 on error.
-    pub fn sceMp3NotifyAddStreamData(handle: Handle, size: i32) -> i32;
+    pub fn sceMp3NotifyAddStreamData(handle: Mp3Handle, size: i32) -> i32;
 
     #[psp(0xD0A56296)]
     /// # Parameters
@@ -123,7 +123,7 @@ psp_extern! {
     /// # Return Value
     ///
     /// 1 if more stream data is needed, < 0 on error.
-    pub fn sceMp3CheckStreamDataNeeded(handle: Handle) -> i32;
+    pub fn sceMp3CheckStreamDataNeeded(handle: Mp3Handle) -> i32;
 
     #[psp(0x3CEF484F)]
     /// # Parameters
@@ -134,7 +134,7 @@ psp_extern! {
     /// # Return Value
     ///
     /// 0 if success, < 0 on error.
-    pub fn sceMp3SetLoopNum(handle: Handle, loop_: i32) -> i32;
+    pub fn sceMp3SetLoopNum(handle: Mp3Handle, loop_: i32) -> i32;
 
     #[psp(0xD8F54A51)]
     /// # Parameters
@@ -144,7 +144,7 @@ psp_extern! {
     /// # Return Value
     ///
     /// Number of loops
-    pub fn sceMp3GetLoopNum(handle: Handle) -> i32;
+    pub fn sceMp3GetLoopNum(handle: Mp3Handle) -> i32;
 
     #[psp(0x354D27EA)]
     /// # Parameters
@@ -154,7 +154,7 @@ psp_extern! {
     /// # Return Value
     ///
     /// Number of decoded samples
-    pub fn sceMp3GetSumDecodedSample(handle: Handle) -> i32;
+    pub fn sceMp3GetSumDecodedSample(handle: Mp3Handle) -> i32;
 
     #[psp(0x87C263D1)]
     /// # Parameters
@@ -164,7 +164,7 @@ psp_extern! {
     /// # Return Value
     ///
     /// Number of max samples to output
-    pub fn sceMp3GetMaxOutputSample(handle: Handle) -> i32;
+    pub fn sceMp3GetMaxOutputSample(handle: Mp3Handle) -> i32;
 
     #[psp(0x8F450998)]
     /// # Parameters
@@ -174,7 +174,7 @@ psp_extern! {
     /// # Return Value
     ///
     /// Sampling rate of the mp3
-    pub fn sceMp3GetSamplingRate(handle: Handle) -> i32;
+    pub fn sceMp3GetSamplingRate(handle: Mp3Handle) -> i32;
 
     #[psp(0x87677E40)]
     /// # Parameters
@@ -184,7 +184,7 @@ psp_extern! {
     /// # Return Value
     ///
     /// Bitrate of the mp3
-    pub fn sceMp3GetBitRate(handle: Handle) -> i32;
+    pub fn sceMp3GetBitRate(handle: Mp3Handle) -> i32;
 
     #[psp(0x7F696782)]
     /// # Parameters
@@ -194,7 +194,7 @@ psp_extern! {
     /// # Return Value
     ///
     /// Number of channels of the mp3
-    pub fn sceMp3GetMp3ChannelNum(handle: Handle) -> i32;
+    pub fn sceMp3GetMp3ChannelNum(handle: Mp3Handle) -> i32;
 
     #[psp(0x2A368661)]
     /// # Parameters
@@ -204,5 +204,5 @@ psp_extern! {
     /// # Return Value
     ///
     /// < 0 on error
-    pub fn sceMp3ResetPlayPosition(handle: Handle) -> i32;
+    pub fn sceMp3ResetPlayPosition(handle: Mp3Handle) -> i32;
 }
