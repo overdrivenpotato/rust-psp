@@ -121,17 +121,29 @@ impl fmt::Display for CommitDate {
     }
 }
 
-// Minimum 2023-04-11, remember to update both commit date and version too,
+impl core::ops::Add<CommitDate> for CommitDate {
+    type Output = CommitDate;
+
+    fn add(self, rhs: CommitDate) -> Self::Output {
+        Self {
+            year: self.year + rhs.year,
+            month: self.month + rhs.month,
+            day: self.day + rhs.day,
+        }
+    }
+}
+
+// Minimum 2023-03-27, remember to update both commit date and version too,
 // below. Note that the `day` field lags by one day, as the toolchain always
 // contains the previous days' nightly rustc.
 const MINIMUM_COMMIT_DATE: CommitDate = CommitDate {
     year: 2023,
-    month: 04,
-    day: 11,
+    month: 03,
+    day: 27,
 };
 const MINIMUM_RUSTC_VERSION: Version = Version {
     major: 1,
-    minor: 70,
+    minor: 69,
     patch: 0,
     pre: Vec::new(),
     build: Vec::new(),
@@ -167,7 +179,12 @@ fn main() {
     if old_version || old_commit {
         println!(
             "cargo-psp requires rustc nightly version >= {}",
-            MINIMUM_COMMIT_DATE,
+            MINIMUM_COMMIT_DATE + 
+            CommitDate {
+                year: 0,
+                month: 0,
+                day: 1
+            },
         );
         println!("Please run `rustup update nightly` to upgrade your nightly version");
 
