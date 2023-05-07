@@ -94,10 +94,10 @@ unsafe extern "C" fn memcmp(ptr1: *mut u8, ptr2: *mut u8, num: usize) -> i32 {
     while i < num {
         let val1 = *((ptr1 as usize + i) as *mut u8);
         let val2 = *((ptr2 as usize + i) as *mut u8);
-        let diff = val1 - val2;
+        let diff = val1 as i32 - val2 as i32;
 
         if diff != 0 {
-            return diff as i32;
+            return diff;
         }
 
         i += 1;
