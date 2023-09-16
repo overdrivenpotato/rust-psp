@@ -11,7 +11,7 @@ image_resource:
     tag: 1.44-slim
 
 params:
-  RUSTUP_TOOLCHAIN: nightly-2023-03-28
+  RUSTUP_TOOLCHAIN: nightly-2023-09-16
 
 inputs:
   - name: repo
