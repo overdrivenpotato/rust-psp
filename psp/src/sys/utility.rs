@@ -90,7 +90,6 @@ pub enum SceUtilityOskInputType {
 #[repr(u32)]
 pub enum SceUtilityOskState {
     None,
-    Initializing,
     Initialized,
     Visible,
     Quit,
