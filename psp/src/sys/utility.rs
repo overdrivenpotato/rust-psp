@@ -49,6 +49,23 @@ pub enum UtilityDialogButtonAccept {
 }
 
 #[repr(u32)]
+#[derive(Debug, Clone, Copy, TryFromPrimitive)]
+/// Return-values for the various `sceUtility***GetStatus()` functions, when they don't return an error.
+///
+/// # Example
+///
+/// ```no_run
+///    let status: PspUtilityDialogState = unsafe { sceUtilityOskGetStatus().try_into().unwrap() };
+/// ```
+pub enum PspUtilityDialogState {
+    None,
+    Init,
+    Visible,
+    Quit,
+    Finished,
+}
+
+#[repr(u32)]
 #[derive(Debug, Clone, Copy)]
 pub enum SceUtilityOskInputLanguage {
     Default,
@@ -695,8 +712,8 @@ pub struct SceUtilityOskParams {
     pub datacount: i32,
     /// Pointer to the start of the data for the input fields
     pub data: *mut SceUtilityOskData,
-    /// The local OSK state, one of `SceUtilityOskState`
-    pub state: SceUtilityOskState,
+    /// The local OSK state, one of [`PspUtilityDialogState`]
+    pub state: PspUtilityDialogState,
     /// Unknown. Pass 0
     pub unk_60: i32,
 }
@@ -783,7 +800,7 @@ psp_extern! {
     ///
     /// # Return Value
     ///
-    /// one of DialogState on success, < 0 on error
+    /// one of [`PspUtilityDialogState`] on success, < 0 on error
     pub fn sceUtilityNetconfGetStatus() -> i32;
 
     #[psp(0x5EEE6548)]
@@ -1033,9 +1050,23 @@ psp_extern! {
     #[psp(0xF3F76017)]
     /// Get the status of a on-screen keyboard currently active.
     ///
+    /// # Example
+    ///
+    /// ```
+    /// unsafe {
+    ///     let status: PspUtilityDialogState = sceUtilityOskGetStatus().try_into().unwrap();
+    ///     match status {
+    ///         PspUtilityDialogState::Visible => {
+    ///             // do something
+    ///        }
+    ///        // ...
+    ///    }
+    /// }
+    /// ```
+    ///
     /// # Return Value
     ///
-    /// the current status of the keyboard. See ::DialogState for details.
+    /// the current status of the keyboard. See [`PspUtilityDialogState`] for details.
     pub fn sceUtilityOskGetStatus() -> i32;
 
     #[psp(0x1579a159)]
