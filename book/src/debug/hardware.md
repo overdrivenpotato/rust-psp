@@ -30,7 +30,8 @@ debug = true
 ```
 
 ## Setting up PSPLink
-Back on your PC, run `usbhostfs_pc <path>` where `<path>` is your `target` directory
+`usbhostfs_pc` exposes part of your host filesystem to the PSP over USB.
+Run `usbhostfs_pc <path>` where `<path>` is your `target` directory
 or somewhere above it in your folder hierarchy. Basically you will need the `target`
 directory build outputs to be accessible from the path chosen. 
 
