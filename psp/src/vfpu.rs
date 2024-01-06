@@ -369,6 +369,21 @@ macro_rules! try_stringify_reg {
 #[doc(hidden)]
 macro_rules! instruction {
     // No offset
+    (lv.s $t:ident, $s:tt) => { $crate::instruction!(lv.s $t, 0($s)) };
+
+    // lv.s 110110ss sssttttt oooooooo oooooo0t
+    (lv.s $t:ident, $offset:literal ( $s:tt )) => {
+        concat!(
+            "__psp_reg_or ", $crate::stringify_asm!($s), " (16+5) ", " (",
+                "(0b11001000 << 24) | ",
+                "((", $crate::register_single!($t), "& 0b11111) << 16) | ",
+                "((((", stringify!($offset), " / 4) >> 6) & 0xff) << 8) | ",
+                "(((", stringify!($offset), " / 4) << 2) & 0xff) | ((", $crate::register_quad!($t), " >> 5) & 1)",
+            ")",
+        )
+    };
+
+    // No offset
     (lv.q $t:ident, $s:tt) => { $crate::instruction!(lv.q $t, 0($s)) };
 
     // lv.q 110110ss sssttttt oooooooo oooooo0t
