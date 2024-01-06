@@ -467,6 +467,8 @@ macro_rules! instruction {
     };
 
     // mtv 0100 1000 111 sssss 0000 0000 0 ddddddd
+    (mtvc $t:ident, $s:ident) => { $crate::instruction!(mtv $t, $s) };
+
     (mtv $s:tt, $d:ident) => {
         concat!(
             "__psp_reg_or ", $crate::stringify_asm!($s), " 16 (",
@@ -478,7 +480,10 @@ macro_rules! instruction {
         )
     };
 
+
     // mfv 0100 1000 011 ddddd 000000000 sssssss
+    (mfvc $t:ident, $s:ident) => { $crate::instruction!(mfv $t, $s) };
+
     (mfv $d:tt, $s:ident) => {
         concat!(
             "__psp_reg_or ", $crate::stringify_asm!($d), " 16 (",
