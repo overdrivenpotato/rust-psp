@@ -378,7 +378,7 @@ macro_rules! instruction {
                 "(0b11001000 << 24) | ",
                 "((", $crate::register_single!($t), "& 0b11111) << 16) | ",
                 "((((", stringify!($offset), " / 4) >> 6) & 0xff) << 8) | ",
-                "(((", stringify!($offset), " / 4) << 2) & 0xff) | ((", $crate::register_quad!($t), " >> 5) & 1)",
+                "(((", stringify!($offset), " / 4) << 2) & 0xff) | ((", $crate::register_single!($t), " >> 5) & 1)",
             ")",
         )
     };
