@@ -384,6 +384,40 @@ macro_rules! instruction {
     };
 
     // No offset, no writeback
+    (sv.s $t:ident, $s:tt) => {
+        $crate::instruction!(sv.s $t, 0($s), wb:0)
+    };
+
+    // No offset, has writeback
+    (sv.s $t:ident, $s:tt, wb) => {
+        $crate::instruction!(sv.s $t, 0($s), wb:1)
+    };
+
+    // Has offset, no writeback
+    (sv.s $t:ident, $offset:literal ( $s:tt )) => {
+        $crate::instruction!(sv.s $t, $offset ($s), wb:0)
+    };
+
+    // Has offset, has writeback
+    (sv.s $t:ident, $offset:literal ( $s:tt ), wb) => {
+        $crate::instruction!(sv.s $t, $offset ($s), wb:1)
+    };
+
+    // sv.s 111110ss sssttttt oooooooo oooooowt
+    (sv.s $t:ident, $offset:literal ( $s:tt ), wb:$wb:literal) => {
+        concat!(
+            "__psp_reg_or ", $crate::stringify_asm!($s), " (16+5) (",
+                "(0b11101000 << 24) | ",
+                "((", $crate::register_single!($t), " & 0b11111) << 16) | ",
+                "((((", stringify!($offset), " / 4) >> 6) & 0xff) << 8) | ",
+                "(((", stringify!($offset), " / 4) << 2) & 0xff) | ",
+                    "((", $crate::register_single!($t), " >> 5) & 1) | ",
+                    "(", stringify!($wb), " << 1)",
+            ")",
+        )
+    };
+
+    // No offset, no writeback
     (sv.q $t:ident, $s:tt) => {
         $crate::instruction!(sv.q $t, 0($s), wb:0)
     };
@@ -553,1414 +587,2536 @@ macro_rules! instruction {
         )
     };
 
-    // vadd.s 0110 0000 0 ttttttt 0 sssssss 0 ddddddd
-    (vadd.s $d:ident, $s:ident, $t:ident) => {
+    // Performs element-wise floating point absolute value
+
+    (vabs.s $rd:ident, $rs:ident) => {
+        concat!(
+            ".word 0b11010000000000000000000000000000",
+            "| 0b0000000000000000",
+            "| (", $crate::register_single!($rd), " << 0)",
+            "| (", $crate::register_single!($rs), " << 8)",
+            "| (0b0000001 << 16)",
+        )
+    };
+
+    (vabs.p $rd:ident, $rs:ident) => {
+        concat!(
+            ".word 0b11010000000000000000000000000000",
+            "| 0b0000000010000000",
+            "| (", $crate::register_pair!($rd), " << 0)",
+            "| (", $crate::register_pair!($rs), " << 8)",
+            "| (0b0000001 << 16)",
+        )
+    };
+
+    (vabs.t $rd:ident, $rs:ident) => {
+        concat!(
+            ".word 0b11010000000000000000000000000000",
+            "| 0b1000000000000000",
+            "| (", $crate::register_triple!($rd), " << 0)",
+            "| (", $crate::register_triple!($rs), " << 8)",
+            "| (0b0000001 << 16)",
+        )
+    };
+
+    (vabs.q $rd:ident, $rs:ident) => {
+        concat!(
+            ".word 0b11010000000000000000000000000000",
+            "| 0b1000000010000000",
+            "| (", $crate::register_quad!($rd), " << 0)",
+            "| (", $crate::register_quad!($rs), " << 8)",
+            "| (0b0000001 << 16)",
+        )
+    };
+
+    // Performs element-wise floating point addition
+
+    (vadd.s $rd:ident, $rs:ident, $rt:ident) => {
+        concat!(
+            ".word 0b01100000000000000000000000000000",
+            "| 0b0000000000000000",
+            "| (", $crate::register_single!($rd), " << 0)",
+            "| (", $crate::register_single!($rs), " << 8)",
+            "| (", $crate::register_single!($rt), " << 16)",
+        )
+    };
+
+    (vadd.p $rd:ident, $rs:ident, $rt:ident) => {
+        concat!(
+            ".word 0b01100000000000000000000000000000",
+            "| 0b0000000010000000",
+            "| (", $crate::register_pair!($rd), " << 0)",
+            "| (", $crate::register_pair!($rs), " << 8)",
+            "| (", $crate::register_pair!($rt), " << 16)",
+        )
+    };
+
+    (vadd.t $rd:ident, $rs:ident, $rt:ident) => {
+        concat!(
+            ".word 0b01100000000000000000000000000000",
+            "| 0b1000000000000000",
+            "| (", $crate::register_triple!($rd), " << 0)",
+            "| (", $crate::register_triple!($rs), " << 8)",
+            "| (", $crate::register_triple!($rt), " << 16)",
+        )
+    };
+
+    (vadd.q $rd:ident, $rs:ident, $rt:ident) => {
+        concat!(
+            ".word 0b01100000000000000000000000000000",
+            "| 0b1000000010000000",
+            "| (", $crate::register_quad!($rd), " << 0)",
+            "| (", $crate::register_quad!($rs), " << 8)",
+            "| (", $crate::register_quad!($rt), " << 16)",
+        )
+    };
+
+    // Performs element-wise floating point asin(rs)⋅2/π operation
+
+    (vasin.s $rd:ident, $rs:ident) => {
+        concat!(
+            ".word 0b11010000000000000000000000000000",
+            "| 0b0000000000000000",
+            "| (", $crate::register_single!($rd), " << 0)",
+            "| (", $crate::register_single!($rs), " << 8)",
+            "| (0b0010111 << 16)",
+        )
+    };
+
+    (vasin.p $rd:ident, $rs:ident) => {
+        concat!(
+            ".word 0b11010000000000000000000000000000",
+            "| 0b0000000010000000",
+            "| (", $crate::register_pair!($rd), " << 0)",
+            "| (", $crate::register_pair!($rs), " << 8)",
+            "| (0b0010111 << 16)",
+        )
+    };
+
+    (vasin.t $rd:ident, $rs:ident) => {
+        concat!(
+            ".word 0b11010000000000000000000000000000",
+            "| 0b1000000000000000",
+            "| (", $crate::register_triple!($rd), " << 0)",
+            "| (", $crate::register_triple!($rs), " << 8)",
+            "| (0b0010111 << 16)",
+        )
+    };
+
+    (vasin.q $rd:ident, $rs:ident) => {
+        concat!(
+            ".word 0b11010000000000000000000000000000",
+            "| 0b1000000010000000",
+            "| (", $crate::register_quad!($rd), " << 0)",
+            "| (", $crate::register_quad!($rs), " << 8)",
+            "| (0b0010111 << 16)",
+        )
+    };
+
+    // Calculates the average value of the vector elements
+
+    (vavg.p $rd:ident, $rs:ident) => {
+        concat!(
+            ".word 0b11010000000000000000000000000000",
+            "| 0b0000000010000000",
+            "| (", $crate::register_single!($rd), " << 0)",
+            "| (", $crate::register_pair!($rs), " << 8)",
+            "| (0b1000111 << 16)",
+        )
+    };
+
+    (vavg.t $rd:ident, $rs:ident) => {
+        concat!(
+            ".word 0b11010000000000000000000000000000",
+            "| 0b1000000000000000",
+            "| (", $crate::register_single!($rd), " << 0)",
+            "| (", $crate::register_triple!($rs), " << 8)",
+            "| (0b1000111 << 16)",
+        )
+    };
+
+    (vavg.q $rd:ident, $rs:ident) => {
+        concat!(
+            ".word 0b11010000000000000000000000000000",
+            "| 0b1000000010000000",
+            "| (", $crate::register_single!($rd), " << 0)",
+            "| (", $crate::register_quad!($rs), " << 8)",
+            "| (0b1000111 << 16)",
+        )
+    };
+
+    // Performs a `butterfly` operation between the input elements.
+
+    (vbfy1.p $rd:ident, $rs:ident) => {
+        concat!(
+            ".word 0b11010000000000000000000000000000",
+            "| 0b0000000010000000",
+            "| (", $crate::register_pair!($rd), " << 0)",
+            "| (", $crate::register_pair!($rs), " << 8)",
+            "| (0b1000010 << 16)",
+        )
+    };
+
+    (vbfy1.q $rd:ident, $rs:ident) => {
+        concat!(
+            ".word 0b11010000000000000000000000000000",
+            "| 0b1000000010000000",
+            "| (", $crate::register_quad!($rd), " << 0)",
+            "| (", $crate::register_quad!($rs), " << 8)",
+            "| (0b1000010 << 16)",
+        )
+    };
+
+    // Performs a `butterfly` operation between the input elements.
+
+    (vbfy2.q $rd:ident, $rs:ident) => {
+        concat!(
+            ".word 0b11010000000000000000000000000000",
+            "| 0b1000000010000000",
+            "| (", $crate::register_quad!($rd), " << 0)",
+            "| (", $crate::register_quad!($rs), " << 8)",
+            "| (0b1000011 << 16)",
+        )
+    };
+
+    // Converts the input packed chars into full 32 bit integers in the output register. The input is placed on the most significant bits of the output integer, while the least significant bits are filled with zeros.
+
+    (vc2i.s $rd:ident, $rs:ident) => {
+        concat!(
+            ".word 0b11010000000000000000000000000000",
+            "| 0b0000000000000000",
+            "| (", $crate::register_quad!($rd), " << 0)",
+            "| (", $crate::register_single!($rs), " << 8)",
+            "| (0b0111001 << 16)",
+        )
+    };
+
+    // Performs element-wise floating point cos(π/2⋅rs) operation
+
+    (vcos.s $rd:ident, $rs:ident) => {
+        concat!(
+            ".word 0b11010000000000000000000000000000",
+            "| 0b0000000000000000",
+            "| (", $crate::register_single!($rd), " << 0)",
+            "| (", $crate::register_single!($rs), " << 8)",
+            "| (0b0010011 << 16)",
+        )
+    };
+
+    (vcos.p $rd:ident, $rs:ident) => {
+        concat!(
+            ".word 0b11010000000000000000000000000000",
+            "| 0b0000000010000000",
+            "| (", $crate::register_pair!($rd), " << 0)",
+            "| (", $crate::register_pair!($rs), " << 8)",
+            "| (0b0010011 << 16)",
+        )
+    };
+
+    (vcos.t $rd:ident, $rs:ident) => {
+        concat!(
+            ".word 0b11010000000000000000000000000000",
+            "| 0b1000000000000000",
+            "| (", $crate::register_triple!($rd), " << 0)",
+            "| (", $crate::register_triple!($rs), " << 8)",
+            "| (0b0010011 << 16)",
+        )
+    };
+
+    (vcos.q $rd:ident, $rs:ident) => {
+        concat!(
+            ".word 0b11010000000000000000000000000000",
+            "| 0b1000000010000000",
+            "| (", $crate::register_quad!($rd), " << 0)",
+            "| (", $crate::register_quad!($rs), " << 8)",
+            "| (0b0010011 << 16)",
+        )
+    };
+
+    // Performs a partial cross-product operation
+
+    (vcrs.t $rd:ident, $rs:ident, $rt:ident) => {
+        concat!(
+            ".word 0b01100110100000000000000000000000",
+            "| 0b1000000000000000",
+            "| (", $crate::register_triple!($rd), " << 0)",
+            "| (", $crate::register_triple!($rs), " << 8)",
+            "| (", $crate::register_triple!($rt), " << 16)",
+        )
+    };
+
+    // Performs a full cross-product operation
+
+    (vcrsp.t $rd:ident, $rs:ident, $rt:ident) => {
+        concat!(
+            ".word 0b11110010100000000000000000000000",
+            "| 0b1000000000000000",
+            "| (", $crate::register_triple!($rd), " << 0)",
+            "| (", $crate::register_triple!($rs), " << 8)",
+            "| (", $crate::register_triple!($rt), " << 16)",
+        )
+    };
+
+    // Loads a predefined indexed floating point constant specified by the immediate field
+
+    (vcst.s $rd:ident, $imm5:ident) => {
+        concat!(
+            ".word 0b11010000000000000000000000000000",
+            "| 0b0000000000000000",
+            "| (", $crate::register_single!($rd), " << 0)",
+            "| (0b0000000 << 8))",
+            "| (", $crate::vfpu_const!($imm5), " << 16)",
+        )
+    };
+
+    (vcst.p $rd:ident, $imm5:ident) => {
+        concat!(
+            ".word 0b11010000000000000000000000000000",
+            "| 0b0000000010000000",
+            "| (", $crate::register_pair!($rd), " << 0)",
+            "| (0b0000000 << 8))",
+            "| (", $crate::vfpu_const!($imm5), " << 16)",
+        )
+    };
+
+    (vcst.t $rd:ident, $imm5:ident) => {
+        concat!(
+            ".word 0b11010000000000000000000000000000",
+            "| 0b1000000000000000",
+            "| (", $crate::register_triple!($rd), " << 0)",
+            "| (0b0000000 << 8))",
+            "| (", $crate::vfpu_const!($imm5), " << 16)",
+        )
+    };
+
+    (vcst.q $rd:ident, $imm5:ident) => {
+        concat!(
+            ".word 0b11010000000000000000000000000000",
+            "| 0b1000000010000000",
+            "| (", $crate::register_quad!($rd), " << 0)",
+            "| (0b0000000 << 8))",
+            "| (", $crate::vfpu_const!($imm5), " << 16)",
+        )
+    };
+
+    // Performs a 2x2 matrix determinant between two matrix rows
+
+    (vdet.p $rd:ident, $rs:ident, $rt:ident) => {
+        concat!(
+            ".word 0b01100111000000000000000000000000",
+            "| 0b0000000010000000",
+            "| (", $crate::register_single!($rd), " << 0)",
+            "| (", $crate::register_pair!($rs), " << 8)",
+            "| (", $crate::register_pair!($rt), " << 16)",
+        )
+    };
+
+    // Performs element-wise floating point division
+
+    (vdiv.s $rd:ident, $rs:ident, $rt:ident) => {
+        concat!(
+            ".word 0b01100011100000000000000000000000",
+            "| 0b0000000000000000",
+            "| (", $crate::register_single!($rd), " << 0)",
+            "| (", $crate::register_single!($rs), " << 8)",
+            "| (", $crate::register_single!($rt), " << 16)",
+        )
+    };
+
+    (vdiv.p $rd:ident, $rs:ident, $rt:ident) => {
+        concat!(
+            ".word 0b01100011100000000000000000000000",
+            "| 0b0000000010000000",
+            "| (", $crate::register_pair!($rd), " << 0)",
+            "| (", $crate::register_pair!($rs), " << 8)",
+            "| (", $crate::register_pair!($rt), " << 16)",
+        )
+    };
+
+    (vdiv.t $rd:ident, $rs:ident, $rt:ident) => {
+        concat!(
+            ".word 0b01100011100000000000000000000000",
+            "| 0b1000000000000000",
+            "| (", $crate::register_triple!($rd), " << 0)",
+            "| (", $crate::register_triple!($rs), " << 8)",
+            "| (", $crate::register_triple!($rt), " << 16)",
+        )
+    };
+
+    (vdiv.q $rd:ident, $rs:ident, $rt:ident) => {
+        concat!(
+            ".word 0b01100011100000000000000000000000",
+            "| 0b1000000010000000",
+            "| (", $crate::register_quad!($rd), " << 0)",
+            "| (", $crate::register_quad!($rs), " << 8)",
+            "| (", $crate::register_quad!($rt), " << 16)",
+        )
+    };
+
+    // Performs vector floating point dot product
+
+    (vdot.p $rd:ident, $rs:ident, $rt:ident) => {
+        concat!(
+            ".word 0b01100100100000000000000000000000",
+            "| 0b0000000010000000",
+            "| (", $crate::register_single!($rd), " << 0)",
+            "| (", $crate::register_pair!($rs), " << 8)",
+            "| (", $crate::register_pair!($rt), " << 16)",
+        )
+    };
+
+    (vdot.t $rd:ident, $rs:ident, $rt:ident) => {
+        concat!(
+            ".word 0b01100100100000000000000000000000",
+            "| 0b1000000000000000",
+            "| (", $crate::register_single!($rd), " << 0)",
+            "| (", $crate::register_triple!($rs), " << 8)",
+            "| (", $crate::register_triple!($rt), " << 16)",
+        )
+    };
+
+    (vdot.q $rd:ident, $rs:ident, $rt:ident) => {
+        concat!(
+            ".word 0b01100100100000000000000000000000",
+            "| 0b1000000010000000",
+            "| (", $crate::register_single!($rd), " << 0)",
+            "| (", $crate::register_quad!($rs), " << 8)",
+            "| (", $crate::register_quad!($rt), " << 16)",
+        )
+    };
+
+    // Performs element-wise floating point exp2(rs) operation
+
+    (vexp2.s $rd:ident, $rs:ident) => {
+        concat!(
+            ".word 0b11010000000000000000000000000000",
+            "| 0b0000000000000000",
+            "| (", $crate::register_single!($rd), " << 0)",
+            "| (", $crate::register_single!($rs), " << 8)",
+            "| (0b0010100 << 16)",
+        )
+    };
+
+    (vexp2.p $rd:ident, $rs:ident) => {
+        concat!(
+            ".word 0b11010000000000000000000000000000",
+            "| 0b0000000010000000",
+            "| (", $crate::register_pair!($rd), " << 0)",
+            "| (", $crate::register_pair!($rs), " << 8)",
+            "| (0b0010100 << 16)",
+        )
+    };
+
+    (vexp2.t $rd:ident, $rs:ident) => {
+        concat!(
+            ".word 0b11010000000000000000000000000000",
+            "| 0b1000000000000000",
+            "| (", $crate::register_triple!($rd), " << 0)",
+            "| (", $crate::register_triple!($rs), " << 8)",
+            "| (0b0010100 << 16)",
+        )
+    };
+
+    (vexp2.q $rd:ident, $rs:ident) => {
+        concat!(
+            ".word 0b11010000000000000000000000000000",
+            "| 0b1000000010000000",
+            "| (", $crate::register_quad!($rd), " << 0)",
+            "| (", $crate::register_quad!($rs), " << 8)",
+            "| (0b0010100 << 16)",
+        )
+    };
+
+    // Converts the float inputs to float16 (half-float) and packs them in pairs in the output register. The conversion process may naturally result in precision loss.
+
+    (vf2h.p $rd:ident, $rs:ident) => {
+        concat!(
+            ".word 0b11010000000000000000000000000000",
+            "| 0b0000000010000000",
+            "| (", $crate::register_single!($rd), " << 0)",
+            "| (", $crate::register_pair!($rs), " << 8)",
+            "| (0b0110010 << 16)",
+        )
+    };
+
+    (vf2h.q $rd:ident, $rs:ident) => {
+        concat!(
+            ".word 0b11010000000000000000000000000000",
+            "| 0b1000000010000000",
+            "| (", $crate::register_pair!($rd), " << 0)",
+            "| (", $crate::register_quad!($rs), " << 8)",
+            "| (0b0110010 << 16)",
+        )
+    };
+
+    // Performs element-wise float to integer conversion with optional scaling factor, rounding down (that is, towards the previous, equal or smaller, integer value)
+
+    (vf2id.s $rd:ident, $rs:ident, $scale:expr) => {
+        concat!(
+            ".word 0b11010010000000000000000000000000",
+            "| 0b0000000000000000",
+            "| (", $crate::register_single!($rd), " << 0)",
+            "| (", $crate::register_single!($rs), " << 8)",
+            "| (", stringify!($scale), " << 16)",
+        )
+    };
+
+    (vf2id.p $rd:ident, $rs:ident, $scale:expr) => {
+        concat!(
+            ".word 0b11010010000000000000000000000000",
+            "| 0b0000000010000000",
+            "| (", $crate::register_pair!($rd), " << 0)",
+            "| (", $crate::register_pair!($rs), " << 8)",
+            "| (", stringify!($scale), " << 16)",
+        )
+    };
+
+    (vf2id.t $rd:ident, $rs:ident, $scale:expr) => {
+        concat!(
+            ".word 0b11010010000000000000000000000000",
+            "| 0b1000000000000000",
+            "| (", $crate::register_triple!($rd), " << 0)",
+            "| (", $crate::register_triple!($rs), " << 8)",
+            "| (", stringify!($scale), " << 16)",
+        )
+    };
+
+    (vf2id.q $rd:ident, $rs:ident, $scale:expr) => {
+        concat!(
+            ".word 0b11010010000000000000000000000000",
+            "| 0b1000000010000000",
+            "| (", $crate::register_quad!($rd), " << 0)",
+            "| (", $crate::register_quad!($rs), " << 8)",
+            "| (", stringify!($scale), " << 16)",
+        )
+    };
+
+    // Performs element-wise float to integer conversion with optional scaling factor, rounding to the nearest integer
+
+    (vf2in.s $rd:ident, $rs:ident, $scale:expr) => {
+        concat!(
+            ".word 0b11010010000000000000000000000000",
+            "| 0b0000000000000000",
+            "| (", $crate::register_single!($rd), " << 0)",
+            "| (", $crate::register_single!($rs), " << 8)",
+            "| (", stringify!($scale), " << 16)",
+        )
+    };
+
+    (vf2in.p $rd:ident, $rs:ident, $scale:expr) => {
+        concat!(
+            ".word 0b11010010000000000000000000000000",
+            "| 0b0000000010000000",
+            "| (", $crate::register_pair!($rd), " << 0)",
+            "| (", $crate::register_pair!($rs), " << 8)",
+            "| (", stringify!($scale), " << 16)",
+        )
+    };
+
+    (vf2in.t $rd:ident, $rs:ident, $scale:expr) => {
+        concat!(
+            ".word 0b11010010000000000000000000000000",
+            "| 0b1000000000000000",
+            "| (", $crate::register_triple!($rd), " << 0)",
+            "| (", $crate::register_triple!($rs), " << 8)",
+            "| (", stringify!($scale), " << 16)",
+        )
+    };
+
+    (vf2in.q $rd:ident, $rs:ident, $scale:expr) => {
+        concat!(
+            ".word 0b11010010000000000000000000000000",
+            "| 0b1000000010000000",
+            "| (", $crate::register_quad!($rd), " << 0)",
+            "| (", $crate::register_quad!($rs), " << 8)",
+            "| (", stringify!($scale), " << 16)",
+        )
+    };
+
+    // Performs element-wise float to integer conversion with optional scaling factor, rounding up (that is, towards the next, equal or greater, integer value)
+
+    (vf2iu.s $rd:ident, $rs:ident, $scale:expr) => {
+        concat!(
+            ".word 0b11010010000000000000000000000000",
+            "| 0b0000000000000000",
+            "| (", $crate::register_single!($rd), " << 0)",
+            "| (", $crate::register_single!($rs), " << 8)",
+            "| (", stringify!($scale), " << 16)",
+        )
+    };
+
+    (vf2iu.p $rd:ident, $rs:ident, $scale:expr) => {
+        concat!(
+            ".word 0b11010010000000000000000000000000",
+            "| 0b0000000010000000",
+            "| (", $crate::register_pair!($rd), " << 0)",
+            "| (", $crate::register_pair!($rs), " << 8)",
+            "| (", stringify!($scale), " << 16)",
+        )
+    };
+
+    (vf2iu.t $rd:ident, $rs:ident, $scale:expr) => {
+        concat!(
+            ".word 0b11010010000000000000000000000000",
+            "| 0b1000000000000000",
+            "| (", $crate::register_triple!($rd), " << 0)",
+            "| (", $crate::register_triple!($rs), " << 8)",
+            "| (", stringify!($scale), " << 16)",
+        )
+    };
+
+    (vf2iu.q $rd:ident, $rs:ident, $scale:expr) => {
+        concat!(
+            ".word 0b11010010000000000000000000000000",
+            "| 0b1000000010000000",
+            "| (", $crate::register_quad!($rd), " << 0)",
+            "| (", $crate::register_quad!($rs), " << 8)",
+            "| (", stringify!($scale), " << 16)",
+        )
+    };
+
+    // Performs element-wise float to integer conversion with optional scaling factor, truncating the decimal argument (that is, rounding towards zero)
+
+    (vf2iz.s $rd:ident, $rs:ident, $scale:expr) => {
+        concat!(
+            ".word 0b11010010000000000000000000000000",
+            "| 0b0000000000000000",
+            "| (", $crate::register_single!($rd), " << 0)",
+            "| (", $crate::register_single!($rs), " << 8)",
+            "| (", stringify!($scale), " << 16)",
+        )
+    };
+
+    (vf2iz.p $rd:ident, $rs:ident, $scale:expr) => {
+        concat!(
+            ".word 0b11010010000000000000000000000000",
+            "| 0b0000000010000000",
+            "| (", $crate::register_pair!($rd), " << 0)",
+            "| (", $crate::register_pair!($rs), " << 8)",
+            "| (", stringify!($scale), " << 16)",
+        )
+    };
+
+    (vf2iz.t $rd:ident, $rs:ident, $scale:expr) => {
+        concat!(
+            ".word 0b11010010000000000000000000000000",
+            "| 0b1000000000000000",
+            "| (", $crate::register_triple!($rd), " << 0)",
+            "| (", $crate::register_triple!($rs), " << 8)",
+            "| (", stringify!($scale), " << 16)",
+        )
+    };
+
+    (vf2iz.q $rd:ident, $rs:ident, $scale:expr) => {
+        concat!(
+            ".word 0b11010010000000000000000000000000",
+            "| 0b1000000010000000",
+            "| (", $crate::register_quad!($rd), " << 0)",
+            "| (", $crate::register_quad!($rs), " << 8)",
+            "| (", stringify!($scale), " << 16)",
+        )
+    };
+
+    // Adds all vector elements toghether producing a single result
+
+    (vfad.p $rd:ident, $rs:ident) => {
+        concat!(
+            ".word 0b11010000000000000000000000000000",
+            "| 0b0000000010000000",
+            "| (", $crate::register_single!($rd), " << 0)",
+            "| (", $crate::register_pair!($rs), " << 8)",
+            "| (0b1000110 << 16)",
+        )
+    };
+
+    (vfad.t $rd:ident, $rs:ident) => {
+        concat!(
+            ".word 0b11010000000000000000000000000000",
+            "| 0b1000000000000000",
+            "| (", $crate::register_single!($rd), " << 0)",
+            "| (", $crate::register_triple!($rs), " << 8)",
+            "| (0b1000110 << 16)",
+        )
+    };
+
+    (vfad.q $rd:ident, $rs:ident) => {
+        concat!(
+            ".word 0b11010000000000000000000000000000",
+            "| 0b1000000010000000",
+            "| (", $crate::register_single!($rd), " << 0)",
+            "| (", $crate::register_quad!($rs), " << 8)",
+            "| (0b1000110 << 16)",
+        )
+    };
+
+    // Loads a float16 immediate value in a register
+
+    (vfim.s $rd:ident, $imm16:expr) => {
+        concat!(
+            ".word 0b11011111000000000000000000000000",
+            "| 0b0000000010000000",
+            "| ((", stringify!($imm16), " & 0xFFFF) << 0)",
+            "| (", $crate::register_single!($rd), " << 16)",
+        )
+    };
+
+    // Waits until the write buffer has been flushed
+
+    (vflush) => {
+        ".word 0b11111111111111110000010000001101"
+    };
+
+    // Converts the input packed float16 into full 32 bit floating point numbers.
+
+    (vh2f.s $rd:ident, $rs:ident) => {
+        concat!(
+            ".word 0b11010000000000000000000000000000",
+            "| 0b0000000000000000",
+            "| (", $crate::register_pair!($rd), " << 0)",
+            "| (", $crate::register_single!($rs), " << 8)",
+            "| (0b0110011 << 16)",
+        )
+    };
+
+    (vh2f.p $rd:ident, $rs:ident) => {
+        concat!(
+            ".word 0b11010000000000000000000000000000",
+            "| 0b0000000010000000",
+            "| (", $crate::register_quad!($rd), " << 0)",
+            "| (", $crate::register_pair!($rs), " << 8)",
+            "| (0b0110011 << 16)",
+        )
+    };
+
+    // Performs vector floating point homegeneous dot product
+
+    (vhdp.p $rd:ident, $rs:ident, $rt:ident) => {
+        concat!(
+            ".word 0b01100110000000000000000000000000",
+            "| 0b0000000010000000",
+            "| (", $crate::register_single!($rd), " << 0)",
+            "| (", $crate::register_pair!($rs), " << 8)",
+            "| (", $crate::register_pair!($rt), " << 16)",
+        )
+    };
+
+    (vhdp.t $rd:ident, $rs:ident, $rt:ident) => {
+        concat!(
+            ".word 0b01100110000000000000000000000000",
+            "| 0b1000000000000000",
+            "| (", $crate::register_single!($rd), " << 0)",
+            "| (", $crate::register_triple!($rs), " << 8)",
+            "| (", $crate::register_triple!($rt), " << 16)",
+        )
+    };
+
+    (vhdp.q $rd:ident, $rs:ident, $rt:ident) => {
+        concat!(
+            ".word 0b01100110000000000000000000000000",
+            "| 0b1000000010000000",
+            "| (", $crate::register_single!($rd), " << 0)",
+            "| (", $crate::register_quad!($rs), " << 8)",
+            "| (", $crate::register_quad!($rt), " << 16)",
+        )
+    };
+
+    // Performs a vector-matrix homogeneous transform (matrix-vector product), with a vector result
+
+    (vhtfm2.p $rd:ident, $rs:ident, $rt:ident) => {
+        concat!(
+            ".word 0b11110000100000000000000000000000",
+            "| 0b0000000000000000",
+            "| (", $crate::register_pair!($rd), " << 0)",
+            "| (", $crate::register_pair!($rd), " << 0)",
+            "| (", $crate::register_mpair!($rs), " << 8)",
+            "| (", $crate::register_pair!($rt), " << 16)",
+        )
+    };
+
+    // Performs a vector-matrix homogeneous transform (matrix-vector product), with a vector result
+
+    (vhtfm3.t $rd:ident, $rs:ident, $rt:ident) => {
+        concat!(
+            ".word 0b11110001000000000000000000000000",
+            "| 0b0000000010000000",
+            "| (", $crate::register_triple!($rd), " << 0)",
+            "| (", $crate::register_triple!($rd), " << 0)",
+            "| (", $crate::register_mtriple!($rs), " << 8)",
+            "| (", $crate::register_triple!($rt), " << 16)",
+        )
+    };
+
+    // Performs a vector-matrix homogeneous transform (matrix-vector product), with a vector result
+
+    (vhtfm4.q $rd:ident, $rs:ident, $rt:ident) => {
+        concat!(
+            ".word 0b11110001100000000000000000000000",
+            "| 0b1000000000000000",
+            "| (", $crate::register_quad!($rd), " << 0)",
+            "| (", $crate::register_quad!($rd), " << 0)",
+            "| (", $crate::register_mquad!($rs), " << 8)",
+            "| (", $crate::register_quad!($rt), " << 16)",
+        )
+    };
+
+    // Converts the four integer inputs to char and packs them as a single element word. The conversion process takes the 8 most significant bits of each integer.
+
+    (vi2c.q $rd:ident, $rs:ident) => {
+        concat!(
+            ".word 0b11010000000000000000000000000000",
+            "| 0b1000000010000000",
+            "| (", $crate::register_single!($rd), " << 0)",
+            "| (", $crate::register_quad!($rs), " << 8)",
+            "| (0b0111101 << 16)",
+        )
+    };
+
+    // Performs element-wise integer to float conversion with optional scaling factor. The integer is divided by 2^scale after the conversion.
+
+    (vi2f.s $rd:ident, $rs:ident, $scale:expr) => {
+        concat!(
+            ".word 0b11010010100000000000000000000000",
+            "| 0b0000000000000000",
+            "| (", $crate::register_single!($rd), " << 0)",
+            "| (", $crate::register_single!($rs), " << 8)",
+            "| (", stringify!($scale), " << 16)",
+        )
+    };
+
+    (vi2f.p $rd:ident, $rs:ident, $scale:expr) => {
+        concat!(
+            ".word 0b11010010100000000000000000000000",
+            "| 0b0000000010000000",
+            "| (", $crate::register_pair!($rd), " << 0)",
+            "| (", $crate::register_pair!($rs), " << 8)",
+            "| (", stringify!($scale), " << 16)",
+        )
+    };
+
+    (vi2f.t $rd:ident, $rs:ident, $scale:expr) => {
+        concat!(
+            ".word 0b11010010100000000000000000000000",
+            "| 0b1000000000000000",
+            "| (", $crate::register_triple!($rd), " << 0)",
+            "| (", $crate::register_triple!($rs), " << 8)",
+            "| (", stringify!($scale), " << 16)",
+        )
+    };
+
+    (vi2f.q $rd:ident, $rs:ident, $scale:expr) => {
+        concat!(
+            ".word 0b11010010100000000000000000000000",
+            "| 0b1000000010000000",
+            "| (", $crate::register_quad!($rd), " << 0)",
+            "| (", $crate::register_quad!($rs), " << 8)",
+            "| (", stringify!($scale), " << 16)",
+        )
+    };
+
+    // Converts the integer inputs to short and packs them in pairs in the output register. The conversion process takes the 16 most significant bits of each integer.
+
+    (vi2s.p $rd:ident, $rs:ident) => {
+        concat!(
+            ".word 0b11010000000000000000000000000000",
+            "| 0b0000000010000000",
+            "| (", $crate::register_single!($rd), " << 0)",
+            "| (", $crate::register_pair!($rs), " << 8)",
+            "| (0b0111111 << 16)",
+        )
+    };
+
+    (vi2s.q $rd:ident, $rs:ident) => {
+        concat!(
+            ".word 0b11010000000000000000000000000000",
+            "| 0b1000000010000000",
+            "| (", $crate::register_pair!($rd), " << 0)",
+            "| (", $crate::register_quad!($rs), " << 8)",
+            "| (0b0111111 << 16)",
+        )
+    };
+
+    // Converts the four integer inputs to char and packs them as a single element word. The conversion process takes the 8 most significant bits of each integer and clamps any negative input values to zero.
+
+    (vi2uc.q $rd:ident, $rs:ident) => {
+        concat!(
+            ".word 0b11010000000000000000000000000000",
+            "| 0b1000000010000000",
+            "| (", $crate::register_single!($rd), " << 0)",
+            "| (", $crate::register_quad!($rs), " << 8)",
+            "| (0b0111100 << 16)",
+        )
+    };
+
+    // Converts the integer inputs to short and packs them in pairs in the output register. The conversion process takes the 16 most significant bits of each integer and clamps any negative input values to zero.
+
+    (vi2us.p $rd:ident, $rs:ident) => {
         concat!(
-            "\n.byte ", $crate::register_single!($d),
-            "\n.byte ", $crate::register_single!($s),
-            "\n.byte ", $crate::register_single!($t),
-            "\n.byte 0b01100000",
+            ".word 0b11010000000000000000000000000000",
+            "| 0b0000000010000000",
+            "| (", $crate::register_single!($rd), " << 0)",
+            "| (", $crate::register_pair!($rs), " << 8)",
+            "| (0b0111110 << 16)",
         )
     };
 
-    // vadd.p 0110 0000 0 ttttttt 0 sssssss 1 ddddddd
-    (vadd.p $d:ident, $s:ident, $t:ident) => {
+    (vi2us.q $rd:ident, $rs:ident) => {
         concat!(
-            "\n.byte 0x80 | ", $crate::register_pair!($d),
-            "\n.byte ", $crate::register_pair!($s),
-            "\n.byte ", $crate::register_pair!($t),
-            "\n.byte 0b01100000",
+            ".word 0b11010000000000000000000000000000",
+            "| 0b1000000010000000",
+            "| (", $crate::register_pair!($rd), " << 0)",
+            "| (", $crate::register_quad!($rs), " << 8)",
+            "| (0b0111110 << 16)",
         )
     };
 
-    // vadd.t 0110 0000 0 ttttttt 1 sssssss 0 ddddddd
-    (vadd.t $d:ident, $s:ident, $t:ident) => {
+    // Initializes destination register as an identity matrix row (all zeros but one). The behaviour depends on the destination register number.
+
+    (vidt.p $rd:ident) => {
+        concat!(
+            ".word 0b11010000000000000000000000000000",
+            "| 0b0000000010000000",
+            "| (", $crate::register_pair!($rd), " << 0)",
+            "| (0b0000000 << 8))",
+            "| (0b0000011 << 16)",
+        )
+    };
+
+    (vidt.q $rd:ident) => {
+        concat!(
+            ".word 0b11010000000000000000000000000000",
+            "| 0b1000000010000000",
+            "| (", $crate::register_quad!($rd), " << 0)",
+            "| (0b0000000 << 8))",
+            "| (0b0000011 << 16)",
+        )
+    };
+
+    // Loads a signed 16 bit immediate value (converted to floating point) in a register
+
+    (viim.s $rd:ident, $imm16:expr) => {
+        concat!(
+            ".word 0b11011111000000000000000000000000",
+            "| 0b0000000000000000",
+            "| ((", stringify!($imm16), " & 0xFFFF) << 0)",
+            "| (", $crate::register_single!($rd), " << 16)",
+        )
+    };
+
+    // Performs element-wise logB() calculation
+
+    (vlgb.s $rd:ident, $rs:ident) => {
+        concat!(
+            ".word 0b11010000000000000000000000000000",
+            "| 0b0000000000000000",
+            "| (", $crate::register_single!($rd), " << 0)",
+            "| (", $crate::register_single!($rs), " << 8)",
+            "| (0b0110111 << 16)",
+        )
+    };
+
+    // Performs element-wise floating point log2(rs) operation
+
+    (vlog2.s $rd:ident, $rs:ident) => {
+        concat!(
+            ".word 0b11010000000000000000000000000000",
+            "| 0b0000000000000000",
+            "| (", $crate::register_single!($rd), " << 0)",
+            "| (", $crate::register_single!($rs), " << 8)",
+            "| (0b0010101 << 16)",
+        )
+    };
+
+    (vlog2.p $rd:ident, $rs:ident) => {
+        concat!(
+            ".word 0b11010000000000000000000000000000",
+            "| 0b0000000010000000",
+            "| (", $crate::register_pair!($rd), " << 0)",
+            "| (", $crate::register_pair!($rs), " << 8)",
+            "| (0b0010101 << 16)",
+        )
+    };
+
+    (vlog2.t $rd:ident, $rs:ident) => {
+        concat!(
+            ".word 0b11010000000000000000000000000000",
+            "| 0b1000000000000000",
+            "| (", $crate::register_triple!($rd), " << 0)",
+            "| (", $crate::register_triple!($rs), " << 8)",
+            "| (0b0010101 << 16)",
+        )
+    };
+
+    (vlog2.q $rd:ident, $rs:ident) => {
+        concat!(
+            ".word 0b11010000000000000000000000000000",
+            "| 0b1000000010000000",
+            "| (", $crate::register_quad!($rd), " << 0)",
+            "| (", $crate::register_quad!($rs), " << 8)",
+            "| (0b0010101 << 16)",
+        )
+    };
+
+    // Performs element-wise floating point max(rs, rt) operation
+
+    (vmax.s $rd:ident, $rs:ident, $rt:ident) => {
+        concat!(
+            ".word 0b01101101100000000000000000000000",
+            "| 0b0000000000000000",
+            "| (", $crate::register_single!($rd), " << 0)",
+            "| (", $crate::register_single!($rs), " << 8)",
+            "| (", $crate::register_single!($rt), " << 16)",
+        )
+    };
+
+    (vmax.p $rd:ident, $rs:ident, $rt:ident) => {
+        concat!(
+            ".word 0b01101101100000000000000000000000",
+            "| 0b0000000010000000",
+            "| (", $crate::register_pair!($rd), " << 0)",
+            "| (", $crate::register_pair!($rs), " << 8)",
+            "| (", $crate::register_pair!($rt), " << 16)",
+        )
+    };
+
+    (vmax.t $rd:ident, $rs:ident, $rt:ident) => {
+        concat!(
+            ".word 0b01101101100000000000000000000000",
+            "| 0b1000000000000000",
+            "| (", $crate::register_triple!($rd), " << 0)",
+            "| (", $crate::register_triple!($rs), " << 8)",
+            "| (", $crate::register_triple!($rt), " << 16)",
+        )
+    };
+
+    (vmax.q $rd:ident, $rs:ident, $rt:ident) => {
+        concat!(
+            ".word 0b01101101100000000000000000000000",
+            "| 0b1000000010000000",
+            "| (", $crate::register_quad!($rd), " << 0)",
+            "| (", $crate::register_quad!($rs), " << 8)",
+            "| (", $crate::register_quad!($rt), " << 16)",
+        )
+    };
+
+    // Writes the identity matrix into the destination register
+
+    (vmidt.p $rd:ident) => {
+        concat!(
+            ".word 0b11110011100000000000000000000000",
+            "| 0b0000000010000000",
+            "| (", $crate::register_mpair!($rd), " << 0)",
+            "| (0b0000000 << 8))",
+            "| (0b0000011 << 16)",
+        )
+    };
+
+    (vmidt.t $rd:ident) => {
         concat!(
-            "\n.byte ", $crate::register_triple!($d),
-            "\n.byte 0x80 | ", $crate::register_triple!($s),
-            "\n.byte ", $crate::register_triple!($t),
-            "\n.byte 0b01100000",
+            ".word 0b11110011100000000000000000000000",
+            "| 0b1000000000000000",
+            "| (", $crate::register_mtriple!($rd), " << 0)",
+            "| (0b0000000 << 8))",
+            "| (0b0000011 << 16)",
         )
     };
 
-    // vadd.q 0110 0000 0 ttttttt 1 sssssss 1 ddddddd
-    (vadd.q $d:ident, $s:ident, $t:ident) => {
+    (vmidt.q $rd:ident) => {
         concat!(
-            "\n.byte 0x80 | ", $crate::register_quad!($d),
-            "\n.byte 0x80 | ", $crate::register_quad!($s),
-            "\n.byte ", $crate::register_quad!($t),
-            "\n.byte 0b01100000",
+            ".word 0b11110011100000000000000000000000",
+            "| 0b1000000010000000",
+            "| (", $crate::register_mquad!($rd), " << 0)",
+            "| (0b0000000 << 8))",
+            "| (0b0000011 << 16)",
         )
     };
 
-    // vsub.s 0110 0000 1 ttttttt 0 sssssss 0 ddddddd
-    (vsub.s $d:ident, $s:ident, $t:ident) => {
+    // Performs element-wise floating point min(rs, rt) operation
+
+    (vmin.s $rd:ident, $rs:ident, $rt:ident) => {
+        concat!(
+            ".word 0b01101101000000000000000000000000",
+            "| 0b0000000000000000",
+            "| (", $crate::register_single!($rd), " << 0)",
+            "| (", $crate::register_single!($rs), " << 8)",
+            "| (", $crate::register_single!($rt), " << 16)",
+        )
+    };
+
+    (vmin.p $rd:ident, $rs:ident, $rt:ident) => {
         concat!(
-            "\n.byte ", $crate::register_single!($d),
-            "\n.byte ", $crate::register_single!($s),
-            "\n.byte 0x80 | ", $crate::register_single!($t),
-            "\n.byte 0b01100000",
+            ".word 0b01101101000000000000000000000000",
+            "| 0b0000000010000000",
+            "| (", $crate::register_pair!($rd), " << 0)",
+            "| (", $crate::register_pair!($rs), " << 8)",
+            "| (", $crate::register_pair!($rt), " << 16)",
         )
     };
 
-    // vsub.p 0110 0000 1 ttttttt 0 sssssss 1 ddddddd
-    (vsub.p $d:ident, $s:ident, $t:ident) => {
+    (vmin.t $rd:ident, $rs:ident, $rt:ident) => {
         concat!(
-            "\n.byte 0x80 | ", $crate::register_pair!($d),
-            "\n.byte ", $crate::register_pair!($s),
-            "\n.byte 0x80 | ", $crate::register_pair!($t),
-            "\n.byte 0b01100000",
+            ".word 0b01101101000000000000000000000000",
+            "| 0b1000000000000000",
+            "| (", $crate::register_triple!($rd), " << 0)",
+            "| (", $crate::register_triple!($rs), " << 8)",
+            "| (", $crate::register_triple!($rt), " << 16)",
         )
     };
 
-    // vsub.t 0110 0000 1 ttttttt 1 sssssss 0 ddddddd
-    (vsub.t $d:ident, $s:ident, $t:ident) => {
+    (vmin.q $rd:ident, $rs:ident, $rt:ident) => {
         concat!(
-            "\n.byte ", $crate::register_triple!($d),
-            "\n.byte 0x80 | ", $crate::register_triple!($s),
-            "\n.byte 0x80 | ", $crate::register_triple!($t),
-            "\n.byte 0b01100000",
+            ".word 0b01101101000000000000000000000000",
+            "| 0b1000000010000000",
+            "| (", $crate::register_quad!($rd), " << 0)",
+            "| (", $crate::register_quad!($rs), " << 8)",
+            "| (", $crate::register_quad!($rt), " << 16)",
         )
     };
 
-    // vsub.q 0110 0000 1 ttttttt 1 sssssss 1 ddddddd
-    (vsub.q $d:ident, $s:ident, $t:ident) => {
+    // Element-wise data copy
+
+    (vmmov.p $rd:ident, $rs:ident) => {
         concat!(
-            "\n.byte 0x80 | ", $crate::register_quad!($d),
-            "\n.byte 0x80 | ", $crate::register_quad!($s),
-            "\n.byte 0x80 | ", $crate::register_quad!($t),
-            "\n.byte 0b01100000",
+            ".word 0b11110011100000000000000000000000",
+            "| 0b0000000010000000",
+            "| (", $crate::register_mpair!($rd), " << 0)",
+            "| (", $crate::register_mpair!($rs), " << 8)",
+            "| (0b0000000 << 16)",
         )
     };
 
-    // vdiv.s 0110 0011 1 ttttttt 0 sssssss 0 ddddddd
-    (vdiv.s $d:ident, $s:ident, $t:ident) => {
+    (vmmov.t $rd:ident, $rs:ident) => {
         concat!(
-            "\n.byte ", $crate::register_single!($d),
-            "\n.byte ", $crate::register_single!($s),
-            "\n.byte 0x80 | ", $crate::register_single!($t),
-            "\n.byte 0b01100011",
+            ".word 0b11110011100000000000000000000000",
+            "| 0b1000000000000000",
+            "| (", $crate::register_mtriple!($rd), " << 0)",
+            "| (", $crate::register_mtriple!($rs), " << 8)",
+            "| (0b0000000 << 16)",
         )
     };
 
-    // vdiv.p 0110 0011 1 ttttttt 0 sssssss 1 ddddddd
-    (vdiv.p $d:ident, $s:ident, $t:ident) => {
+    (vmmov.q $rd:ident, $rs:ident) => {
         concat!(
-            "\n.byte 0x80 | ", $crate::register_pair!($d),
-            "\n.byte ", $crate::register_pair!($s),
-            "\n.byte 0x80 | ", $crate::register_pair!($t),
-            "\n.byte 0b01100011",
+            ".word 0b11110011100000000000000000000000",
+            "| 0b1000000010000000",
+            "| (", $crate::register_mquad!($rd), " << 0)",
+            "| (", $crate::register_mquad!($rs), " << 8)",
+            "| (0b0000000 << 16)",
         )
     };
+
+    // Performs a matrix multiplication
 
-    // vdiv.t 0110 0011 1 ttttttt 1 sssssss 0 ddddddd
-    (vdiv.t $d:ident, $s:ident, $t:ident) => {
+    (vmmul.p $rd:ident, $rs:ident, $rt:ident) => {
         concat!(
-            "\n.byte ", $crate::register_triple!($d),
-            "\n.byte 0x80 | ", $crate::register_triple!($s),
-            "\n.byte 0x80 | ", $crate::register_triple!($t),
-            "\n.byte 0b01100011",
+            ".word 0b11110000000000000000000000000000",
+            "| 0b0000000010000000",
+            "| (", $crate::register_mpair!($rd), " << 0)",
+            "| (", $crate::register_mpair!($rs), " << 8)",
+            "| (", $crate::register_mpair!($rt), " << 16)",
         )
     };
 
-    // vdiv.q 0110 0011 1 ttttttt 1 sssssss 1 ddddddd
-    (vdiv.q $d:ident, $s:ident, $t:ident) => {
+    (vmmul.t $rd:ident, $rs:ident, $rt:ident) => {
         concat!(
-            "\n.byte 0x80 | ", $crate::register_quad!($d),
-            "\n.byte 0x80 | ", $crate::register_quad!($s),
-            "\n.byte 0x80 | ", $crate::register_quad!($t),
-            "\n.byte 0b01100011",
+            ".word 0b11110000000000000000000000000000",
+            "| 0b1000000000000000",
+            "| (", $crate::register_mtriple!($rd), " << 0)",
+            "| (", $crate::register_mtriple!($rs), " << 8)",
+            "| (", $crate::register_mtriple!($rt), " << 16)",
         )
     };
 
-    // vmul.s 0110 0100 0 ttttttt 0 sssssss 0 ddddddd
-    (vmul.s $d:ident, $s:ident, $t:ident) => {
+    (vmmul.q $rd:ident, $rs:ident, $rt:ident) => {
         concat!(
-            "\n.byte ", $crate::register_single!($d),
-            "\n.byte ", $crate::register_single!($s),
-            "\n.byte ", $crate::register_single!($t),
-            "\n.byte 0b01100100",
+            ".word 0b11110000000000000000000000000000",
+            "| 0b1000000010000000",
+            "| (", $crate::register_mquad!($rd), " << 0)",
+            "| (", $crate::register_mquad!($rs), " << 8)",
+            "| (", $crate::register_mquad!($rt), " << 16)",
         )
     };
 
-    // vmul.p 0110 0100 0 ttttttt 0 sssssss 1 ddddddd
-    (vmul.p $d:ident, $s:ident, $t:ident) => {
+    // Overwrites all elements in a matrix with ones (1.0f)
+
+    (vmone.p $rd:ident) => {
         concat!(
-            "\n.byte 0x80 | ", $crate::register_pair!($d),
-            "\n.byte ", $crate::register_pair!($s),
-            "\n.byte ", $crate::register_pair!($t),
-            "\n.byte 0b01100100",
+            ".word 0b11110011100000000000000000000000",
+            "| 0b0000000010000000",
+            "| (", $crate::register_mpair!($rd), " << 0)",
+            "| (0b0000000 << 8))",
+            "| (0b0000111 << 16)",
         )
     };
 
-    // vmul.t 0110 0100 0 ttttttt 1 sssssss 0 ddddddd
-    (vmul.t $d:ident, $s:ident, $t:ident) => {
+    (vmone.t $rd:ident) => {
         concat!(
-            "\n.byte ", $crate::register_triple!($d),
-            "\n.byte 0x80 | ", $crate::register_triple!($s),
-            "\n.byte ", $crate::register_triple!($t),
-            "\n.byte 0b01100100",
+            ".word 0b11110011100000000000000000000000",
+            "| 0b1000000000000000",
+            "| (", $crate::register_mtriple!($rd), " << 0)",
+            "| (0b0000000 << 8))",
+            "| (0b0000111 << 16)",
         )
     };
 
-    // vmul.q 0110 0100 0 ttttttt 1 sssssss 1 ddddddd
-    (vmul.q $d:ident, $s:ident, $t:ident) => {
+    (vmone.q $rd:ident) => {
         concat!(
-            "\n.byte 0x80 | ", $crate::register_quad!($d),
-            "\n.byte 0x80 | ", $crate::register_quad!($s),
-            "\n.byte ", $crate::register_quad!($t),
-            "\n.byte 0b01100100",
+            ".word 0b11110011100000000000000000000000",
+            "| 0b1000000010000000",
+            "| (", $crate::register_mquad!($rd), " << 0)",
+            "| (0b0000000 << 8))",
+            "| (0b0000111 << 16)",
         )
     };
 
-    // vdot.p 0110 0100 1 ttttttt 0 sssssss 1 ddddddd
-    (vdot.p $d:ident, $s:ident, $t:ident) => {
+    // Element-wise data copy
+
+    (vmov.s $rd:ident, $rs:ident) => {
         concat!(
-            "\n.byte 0x80 | ", $crate::register_pair!($d),
-            "\n.byte ", $crate::register_pair!($s),
-            "\n.byte 0x80 | ", $crate::register_pair!($t),
-            "\n.byte 0b01100100",
+            ".word 0b11010000000000000000000000000000",
+            "| 0b0000000000000000",
+            "| (", $crate::register_single!($rd), " << 0)",
+            "| (", $crate::register_single!($rs), " << 8)",
+            "| (0b0000000 << 16)",
         )
     };
 
-    // vdot.t 0110 0100 1 ttttttt 1 sssssss 0 ddddddd
-    (vdot.t $d:ident, $s:ident, $t:ident) => {
+    (vmov.p $rd:ident, $rs:ident) => {
         concat!(
-            "\n.byte ", $crate::register_triple!($d),
-            "\n.byte 0x80 | ", $crate::register_triple!($s),
-            "\n.byte 0x80 | ", $crate::register_triple!($t),
-            "\n.byte 0b01100100",
+            ".word 0b11010000000000000000000000000000",
+            "| 0b0000000010000000",
+            "| (", $crate::register_pair!($rd), " << 0)",
+            "| (", $crate::register_pair!($rs), " << 8)",
+            "| (0b0000000 << 16)",
         )
     };
 
-    // vdot.q 0110 0100 1 ttttttt 1 sssssss 1 ddddddd
-    (vdot.q $d:ident, $s:ident, $t:ident) => {
+    (vmov.t $rd:ident, $rs:ident) => {
         concat!(
-            "\n.byte 0x80 | ", $crate::register_quad!($d),
-            "\n.byte 0x80 | ", $crate::register_quad!($s),
-            "\n.byte 0x80 | ", $crate::register_quad!($t),
-            "\n.byte 0b01100100",
+            ".word 0b11010000000000000000000000000000",
+            "| 0b1000000000000000",
+            "| (", $crate::register_triple!($rd), " << 0)",
+            "| (", $crate::register_triple!($rs), " << 8)",
+            "| (0b0000000 << 16)",
         )
     };
 
-    // vhdp.p 0110 0110 0 ttttttt 0 sssssss 1 ddddddd
-    (vhdp.p $d:ident, $s:ident, $t:ident) => {
+    (vmov.q $rd:ident, $rs:ident) => {
         concat!(
-            "\n.byte 0x80 | ", $crate::register_pair!($d),
-            "\n.byte ", $crate::register_pair!($s),
-            "\n.byte ", $crate::register_pair!($t),
-            "\n.byte 0b01100110",
+            ".word 0b11010000000000000000000000000000",
+            "| 0b1000000010000000",
+            "| (", $crate::register_quad!($rd), " << 0)",
+            "| (", $crate::register_quad!($rs), " << 8)",
+            "| (0b0000000 << 16)",
         )
     };
+
+    // Performs a matrix scaling by a single factor
 
-    // vhdp.t 0110 0110 0 ttttttt 1 sssssss 0 ddddddd
-    (vhdp.t $d:ident, $s:ident, $t:ident) => {
+    (vmscl.p $rd:ident, $rs:ident, $rt:ident) => {
         concat!(
-            "\n.byte ", $crate::register_triple!($d),
-            "\n.byte 0x80 | ", $crate::register_triple!($s),
-            "\n.byte ", $crate::register_triple!($t),
-            "\n.byte 0b01100110",
+            ".word 0b11110010000000000000000000000000",
+            "| 0b0000000010000000",
+            "| (", $crate::register_mpair!($rd), " << 0)",
+            "| (", $crate::register_mpair!($rs), " << 8)",
+            "| (", $crate::register_single!($rt), " << 16)",
         )
     };
 
-    // vhdp.q 0110 0110 0 ttttttt 1 sssssss 1 ddddddd
-    (vhdp.q $d:ident, $s:ident, $t:ident) => {
+    (vmscl.t $rd:ident, $rs:ident, $rt:ident) => {
         concat!(
-            "\n.byte 0x80 | ", $crate::register_quad!($d),
-            "\n.byte 0x80 | ", $crate::register_quad!($s),
-            "\n.byte ", $crate::register_quad!($t),
-            "\n.byte 0b01100110",
+            ".word 0b11110010000000000000000000000000",
+            "| 0b1000000000000000",
+            "| (", $crate::register_mtriple!($rd), " << 0)",
+            "| (", $crate::register_mtriple!($rs), " << 8)",
+            "| (", $crate::register_single!($rt), " << 16)",
         )
     };
 
-    // vmin.s 0110 1101 0 ttttttt 0 sssssss 0 ddddddd
-    (vmin.s $d:ident, $s:ident, $t:ident) => {
+    (vmscl.q $rd:ident, $rs:ident, $rt:ident) => {
         concat!(
-            "\n.byte ", $crate::register_single!($d),
-            "\n.byte ", $crate::register_single!($s),
-            "\n.byte ", $crate::register_single!($t),
-            "\n.byte 0b01101101",
+            ".word 0b11110010000000000000000000000000",
+            "| 0b1000000010000000",
+            "| (", $crate::register_mquad!($rd), " << 0)",
+            "| (", $crate::register_mquad!($rs), " << 8)",
+            "| (", $crate::register_single!($rt), " << 16)",
         )
     };
 
-    // vmin.p 0110 1101 0 ttttttt 0 sssssss 1 ddddddd
-    (vmin.p $d:ident, $s:ident, $t:ident) => {
+    // Performs element-wise floating point multiplication
+
+    (vmul.s $rd:ident, $rs:ident, $rt:ident) => {
         concat!(
-            "\n.byte 0x80 | ", $crate::register_pair!($d),
-            "\n.byte ", $crate::register_pair!($s),
-            "\n.byte ", $crate::register_pair!($t),
-            "\n.byte 0b01101101",
+            ".word 0b01100100000000000000000000000000",
+            "| 0b0000000000000000",
+            "| (", $crate::register_single!($rd), " << 0)",
+            "| (", $crate::register_single!($rs), " << 8)",
+            "| (", $crate::register_single!($rt), " << 16)",
         )
     };
 
-    // vmin.t 0110 1101 0 ttttttt 1 sssssss 0 ddddddd
-    (vmin.t $d:ident, $s:ident, $t:ident) => {
+    (vmul.p $rd:ident, $rs:ident, $rt:ident) => {
         concat!(
-            "\n.byte ", $crate::register_triple!($d),
-            "\n.byte 0x80 | ", $crate::register_triple!($s),
-            "\n.byte ", $crate::register_triple!($t),
-            "\n.byte 0b01101101",
+            ".word 0b01100100000000000000000000000000",
+            "| 0b0000000010000000",
+            "| (", $crate::register_pair!($rd), " << 0)",
+            "| (", $crate::register_pair!($rs), " << 8)",
+            "| (", $crate::register_pair!($rt), " << 16)",
         )
     };
 
-    // vmin.q 0110 1101 0 ttttttt 1 sssssss 1 ddddddd
-    (vmin.q $d:ident, $s:ident, $t:ident) => {
+    (vmul.t $rd:ident, $rs:ident, $rt:ident) => {
         concat!(
-            "\n.byte 0x80 | ", $crate::register_quad!($d),
-            "\n.byte 0x80 | ", $crate::register_quad!($s),
-            "\n.byte ", $crate::register_quad!($t),
-            "\n.byte 0b01101101",
+            ".word 0b01100100000000000000000000000000",
+            "| 0b1000000000000000",
+            "| (", $crate::register_triple!($rd), " << 0)",
+            "| (", $crate::register_triple!($rs), " << 8)",
+            "| (", $crate::register_triple!($rt), " << 16)",
         )
     };
 
-    // vmax.s 0110 1101 1 ttttttt 0 sssssss 0 ddddddd
-    (vmax.s $d:ident, $s:ident, $t:ident) => {
+    (vmul.q $rd:ident, $rs:ident, $rt:ident) => {
         concat!(
-            "\n.byte ", $crate::register_single!($d),
-            "\n.byte ", $crate::register_single!($s),
-            "\n.byte 0x80 | ", $crate::register_single!($t),
-            "\n.byte 0b01101101",
+            ".word 0b01100100000000000000000000000000",
+            "| 0b1000000010000000",
+            "| (", $crate::register_quad!($rd), " << 0)",
+            "| (", $crate::register_quad!($rs), " << 8)",
+            "| (", $crate::register_quad!($rt), " << 16)",
         )
     };
+
+    // Writes a zero matrix into the destination register
 
-    // vmax.p 0110 1101 1 ttttttt 0 sssssss 1 ddddddd
-    (vmax.p $d:ident, $s:ident, $t:ident) => {
+    (vmzero.p $rd:ident) => {
         concat!(
-            "\n.byte 0x80 | ", $crate::register_pair!($d),
-            "\n.byte ", $crate::register_pair!($s),
-            "\n.byte 0x80 | ", $crate::register_pair!($t),
-            "\n.byte 0b01101101",
+            ".word 0b11110011100000000000000000000000",
+            "| 0b0000000010000000",
+            "| (", $crate::register_mpair!($rd), " << 0)",
+            "| (0b0000000 << 8))",
+            "| (0b0000110 << 16)",
         )
     };
 
-    // vmax.t 0110 1101 1 ttttttt 1 sssssss 0 ddddddd
-    (vmax.t $d:ident, $s:ident, $t:ident) => {
+    (vmzero.t $rd:ident) => {
         concat!(
-            "\n.byte ", $crate::register_triple!($d),
-            "\n.byte 0x80 | ", $crate::register_triple!($s),
-            "\n.byte 0x80 | ", $crate::register_triple!($t),
-            "\n.byte 0b01101101",
+            ".word 0b11110011100000000000000000000000",
+            "| 0b1000000000000000",
+            "| (", $crate::register_mtriple!($rd), " << 0)",
+            "| (0b0000000 << 8))",
+            "| (0b0000110 << 16)",
         )
     };
 
-    // vmax.q 0110 1101 1 ttttttt 1 sssssss 1 ddddddd
-    (vmax.q $d:ident, $s:ident, $t:ident) => {
+    (vmzero.q $rd:ident) => {
         concat!(
-            "\n.byte 0x80 | ", $crate::register_quad!($d),
-            "\n.byte 0x80 | ", $crate::register_quad!($s),
-            "\n.byte 0x80 | ", $crate::register_quad!($t),
-            "\n.byte 0b01101101",
+            ".word 0b11110011100000000000000000000000",
+            "| 0b1000000010000000",
+            "| (", $crate::register_mquad!($rd), " << 0)",
+            "| (0b0000000 << 8))",
+            "| (0b0000110 << 16)",
         )
     };
 
-    // vabs.s 1101 0000 0 0000001 0 sssssss 0 ddddddd
-    (vabs.s $d:ident, $s:ident) => {
+    // Performs element-wise floating point negation
+
+    (vneg.s $rd:ident, $rs:ident) => {
         concat!(
-            "\n.byte ", $crate::register_single!($d),
-            "\n.byte ", $crate::register_single!($s),
-            "\n.byte 0b00000001",
-            "\n.byte 0b11010000",
+            ".word 0b11010000000000000000000000000000",
+            "| 0b0000000000000000",
+            "| (", $crate::register_single!($rd), " << 0)",
+            "| (", $crate::register_single!($rs), " << 8)",
+            "| (0b0000010 << 16)",
         )
     };
 
-    // vabs.p 1101 0000 0 0000001 0 sssssss 1 ddddddd
-    (vabs.p $d:ident, $s:ident) => {
+    (vneg.p $rd:ident, $rs:ident) => {
         concat!(
-            "\n.byte 0x80 | ", $crate::register_pair!($d),
-            "\n.byte ", $crate::register_pair!($s),
-            "\n.byte 0b00000001",
-            "\n.byte 0b11010000",
+            ".word 0b11010000000000000000000000000000",
+            "| 0b0000000010000000",
+            "| (", $crate::register_pair!($rd), " << 0)",
+            "| (", $crate::register_pair!($rs), " << 8)",
+            "| (0b0000010 << 16)",
         )
     };
 
-    // vabs.t 1101 0000 0 0000001 1 sssssss 0 ddddddd
-    (vabs.t $d:ident, $s:ident) => {
+    (vneg.t $rd:ident, $rs:ident) => {
         concat!(
-            "\n.byte ", $crate::register_triple!($d),
-            "\n.byte 0x80 | ", $crate::register_triple!($s),
-            "\n.byte 0b00000001",
-            "\n.byte 0b11010000",
+            ".word 0b11010000000000000000000000000000",
+            "| 0b1000000000000000",
+            "| (", $crate::register_triple!($rd), " << 0)",
+            "| (", $crate::register_triple!($rs), " << 8)",
+            "| (0b0000010 << 16)",
         )
     };
 
-    // vabs.q 1101 0000 0 0000001 1 sssssss 1 ddddddd
-    (vabs.q $d:ident, $s:ident) => {
+    (vneg.q $rd:ident, $rs:ident) => {
         concat!(
-            "\n.byte 0x80 | ", $crate::register_quad!($d),
-            "\n.byte 0x80 | ", $crate::register_quad!($s),
-            "\n.byte 0b00000001",
-            "\n.byte 0b11010000",
+            ".word 0b11010000000000000000000000000000",
+            "| 0b1000000010000000",
+            "| (", $crate::register_quad!($rd), " << 0)",
+            "| (", $crate::register_quad!($rs), " << 8)",
+            "| (0b0000010 << 16)",
         )
+    };
+
+    // Does nothing and wastes one VFPU cycle. Used to avoid pipeline hazards. This instruction does consume prefixes.
+
+    (vnop) => {
+        ".word 0b11111111111111110000000000000000"
     };
+
+    // Performs element-wise floating point negated reciprocal
 
-    // vneg.s 1101 0000 0 0000010 0 sssssss 0 ddddddd
-    (vneg.s $d:ident, $s:ident) => {
+    (vnrcp.s $rd:ident, $rs:ident) => {
         concat!(
-            "\n.byte ", $crate::register_single!($d),
-            "\n.byte ", $crate::register_single!($s),
-            "\n.byte 0b00000010",
-            "\n.byte 0b11010000",
+            ".word 0b11010000000000000000000000000000",
+            "| 0b0000000000000000",
+            "| (", $crate::register_single!($rd), " << 0)",
+            "| (", $crate::register_single!($rs), " << 8)",
+            "| (0b0011000 << 16)",
         )
     };
 
-    // vneg.p 1101 0000 0 0000010 0 sssssss 1 ddddddd
-    (vneg.p $d:ident, $s:ident) => {
+    (vnrcp.p $rd:ident, $rs:ident) => {
         concat!(
-            "\n.byte 0x80 | ", $crate::register_pair!($d),
-            "\n.byte ", $crate::register_pair!($s),
-            "\n.byte 0b00000010",
-            "\n.byte 0b11010000",
+            ".word 0b11010000000000000000000000000000",
+            "| 0b0000000010000000",
+            "| (", $crate::register_pair!($rd), " << 0)",
+            "| (", $crate::register_pair!($rs), " << 8)",
+            "| (0b0011000 << 16)",
         )
     };
 
-    // vneg.t 1101 0000 0 0000010 1 sssssss 0 ddddddd
-    (vneg.t $d:ident, $s:ident) => {
+    (vnrcp.t $rd:ident, $rs:ident) => {
         concat!(
-            "\n.byte ", $crate::register_triple!($d),
-            "\n.byte 0x80 | ", $crate::register_triple!($s),
-            "\n.byte 0b00000010",
-            "\n.byte 0b11010000",
+            ".word 0b11010000000000000000000000000000",
+            "| 0b1000000000000000",
+            "| (", $crate::register_triple!($rd), " << 0)",
+            "| (", $crate::register_triple!($rs), " << 8)",
+            "| (0b0011000 << 16)",
         )
     };
 
-    // vneg.q 1101 0000 0 0000010 1 sssssss 1 ddddddd
-    (vneg.q $d:ident, $s:ident) => {
+    (vnrcp.q $rd:ident, $rs:ident) => {
         concat!(
-            "\n.byte 0x80 | ", $crate::register_quad!($d),
-            "\n.byte 0x80 | ", $crate::register_quad!($s),
-            "\n.byte 0b00000010",
-            "\n.byte 0b11010000",
+            ".word 0b11010000000000000000000000000000",
+            "| 0b1000000010000000",
+            "| (", $crate::register_quad!($rd), " << 0)",
+            "| (", $crate::register_quad!($rs), " << 8)",
+            "| (0b0011000 << 16)",
         )
     };
 
-    // vidt.p 1101 0000 0 0000011 0 0000000 1 ddddddd
-    (vidt.p $d:ident) => {
+    // Performs element-wise floating point -sin(π/2⋅rs) operation
+
+    (vnsin.s $rd:ident, $rs:ident) => {
         concat!(
-            "\n.byte 0x80 | ", $crate::register_pair!($d),
-            "\n.byte 0b00000000",
-            "\n.byte 0b00000011",
-            "\n.byte 0b11010000",
+            ".word 0b11010000000000000000000000000000",
+            "| 0b0000000000000000",
+            "| (", $crate::register_single!($rd), " << 0)",
+            "| (", $crate::register_single!($rs), " << 8)",
+            "| (0b0011010 << 16)",
         )
     };
 
-    // vidt.t 1101 0000 0 0000011 1 0000000 0 ddddddd
-    (vidt.t $d:ident) => {
+    (vnsin.p $rd:ident, $rs:ident) => {
         concat!(
-            "\n.byte ", $crate::register_triple!($d),
-            "\n.byte 0x80",
-            "\n.byte 0b00000011",
-            "\n.byte 0b11010000",
+            ".word 0b11010000000000000000000000000000",
+            "| 0b0000000010000000",
+            "| (", $crate::register_pair!($rd), " << 0)",
+            "| (", $crate::register_pair!($rs), " << 8)",
+            "| (0b0011010 << 16)",
         )
     };
 
-    // vidt.q 1101 0000 0 0000011 1 0000000 1 ddddddd
-    (vidt.q $d:ident) => {
+    (vnsin.t $rd:ident, $rs:ident) => {
         concat!(
-            "\n.byte 0x80 | ", $crate::register_quad!($d),
-            "\n.byte 0x80",
-            "\n.byte 0b00000011",
-            "\n.byte 0b11010000",
+            ".word 0b11010000000000000000000000000000",
+            "| 0b1000000000000000",
+            "| (", $crate::register_triple!($rd), " << 0)",
+            "| (", $crate::register_triple!($rs), " << 8)",
+            "| (0b0011010 << 16)",
         )
     };
 
-    // vzero.s 1101 0000 0 0000110 0 0000000 0 ddddddd
-    (vzero.s $d:ident) => {
+    (vnsin.q $rd:ident, $rs:ident) => {
         concat!(
-            "\n.byte ", $crate::register_single!($d),
-            "\n.byte 0b00000000",
-            "\n.byte 0b00000110",
-            "\n.byte 0b11010000",
+            ".word 0b11010000000000000000000000000000",
+            "| 0b1000000010000000",
+            "| (", $crate::register_quad!($rd), " << 0)",
+            "| (", $crate::register_quad!($rs), " << 8)",
+            "| (0b0011010 << 16)",
         )
     };
+
+    // Performs element-wise one's complement (1.0f - x)
 
-    // vzero.p 1101 0000 0 0000110 0 0000000 1 ddddddd
-    (vzero.p $d:ident) => {
+    (vocp.s $rd:ident, $rs:ident) => {
         concat!(
-            "\n.byte 0x80 | ", $crate::register_pair!($d),
-            "\n.byte 0b00000000",
-            "\n.byte 0b00000110",
-            "\n.byte 0b11010000",
+            ".word 0b11010000000000000000000000000000",
+            "| 0b0000000000000000",
+            "| (", $crate::register_single!($rd), " << 0)",
+            "| (", $crate::register_single!($rs), " << 8)",
+            "| (0b1000100 << 16)",
         )
     };
 
-    // vzero.t 1101 0000 0 0000110 1 0000000 0 ddddddd
-    (vzero.t $d:ident) => {
+    (vocp.p $rd:ident, $rs:ident) => {
         concat!(
-            "\n.byte ", $crate::register_triple!($d),
-            "\n.byte 0x80",
-            "\n.byte 0b00000110",
-            "\n.byte 0b11010000",
+            ".word 0b11010000000000000000000000000000",
+            "| 0b0000000010000000",
+            "| (", $crate::register_pair!($rd), " << 0)",
+            "| (", $crate::register_pair!($rs), " << 8)",
+            "| (0b1000100 << 16)",
         )
     };
 
-    // vzero.q 1101 0000 0 0000110 1 0000000 1 ddddddd
-    (vzero.q $d:ident) => {
+    (vocp.t $rd:ident, $rs:ident) => {
         concat!(
-            "\n.byte 0x80 | ", $crate::register_quad!($d),
-            "\n.byte 0x80",
-            "\n.byte 0b00000110",
-            "\n.byte 0b11010000",
+            ".word 0b11010000000000000000000000000000",
+            "| 0b1000000000000000",
+            "| (", $crate::register_triple!($rd), " << 0)",
+            "| (", $crate::register_triple!($rs), " << 8)",
+            "| (0b1000100 << 16)",
         )
     };
 
-    // vone.s 1101 0000 0 0000111 0 0000000 0 ddddddd
-    (vone.s $d:ident) => {
+    (vocp.q $rd:ident, $rs:ident) => {
         concat!(
-            "\n.byte ", $crate::register_single!($d),
-            "\n.byte 0b00000000",
-            "\n.byte 0b00000111",
-            "\n.byte 0b11010000",
+            ".word 0b11010000000000000000000000000000",
+            "| 0b1000000010000000",
+            "| (", $crate::register_quad!($rd), " << 0)",
+            "| (", $crate::register_quad!($rs), " << 8)",
+            "| (0b1000100 << 16)",
         )
     };
 
-    // vone.p 1101 0000 0 0000111 0 0000000 1 ddddddd
-    (vone.p $d:ident) => {
+    // Writes ones (1.0f) into the destination register
+
+    (vone.s $rd:ident) => {
         concat!(
-            "\n.byte 0x80 | ", $crate::register_pair!($d),
-            "\n.byte 0b00000000",
-            "\n.byte 0b00000111",
-            "\n.byte 0b11010000",
+            ".word 0b11010000000000000000000000000000",
+            "| 0b0000000000000000",
+            "| (", $crate::register_single!($rd), " << 0)",
+            "| (0b0000000 << 8))",
+            "| (0b0000111 << 16)",
         )
     };
 
-    // vone.t 1101 0000 0 0000111 1 0000000 0 ddddddd
-    (vone.t $d:ident) => {
+    (vone.p $rd:ident) => {
         concat!(
-            "\n.byte ", $crate::register_triple!($d),
-            "\n.byte 0x80",
-            "\n.byte 0b00000111",
-            "\n.byte 0b11010000",
+            ".word 0b11010000000000000000000000000000",
+            "| 0b0000000010000000",
+            "| (", $crate::register_pair!($rd), " << 0)",
+            "| (0b0000000 << 8))",
+            "| (0b0000111 << 16)",
         )
     };
 
-    // vone.q 1101 0000 0 0000111 1 0000000 1 ddddddd
-    (vone.q $d:ident) => {
+    (vone.t $rd:ident) => {
         concat!(
-            "\n.byte 0x80 | ", $crate::register_quad!($d),
-            "\n.byte 0x80",
-            "\n.byte 0b00000111",
-            "\n.byte 0b11010000",
+            ".word 0b11010000000000000000000000000000",
+            "| 0b1000000000000000",
+            "| (", $crate::register_triple!($rd), " << 0)",
+            "| (0b0000000 << 8))",
+            "| (0b0000111 << 16)",
         )
     };
 
-    // vrcp.s 1101 0000 0 0010000 0 sssssss 0 ddddddd
-    (vrcp.s $s:ident, $d:ident) => {
+    (vone.q $rd:ident) => {
         concat!(
-            "\n.byte ", $crate::register_single!($d),
-            "\n.byte ", $crate::register_single!($s),
-            "\n.byte 0b00010000",
-            "\n.byte 0b11010000",
+            ".word 0b11010000000000000000000000000000",
+            "| 0b1000000010000000",
+            "| (", $crate::register_quad!($rd), " << 0)",
+            "| (0b0000000 << 8))",
+            "| (0b0000111 << 16)",
         )
     };
+
+    // Performs a vector-matrix homogeneous transform (matrix-vector product), with a vector result
 
-    // vrcp.p 1101 0000 0 0010000 0 sssssss 1 ddddddd
-    (vrcp.p $s:ident, $d:ident) => {
+    (vqmul.q $rd:ident, $rs:ident, $rt:ident) => {
         concat!(
-            "\n.byte 0x80 | ", $crate::register_pair!($d),
-            "\n.byte ", $crate::register_pair!($s),
-            "\n.byte 0b00010000",
-            "\n.byte 0b11010000",
+            ".word 0b11110010100000000000000000000000",
+            "| 0b1000000010000000",
+            "| (", $crate::register_quad!($rd), " << 0)",
+            "| (", $crate::register_quad!($rs), " << 8)",
+            "| (", $crate::register_quad!($rt), " << 16)",
         )
     };
 
-    // vrcp.t 1101 0000 0 0010000 1 sssssss 0 ddddddd
-    (vrcp.t $s:ident, $d:ident) => {
+    // Performs element-wise floating point reciprocal
+
+    (vrcp.s $rd:ident, $rs:ident) => {
         concat!(
-            "\n.byte ", $crate::register_triple!($d),
-            "\n.byte 0x80 | ", $crate::register_triple!($s),
-            "\n.byte 0b00010000",
-            "\n.byte 0b11010000",
+            ".word 0b11010000000000000000000000000000",
+            "| 0b0000000000000000",
+            "| (", $crate::register_single!($rd), " << 0)",
+            "| (", $crate::register_single!($rs), " << 8)",
+            "| (0b0010000 << 16)",
         )
     };
 
-    // vrcp.q 1101 0000 0 0010000 1 sssssss 1 ddddddd
-    (vrcp.q $s:ident, $d:ident) => {
+    (vrcp.p $rd:ident, $rs:ident) => {
         concat!(
-            "\n.byte 0x80 | ", $crate::register_quad!($d),
-            "\n.byte 0x80 | ", $crate::register_quad!($s),
-            "\n.byte 0b00010000",
-            "\n.byte 0b11010000",
+            ".word 0b11010000000000000000000000000000",
+            "| 0b0000000010000000",
+            "| (", $crate::register_pair!($rd), " << 0)",
+            "| (", $crate::register_pair!($rs), " << 8)",
+            "| (0b0010000 << 16)",
         )
     };
 
-    // vrsq.s 1101 0000 0 0010001 0 sssssss 0 ddddddd
-    (vrsq.s $s:ident, $d:ident) => {
+    (vrcp.t $rd:ident, $rs:ident) => {
         concat!(
-            "\n.byte ", $crate::register_single!($d),
-            "\n.byte ", $crate::register_single!($s),
-            "\n.byte 0b00010001",
-            "\n.byte 0b11010000",
+            ".word 0b11010000000000000000000000000000",
+            "| 0b1000000000000000",
+            "| (", $crate::register_triple!($rd), " << 0)",
+            "| (", $crate::register_triple!($rs), " << 8)",
+            "| (0b0010000 << 16)",
         )
     };
 
-    // vrsq.p 1101 0000 0 0010001 0 sssssss 1 ddddddd
-    (vrsq.p $s:ident, $d:ident) => {
+    (vrcp.q $rd:ident, $rs:ident) => {
         concat!(
-            "\n.byte 0x80 | ", $crate::register_pair!($d),
-            "\n.byte ", $crate::register_pair!($s),
-            "\n.byte 0b00010001",
-            "\n.byte 0b11010000",
+            ".word 0b11010000000000000000000000000000",
+            "| 0b1000000010000000",
+            "| (", $crate::register_quad!($rd), " << 0)",
+            "| (", $crate::register_quad!($rs), " << 8)",
+            "| (0b0010000 << 16)",
         )
     };
+
+    // Performs element-wise floating point 1/exp2(rs) operation (equivalent to exp2(-rs))
 
-    // vrsq.t 1101 0000 0 0010001 1 sssssss 0 ddddddd
-    (vrsq.t $s:ident, $d:ident) => {
+    (vrexp2.s $rd:ident, $rs:ident) => {
         concat!(
-            "\n.byte ", $crate::register_triple!($d),
-            "\n.byte 0x80 | ", $crate::register_triple!($s),
-            "\n.byte 0b00010001",
-            "\n.byte 0b11010000",
+            ".word 0b11010000000000000000000000000000",
+            "| 0b0000000000000000",
+            "| (", $crate::register_single!($rd), " << 0)",
+            "| (", $crate::register_single!($rs), " << 8)",
+            "| (0b0011100 << 16)",
         )
     };
 
-    // vrsq.q 1101 0000 0 0010001 1 sssssss 1 ddddddd
-    (vrsq.q $s:ident, $d:ident) => {
+    (vrexp2.p $rd:ident, $rs:ident) => {
         concat!(
-            "\n.byte 0x80 | ", $crate::register_quad!($d),
-            "\n.byte 0x80 | ", $crate::register_quad!($s),
-            "\n.byte 0b00010001",
-            "\n.byte 0b11010000",
+            ".word 0b11010000000000000000000000000000",
+            "| 0b0000000010000000",
+            "| (", $crate::register_pair!($rd), " << 0)",
+            "| (", $crate::register_pair!($rs), " << 8)",
+            "| (0b0011100 << 16)",
         )
     };
 
-    // vsin.s 1101 0000 0 0010010 0 sssssss 0 ddddddd
-    (vsin.s $s:ident, $d:ident) => {
+    (vrexp2.t $rd:ident, $rs:ident) => {
         concat!(
-            "\n.byte ", $crate::register_single!($d),
-            "\n.byte ", $crate::register_single!($s),
-            "\n.byte 0b00010010",
-            "\n.byte 0b11010000",
+            ".word 0b11010000000000000000000000000000",
+            "| 0b1000000000000000",
+            "| (", $crate::register_triple!($rd), " << 0)",
+            "| (", $crate::register_triple!($rs), " << 8)",
+            "| (0b0011100 << 16)",
         )
     };
 
-    // vsin.p 1101 0000 0 0010010 0 sssssss 1 ddddddd
-    (vsin.p $s:ident, $d:ident) => {
+    (vrexp2.q $rd:ident, $rs:ident) => {
         concat!(
-            "\n.byte 0x80 | ", $crate::register_pair!($d),
-            "\n.byte ", $crate::register_pair!($s),
-            "\n.byte 0b00010010",
-            "\n.byte 0b11010000",
+            ".word 0b11010000000000000000000000000000",
+            "| 0b1000000010000000",
+            "| (", $crate::register_quad!($rd), " << 0)",
+            "| (", $crate::register_quad!($rs), " << 8)",
+            "| (0b0011100 << 16)",
         )
     };
 
-    // vsin.t 1101 0000 0 0010010 1 sssssss 0 ddddddd
-    (vsin.t $s:ident, $d:ident) => {
+    // Writes pseudorandom numbers to the destination elements so that each element (x) can assert 1.0f <= x < 2.0f
+
+    (vrndf1.s $rd:ident) => {
         concat!(
-            "\n.byte ", $crate::register_triple!($d),
-            "\n.byte 0x80 | ", $crate::register_triple!($s),
-            "\n.byte 0b00010010",
-            "\n.byte 0b11010000",
+            ".word 0b11010000000000000000000000000000",
+            "| 0b0000000000000000",
+            "| (", $crate::register_single!($rd), " << 0)",
+            "| (0b0000000 << 8))",
+            "| (0b0100010 << 16)",
         )
     };
 
-    // vsin.q 1101 0000 0 0010010 1 sssssss 1 ddddddd
-    (vsin.q $s:ident, $d:ident) => {
+    (vrndf1.p $rd:ident) => {
         concat!(
-            "\n.byte 0x80 | ", $crate::register_quad!($d),
-            "\n.byte 0x80 | ", $crate::register_quad!($s),
-            "\n.byte 0b00010010",
-            "\n.byte 0b11010000",
+            ".word 0b11010000000000000000000000000000",
+            "| 0b0000000010000000",
+            "| (", $crate::register_pair!($rd), " << 0)",
+            "| (0b0000000 << 8))",
+            "| (0b0100010 << 16)",
         )
     };
 
-    // vcos.s 1101 0000 0 0010011 0 sssssss 0 ddddddd
-    (vcos.s $s:ident, $d:ident) => {
+    (vrndf1.t $rd:ident) => {
         concat!(
-            "\n.byte ", $crate::register_single!($d),
-            "\n.byte ", $crate::register_single!($s),
-            "\n.byte 0b00010011",
-            "\n.byte 0b11010000",
+            ".word 0b11010000000000000000000000000000",
+            "| 0b1000000000000000",
+            "| (", $crate::register_triple!($rd), " << 0)",
+            "| (0b0000000 << 8))",
+            "| (0b0100010 << 16)",
         )
     };
 
-    // vcos.p 1101 0000 0 0010011 0 sssssss 1 ddddddd
-    (vcos.p $s:ident, $d:ident) => {
+    (vrndf1.q $rd:ident) => {
         concat!(
-            "\n.byte 0x80 | ", $crate::register_pair!($d),
-            "\n.byte ", $crate::register_pair!($s),
-            "\n.byte 0b00010011",
-            "\n.byte 0b11010000",
+            ".word 0b11010000000000000000000000000000",
+            "| 0b1000000010000000",
+            "| (", $crate::register_quad!($rd), " << 0)",
+            "| (0b0000000 << 8))",
+            "| (0b0100010 << 16)",
         )
     };
+
+    // Writes pseudorandom numbers to the destination elements so that each element (x) can assert 2.0f <= x < 4.0f
 
-    // vcos.t 1101 0000 0 0010011 1 sssssss 0 ddddddd
-    (vcos.t $s:ident, $d:ident) => {
+    (vrndf2.s $rd:ident) => {
         concat!(
-            "\n.byte ", $crate::register_triple!($d),
-            "\n.byte 0x80 | ", $crate::register_triple!($s),
-            "\n.byte 0b00010011",
-            "\n.byte 0b11010000",
+            ".word 0b11010000000000000000000000000000",
+            "| 0b0000000000000000",
+            "| (", $crate::register_single!($rd), " << 0)",
+            "| (0b0000000 << 8))",
+            "| (0b0100011 << 16)",
         )
     };
 
-    // vcos.q 1101 0000 0 0010011 1 sssssss 1 ddddddd
-    (vcos.q $s:ident, $d:ident) => {
+    (vrndf2.p $rd:ident) => {
         concat!(
-            "\n.byte 0x80 | ", $crate::register_quad!($d),
-            "\n.byte 0x80 | ", $crate::register_quad!($s),
-            "\n.byte 0b00010011",
-            "\n.byte 0b11010000",
+            ".word 0b11010000000000000000000000000000",
+            "| 0b0000000010000000",
+            "| (", $crate::register_pair!($rd), " << 0)",
+            "| (0b0000000 << 8))",
+            "| (0b0100011 << 16)",
         )
     };
 
-    // vexp2.s 1101 0000 0 0010100 0 sssssss 0 ddddddd
-    (vexp2.s $s:ident, $d:ident) => {
+    (vrndf2.t $rd:ident) => {
         concat!(
-            "\n.byte ", $crate::register_single!($d),
-            "\n.byte ", $crate::register_single!($s),
-            "\n.byte 0b00010100",
-            "\n.byte 0b11010000",
+            ".word 0b11010000000000000000000000000000",
+            "| 0b1000000000000000",
+            "| (", $crate::register_triple!($rd), " << 0)",
+            "| (0b0000000 << 8))",
+            "| (0b0100011 << 16)",
         )
     };
 
-    // vexp2.p 1101 0000 0 0010100 0 sssssss 1 ddddddd
-    (vexp2.p $s:ident, $d:ident) => {
+    (vrndf2.q $rd:ident) => {
         concat!(
-            "\n.byte 0x80 | ", $crate::register_pair!($d),
-            "\n.byte ", $crate::register_pair!($s),
-            "\n.byte 0b00010100",
-            "\n.byte 0b11010000",
+            ".word 0b11010000000000000000000000000000",
+            "| 0b1000000010000000",
+            "| (", $crate::register_quad!($rd), " << 0)",
+            "| (0b0000000 << 8))",
+            "| (0b0100011 << 16)",
         )
     };
 
-    // vexp2.t 1101 0000 0 0010100 1 sssssss 0 ddddddd
-    (vexp2.t $s:ident, $d:ident) => {
+    // Writes pseudorandom 32 bit numbers to the destination elements (full 32bit range)
+
+    (vrndi.s $rd:ident) => {
         concat!(
-            "\n.byte ", $crate::register_triple!($d),
-            "\n.byte 0x80 | ", $crate::register_triple!($s),
-            "\n.byte 0b00010100",
-            "\n.byte 0b11010000",
+            ".word 0b11010000000000000000000000000000",
+            "| 0b0000000000000000",
+            "| (", $crate::register_single!($rd), " << 0)",
+            "| (0b0000000 << 8))",
+            "| (0b0100001 << 16)",
         )
     };
 
-    // vexp2.q 1101 0000 0 0010100 1 sssssss 1 ddddddd
-    (vexp2.q $s:ident, $d:ident) => {
+    (vrndi.p $rd:ident) => {
         concat!(
-            "\n.byte 0x80 | ", $crate::register_quad!($d),
-            "\n.byte 0x80 | ", $crate::register_quad!($s),
-            "\n.byte 0b00010100",
-            "\n.byte 0b11010000",
+            ".word 0b11010000000000000000000000000000",
+            "| 0b0000000010000000",
+            "| (", $crate::register_pair!($rd), " << 0)",
+            "| (0b0000000 << 8))",
+            "| (0b0100001 << 16)",
         )
     };
 
-    // vlog2.s 1101 0000 0 0010101 0 sssssss 0 ddddddd
-    (vlog2.s $s:ident, $d:ident) => {
+    (vrndi.t $rd:ident) => {
         concat!(
-            "\n.byte ", $crate::register_single!($d),
-            "\n.byte ", $crate::register_single!($s),
-            "\n.byte 0b00010101",
-            "\n.byte 0b11010000",
+            ".word 0b11010000000000000000000000000000",
+            "| 0b1000000000000000",
+            "| (", $crate::register_triple!($rd), " << 0)",
+            "| (0b0000000 << 8))",
+            "| (0b0100001 << 16)",
         )
     };
 
-    // vlog2.p 1101 0000 0 0010101 0 sssssss 1 ddddddd
-    (vlog2.p $s:ident, $d:ident) => {
+    (vrndi.q $rd:ident) => {
         concat!(
-            "\n.byte 0x80 | ", $crate::register_pair!($d),
-            "\n.byte ", $crate::register_pair!($s),
-            "\n.byte 0b00010101",
-            "\n.byte 0b11010000",
+            ".word 0b11010000000000000000000000000000",
+            "| 0b1000000010000000",
+            "| (", $crate::register_quad!($rd), " << 0)",
+            "| (0b0000000 << 8))",
+            "| (0b0100001 << 16)",
         )
     };
+
+    // Uses the integer value as a seed for the pseudorandom number generator.
 
-    // vlog2.t 1101 0000 0 0010101 1 sssssss 0 ddddddd
-    (vlog2.t $s:ident, $d:ident) => {
+    (vrnds.s $rs:ident) => {
         concat!(
-            "\n.byte ", $crate::register_triple!($d),
-            "\n.byte 0x80 | ", $crate::register_triple!($s),
-            "\n.byte 0b00010101",
-            "\n.byte 0b11010000",
+            ".word 0b11010000000000000000000000000000",
+            "| 0b0000000000000000",
+            "| (0b0000000 << 0))",
+            "| (", $crate::register_single!($rs), " << 8)",
+            "| (0b0100000 << 16)",
         )
     };
 
-    // vlog2.q 1101 0000 0 0010101 1 sssssss 1 ddddddd
-    (vlog2.q $s:ident, $d:ident) => {
+    // Calculates a rotation matrix row, given an angle argument
+
+    (vrot.p $rd:ident, $rs:ident, [$($imm5:tt)*]) => {
         concat!(
-            "\n.byte 0x80 | ", $crate::register_quad!($d),
-            "\n.byte 0x80 | ", $crate::register_quad!($s),
-            "\n.byte 0b00010101",
-            "\n.byte 0b11010000",
+            ".word 0b11110011100000000000000000000000",
+            "| 0b0000000010000000",
+            "| (", $crate::register_pair!($rd), " << 0)",
+            "| (", $crate::register_single!($rs), " << 8)",
+            "| (", $crate::vrot_immediate_pair($($imm5)*), " << 16)",
         )
     };
 
-    // vsqrt.s 1101 0000 0 0010110 0 sssssss 0 ddddddd
-    (vsqrt.s $s:ident, $d:ident) => {
+    (vrot.t $rd:ident, $rs:ident, [$($imm5:tt)*]) => {
         concat!(
-            "\n.byte ", $crate::register_single!($d),
-            "\n.byte ", $crate::register_single!($s),
-            "\n.byte 0b00010110",
-            "\n.byte 0b11010000",
+            ".word 0b11110011100000000000000000000000",
+            "| 0b1000000000000000",
+            "| (", $crate::register_triple!($rd), " << 0)",
+            "| (", $crate::register_single!($rs), " << 8)",
+            "| (", $crate::vrot_immediate_triple($($imm5)*), " << 16)",
         )
     };
 
-    // vsqrt.p 1101 0000 0 0010110 0 sssssss 1 ddddddd
-    (vsqrt.p $s:ident, $d:ident) => {
+    (vrot.q $rd:ident, $rs:ident, [$($imm5:tt)*]) => {
         concat!(
-            "\n.byte 0x80 | ", $crate::register_pair!($d),
-            "\n.byte ", $crate::register_pair!($s),
-            "\n.byte 0b00010110",
-            "\n.byte 0b11010000",
+            ".word 0b11110011100000000000000000000000",
+            "| 0b1000000010000000",
+            "| (", $crate::register_quad!($rd), " << 0)",
+            "| (", $crate::register_single!($rs), " << 8)",
+            "| (", $crate::vrot_immediate_quad($($imm5)*), " << 16)",
         )
     };
+
+    // Performs element-wise floating pointreciprocal square root
 
-    // vsqrt.t 1101 0000 0 0010110 1 sssssss 0 ddddddd
-    (vsqrt.t $s:ident, $d:ident) => {
+    (vrsq.s $rd:ident, $rs:ident) => {
         concat!(
-            "\n.byte ", $crate::register_triple!($d),
-            "\n.byte 0x80 | ", $crate::register_triple!($s),
-            "\n.byte 0b00010110",
-            "\n.byte 0b11010000",
+            ".word 0b11010000000000000000000000000000",
+            "| 0b0000000000000000",
+            "| (", $crate::register_single!($rd), " << 0)",
+            "| (", $crate::register_single!($rs), " << 8)",
+            "| (0b0010001 << 16)",
         )
     };
 
-    // vsqrt.q 1101 0000 0 0010110 1 sssssss 1 ddddddd
-    (vsqrt.q $s:ident, $d:ident) => {
+    (vrsq.p $rd:ident, $rs:ident) => {
         concat!(
-            "\n.byte 0x80 | ", $crate::register_quad!($d),
-            "\n.byte 0x80 | ", $crate::register_quad!($s),
-            "\n.byte 0b00010110",
-            "\n.byte 0b11010000",
+            ".word 0b11010000000000000000000000000000",
+            "| 0b0000000010000000",
+            "| (", $crate::register_pair!($rd), " << 0)",
+            "| (", $crate::register_pair!($rs), " << 8)",
+            "| (0b0010001 << 16)",
         )
     };
 
-    // vasin.s 1101 0000 0 0010111 0 sssssss 0 ddddddd
-    (vasin.s $s:ident, $d:ident) => {
+    (vrsq.t $rd:ident, $rs:ident) => {
         concat!(
-            "\n.byte ", $crate::register_single!($d),
-            "\n.byte ", $crate::register_single!($s),
-            "\n.byte 0b00010111",
-            "\n.byte 0b11010000",
+            ".word 0b11010000000000000000000000000000",
+            "| 0b1000000000000000",
+            "| (", $crate::register_triple!($rd), " << 0)",
+            "| (", $crate::register_triple!($rs), " << 8)",
+            "| (0b0010001 << 16)",
         )
     };
 
-    // vasin.p 1101 0000 0 0010111 0 sssssss 1 ddddddd
-    (vasin.p $s:ident, $d:ident) => {
+    (vrsq.q $rd:ident, $rs:ident) => {
         concat!(
-            "\n.byte 0x80 | ", $crate::register_pair!($d),
-            "\n.byte ", $crate::register_pair!($s),
-            "\n.byte 0b00010111",
-            "\n.byte 0b11010000",
+            ".word 0b11010000000000000000000000000000",
+            "| 0b1000000010000000",
+            "| (", $crate::register_quad!($rd), " << 0)",
+            "| (", $crate::register_quad!($rs), " << 8)",
+            "| (0b0010001 << 16)",
         )
     };
 
-    // vasin.t 1101 0000 0 0010111 1 sssssss 0 ddddddd
-    (vasin.t $s:ident, $d:ident) => {
+    // Converts the input packed shorts into full 32 bit integers in the output register. The input is placed on the most significant bits of the output integer, while the least significant bits are filled with zeros.
+
+    (vs2i.s $rd:ident, $rs:ident) => {
         concat!(
-            "\n.byte ", $crate::register_triple!($d),
-            "\n.byte 0x80 | ", $crate::register_triple!($s),
-            "\n.byte 0b00010111",
-            "\n.byte 0b11010000",
+            ".word 0b11010000000000000000000000000000",
+            "| 0b0000000000000000",
+            "| (", $crate::register_pair!($rd), " << 0)",
+            "| (", $crate::register_single!($rs), " << 8)",
+            "| (0b0111011 << 16)",
         )
     };
 
-    // vasin.q 1101 0000 0 0010111 1 sssssss 1 ddddddd
-    (vasin.q $s:ident, $d:ident) => {
+    (vs2i.p $rd:ident, $rs:ident) => {
         concat!(
-            "\n.byte 0x80 | ", $crate::register_quad!($d),
-            "\n.byte 0x80 | ", $crate::register_quad!($s),
-            "\n.byte 0b00010111",
-            "\n.byte 0b11010000",
+            ".word 0b11010000000000000000000000000000",
+            "| 0b0000000010000000",
+            "| (", $crate::register_quad!($rd), " << 0)",
+            "| (", $crate::register_pair!($rs), " << 8)",
+            "| (0b0111011 << 16)",
         )
     };
 
-    // vnrcp.s 1101 0000 0 0011000 0 sssssss 0 ddddddd
-    (vnrcp.s $s:ident, $d:ident) => {
+    // Saturates inputs to the [0.0f ... 1.0f] range
+
+    (vsat0.s $rd:ident, $rs:ident) => {
         concat!(
-            "\n.byte ", $crate::register_single!($d),
-            "\n.byte ", $crate::register_single!($s),
-            "\n.byte 0b00011000",
-            "\n.byte 0b11010000",
+            ".word 0b11010000000000000000000000000000",
+            "| 0b0000000000000000",
+            "| (", $crate::register_single!($rd), " << 0)",
+            "| (", $crate::register_single!($rs), " << 8)",
+            "| (0b0000100 << 16)",
         )
     };
 
-    // vnrcp.p 1101 0000 0 0011000 0 sssssss 1 ddddddd
-    (vnrcp.p $s:ident, $d:ident) => {
+    (vsat0.p $rd:ident, $rs:ident) => {
         concat!(
-            "\n.byte 0x80 | ", $crate::register_pair!($d),
-            "\n.byte ", $crate::register_pair!($s),
-            "\n.byte 0b00011000",
-            "\n.byte 0b11010000",
+            ".word 0b11010000000000000000000000000000",
+            "| 0b0000000010000000",
+            "| (", $crate::register_pair!($rd), " << 0)",
+            "| (", $crate::register_pair!($rs), " << 8)",
+            "| (0b0000100 << 16)",
         )
     };
 
-    // vnrcp.t 1101 0000 0 0011000 1 sssssss 0 ddddddd
-    (vnrcp.t $s:ident, $d:ident) => {
+    (vsat0.t $rd:ident, $rs:ident) => {
         concat!(
-            "\n.byte ", $crate::register_triple!($d),
-            "\n.byte 0x80 | ", $crate::register_triple!($s),
-            "\n.byte 0b00011000",
-            "\n.byte 0b11010000",
+            ".word 0b11010000000000000000000000000000",
+            "| 0b1000000000000000",
+            "| (", $crate::register_triple!($rd), " << 0)",
+            "| (", $crate::register_triple!($rs), " << 8)",
+            "| (0b0000100 << 16)",
         )
     };
 
-    // vnrcp.q 1101 0000 0 0011000 1 sssssss 1 ddddddd
-    (vnrcp.q $s:ident, $d:ident) => {
+    (vsat0.q $rd:ident, $rs:ident) => {
         concat!(
-            "\n.byte 0x80 | ", $crate::register_quad!($d),
-            "\n.byte 0x80 | ", $crate::register_quad!($s),
-            "\n.byte 0b00011000",
-            "\n.byte 0b11010000",
+            ".word 0b11010000000000000000000000000000",
+            "| 0b1000000010000000",
+            "| (", $crate::register_quad!($rd), " << 0)",
+            "| (", $crate::register_quad!($rs), " << 8)",
+            "| (0b0000100 << 16)",
         )
     };
+
+    // Saturates inputs to the [-1.0f ... 1.0f] range
 
-    // vnsin.s 1101 0000 0 0011010 0 sssssss 0 ddddddd
-    (vnsin.s $s:ident, $d:ident) => {
+    (vsat1.s $rd:ident, $rs:ident) => {
         concat!(
-            "\n.byte ", $crate::register_single!($d),
-            "\n.byte ", $crate::register_single!($s),
-            "\n.byte 0b00011010",
-            "\n.byte 0b11010000",
+            ".word 0b11010000000000000000000000000000",
+            "| 0b0000000000000000",
+            "| (", $crate::register_single!($rd), " << 0)",
+            "| (", $crate::register_single!($rs), " << 8)",
+            "| (0b0000101 << 16)",
         )
     };
 
-    // vnsin.p 1101 0000 0 0011010 0 sssssss 1 ddddddd
-    (vnsin.p $s:ident, $d:ident) => {
+    (vsat1.p $rd:ident, $rs:ident) => {
         concat!(
-            "\n.byte 0x80 | ", $crate::register_pair!($d),
-            "\n.byte ", $crate::register_pair!($s),
-            "\n.byte 0b00011010",
-            "\n.byte 0b11010000",
+            ".word 0b11010000000000000000000000000000",
+            "| 0b0000000010000000",
+            "| (", $crate::register_pair!($rd), " << 0)",
+            "| (", $crate::register_pair!($rs), " << 8)",
+            "| (0b0000101 << 16)",
         )
     };
 
-    // vnsin.t 1101 0000 0 0011010 1 sssssss 0 ddddddd
-    (vnsin.t $s:ident, $d:ident) => {
+    (vsat1.t $rd:ident, $rs:ident) => {
         concat!(
-            "\n.byte ", $crate::register_triple!($d),
-            "\n.byte 0x80 | ", $crate::register_triple!($s),
-            "\n.byte 0b00011010",
-            "\n.byte 0b11010000",
+            ".word 0b11010000000000000000000000000000",
+            "| 0b1000000000000000",
+            "| (", $crate::register_triple!($rd), " << 0)",
+            "| (", $crate::register_triple!($rs), " << 8)",
+            "| (0b0000101 << 16)",
         )
     };
 
-    // vnsin.q 1101 0000 0 0011010 1 sssssss 1 ddddddd
-    (vnsin.q $s:ident, $d:ident) => {
+    (vsat1.q $rd:ident, $rs:ident) => {
         concat!(
-            "\n.byte 0x80 | ", $crate::register_quad!($d),
-            "\n.byte 0x80 | ", $crate::register_quad!($s),
-            "\n.byte 0b00011010",
-            "\n.byte 0b11010000",
+            ".word 0b11010000000000000000000000000000",
+            "| 0b1000000010000000",
+            "| (", $crate::register_quad!($rd), " << 0)",
+            "| (", $crate::register_quad!($rs), " << 8)",
+            "| (0b0000101 << 16)",
         )
     };
 
-    // vrexp2.s 1101 0000 0 0011100 0 sssssss 0 ddddddd
-    (vrexp2.s $s:ident, $d:ident) => {
+    // Rescales rs operand to have rt as exponent. This would be equivalent to ldexp(frexp(rs, NULL), rt + 128). If we express the number in its IEEE754 terms, that is, if rs can be expressed as ±m * 2^e, the instruction will replace "e" with the value of rt + 127 mod 256.
+
+    (vsbn.s $rd:ident, $rs:ident, $rt:ident) => {
         concat!(
-            "\n.byte ", $crate::register_single!($d),
-            "\n.byte ", $crate::register_single!($s),
-            "\n.byte 0b00011100",
-            "\n.byte 0b11010000",
+            ".word 0b01100001000000000000000000000000",
+            "| 0b0000000000000000",
+            "| (", $crate::register_single!($rd), " << 0)",
+            "| (", $crate::register_single!($rs), " << 8)",
+            "| (", $crate::register_single!($rt), " << 16)",
         )
     };
+
+    // Rescales rs operand to have zero as exponent, so that it is reduced to the [1.0, 2.0) interval. This is essentially equivalent to the vsbn instruction with rt=0.
 
-    // vrexp2.p 1101 0000 0 0011100 0 sssssss 1 ddddddd
-    (vrexp2.p $s:ident, $d:ident) => {
+    (vsbz.s $rd:ident, $rs:ident) => {
         concat!(
-            "\n.byte 0x80 | ", $crate::register_pair!($d),
-            "\n.byte ", $crate::register_pair!($s),
-            "\n.byte 0b00011100",
-            "\n.byte 0b11010000",
+            ".word 0b11010000000000000000000000000000",
+            "| 0b0000000000000000",
+            "| (", $crate::register_single!($rd), " << 0)",
+            "| (", $crate::register_single!($rs), " << 8)",
+            "| (0b0110110 << 16)",
         )
     };
 
-    // vrexp2.t 1101 0000 0 0011100 1 sssssss 0 ddddddd
-    (vrexp2.t $s:ident, $d:ident) => {
+    // Scales a vector (element-wise) by an scalar factor
+
+    (vscl.p $rd:ident, $rs:ident, $rt:ident) => {
         concat!(
-            "\n.byte ", $crate::register_triple!($d),
-            "\n.byte 0x80 | ", $crate::register_triple!($s),
-            "\n.byte 0b00011100",
-            "\n.byte 0b11010000",
+            ".word 0b01100101000000000000000000000000",
+            "| 0b0000000010000000",
+            "| (", $crate::register_pair!($rd), " << 0)",
+            "| (", $crate::register_pair!($rs), " << 8)",
+            "| (", $crate::register_single!($rt), " << 16)",
         )
     };
 
-    // vrexp2.q 1101 0000 0 0011100 1 sssssss 1 ddddddd
-    (vrexp2.q $s:ident, $d:ident) => {
+    (vscl.t $rd:ident, $rs:ident, $rt:ident) => {
         concat!(
-            "\n.byte 0x80 | ", $crate::register_quad!($d),
-            "\n.byte 0x80 | ", $crate::register_quad!($s),
-            "\n.byte 0b00011100",
-            "\n.byte 0b11010000",
+            ".word 0b01100101000000000000000000000000",
+            "| 0b1000000000000000",
+            "| (", $crate::register_triple!($rd), " << 0)",
+            "| (", $crate::register_triple!($rs), " << 8)",
+            "| (", $crate::register_single!($rt), " << 16)",
         )
     };
 
-    // vi2uc.q 1101 0000 0 0111100 1 sssssss 1 ddddddd
-    (vi2uc.q $d:ident, $s:ident) => {
+    (vscl.q $rd:ident, $rs:ident, $rt:ident) => {
         concat!(
-            "\n.byte 0x80 | ", $crate::register_quad!($d),
-            "\n.byte 0x80 | ", $crate::register_quad!($s),
-            "\n.byte 0b00111100",
-            "\n.byte 0b11010000",
+            ".word 0b01100101000000000000000000000000",
+            "| 0b1000000010000000",
+            "| (", $crate::register_quad!($rd), " << 0)",
+            "| (", $crate::register_quad!($rs), " << 8)",
+            "| (", $crate::register_single!($rt), " << 16)",
         )
     };
+
+    // Performs element-wise floating point comparison. The result is -1.0f, 0.0f or 1.0f depending on whether the input vs is less that vt, equal, or greater, respectively.
 
-    // vi2s.p 1101 0000 0 0111111 0 sssssss 1 ddddddd
-    (vi2s.p $d:ident, $s:ident) => {
+    (vscmp.s $rd:ident, $rs:ident, $rt:ident) => {
         concat!(
-            "\n.byte 0x80 | ", $crate::register_pair!($d),
-            "\n.byte ", $crate::register_pair!($s),
-            "\n.byte 0b00111111",
-            "\n.byte 0b11010000",
+            ".word 0b01101110100000000000000000000000",
+            "| 0b0000000000000000",
+            "| (", $crate::register_single!($rd), " << 0)",
+            "| (", $crate::register_single!($rs), " << 8)",
+            "| (", $crate::register_single!($rt), " << 16)",
         )
     };
 
-    // vi2s.q 1101 0000 0 0111111 1 sssssss 1 ddddddd
-    (vi2s.q $d:ident, $s:ident) => {
+    (vscmp.p $rd:ident, $rs:ident, $rt:ident) => {
         concat!(
-            "\n.byte 0x80 | ", $crate::register_quad!($d),
-            "\n.byte 0x80 | ", $crate::register_quad!($s),
-            "\n.byte 0b00111111",
-            "\n.byte 0b11010000",
+            ".word 0b01101110100000000000000000000000",
+            "| 0b0000000010000000",
+            "| (", $crate::register_pair!($rd), " << 0)",
+            "| (", $crate::register_pair!($rs), " << 8)",
+            "| (", $crate::register_pair!($rt), " << 16)",
         )
     };
 
-    // vsgn.s 1101 0000 0 1001010 0 sssssss 0 ddddddd
-    (vsgn.s $d:ident, $s:ident) => {
+    (vscmp.t $rd:ident, $rs:ident, $rt:ident) => {
         concat!(
-            "\n.byte ", $crate::register_single!($d),
-            "\n.byte ", $crate::register_single!($s),
-            "\n.byte 0b01001010",
-            "\n.byte 0b11010000",
+            ".word 0b01101110100000000000000000000000",
+            "| 0b1000000000000000",
+            "| (", $crate::register_triple!($rd), " << 0)",
+            "| (", $crate::register_triple!($rs), " << 8)",
+            "| (", $crate::register_triple!($rt), " << 16)",
         )
     };
 
-    // vsgn.p 1101 0000 0 1001010 0 sssssss 1 ddddddd
-    (vsgn.p $d:ident, $s:ident) => {
+    (vscmp.q $rd:ident, $rs:ident, $rt:ident) => {
         concat!(
-            "\n.byte 0x80 | ", $crate::register_pair!($d),
-            "\n.byte ", $crate::register_pair!($s),
-            "\n.byte 0b01001010",
-            "\n.byte 0b11010000",
+            ".word 0b01101110100000000000000000000000",
+            "| 0b1000000010000000",
+            "| (", $crate::register_quad!($rd), " << 0)",
+            "| (", $crate::register_quad!($rs), " << 8)",
+            "| (", $crate::register_quad!($rt), " << 16)",
         )
     };
 
-    // vsgn.t 1101 0000 0 1001010 1 sssssss 0 ddddddd
-    (vsgn.t $d:ident, $s:ident) => {
+    // Performs element-wise floating point bigger-or-equal comparison. The result will be 1.0 if vs is bigger or equal to vt, otherwise will be zero.
+
+    (vsge.s $rd:ident, $rs:ident, $rt:ident) => {
         concat!(
-            "\n.byte ", $crate::register_triple!($d),
-            "\n.byte 0x80 | ", $crate::register_triple!($s),
-            "\n.byte 0b01001010",
-            "\n.byte 0b11010000",
+            ".word 0b01101111000000000000000000000000",
+            "| 0b0000000000000000",
+            "| (", $crate::register_single!($rd), " << 0)",
+            "| (", $crate::register_single!($rs), " << 8)",
+            "| (", $crate::register_single!($rt), " << 16)",
         )
     };
 
-    // vsgn.q 1101 0000 0 1001010 1 sssssss 1 ddddddd
-    (vsgn.q $d:ident, $s:ident) => {
+    (vsge.p $rd:ident, $rs:ident, $rt:ident) => {
         concat!(
-            "\n.byte 0x80 | ", $crate::register_quad!($d),
-            "\n.byte 0x80 | ", $crate::register_quad!($s),
-            "\n.byte 0b01001010",
-            "\n.byte 0b11010000",
+            ".word 0b01101111000000000000000000000000",
+            "| 0b0000000010000000",
+            "| (", $crate::register_pair!($rd), " << 0)",
+            "| (", $crate::register_pair!($rs), " << 8)",
+            "| (", $crate::register_pair!($rt), " << 16)",
         )
     };
 
-    // vcst.s 1101 0000 0 11aaaaa 0 0000000 0 ddddddd
-    (vcst.s $d:ident, $a:ident) => {
+    (vsge.t $rd:ident, $rs:ident, $rt:ident) => {
         concat!(
-            "\n.byte ", $crate::register_single!($d),
-            "\n.byte 0b00000000",
-            "\n.byte 0b01100000 | ", $crate::vfpu_const!($a),
-            "\n.byte 0b11010000",
+            ".word 0b01101111000000000000000000000000",
+            "| 0b1000000000000000",
+            "| (", $crate::register_triple!($rd), " << 0)",
+            "| (", $crate::register_triple!($rs), " << 8)",
+            "| (", $crate::register_triple!($rt), " << 16)",
         )
     };
 
-    // vcst.p 1101 0000 0 11aaaaa 0 0000000 1 ddddddd
-    (vcst.p $d:ident, $a:ident) => {
+    (vsge.q $rd:ident, $rs:ident, $rt:ident) => {
         concat!(
-            "\n.byte 0x80 | ", $crate::register_pair!($d),
-            "\n.byte 0b00000000",
-            "\n.byte 0b01100000 | ", $crate::vfpu_const!($a),
-            "\n.byte 0b11010000",
+            ".word 0b01101111000000000000000000000000",
+            "| 0b1000000010000000",
+            "| (", $crate::register_quad!($rd), " << 0)",
+            "| (", $crate::register_quad!($rs), " << 8)",
+            "| (", $crate::register_quad!($rt), " << 16)",
         )
     };
+
+    // Performs element-wise floating point sign(rs) operation. This function returns -1, 0 or 1 depending on whether the input is negative zero or positive respectively.
 
-    // vcst.t 1101 0000 0 11aaaaa 1 0000000 0 ddddddd
-    (vcst.t $d:ident, $a:ident) => {
+    (vsgn.s $rd:ident, $rs:ident) => {
         concat!(
-            "\n.byte ", $crate::register_triple!($d),
-            "\n.byte 0x80",
-            "\n.byte 0b01100000 | ", $crate::vfpu_const!($a),
-            "\n.byte 0b11010000",
+            ".word 0b11010000000000000000000000000000",
+            "| 0b0000000000000000",
+            "| (", $crate::register_single!($rd), " << 0)",
+            "| (", $crate::register_single!($rs), " << 8)",
+            "| (0b1001010 << 16)",
         )
     };
 
-    // vcst.q 1101 0000 0 11aaaaa 1 0000000 1 ddddddd
-    (vcst.q $d:ident, $a:ident) => {
+    (vsgn.p $rd:ident, $rs:ident) => {
         concat!(
-            "\n.byte 0x80 | ", $crate::register_quad!($d),
-            "\n.byte 0x80",
-            "\n.byte 0b01100000 | ", $crate::vfpu_const!($a),
-            "\n.byte 0b11010000",
+            ".word 0b11010000000000000000000000000000",
+            "| 0b0000000010000000",
+            "| (", $crate::register_pair!($rd), " << 0)",
+            "| (", $crate::register_pair!($rs), " << 8)",
+            "| (0b1001010 << 16)",
         )
     };
 
-    // Float to int, rounds to nearest
-    // vf2in.s 1101 0010 0 SSSSSSS 0 sssssss 0 ddddddd
-    (vf2in.s $d:ident, $s:ident, $scale:expr) => {
+    (vsgn.t $rd:ident, $rs:ident) => {
         concat!(
-            "\n.byte ", $crate::register_single!($d),
-            "\n.byte ", $crate::register_single!($s),
-            "\n.byte ", stringify!($scale),
-            "\n.byte 0b11010010",
+            ".word 0b11010000000000000000000000000000",
+            "| 0b1000000000000000",
+            "| (", $crate::register_triple!($rd), " << 0)",
+            "| (", $crate::register_triple!($rs), " << 8)",
+            "| (0b1001010 << 16)",
         )
     };
 
-    // vf2in.p 1101 0010 0 SSSSSSS 0 sssssss 1 ddddddd
-    (vf2in.p $d:ident, $s:ident, $scale:expr) => {
+    (vsgn.q $rd:ident, $rs:ident) => {
         concat!(
-            "\n.byte 0x80 | ", $crate::register_pair!($d),
-            "\n.byte ", $crate::register_pair!($s),
-            "\n.byte ", stringify!($scale),
-            "\n.byte 0b11010010",
+            ".word 0b11010000000000000000000000000000",
+            "| 0b1000000010000000",
+            "| (", $crate::register_quad!($rd), " << 0)",
+            "| (", $crate::register_quad!($rs), " << 8)",
+            "| (0b1001010 << 16)",
         )
     };
 
-    // vf2in.t 1101 0010 0 SSSSSSS 1 sssssss 0 ddddddd
-    (vf2in.t $d:ident, $s:ident, $scale:expr) => {
+    // Performs element-wise floating point sin(π/2⋅rs) operation
+
+    (vsin.s $rd:ident, $rs:ident) => {
         concat!(
-            "\n.byte ", $crate::register_triple!($d),
-            "\n.byte 0x80 | ", $crate::register_triple!($s),
-            "\n.byte ", stringify!($scale),
-            "\n.byte 0b11010010",
+            ".word 0b11010000000000000000000000000000",
+            "| 0b0000000000000000",
+            "| (", $crate::register_single!($rd), " << 0)",
+            "| (", $crate::register_single!($rs), " << 8)",
+            "| (0b0010010 << 16)",
         )
     };
 
-    // vf2in.q 1101 0010 0 SSSSSSS 1 sssssss 1 ddddddd
-    (vf2in.q $d:ident, $s:ident, $scale:expr) => {
+    (vsin.p $rd:ident, $rs:ident) => {
         concat!(
-            "\n.byte 0x80 | ", $crate::register_quad!($d),
-            "\n.byte 0x80 | ", $crate::register_quad!($s),
-            "\n.byte ", stringify!($scale),
-            "\n.byte 0b11010010",
+            ".word 0b11010000000000000000000000000000",
+            "| 0b0000000010000000",
+            "| (", $crate::register_pair!($rd), " << 0)",
+            "| (", $crate::register_pair!($rs), " << 8)",
+            "| (0b0010010 << 16)",
         )
     };
 
-    // vi2f.s 1101 0010 1 SSSSSSS 0 sssssss 0 ddddddd
-    (vi2f.s $d:ident, $s:ident, $scale:expr) => {
+    (vsin.t $rd:ident, $rs:ident) => {
         concat!(
-            "\n.byte ", $crate::register_single!($d),
-            "\n.byte ", $crate::register_single!($s),
-            "\n.byte 0x80 | ", stringify!($scale),
-            "\n.byte 0b11010010",
+            ".word 0b11010000000000000000000000000000",
+            "| 0b1000000000000000",
+            "| (", $crate::register_triple!($rd), " << 0)",
+            "| (", $crate::register_triple!($rs), " << 8)",
+            "| (0b0010010 << 16)",
         )
     };
 
-    // vi2f.p 1101 0010 1 SSSSSSS 0 sssssss 1 ddddddd
-    (vi2f.p $d:ident, $s:ident, $scale:expr) => {
+    (vsin.q $rd:ident, $rs:ident) => {
         concat!(
-            "\n.byte 0x80 | ", $crate::register_pair!($d),
-            "\n.byte ", $crate::register_pair!($s),
-            "\n.byte 0x80 | ", stringify!($scale),
-            "\n.byte 0b11010010",
+            ".word 0b11010000000000000000000000000000",
+            "| 0b1000000010000000",
+            "| (", $crate::register_quad!($rd), " << 0)",
+            "| (", $crate::register_quad!($rs), " << 8)",
+            "| (0b0010010 << 16)",
         )
     };
+
+    // Performs element-wise floating point less-than comparison. The result will be 1.0 if vs less than vt, otherwise will be zero.
 
-    // vi2f.t 1101 0010 1 SSSSSSS 1 sssssss 0 ddddddd
-    (vi2f.t $d:ident, $s:ident, $scale:expr) => {
+    (vslt.s $rd:ident, $rs:ident, $rt:ident) => {
         concat!(
-            "\n.byte ", $crate::register_triple!($d),
-            "\n.byte 0x80 | ", $crate::register_triple!($s),
-            "\n.byte 0x80 | ", stringify!($scale),
-            "\n.byte 0b11010010",
+            ".word 0b01101111100000000000000000000000",
+            "| 0b0000000000000000",
+            "| (", $crate::register_single!($rd), " << 0)",
+            "| (", $crate::register_single!($rs), " << 8)",
+            "| (", $crate::register_single!($rt), " << 16)",
         )
     };
 
-    // vi2f.q 1101 0010 1 SSSSSSS 1 sssssss 1 ddddddd
-    (vi2f.q $d:ident, $s:ident, $scale:expr) => {
+    (vslt.p $rd:ident, $rs:ident, $rt:ident) => {
         concat!(
-            "\n.byte 0x80 | ", $crate::register_quad!($d),
-            "\n.byte 0x80 | ", $crate::register_quad!($s),
-            "\n.byte 0x80 | ", stringify!($scale),
-            "\n.byte 0b11010010",
+            ".word 0b01101111100000000000000000000000",
+            "| 0b0000000010000000",
+            "| (", $crate::register_pair!($rd), " << 0)",
+            "| (", $crate::register_pair!($rs), " << 8)",
+            "| (", $crate::register_pair!($rt), " << 16)",
         )
     };
 
-    // vmmul.p 1111 0000 0 ttttttt 0 sSsssss 1 ddddddd (*inverted 5th S bit)
-    (vmmul.p $d:ident, $s:ident, $t:ident) => {
+    (vslt.t $rd:ident, $rs:ident, $rt:ident) => {
         concat!(
-            "\n.byte 0x80 | ", $crate::register_mpair!($d),
-            "\n.byte ", $crate::register_mpair!($s), " ^ 0b0100000",
-            "\n.byte ", $crate::register_mpair!($t),
-            "\n.byte 0b11110000",
+            ".word 0b01101111100000000000000000000000",
+            "| 0b1000000000000000",
+            "| (", $crate::register_triple!($rd), " << 0)",
+            "| (", $crate::register_triple!($rs), " << 8)",
+            "| (", $crate::register_triple!($rt), " << 16)",
         )
     };
 
-    // vmmul.t 1111 0000 0 ttttttt 1 sSsssss 0 ddddddd (*inverted 5th S bit)
-    (vmmul.t $d:ident, $s:ident, $t:ident) => {
+    (vslt.q $rd:ident, $rs:ident, $rt:ident) => {
         concat!(
-            "\n.byte ", $crate::register_mtriple!($d),
-            "\n.byte 0x80 | ", $crate::register_mtriple!($s), " ^ 0b0100000",
-            "\n.byte ", $crate::register_mtriple!($t),
-            "\n.byte 0b11110000",
+            ".word 0b01101111100000000000000000000000",
+            "| 0b1000000010000000",
+            "| (", $crate::register_quad!($rd), " << 0)",
+            "| (", $crate::register_quad!($rs), " << 8)",
+            "| (", $crate::register_quad!($rt), " << 16)",
         )
     };
 
-    // vmmul.q 1111 0000 0 ttttttt 1 sSsssss 1 ddddddd (*inverted 5th S bit)
-    (vmmul.q $d:ident, $s:ident, $t:ident) => {
+    // Performs element-wise one's complement (1.0f - x) with saturation to [0.0f ... 1.0f]
+
+    (vsocp.s $rd:ident, $rs:ident) => {
         concat!(
-            "\n.byte 0x80 | ", $crate::register_mquad!($d),
-            "\n.byte 0x80 | ", $crate::register_mquad!($s), " ^ 0b0100000",
-            "\n.byte ", $crate::register_mquad!($t),
-            "\n.byte 0b11110000",
+            ".word 0b11010000000000000000000000000000",
+            "| 0b0000000000000000",
+            "| (", $crate::register_pair!($rd), " << 0)",
+            "| (", $crate::register_single!($rs), " << 8)",
+            "| (0b1000101 << 16)",
         )
     };
 
-    // vhtfm2.p 1111 0000 1 ttttttt 0 sssssss 0 ddddddd
-    (vhtfm2.p $d:ident, $s:ident, $t:ident) => {
+    (vsocp.p $rd:ident, $rs:ident) => {
         concat!(
-            "\n.byte ", $crate::register_pair!($d),
-            "\n.byte ", $crate::register_mpair!($s),
-            "\n.byte 0x80 | ", $crate::register_pair!($t),
-            "\n.byte 0b11110000",
+            ".word 0b11010000000000000000000000000000",
+            "| 0b0000000010000000",
+            "| (", $crate::register_quad!($rd), " << 0)",
+            "| (", $crate::register_pair!($rs), " << 8)",
+            "| (0b1000101 << 16)",
         )
     };
+
+    // Performs element-wise floating point aproximate square root
 
-    // vtfm2.p 1111 0000 1 ttttttt 0 sssssss 1 ddddddd
-    (vtfm2.p $d:ident, $s:ident, $t:ident) => {
+    (vsqrt.s $rd:ident, $rs:ident) => {
         concat!(
-            "\n.byte 0x80 | ", $crate::register_pair!($d),
-            "\n.byte ", $crate::register_mpair!($s),
-            "\n.byte 0x80 | ", $crate::register_pair!($t),
-            "\n.byte 0b11110000",
+            ".word 0b11010000000000000000000000000000",
+            "| 0b0000000000000000",
+            "| (", $crate::register_single!($rd), " << 0)",
+            "| (", $crate::register_single!($rs), " << 8)",
+            "| (0b0010110 << 16)",
         )
     };
 
-    // vhtfm3.t 1111 0001 0 ttttttt 0 sssssss 1 ddddddd
-    (vhtfm3.t $d:ident, $s:ident, $t:ident) => {
+    (vsqrt.p $rd:ident, $rs:ident) => {
         concat!(
-            "\n.byte 0x80 | ", $crate::register_triple!($d),
-            "\n.byte ", $crate::register_mtriple!($s),
-            "\n.byte ", $crate::register_triple!($t),
-            "\n.byte 0b11110001",
+            ".word 0b11010000000000000000000000000000",
+            "| 0b0000000010000000",
+            "| (", $crate::register_pair!($rd), " << 0)",
+            "| (", $crate::register_pair!($rs), " << 8)",
+            "| (0b0010110 << 16)",
         )
     };
 
-    // vtfm3.t 1111 0001 0 ttttttt 1 sssssss 0 ddddddd
-    (vtfm3.t $d:ident, $s:ident, $t:ident) => {
+    (vsqrt.t $rd:ident, $rs:ident) => {
         concat!(
-            "\n.byte ", $crate::register_triple!($d),
-            "\n.byte 0x80 | ", $crate::register_mtriple!($s),
-            "\n.byte ", $crate::register_triple!($t),
-            "\n.byte 0b11110001",
+            ".word 0b11010000000000000000000000000000",
+            "| 0b1000000000000000",
+            "| (", $crate::register_triple!($rd), " << 0)",
+            "| (", $crate::register_triple!($rs), " << 8)",
+            "| (0b0010110 << 16)",
         )
     };
 
-    // vhtfm4.q 1111 0001 1 ttttttt 1 sssssss 0 ddddddd
-    (vhtfm4.q $d:ident, $s:ident, $t:ident) => {
+    (vsqrt.q $rd:ident, $rs:ident) => {
         concat!(
-            "\n.byte ", $crate::register_quad!($d),
-            "\n.byte 0x80 | ", $crate::register_mquad!($s),
-            "\n.byte 0x80 | ", $crate::register_quad!($t),
-            "\n.byte 0b11110001",
+            ".word 0b11010000000000000000000000000000",
+            "| 0b1000000010000000",
+            "| (", $crate::register_quad!($rd), " << 0)",
+            "| (", $crate::register_quad!($rs), " << 8)",
+            "| (0b0010110 << 16)",
         )
     };
 
-    // vtfm4.q 1111 0001 1 ttttttt 1 sssssss 1 ddddddd
-    (vtfm4.q $d:ident, $s:ident, $t:ident) => {
+    // Performs a min() sorting step between elements pairs 0-1 and 2-3, shuffling them depending on their values.
+
+    (vsrt1.q $rd:ident, $rs:ident) => {
         concat!(
-            "\n.byte 0x80 | ", $crate::register_quad!($d),
-            "\n.byte 0x80 | ", $crate::register_mquad!($s),
-            "\n.byte 0x80 | ", $crate::register_quad!($t),
-            "\n.byte 0b11110001",
+            ".word 0b11010000000000000000000000000000",
+            "| 0b1000000010000000",
+            "| (", $crate::register_quad!($rd), " << 0)",
+            "| (", $crate::register_quad!($rs), " << 8)",
+            "| (0b1000000 << 16)",
         )
     };
+
+    // Performs a min() sorting step between elements pairs 3-0 and 1-2, shuffling them depending on their values.
 
-    // vmidt.p 1111 0011 1 0000011 0 0000000 1 ddddddd
-    (vmidt.p $d:ident) => {
+    (vsrt2.q $rd:ident, $rs:ident) => {
         concat!(
-            "\n.byte 0x80 | ", $crate::register_mpair!($d),
-            "\n.byte 0b00000000",
-            "\n.byte 0b10000011",
-            "\n.byte 0b11110011",
+            ".word 0b11010000000000000000000000000000",
+            "| 0b1000000010000000",
+            "| (", $crate::register_quad!($rd), " << 0)",
+            "| (", $crate::register_quad!($rs), " << 8)",
+            "| (0b1000001 << 16)",
         )
     };
 
-    // vmidt.t 1111 0011 1 0000011 1 0000000 0 ddddddd
-    (vmidt.t $d:ident) => {
+    // Performs a max() sorting step between elements pairs 0-1 and 2-3, shuffling them depending on their values.
+
+    (vsrt3.q $rd:ident, $rs:ident) => {
         concat!(
-            "\n.byte ", $crate::register_mtriple!($d),
-            "\n.byte 0x80",
-            "\n.byte 0b10000011",
-            "\n.byte 0b11110011",
+            ".word 0b11010000000000000000000000000000",
+            "| 0b1000000010000000",
+            "| (", $crate::register_quad!($rd), " << 0)",
+            "| (", $crate::register_quad!($rs), " << 8)",
+            "| (0b1001000 << 16)",
         )
     };
 
-    // vmidt.q 1111 0011 1 0000011 1 0000000 1 ddddddd
-    (vmidt.q $d:ident) => {
+    // Performs a max() sorting step between elements pairs 3-0 and 1-2, shuffling them depending on their values.
+
+    (vsrt4.q $rd:ident, $rs:ident) => {
         concat!(
-            "\n.byte 0x80 | ", $crate::register_mquad!($d),
-            "\n.byte 0x80",
-            "\n.byte 0b10000011",
-            "\n.byte 0b11110011",
+            ".word 0b11010000000000000000000000000000",
+            "| 0b1000000010000000",
+            "| (", $crate::register_quad!($rd), " << 0)",
+            "| (", $crate::register_quad!($rs), " << 8)",
+            "| (0b1001001 << 16)",
         )
     };
+
+    // Performs element-wise floating point subtraction
 
-    // vmzero.p 1111 0011 1 0000110 0 0000000 1 ddddddd
-    (vmzero.p $d:ident) => {
+    (vsub.s $rd:ident, $rs:ident, $rt:ident) => {
         concat!(
-            "\n.byte 0x80 | ", $crate::register_mpair!($d),
-            "\n.byte 0b00000000",
-            "\n.byte 0b10000110",
-            "\n.byte 0b11110011",
+            ".word 0b01100000100000000000000000000000",
+            "| 0b0000000000000000",
+            "| (", $crate::register_single!($rd), " << 0)",
+            "| (", $crate::register_single!($rs), " << 8)",
+            "| (", $crate::register_single!($rt), " << 16)",
         )
     };
 
-    // vmzero.t 1111 0011 1 0000110 1 0000000 0 ddddddd
-    (vmzero.t $d:ident) => {
+    (vsub.p $rd:ident, $rs:ident, $rt:ident) => {
         concat!(
-            "\n.byte ", $crate::register_mtriple!($d),
-            "\n.byte 0x80",
-            "\n.byte 0b10000110",
-            "\n.byte 0b11110011",
+            ".word 0b01100000100000000000000000000000",
+            "| 0b0000000010000000",
+            "| (", $crate::register_pair!($rd), " << 0)",
+            "| (", $crate::register_pair!($rs), " << 8)",
+            "| (", $crate::register_pair!($rt), " << 16)",
         )
     };
 
-    // vmzero.q 1111 0011 1 0000110 1 0000000 1 ddddddd
-    (vmzero.q $d:ident) => {
+    (vsub.t $rd:ident, $rs:ident, $rt:ident) => {
         concat!(
-            "\n.byte 0x80 | ", $crate::register_mquad!($d),
-            "\n.byte 0x80",
-            "\n.byte 0b10000110",
-            "\n.byte 0b11110011",
+            ".word 0b01100000100000000000000000000000",
+            "| 0b1000000000000000",
+            "| (", $crate::register_triple!($rd), " << 0)",
+            "| (", $crate::register_triple!($rs), " << 8)",
+            "| (", $crate::register_triple!($rt), " << 16)",
         )
     };
 
-    // vscl.p 0110 0101 0 ttttttt 0 sssssss 1 ddddddd
-    (vscl.p $d:ident, $s:ident, $t:ident) => {
+    (vsub.q $rd:ident, $rs:ident, $rt:ident) => {
         concat!(
-            "\n.byte 0x80 | ", $crate::register_pair!($d),
-            "\n.byte ", $crate::register_pair!($s),
-            "\n.byte ", $crate::register_single!($t),
-            "\n.byte 0b01100101",
+            ".word 0b01100000100000000000000000000000",
+            "| 0b1000000010000000",
+            "| (", $crate::register_quad!($rd), " << 0)",
+            "| (", $crate::register_quad!($rs), " << 8)",
+            "| (", $crate::register_quad!($rt), " << 16)",
         )
     };
+
+    // Waits until all operations in the VFPU pipeline have completed
+
+    (vsync) => {
+        ".word 0b11111111111111110000001100100000"
+    };
+
+    // Converts four ABGR8888 color points to ABGR4444. The output 16 bit values are packed into a vector register pair.
 
-    // vscl.t 0110 0101 0 ttttttt 1 sssssss 0 ddddddd
-    (vscl.t $d:ident, $s:ident, $t:ident) => {
+    (vt4444.q $rd:ident, $rs:ident) => {
         concat!(
-            "\n.byte ", $crate::register_triple!($d),
-            "\n.byte 0x80 | ", $crate::register_triple!($s),
-            "\n.byte ", $crate::register_single!($t),
-            "\n.byte 0b01100101",
+            ".word 0b11010000000000000000000000000000",
+            "| 0b1000000010000000",
+            "| (", $crate::register_pair!($rd), " << 0)",
+            "| (", $crate::register_quad!($rs), " << 8)",
+            "| (0b1011001 << 16)",
         )
     };
 
-    // vscl.q 0110 0101 0 ttttttt 1 sssssss 1 ddddddd
-    (vscl.q $d:ident, $s:ident, $t:ident) => {
+    // Converts four ABGR8888 color points to ABGR1555. The output 16 bit values are packed into a vector register pair.
+
+    (vt5551.q $rd:ident, $rs:ident) => {
         concat!(
-            "\n.byte 0x80 | ", $crate::register_quad!($d),
-            "\n.byte 0x80 | ", $crate::register_quad!($s),
-            "\n.byte ", $crate::register_single!($t),
-            "\n.byte 0b01100101",
+            ".word 0b11010000000000000000000000000000",
+            "| 0b1000000010000000",
+            "| (", $crate::register_pair!($rd), " << 0)",
+            "| (", $crate::register_quad!($rs), " << 8)",
+            "| (0b1011010 << 16)",
         )
     };
+
+    // Converts four ABGR8888 color points to BGR565. The output 16 bit values are packed into a vector register pair.
 
-    // vmov.s 1101 0000 0 0000000 0 sssssss 0 ddddddd
-    (vmov.s $d:ident, $s:ident) => {
+    (vt5650.q $rd:ident, $rs:ident) => {
         concat!(
-            "\n.byte ", $crate::register_single!($d),
-            "\n.byte ", $crate::register_single!($s),
-            "\n.byte 0",
-            "\n.byte 0b11010000",
+            ".word 0b11010000000000000000000000000000",
+            "| 0b1000000010000000",
+            "| (", $crate::register_pair!($rd), " << 0)",
+            "| (", $crate::register_quad!($rs), " << 8)",
+            "| (0b1011011 << 16)",
         )
     };
 
-    // vmov.p 1101 0000 00000000 0 sssssss 1 ddddddd
-    (vmov.p $d:ident, $s:ident) => {
+    // Performs a vector-matrix transform (matrix-vector product), with a vector result
+
+    (vtfm2.p $rd:ident, $rs:ident, $rt:ident) => {
         concat!(
-            "\n.byte 0x80 | ", $crate::register_pair!($d),
-            "\n.byte ", $crate::register_pair!($s),
-            "\n.byte 0",
-            "\n.byte 0b11010000",
+            ".word 0b11110000100000000000000000000000",
+            "| 0b0000000010000000",
+            "| (", $crate::register_pair!($rd), " << 0)",
+            "| (", $crate::register_mpair!($rs), " << 8)",
+            "| (", $crate::register_pair!($rt), " << 16)",
         )
     };
+
+    // Performs a vector-matrix transform (matrix-vector product), with a vector result
 
-    // vmov.t 1101 0000 00000000 1 sssssss 0 ddddddd
-    (vmov.t $d:ident, $s:ident) => {
+    (vtfm3.t $rd:ident, $rs:ident, $rt:ident) => {
         concat!(
-            "\n.byte ", $crate::register_triple!($d),
-            "\n.byte 0x80 | ", $crate::register_triple!($s),
-            "\n.byte 0",
-            "\n.byte 0b11010000",
+            ".word 0b11110001000000000000000000000000",
+            "| 0b1000000000000000",
+            "| (", $crate::register_triple!($rd), " << 0)",
+            "| (", $crate::register_mtriple!($rs), " << 8)",
+            "| (", $crate::register_triple!($rt), " << 16)",
         )
     };
 
-    // vmov.q 1101 0000 00000000 1 sssssss 1 ddddddd
-    (vmov.q $d:ident, $s:ident) => {
+    // Performs a vector-matrix transform (matrix-vector product), with a vector result
+
+    (vtfm4.q $rd:ident, $rs:ident, $rt:ident) => {
         concat!(
-            "\n.byte 0x80 | ", $crate::register_quad!($d),
-            "\n.byte 0x80 | ", $crate::register_quad!($s),
-            "\n.byte 0",
-            "\n.byte 0b11010000",
+            ".word 0b11110001100000000000000000000000",
+            "| 0b1000000010000000",
+            "| (", $crate::register_quad!($rd), " << 0)",
+            "| (", $crate::register_mquad!($rs), " << 8)",
+            "| (", $crate::register_quad!($rt), " << 16)",
         )
     };
+
+    // Converts the input packed chars into full 32 bit integers in the output register. The input is placed on the most significant bits of the output integer, while the least significant bits are filled with zeros  XXXXXs.
 
-    // vmmov.p 1111 0011 1 0000000 0 sssssss 1 ddddddd
-    (vmmov.p $d:ident, $s:ident) => {
+    (vuc2ifs.s $rd:ident, $rs:ident) => {
         concat!(
-            "\n.byte 0x80 | ", $crate::register_mpair!($d),
-            "\n.byte ", $crate::register_mpair!($s),
-            "\n.byte 0x80",
-            "\n.byte 0b11110011",
+            ".word 0b11010000000000000000000000000000",
+            "| 0b0000000000000000",
+            "| (", $crate::register_quad!($rd), " << 0)",
+            "| (", $crate::register_single!($rs), " << 8)",
+            "| (0b0111000 << 16)",
         )
     };
 
-    // vmmov.t 1111 0011 1 0000000 1 sssssss 0 ddddddd
-    (vmmov.t $d:ident, $s:ident) => {
+    // Converts the input packed shorts into full 32 bit integers in the output register. The input is placed on the most significant bits of the output integer, while the least significant bits are filled with zeros.
+
+    (vus2i.s $rd:ident, $rs:ident) => {
         concat!(
-            "\n.byte ", $crate::register_mtriple!($d),
-            "\n.byte 0x80 | ", $crate::register_mtriple!($s),
-            "\n.byte 0x80",
-            "\n.byte 0b11110011",
+            ".word 0b11010000000000000000000000000000",
+            "| 0b0000000000000000",
+            "| (", $crate::register_pair!($rd), " << 0)",
+            "| (", $crate::register_single!($rs), " << 8)",
+            "| (0b0111010 << 16)",
         )
     };
 
-    // vmmov.q 1111 0011 1 0000000 1 sssssss 1 ddddddd
-    (vmmov.q $d:ident, $s:ident) => {
+    (vus2i.p $rd:ident, $rs:ident) => {
         concat!(
-            "\n.byte 0x80 | ", $crate::register_mquad!($d),
-            "\n.byte 0x80 | ", $crate::register_mquad!($s),
-            "\n.byte 0x80",
-            "\n.byte 0b11110011",
+            ".word 0b11010000000000000000000000000000",
+            "| 0b0000000010000000",
+            "| (", $crate::register_quad!($rd), " << 0)",
+            "| (", $crate::register_pair!($rs), " << 8)",
+            "| (0b0111010 << 16)",
         )
     };
+
+    // Writes zeros (0.0f) into the destination register
 
-    // viim.s 1101 1111 0 ddddddd iiiiiiii iiiiiiii
-    (viim.s $d:ident, $i:literal) => {
+    (vzero.s $rd:ident) => {
         concat!(
-            "\n.byte ", stringify!($i), " & 0xff",
-            "\n.byte ", stringify!($i), " >> 8",
-            "\n.byte ", $crate::register_single!($d),
-            "\n.byte 0b11011111",
+            ".word 0b11010000000000000000000000000000",
+            "| 0b0000000000000000",
+            "| (", $crate::register_single!($rd), " << 0)",
+            "| (0b0000000 << 8))",
+            "| (0b0000110 << 16)",
         )
     };
 
-    // vrot.p 1111 0011 101iiiii 0 sssssss 1 ddddddd
-    (vrot.p $d:ident, $s:ident, [ $($tt:tt)* ]) => {
+    (vzero.p $rd:ident) => {
         concat!(
-            "\n.byte 0x80 | ", $crate::register_pair!($d),
-            "\n.byte ", $crate::register_single!($s),
-            "\n.byte 0b10100000 | ", $crate::vrot_immediate_pair!($($tt)*),
-            "\n.byte 0b11110011",
+            ".word 0b11010000000000000000000000000000",
+            "| 0b0000000010000000",
+            "| (", $crate::register_pair!($rd), " << 0)",
+            "| (0b0000000 << 8))",
+            "| (0b0000110 << 16)",
         )
     };
 
-    // vrot.t 1111 0011 101iiiii 1 sssssss 0 ddddddd
-    (vrot.t $d:ident, $s:ident, [ $($tt:tt)* ]) => {
+    (vzero.t $rd:ident) => {
         concat!(
-            "\n.byte ", $crate::register_triple!($d),
-            "\n.byte 0x80 | ", $crate::register_single!($s),
-            "\n.byte 0b10100000 | ", $crate::vrot_immediate_triple!($($tt)*),
-            "\n.byte 0b11110011",
+            ".word 0b11010000000000000000000000000000",
+            "| 0b1000000000000000",
+            "| (", $crate::register_triple!($rd), " << 0)",
+            "| (0b0000000 << 8))",
+            "| (0b0000110 << 16)",
         )
     };
 
-    // vrot.q 1111 0011 101iiiii 1 sssssss 1 ddddddd
-    (vrot.q $d:ident, $s:ident, [ $($tt:tt)* ]) => {
+    (vzero.q $rd:ident) => {
         concat!(
-            "\n.byte 0x80 | ", $crate::register_quad!($d),
-            "\n.byte 0x80 | ", $crate::register_single!($s),
-            "\n.byte 0b10100000 | ", $crate::vrot_immediate_quad!($($tt)*),
-            "\n.byte 0b11110011",
+            ".word 0b11010000000000000000000000000000",
+            "| 0b1000000010000000",
+            "| (", $crate::register_quad!($rd), " << 0)",
+            "| (0b0000000 << 8))",
+            "| (0b0000110 << 16)",
         )
     };
 
