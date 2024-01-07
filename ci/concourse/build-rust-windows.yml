@@ -11,4 +11,4 @@ caches:
   - path: repo/target/
 
 run:
-  path: repo/ci/concourse/build-rust.sh
+  path: repo/ci/concourse/build-rust.bat
