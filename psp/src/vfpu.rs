@@ -614,7 +614,6 @@ macro_rules! instruction {
             $($crate::instruction!(vpfxd $($rdp)*), "\n",)?
             $($crate::instruction!(vpfxs $($rsp)*), "\n",)?
             ".word 0b11010000000000000000000000000000",
-            "| 0b0000000000000000",
             "| (", $crate::register_single!($rd), " << 0)",
             "| (", $crate::register_single!($rs), " << 8)",
             "| (0b0000001 << 16)",
@@ -665,7 +664,6 @@ macro_rules! instruction {
             $($crate::instruction!(vpfxs $($rsp)*), "\n",)?
             $($crate::instruction!(vpfxt $($rtp)*), "\n",)?
             ".word 0b01100000000000000000000000000000",
-            "| 0b0000000000000000",
             "| (", $crate::register_single!($rd), " << 0)",
             "| (", $crate::register_single!($rs), " << 8)",
             "| (", $crate::register_single!($rt), " << 16)",
@@ -718,7 +716,6 @@ macro_rules! instruction {
             $($crate::instruction!(vpfxd $($rdp)*), "\n",)?
             $($crate::instruction!(vpfxs $($rsp)*), "\n",)?
             ".word 0b11010000000000000000000000000000",
-            "| 0b0000000000000000",
             "| (", $crate::register_single!($rd), " << 0)",
             "| (", $crate::register_single!($rs), " << 8)",
             "| (0b0010111 << 16)",
@@ -845,7 +842,6 @@ macro_rules! instruction {
         concat!(
             $($crate::instruction!(vpfxd $($rdp)*), "\n",)?
             ".word 0b11010000000000000000000000000000",
-            "| 0b0000000000000000",
             "| (", $crate::register_quad!($rd), " << 0)",
             "| (", $crate::register_single!($rs), " << 8)",
             "| (0b0111001 << 16)",
@@ -859,7 +855,6 @@ macro_rules! instruction {
             $($crate::instruction!(vpfxd $($rdp)*), "\n",)?
             $($crate::instruction!(vpfxs $($rsp)*), "\n",)?
             ".word 0b11010000000000000000000000000000",
-            "| 0b0000000000000000",
             "| (", $crate::register_single!($rd), " << 0)",
             "| (", $crate::register_single!($rs), " << 8)",
             "| (0b0010011 << 16)",
@@ -934,9 +929,7 @@ macro_rules! instruction {
         concat!(
             $($crate::instruction!(vpfxd $($rdp)*), "\n",)?
             ".word 0b11010000011000000000000000000000",
-            "| 0b0000000000000000",
             "| (", $crate::register_single!($rd), " << 0)",
-            "| (0b0000000 << 8)",
             "| (", $crate::vfpu_const!($imm5), " << 16)",
         )
     };
@@ -947,7 +940,6 @@ macro_rules! instruction {
             ".word 0b11010000011000000000000000000000",
             "| 0b0000000010000000",
             "| (", $crate::register_pair!($rd), " << 0)",
-            "| (0b0000000 << 8)",
             "| (", $crate::vfpu_const!($imm5), " << 16)",
         )
     };
@@ -958,7 +950,6 @@ macro_rules! instruction {
             ".word 0b11010000011000000000000000000000",
             "| 0b1000000000000000",
             "| (", $crate::register_triple!($rd), " << 0)",
-            "| (0b0000000 << 8)",
             "| (", $crate::vfpu_const!($imm5), " << 16)",
         )
     };
@@ -969,7 +960,6 @@ macro_rules! instruction {
             ".word 0b11010000011000000000000000000000",
             "| 0b1000000010000000",
             "| (", $crate::register_quad!($rd), " << 0)",
-            "| (0b0000000 << 8)",
             "| (", $crate::vfpu_const!($imm5), " << 16)",
         )
     };
@@ -996,7 +986,6 @@ macro_rules! instruction {
             $($crate::instruction!(vpfxs $($rsp)*), "\n",)?
             $($crate::instruction!(vpfxt $($rtp)*), "\n",)?
             ".word 0b01100011100000000000000000000000",
-            "| 0b0000000000000000",
             "| (", $crate::register_single!($rd), " << 0)",
             "| (", $crate::register_single!($rs), " << 8)",
             "| (", $crate::register_single!($rt), " << 16)",
@@ -1090,7 +1079,6 @@ macro_rules! instruction {
             $($crate::instruction!(vpfxd $($rdp)*), "\n",)?
             $($crate::instruction!(vpfxs $($rsp)*), "\n",)?
             ".word 0b11010000000000000000000000000000",
-            "| 0b0000000000000000",
             "| (", $crate::register_single!($rd), " << 0)",
             "| (", $crate::register_single!($rs), " << 8)",
             "| (0b0010100 << 16)",
@@ -1163,7 +1151,6 @@ macro_rules! instruction {
         concat!(
             $($crate::instruction!(vpfxd $($rdp)*), "\n",)?
             ".word 0b11010010011000000000000000000000",
-            "| 0b0000000000000000",
             "| (", $crate::register_single!($rd), " << 0)",
             "| (", $crate::register_single!($rs), " << 8)",
             "| (", stringify!($scale), " << 16)",
@@ -1209,7 +1196,6 @@ macro_rules! instruction {
         concat!(
             $($crate::instruction!(vpfxd $($rdp)*), "\n",)?
             ".word 0b11010010000000000000000000000000",
-            "| 0b0000000000000000",
             "| (", $crate::register_single!($rd), " << 0)",
             "| (", $crate::register_single!($rs), " << 8)",
             "| (", stringify!($scale), " << 16)",
@@ -1255,7 +1241,6 @@ macro_rules! instruction {
         concat!(
             $($crate::instruction!(vpfxd $($rdp)*), "\n",)?
             ".word 0b11010010010000000000000000000000",
-            "| 0b0000000000000000",
             "| (", $crate::register_single!($rd), " << 0)",
             "| (", $crate::register_single!($rs), " << 8)",
             "| (", stringify!($scale), " << 16)",
@@ -1301,7 +1286,6 @@ macro_rules! instruction {
         concat!(
             $($crate::instruction!(vpfxd $($rdp)*), "\n",)?
             ".word 0b11010010001000000000000000000000",
-            "| 0b0000000000000000",
             "| (", $crate::register_single!($rd), " << 0)",
             "| (", $crate::register_single!($rs), " << 8)",
             "| (", stringify!($scale), " << 16)",
@@ -1404,7 +1388,6 @@ macro_rules! instruction {
             $($crate::instruction!(vpfxd $($rdp)*), "\n",)?
             $($crate::instruction!(vpfxs $($rsp)*), "\n",)?
             ".word 0b11010000000000000000000000000000",
-            "| 0b0000000000000000",
             "| (", $crate::register_pair!($rd), " << 0)",
             "| (", $crate::register_single!($rs), " << 8)",
             "| (0b0110011 << 16)",
@@ -1469,7 +1452,6 @@ macro_rules! instruction {
     (vhtfm2.p $rd:ident, $rs:ident, $rt:ident) => {
         concat!(
             ".word 0b11110000100000000000000000000000",
-            "| 0b0000000000000000",
             "| (", $crate::register_pair!($rd), " << 0)",
             "| (", $crate::register_pair!($rd), " << 0)",
             "| (", $crate::register_mpair!($rs), " << 8)",
@@ -1524,7 +1506,6 @@ macro_rules! instruction {
             $($crate::instruction!(vpfxd $($rdp)*), "\n",)?
             $($crate::instruction!(vpfxs $($rsp)*), "\n",)?
             ".word 0b11010010100000000000000000000000",
-            "| 0b0000000000000000",
             "| (", $crate::register_single!($rd), " << 0)",
             "| (", $crate::register_single!($rs), " << 8)",
             "| (", stringify!($scale), " << 16)",
@@ -1641,7 +1622,6 @@ macro_rules! instruction {
             ".word 0b11010000000000000000000000000000",
             "| 0b0000000010000000",
             "| (", $crate::register_pair!($rd), " << 0)",
-            "| (0b0000000 << 8)",
             "| (0b0000011 << 16)",
         )
     };
@@ -1652,7 +1632,6 @@ macro_rules! instruction {
             ".word 0b11010000000000000000000000000000",
             "| 0b1000000010000000",
             "| (", $crate::register_quad!($rd), " << 0)",
-            "| (0b0000000 << 8)",
             "| (0b0000011 << 16)",
         )
     };
@@ -1663,7 +1642,6 @@ macro_rules! instruction {
         concat!(
             $($crate::instruction!(vpfxd $($rdp)*), "\n",)?
             ".word 0b11011111000000000000000000000000",
-            "| 0b0000000000000000",
             "| ((", stringify!($imm16), " & 0xFFFF) << 0)",
             "| (", $crate::register_single!($rd), " << 16)",
         )
@@ -1676,7 +1654,6 @@ macro_rules! instruction {
             $($crate::instruction!(vpfxd $($rdp)*), "\n",)?
             $($crate::instruction!(vpfxs $($rsp)*), "\n",)?
             ".word 0b11010000000000000000000000000000",
-            "| 0b0000000000000000",
             "| (", $crate::register_single!($rd), " << 0)",
             "| (", $crate::register_single!($rs), " << 8)",
             "| (0b0110111 << 16)",
@@ -1690,7 +1667,6 @@ macro_rules! instruction {
             $($crate::instruction!(vpfxd $($rdp)*), "\n",)?
             $($crate::instruction!(vpfxs $($rsp)*), "\n",)?
             ".word 0b11010000000000000000000000000000",
-            "| 0b0000000000000000",
             "| (", $crate::register_single!($rd), " << 0)",
             "| (", $crate::register_single!($rs), " << 8)",
             "| (0b0010101 << 16)",
@@ -1741,7 +1717,6 @@ macro_rules! instruction {
             $($crate::instruction!(vpfxs $($rsp)*), "\n",)?
             $($crate::instruction!(vpfxt $($rtp)*), "\n",)?
             ".word 0b01101101100000000000000000000000",
-            "| 0b0000000000000000",
             "| (", $crate::register_single!($rd), " << 0)",
             "| (", $crate::register_single!($rs), " << 8)",
             "| (", $crate::register_single!($rt), " << 16)",
@@ -1794,7 +1769,6 @@ macro_rules! instruction {
             ".word 0b11110011100000000000000000000000",
             "| 0b0000000010000000",
             "| (", $crate::register_mpair!($rd), " << 0)",
-            "| (0b0000000 << 8)",
             "| (0b0000011 << 16)",
         )
     };
@@ -1804,7 +1778,6 @@ macro_rules! instruction {
             ".word 0b11110011100000000000000000000000",
             "| 0b1000000000000000",
             "| (", $crate::register_mtriple!($rd), " << 0)",
-            "| (0b0000000 << 8)",
             "| (0b0000011 << 16)",
         )
     };
@@ -1814,7 +1787,6 @@ macro_rules! instruction {
             ".word 0b11110011100000000000000000000000",
             "| 0b1000000010000000",
             "| (", $crate::register_mquad!($rd), " << 0)",
-            "| (0b0000000 << 8)",
             "| (0b0000011 << 16)",
         )
     };
@@ -1827,7 +1799,6 @@ macro_rules! instruction {
             $($crate::instruction!(vpfxs $($rsp)*), "\n",)?
             $($crate::instruction!(vpfxt $($rtp)*), "\n",)?
             ".word 0b01101101000000000000000000000000",
-            "| 0b0000000000000000",
             "| (", $crate::register_single!($rd), " << 0)",
             "| (", $crate::register_single!($rs), " << 8)",
             "| (", $crate::register_single!($rt), " << 16)",
@@ -1881,7 +1852,6 @@ macro_rules! instruction {
             "| 0b0000000010000000",
             "| (", $crate::register_mpair!($rd), " << 0)",
             "| (", $crate::register_mpair!($rs), " << 8)",
-            "| (0b0000000 << 16)",
         )
     };
 
@@ -1891,7 +1861,6 @@ macro_rules! instruction {
             "| 0b1000000000000000",
             "| (", $crate::register_mtriple!($rd), " << 0)",
             "| (", $crate::register_mtriple!($rs), " << 8)",
-            "| (0b0000000 << 16)",
         )
     };
 
@@ -1901,7 +1870,6 @@ macro_rules! instruction {
             "| 0b1000000010000000",
             "| (", $crate::register_mquad!($rd), " << 0)",
             "| (", $crate::register_mquad!($rs), " << 8)",
-            "| (0b0000000 << 16)",
         )
     };
 
@@ -1944,7 +1912,6 @@ macro_rules! instruction {
             ".word 0b11110011100000000000000000000000",
             "| 0b0000000010000000",
             "| (", $crate::register_mpair!($rd), " << 0)",
-            "| (0b0000000 << 8)",
             "| (0b0000111 << 16)",
         )
     };
@@ -1954,7 +1921,6 @@ macro_rules! instruction {
             ".word 0b11110011100000000000000000000000",
             "| 0b1000000000000000",
             "| (", $crate::register_mtriple!($rd), " << 0)",
-            "| (0b0000000 << 8)",
             "| (0b0000111 << 16)",
         )
     };
@@ -1964,7 +1930,6 @@ macro_rules! instruction {
             ".word 0b11110011100000000000000000000000",
             "| 0b1000000010000000",
             "| (", $crate::register_mquad!($rd), " << 0)",
-            "| (0b0000000 << 8)",
             "| (0b0000111 << 16)",
         )
     };
@@ -1976,10 +1941,8 @@ macro_rules! instruction {
             $($crate::instruction!(vpfxd $($rdp)*), "\n",)?
             $($crate::instruction!(vpfxs $($rsp)*), "\n",)?
             ".word 0b11010000000000000000000000000000",
-            "| 0b0000000000000000",
             "| (", $crate::register_single!($rd), " << 0)",
             "| (", $crate::register_single!($rs), " << 8)",
-            "| (0b0000000 << 16)",
         )
     };
 
@@ -1991,7 +1954,6 @@ macro_rules! instruction {
             "| 0b0000000010000000",
             "| (", $crate::register_pair!($rd), " << 0)",
             "| (", $crate::register_pair!($rs), " << 8)",
-            "| (0b0000000 << 16)",
         )
     };
 
@@ -2003,7 +1965,6 @@ macro_rules! instruction {
             "| 0b1000000000000000",
             "| (", $crate::register_triple!($rd), " << 0)",
             "| (", $crate::register_triple!($rs), " << 8)",
-            "| (0b0000000 << 16)",
         )
     };
 
@@ -2015,7 +1976,6 @@ macro_rules! instruction {
             "| 0b1000000010000000",
             "| (", $crate::register_quad!($rd), " << 0)",
             "| (", $crate::register_quad!($rs), " << 8)",
-            "| (0b0000000 << 16)",
         )
     };
 
@@ -2059,7 +2019,6 @@ macro_rules! instruction {
             $($crate::instruction!(vpfxs $($rsp)*), "\n",)?
             $($crate::instruction!(vpfxt $($rtp)*), "\n",)?
             ".word 0b01100100000000000000000000000000",
-            "| 0b0000000000000000",
             "| (", $crate::register_single!($rd), " << 0)",
             "| (", $crate::register_single!($rs), " << 8)",
             "| (", $crate::register_single!($rt), " << 16)",
@@ -2112,7 +2071,6 @@ macro_rules! instruction {
             ".word 0b11110011100000000000000000000000",
             "| 0b0000000010000000",
             "| (", $crate::register_mpair!($rd), " << 0)",
-            "| (0b0000000 << 8)",
             "| (0b0000110 << 16)",
         )
     };
@@ -2122,7 +2080,6 @@ macro_rules! instruction {
             ".word 0b11110011100000000000000000000000",
             "| 0b1000000000000000",
             "| (", $crate::register_mtriple!($rd), " << 0)",
-            "| (0b0000000 << 8)",
             "| (0b0000110 << 16)",
         )
     };
@@ -2132,7 +2089,6 @@ macro_rules! instruction {
             ".word 0b11110011100000000000000000000000",
             "| 0b1000000010000000",
             "| (", $crate::register_mquad!($rd), " << 0)",
-            "| (0b0000000 << 8)",
             "| (0b0000110 << 16)",
         )
     };
@@ -2144,7 +2100,6 @@ macro_rules! instruction {
             $($crate::instruction!(vpfxd $($rdp)*), "\n",)?
             $($crate::instruction!(vpfxs $($rsp)*), "\n",)?
             ".word 0b11010000000000000000000000000000",
-            "| 0b0000000000000000",
             "| (", $crate::register_single!($rd), " << 0)",
             "| (", $crate::register_single!($rs), " << 8)",
             "| (0b0000010 << 16)",
@@ -2200,7 +2155,6 @@ macro_rules! instruction {
             $($crate::instruction!(vpfxd $($rdp)*), "\n",)?
             $($crate::instruction!(vpfxs $($rsp)*), "\n",)?
             ".word 0b11010000000000000000000000000000",
-            "| 0b0000000000000000",
             "| (", $crate::register_single!($rd), " << 0)",
             "| (", $crate::register_single!($rs), " << 8)",
             "| (0b0011000 << 16)",
@@ -2250,7 +2204,6 @@ macro_rules! instruction {
             $($crate::instruction!(vpfxd $($rdp)*), "\n",)?
             $($crate::instruction!(vpfxs $($rsp)*), "\n",)?
             ".word 0b11010000000000000000000000000000",
-            "| 0b0000000000000000",
             "| (", $crate::register_single!($rd), " << 0)",
             "| (", $crate::register_single!($rs), " << 8)",
             "| (0b0011010 << 16)",
@@ -2300,7 +2253,6 @@ macro_rules! instruction {
             $($crate::instruction!(vpfxd $($rdp)*), "\n",)?
             $($crate::instruction!(vpfxs $($rsp)*), "\n",)?
             ".word 0b11010000000000000000000000000000",
-            "| 0b0000000000000000",
             "| (", $crate::register_single!($rd), " << 0)",
             "| (", $crate::register_single!($rs), " << 8)",
             "| (0b1000100 << 16)",
@@ -2349,9 +2301,7 @@ macro_rules! instruction {
         concat!(
             $($crate::instruction!(vpfxd $($rdp)*), "\n",)?
             ".word 0b11010000000000000000000000000000",
-            "| 0b0000000000000000",
             "| (", $crate::register_single!($rd), " << 0)",
-            "| (0b0000000 << 8)",
             "| (0b0000111 << 16)",
         )
     };
@@ -2362,7 +2312,6 @@ macro_rules! instruction {
             ".word 0b11010000000000000000000000000000",
             "| 0b0000000010000000",
             "| (", $crate::register_pair!($rd), " << 0)",
-            "| (0b0000000 << 8)",
             "| (0b0000111 << 16)",
         )
     };
@@ -2373,7 +2322,6 @@ macro_rules! instruction {
             ".word 0b11010000000000000000000000000000",
             "| 0b1000000000000000",
             "| (", $crate::register_triple!($rd), " << 0)",
-            "| (0b0000000 << 8)",
             "| (0b0000111 << 16)",
         )
     };
@@ -2384,7 +2332,6 @@ macro_rules! instruction {
             ".word 0b11010000000000000000000000000000",
             "| 0b1000000010000000",
             "| (", $crate::register_quad!($rd), " << 0)",
-            "| (0b0000000 << 8)",
             "| (0b0000111 << 16)",
         )
     };
@@ -2408,7 +2355,6 @@ macro_rules! instruction {
             $($crate::instruction!(vpfxd $($rdp)*), "\n",)?
             $($crate::instruction!(vpfxs $($rsp)*), "\n",)?
             ".word 0b11010000000000000000000000000000",
-            "| 0b0000000000000000",
             "| (", $crate::register_single!($rd), " << 0)",
             "| (", $crate::register_single!($rs), " << 8)",
             "| (0b0010000 << 16)",
@@ -2458,7 +2404,6 @@ macro_rules! instruction {
             $($crate::instruction!(vpfxd $($rdp)*), "\n",)?
             $($crate::instruction!(vpfxs $($rsp)*), "\n",)?
             ".word 0b11010000000000000000000000000000",
-            "| 0b0000000000000000",
             "| (", $crate::register_single!($rd), " << 0)",
             "| (", $crate::register_single!($rs), " << 8)",
             "| (0b0011100 << 16)",
@@ -2507,9 +2452,7 @@ macro_rules! instruction {
         concat!(
             $($crate::instruction!(vpfxd $($rdp)*), "\n",)?
             ".word 0b11010000000000000000000000000000",
-            "| 0b0000000000000000",
             "| (", $crate::register_single!($rd), " << 0)",
-            "| (0b0000000 << 8)",
             "| (0b0100010 << 16)",
         )
     };
@@ -2520,7 +2463,6 @@ macro_rules! instruction {
             ".word 0b11010000000000000000000000000000",
             "| 0b0000000010000000",
             "| (", $crate::register_pair!($rd), " << 0)",
-            "| (0b0000000 << 8)",
             "| (0b0100010 << 16)",
         )
     };
@@ -2531,7 +2473,6 @@ macro_rules! instruction {
             ".word 0b11010000000000000000000000000000",
             "| 0b1000000000000000",
             "| (", $crate::register_triple!($rd), " << 0)",
-            "| (0b0000000 << 8)",
             "| (0b0100010 << 16)",
         )
     };
@@ -2542,7 +2483,6 @@ macro_rules! instruction {
             ".word 0b11010000000000000000000000000000",
             "| 0b1000000010000000",
             "| (", $crate::register_quad!($rd), " << 0)",
-            "| (0b0000000 << 8)",
             "| (0b0100010 << 16)",
         )
     };
@@ -2553,9 +2493,7 @@ macro_rules! instruction {
         concat!(
             $($crate::instruction!(vpfxd $($rdp)*), "\n",)?
             ".word 0b11010000000000000000000000000000",
-            "| 0b0000000000000000",
             "| (", $crate::register_single!($rd), " << 0)",
-            "| (0b0000000 << 8)",
             "| (0b0100011 << 16)",
         )
     };
@@ -2566,7 +2504,6 @@ macro_rules! instruction {
             ".word 0b11010000000000000000000000000000",
             "| 0b0000000010000000",
             "| (", $crate::register_pair!($rd), " << 0)",
-            "| (0b0000000 << 8)",
             "| (0b0100011 << 16)",
         )
     };
@@ -2577,7 +2514,6 @@ macro_rules! instruction {
             ".word 0b11010000000000000000000000000000",
             "| 0b1000000000000000",
             "| (", $crate::register_triple!($rd), " << 0)",
-            "| (0b0000000 << 8)",
             "| (0b0100011 << 16)",
         )
     };
@@ -2588,7 +2524,6 @@ macro_rules! instruction {
             ".word 0b11010000000000000000000000000000",
             "| 0b1000000010000000",
             "| (", $crate::register_quad!($rd), " << 0)",
-            "| (0b0000000 << 8)",
             "| (0b0100011 << 16)",
         )
     };
@@ -2599,9 +2534,7 @@ macro_rules! instruction {
         concat!(
             $($crate::instruction!(vpfxd $($rdp)*), "\n",)?
             ".word 0b11010000000000000000000000000000",
-            "| 0b0000000000000000",
             "| (", $crate::register_single!($rd), " << 0)",
-            "| (0b0000000 << 8)",
             "| (0b0100001 << 16)",
         )
     };
@@ -2612,7 +2545,6 @@ macro_rules! instruction {
             ".word 0b11010000000000000000000000000000",
             "| 0b0000000010000000",
             "| (", $crate::register_pair!($rd), " << 0)",
-            "| (0b0000000 << 8)",
             "| (0b0100001 << 16)",
         )
     };
@@ -2623,7 +2555,6 @@ macro_rules! instruction {
             ".word 0b11010000000000000000000000000000",
             "| 0b1000000000000000",
             "| (", $crate::register_triple!($rd), " << 0)",
-            "| (0b0000000 << 8)",
             "| (0b0100001 << 16)",
         )
     };
@@ -2634,7 +2565,6 @@ macro_rules! instruction {
             ".word 0b11010000000000000000000000000000",
             "| 0b1000000010000000",
             "| (", $crate::register_quad!($rd), " << 0)",
-            "| (0b0000000 << 8)",
             "| (0b0100001 << 16)",
         )
     };
@@ -2644,8 +2574,6 @@ macro_rules! instruction {
     (vrnds.s $rs:ident) => {
         concat!(
             ".word 0b11010000000000000000000000000000",
-            "| 0b0000000000000000",
-            "| (0b0000000 << 0)",
             "| (", $crate::register_single!($rs), " << 8)",
             "| (0b0100000 << 16)",
         )
@@ -2690,7 +2618,6 @@ macro_rules! instruction {
             $($crate::instruction!(vpfxd $($rdp)*), "\n",)?
             $($crate::instruction!(vpfxs $($rsp)*), "\n",)?
             ".word 0b11010000000000000000000000000000",
-            "| 0b0000000000000000",
             "| (", $crate::register_single!($rd), " << 0)",
             "| (", $crate::register_single!($rs), " << 8)",
             "| (0b0010001 << 16)",
@@ -2739,7 +2666,6 @@ macro_rules! instruction {
         concat!(
             $($crate::instruction!(vpfxd $($rdp)*), "\n",)?
             ".word 0b11010000000000000000000000000000",
-            "| 0b0000000000000000",
             "| (", $crate::register_pair!($rd), " << 0)",
             "| (", $crate::register_single!($rs), " << 8)",
             "| (0b0111011 << 16)",
@@ -2763,7 +2689,6 @@ macro_rules! instruction {
         concat!(
             $($crate::instruction!(vpfxd $($rdp)*), "\n",)?
             ".word 0b11010000000000000000000000000000",
-            "| 0b0000000000000000",
             "| (", $crate::register_single!($rd), " << 0)",
             "| (", $crate::register_single!($rs), " << 8)",
             "| (0b0000100 << 16)",
@@ -2809,7 +2734,6 @@ macro_rules! instruction {
         concat!(
             $($crate::instruction!(vpfxd $($rdp)*), "\n",)?
             ".word 0b11010000000000000000000000000000",
-            "| 0b0000000000000000",
             "| (", $crate::register_single!($rd), " << 0)",
             "| (", $crate::register_single!($rs), " << 8)",
             "| (0b0000101 << 16)",
@@ -2857,7 +2781,6 @@ macro_rules! instruction {
             $($crate::instruction!(vpfxs $($rsp)*), "\n",)?
             $($crate::instruction!(vpfxt $($rtp)*), "\n",)?
             ".word 0b01100001000000000000000000000000",
-            "| 0b0000000000000000",
             "| (", $crate::register_single!($rd), " << 0)",
             "| (", $crate::register_single!($rs), " << 8)",
             "| (", $crate::register_single!($rt), " << 16)",
@@ -2871,7 +2794,6 @@ macro_rules! instruction {
             $($crate::instruction!(vpfxd $($rdp)*), "\n",)?
             $($crate::instruction!(vpfxs $($rsp)*), "\n",)?
             ".word 0b11010000000000000000000000000000",
-            "| 0b0000000000000000",
             "| (", $crate::register_single!($rd), " << 0)",
             "| (", $crate::register_single!($rs), " << 8)",
             "| (0b0110110 << 16)",
@@ -2924,7 +2846,6 @@ macro_rules! instruction {
             $($crate::instruction!(vpfxs $($rsp)*), "\n",)?
             $($crate::instruction!(vpfxt $($rtp)*), "\n",)?
             ".word 0b01101110100000000000000000000000",
-            "| 0b0000000000000000",
             "| (", $crate::register_single!($rd), " << 0)",
             "| (", $crate::register_single!($rs), " << 8)",
             "| (", $crate::register_single!($rt), " << 16)",
@@ -2978,7 +2899,6 @@ macro_rules! instruction {
             $($crate::instruction!(vpfxs $($rsp)*), "\n",)?
             $($crate::instruction!(vpfxt $($rtp)*), "\n",)?
             ".word 0b01101111000000000000000000000000",
-            "| 0b0000000000000000",
             "| (", $crate::register_single!($rd), " << 0)",
             "| (", $crate::register_single!($rs), " << 8)",
             "| (", $crate::register_single!($rt), " << 16)",
@@ -3031,7 +2951,6 @@ macro_rules! instruction {
             $($crate::instruction!(vpfxd $($rdp)*), "\n",)?
             $($crate::instruction!(vpfxs $($rsp)*), "\n",)?
             ".word 0b11010000000000000000000000000000",
-            "| 0b0000000000000000",
             "| (", $crate::register_single!($rd), " << 0)",
             "| (", $crate::register_single!($rs), " << 8)",
             "| (0b1001010 << 16)",
@@ -3081,7 +3000,6 @@ macro_rules! instruction {
             $($crate::instruction!(vpfxd $($rdp)*), "\n",)?
             $($crate::instruction!(vpfxs $($rsp)*), "\n",)?
             ".word 0b11010000000000000000000000000000",
-            "| 0b0000000000000000",
             "| (", $crate::register_single!($rd), " << 0)",
             "| (", $crate::register_single!($rs), " << 8)",
             "| (0b0010010 << 16)",
@@ -3132,7 +3050,6 @@ macro_rules! instruction {
             $($crate::instruction!(vpfxs $($rsp)*), "\n",)?
             $($crate::instruction!(vpfxt $($rtp)*), "\n",)?
             ".word 0b01101111100000000000000000000000",
-            "| 0b0000000000000000",
             "| (", $crate::register_single!($rd), " << 0)",
             "| (", $crate::register_single!($rs), " << 8)",
             "| (", $crate::register_single!($rt), " << 16)",
@@ -3183,7 +3100,6 @@ macro_rules! instruction {
     (vsocp.s $rd:ident, $rs:ident) => {
         concat!(
             ".word 0b11010000000000000000000000000000",
-            "| 0b0000000000000000",
             "| (", $crate::register_pair!($rd), " << 0)",
             "| (", $crate::register_single!($rs), " << 8)",
             "| (0b1000101 << 16)",
@@ -3207,7 +3123,6 @@ macro_rules! instruction {
             $($crate::instruction!(vpfxd $($rdp)*), "\n",)?
             $($crate::instruction!(vpfxs $($rsp)*), "\n",)?
             ".word 0b11010000000000000000000000000000",
-            "| 0b0000000000000000",
             "| (", $crate::register_single!($rd), " << 0)",
             "| (", $crate::register_single!($rs), " << 8)",
             "| (0b0010110 << 16)",
@@ -3314,7 +3229,6 @@ macro_rules! instruction {
             $($crate::instruction!(vpfxs $($rsp)*), "\n",)?
             $($crate::instruction!(vpfxt $($rtp)*), "\n",)?
             ".word 0b01100000100000000000000000000000",
-            "| 0b0000000000000000",
             "| (", $crate::register_single!($rd), " << 0)",
             "| (", $crate::register_single!($rs), " << 8)",
             "| (", $crate::register_single!($rt), " << 16)",
@@ -3447,7 +3361,6 @@ macro_rules! instruction {
         concat!(
             $($crate::instruction!(vpfxd $($rdp)*), "\n",)?
             ".word 0b11010000000000000000000000000000",
-            "| 0b0000000000000000",
             "| (", $crate::register_quad!($rd), " << 0)",
             "| (", $crate::register_single!($rs), " << 8)",
             "| (0b0111000 << 16)",
@@ -3460,7 +3373,6 @@ macro_rules! instruction {
         concat!(
             $($crate::instruction!(vpfxd $($rdp)*), "\n",)?
             ".word 0b11010000000000000000000000000000",
-            "| 0b0000000000000000",
             "| (", $crate::register_pair!($rd), " << 0)",
             "| (", $crate::register_single!($rs), " << 8)",
             "| (0b0111010 << 16)",
@@ -3484,9 +3396,7 @@ macro_rules! instruction {
         concat!(
             $($crate::instruction!(vpfxd $($rdp)*), "\n",)?
             ".word 0b11010000000000000000000000000000",
-            "| 0b0000000000000000",
             "| (", $crate::register_single!($rd), " << 0)",
-            "| (0b0000000 << 8)",
             "| (0b0000110 << 16)",
         )
     };
@@ -3497,7 +3407,6 @@ macro_rules! instruction {
             ".word 0b11010000000000000000000000000000",
             "| 0b0000000010000000",
             "| (", $crate::register_pair!($rd), " << 0)",
-            "| (0b0000000 << 8)",
             "| (0b0000110 << 16)",
         )
     };
@@ -3508,7 +3417,6 @@ macro_rules! instruction {
             ".word 0b11010000000000000000000000000000",
             "| 0b1000000000000000",
             "| (", $crate::register_triple!($rd), " << 0)",
-            "| (0b0000000 << 8)",
             "| (0b0000110 << 16)",
         )
     };
@@ -3519,7 +3427,6 @@ macro_rules! instruction {
             ".word 0b11010000000000000000000000000000",
             "| 0b1000000010000000",
             "| (", $crate::register_quad!($rd), " << 0)",
-            "| (0b0000000 << 8)",
             "| (0b0000110 << 16)",
         )
     };
