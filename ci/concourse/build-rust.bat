@@ -14,6 +14,9 @@ cd repo/cargo-psp/
 cargo build
 cd ../..
 
+# Add cargo-psp to path
+set PATH=%cd%/repo/target/debug/;%PATH%
+
 # build the test project
 cd repo/ci/tests
 cargo psp
