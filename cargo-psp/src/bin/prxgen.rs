@@ -1,4 +1,4 @@
-use clap::{App, AppSettings, Arg};
+use clap::Parser;
 use goblin::elf32::{
     header::Header,
     program_header::{ProgramHeader, PT_LOAD},
@@ -9,44 +9,40 @@ use scroll::{
     ctx::{TryFromCtx, TryIntoCtx},
     Endian,
 };
-use std::{collections::HashMap, fs, path::Path};
+use std::{
+    collections::HashMap,
+    fs,
+    path::{Path, PathBuf},
+};
 
 const PRX_ELF_TYPE: u16 = 0xffa0;
 const PRX_SHT_REL: u32 = 0x700000A0;
 
+#[derive(Parser, Debug)]
+#[command(
+    name = "prxgen",
+    author = "Marko Mijalkovic <marko.mijalkovic97@gmail.com>",
+    version = "0.1",
+    about = "Convert PSP ELF files to PRX format"
+)]
+struct Args {
+    #[arg(name = "in_file.elf", help = "Input ELF file")]
+    in_file: PathBuf,
+    #[arg(name = "out_file.prx", help = "Output PRX file")]
+    out_file: PathBuf,
+    #[arg(
+        default_value = ".rodata.sceModuleInfo",
+        help = "Alternative name for .rodata.sceModuleInfo section"
+    )]
+    minfo: String,
+}
+
 fn main() {
-    let matches = App::new("prxgen")
-        .version("0.1")
-        .author("Marko Mijalkovic <marko.mijalkovic97@gmail.com>")
-        .about("Convert PSP ELF files to PRX format")
-        .setting(AppSettings::ColoredHelp)
-        .arg(
-            Arg::with_name("in_file.elf")
-                .takes_value(true)
-                .help("Input ELF file")
-                .required(true),
-        )
-        .arg(
-            Arg::with_name("out_file.prx")
-                .takes_value(true)
-                .help("Output PRX file")
-                .required(true),
-        )
-        .arg(
-            Arg::with_name("minfo")
-                .long("minfo")
-                .takes_value(true)
-                .default_value(".rodata.sceModuleInfo")
-                .help("Alternative name for .rodata.sceModuleInfo section"),
-        )
-        .get_matches();
+    let args = Args::parse();
 
-    let in_file = matches.value_of("in_file.elf").unwrap();
-    let mod_info_sh_name = matches.value_of("minfo").unwrap();
-
-    let mut prx_gen = PrxGen::load(in_file, mod_info_sh_name);
+    let mut prx_gen = PrxGen::load(args.in_file, &args.minfo);
     prx_gen.modify();
-    prx_gen.save(matches.value_of("out_file.prx").unwrap());
+    prx_gen.save(args.out_file);
 }
 
 struct PrxGen<'a> {
@@ -80,7 +76,7 @@ impl<'a> PrxGen<'a> {
                 let start_idx = sh.sh_offset as usize;
                 let end_idx = sh.sh_size as usize + start_idx;
 
-                let relocs = (&bytes[start_idx..end_idx])
+                let relocs = bytes[start_idx..end_idx]
                     .chunks(8)
                     .map(|rel_bytes| Rel::try_from_ctx(rel_bytes, Endian::Little).unwrap().0)
                     .collect();
