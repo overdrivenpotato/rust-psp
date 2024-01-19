@@ -97,7 +97,7 @@ unsafe fn put_str<T: Font>(s: &[u8], x: usize, y: usize, color: u32) {
     }
 
     for (i, c) in s.iter().enumerate() {
-        if i >= (DISPLAY_WIDTH / T::CHAR_WIDTH) as usize {
+        if i >= (DISPLAY_WIDTH / T::CHAR_WIDTH) {
             break;
         }
 

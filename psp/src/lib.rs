@@ -1,4 +1,9 @@
-#![allow(stable_features)]
+#![allow(
+    stable_features,
+    internal_features,
+    clippy::bad_bit_mask,
+    clippy::missing_safety_doc
+)]
 #![feature(
     asm_experimental_arch,
     alloc_error_handler,
