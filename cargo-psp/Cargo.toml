@@ -24,13 +24,12 @@ name = "mksfo"
 name = "prxmin"
 
 [dependencies]
-clap = "2.33.1"
-goblin = "0.2.3"
-scroll = "0.10.1"
-cargo_metadata = "0.10.0"
-rustc_version = "0.2.3"
-
-serde = "1.0.111"
-serde_derive = "1.0.111"
-bincode = "1.3.1"
-toml = "0.5.6"
+clap = { version = "4.4", features = ["derive"] }
+goblin = "0.8"
+scroll = "0.12"
+cargo_metadata = "0.18"
+rustc_version = "0.4"
+serde = "1.0"
+serde_derive = "1.0"
+bincode = "1.3"
+toml = "0.8"

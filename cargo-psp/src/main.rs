@@ -1,4 +1,7 @@
-use cargo_metadata::{Message as CargoMessage, MetadataCommand};
+use cargo_metadata::{
+    semver::{BuildMetadata, Prerelease},
+    Message as CargoMessage, MetadataCommand,
+};
 use rustc_version::{Channel, Version};
 use std::{
     collections::HashSet,
@@ -105,7 +108,7 @@ struct CommitDate {
 
 impl CommitDate {
     fn parse(date: &str) -> Option<Self> {
-        let mut iter = date.split("-");
+        let mut iter = date.split('-');
 
         let year = iter.next()?.parse().ok()?;
         let month = iter.next()?.parse().ok()?;
@@ -138,15 +141,15 @@ impl core::ops::Add<CommitDate> for CommitDate {
 // contains the previous days' nightly rustc.
 const MINIMUM_COMMIT_DATE: CommitDate = CommitDate {
     year: 2023,
-    month: 03,
+    month: 3,
     day: 27,
 };
 const MINIMUM_RUSTC_VERSION: Version = Version {
     major: 1,
     minor: 70,
     patch: 0,
-    pre: Vec::new(),
-    build: Vec::new(),
+    pre: Prerelease::EMPTY,
+    build: BuildMetadata::EMPTY,
 };
 
 fn main() {
@@ -164,7 +167,7 @@ fn main() {
     let old_version = MINIMUM_RUSTC_VERSION
         > Version {
             // Remove `-nightly` pre-release tag for comparison.
-            pre: Vec::new(),
+            pre: Prerelease::EMPTY,
             ..rustc_version.semver.clone()
         };
 
@@ -191,8 +194,8 @@ fn main() {
         process::exit(1);
     }
 
-    let config = match fs::read(CONFIG_NAME) {
-        Ok(bytes) => match toml::from_slice(&bytes) {
+    let config = match fs::read_to_string(CONFIG_NAME) {
+        Ok(value) => match toml::from_str(&value) {
             Ok(config) => config,
             Err(e) => {
                 println!("Failed to read Psp.toml: {}", e);
@@ -200,7 +203,6 @@ fn main() {
                 process::exit(1);
             }
         },
-
         Err(e) if e.kind() == ErrorKind::NotFound => PspConfig::default(),
         Err(e) => panic!("{}", e),
     };
@@ -292,11 +294,13 @@ fn main() {
 
         fix_imports::fix(&elf_path);
 
-        Command::new("prxgen")
+        let status = Command::new("prxgen")
             .arg(&elf_path)
             .arg(&prx_path)
             .status()
             .expect("failed to run prxgen");
+
+        assert!(status.success(), "prxgen failed: {}", status);
 
         let config_args = vec![
             ("-s", "DISC_ID", config.disc_id.clone()),
@@ -320,7 +324,7 @@ fn main() {
             ("-s", "UPDATER_VER", config.updater_version.clone()),
         ];
 
-        Command::new("mksfo")
+        let status = Command::new("mksfo")
             // Add the optional config args
             .args({
                 config_args
@@ -342,7 +346,9 @@ fn main() {
             .status()
             .expect("failed to run mksfo");
 
-        Command::new("pack-pbp")
+        assert!(status.success(), "mksfo failed: {}", status);
+
+        let status = Command::new("pack-pbp")
             .arg(&pbp_path)
             .arg(&sfo_path)
             .arg(config.xmb_icon_png.as_deref().unwrap_or("NULL"))
@@ -359,5 +365,7 @@ fn main() {
             .arg(config.psar.as_deref().unwrap_or("NULL"))
             .status()
             .expect("failed to run pack-pbp");
+
+        assert!(status.success(), "pack-pbp failed: {}", status);
     }
 }
