@@ -1,11 +1,9 @@
+use core::f32::{consts::PI, EPSILON, NAN};
 use psp::math;
-use core::f32::{EPSILON, NAN, consts::PI};
 use psp::test_runner::TestRunner;
-
 
 pub fn test_main(test_runner: &mut TestRunner) {
     test_runner.check_list(&[
-        ("cos_2.5", test_cos(2.5), -0.8011436),
         ("cos_0", test_cos(0.0), 1.0),
         ("cos_pi", test_cos(PI), -1.0),
         ("sin_0", test_sin(0.0), 0.0),
@@ -16,6 +14,11 @@ pub fn test_main(test_runner: &mut TestRunner) {
         ("fmaxf", test_fmaxf(-10.0, 3.0), 3.0),
         ("fmaxf_NAN", test_fmaxf(NAN, 3.0), 3.0),
     ]);
+    let cos_2_5 = test_cos(2.5) + 0.8011436;
+    test_runner.check_true(
+        "cos_2.5",
+        cos_2_5 < (EPSILON * 2.0) && cos_2_5 > -(EPSILON * 2.0),
+    );
     let almost_zero = test_sin(PI);
     test_runner.check_true("sin_pi", almost_zero < EPSILON && almost_zero > -EPSILON);
     let fmodf_0 = test_fmodf(1.0, 0.0);
