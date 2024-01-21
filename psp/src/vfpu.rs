@@ -1880,7 +1880,7 @@ macro_rules! instruction {
             ".word 0b11110000000000000000000000000000",
             "| 0b0000000010000000",
             "| (", $crate::register_mpair!($rd), " << 0)",
-            "| (", $crate::register_mpair!($rs), " << 8)",
+            "| ((", $crate::register_mpair!($rs), " ^ 0b0100000) << 8)",
             "| (", $crate::register_mpair!($rt), " << 16)",
         )
     };
@@ -1890,7 +1890,7 @@ macro_rules! instruction {
             ".word 0b11110000000000000000000000000000",
             "| 0b1000000000000000",
             "| (", $crate::register_mtriple!($rd), " << 0)",
-            "| (", $crate::register_mtriple!($rs), " << 8)",
+            "| ((", $crate::register_mtriple!($rs), " ^ 0b0100000) << 8)",
             "| (", $crate::register_mtriple!($rt), " << 16)",
         )
     };
@@ -1900,7 +1900,7 @@ macro_rules! instruction {
             ".word 0b11110000000000000000000000000000",
             "| 0b1000000010000000",
             "| (", $crate::register_mquad!($rd), " << 0)",
-            "| (", $crate::register_mquad!($rs), " << 8)",
+            "| ((", $crate::register_mquad!($rs), " ^ 0b0100000) << 8)",
             "| (", $crate::register_mquad!($rt), " << 16)",
         )
     };
