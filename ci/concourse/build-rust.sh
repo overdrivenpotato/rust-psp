@@ -31,14 +31,16 @@ fi
 
 # Test formatting
 rustup component add rustfmt
-pushd repo/
-cargo fmt --check
+{
+    cargo fmt --check --message-format=short --manifest-path=repo/cargo-psp/Cargo.toml;
+    # TODO: remove `-ppsp` after formatting new workspace
+    cargo fmt --check --message-format=short --manifest-path=repo/Cargo.toml -ppsp;
+}
 status=$?
 if test $status -ne 0
     then echo "Formatting errors: Please run cargo fmt on your changes"
     exit 1
 fi
-popd
 
 # build cargo-psp
 pushd repo/cargo-psp/

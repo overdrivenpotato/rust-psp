@@ -1,4 +1,10 @@
 [workspace]
-
-members = [ "psp", "cargo-psp" ]
-exclude = [ "examples", "ci" ]
+# psp target
+members = [
+  "psp",
+  "examples/*",
+  "ci/std_verification",
+  "ci/tests",
+]
+# native target
+exclude = ["cargo-psp"]
