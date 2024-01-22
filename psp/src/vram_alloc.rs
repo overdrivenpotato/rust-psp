@@ -95,7 +95,6 @@ impl SimpleVramAllocator {
         let old_offset = self.offset.load(Ordering::Relaxed);
         let new_offset = old_offset + size;
         self.offset.store(new_offset, Ordering::Relaxed);
-
         if new_offset > self.total_mem() {
             panic!("Total VRAM size exceeded!");
         }
