@@ -1,0 +1,1 @@
+# Understanding project structure
