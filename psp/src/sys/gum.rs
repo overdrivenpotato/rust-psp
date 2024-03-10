@@ -3,7 +3,6 @@ use crate::sys::{
     vfpu_context::{Context, MatrixSet},
     MatrixMode, ScePspFMatrix4, ScePspFVector3, ScePspFVector4,
 };
-use crate::vfpu_asm;
 use core::{ffi::c_void, mem::MaybeUninit};
 
 static mut MATRIX_STACK: [[ScePspFMatrix4; 32]; 4] = {
