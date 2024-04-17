@@ -1,7 +1,7 @@
 platform: darwin
 
 params:
-  RUSTUP_TOOLCHAIN: nightly-2023-09-26
+  RUSTUP_TOOLCHAIN: nightly-2024-03-05
 
 inputs:
   - name: repo
