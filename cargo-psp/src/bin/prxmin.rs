@@ -1,4 +1,4 @@
-use clap::{App, AppSettings, Arg};
+use clap::Parser;
 use goblin::{
     container::{Container, Ctx, Endian},
     elf::{
@@ -14,6 +14,7 @@ use std::{
     fs::{self, File},
     io::Write,
     iter,
+    path::PathBuf,
 };
 
 const SHT_PRXREL: u32 = 0x7000_00A0;
@@ -27,32 +28,26 @@ struct Section<'a> {
     name: Cow<'a, str>,
 }
 
+#[derive(Parser, Debug)]
+#[command(
+    name = "prxmin",
+    author = "Marko Mijalkovic <marko.mijalkovic97@gmail.com>",
+    version = "0.1",
+    about = "Minify (and strip) PRX files"
+)]
+struct Args {
+    #[arg(name = "module.prx", help = "PRX module to minify")]
+    input: PathBuf,
+    #[arg(
+        name = "minified.prx.min",
+        help = "Optional output file name (default adds .min)"
+    )]
+    output: Option<PathBuf>,
+}
+
 fn main() {
-    let matches = App::new("prxmin")
-        .version("0.1")
-        .author("Marko Mijalkovic <marko.mijalkovic97@gmail.com>")
-        .about("Minify (and strip) PRX files")
-        .setting(AppSettings::ColoredHelp)
-        .arg(
-            Arg::with_name("module.prx")
-                .takes_value(true)
-                .help("PRX module to minify")
-                .required(true),
-        )
-        .arg(
-            Arg::with_name("minified.prx.min")
-                .takes_value(true)
-                .help("Optional output file name (default adds .min)"),
-        )
-        .get_matches();
-
-    let file = matches.value_of("module.prx").unwrap();
-    let file_out = matches
-        .value_of("minified.prx.min")
-        .map(String::from)
-        .unwrap_or_else(|| file.to_owned() + ".min");
-
-    let bin = fs::read(&file).unwrap();
+    let args = Args::parse();
+    let bin = fs::read(&args.input).unwrap();
     let elf = Elf::parse(&bin).unwrap();
 
     let shstrtab = {
@@ -216,7 +211,7 @@ fn main() {
         e_shoff: (DATA_OFFSET + body.len()) as u64,
         e_phnum: 1,
         e_shnum: new_sections.len() as u16,
-        ..elf.header.clone()
+        ..elf.header
     };
 
     let ctx = Ctx {
@@ -224,7 +219,8 @@ fn main() {
         le: Endian::Little,
     };
 
-    let mut out = File::create(file_out).unwrap();
+    let out_file = args.output.unwrap_or(args.input.with_extension(".prx.min"));
+    let mut out = File::create(out_file).unwrap();
 
     let mut buf = vec![0; elf32::header::SIZEOF_EHDR];
     header.into_ctx(&mut buf, ctx);

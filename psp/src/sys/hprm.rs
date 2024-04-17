@@ -2,7 +2,7 @@
 
 bitflags::bitflags! {
     #[repr(transparent)]
-    pub struct Key: u32 {
+    pub struct HprmKey: u32 {
         const PLAY_PAUSE  = 0x1;
         const FORWARD     = 0x4;
         const BACK        = 0x8;
@@ -27,7 +27,7 @@ psp_extern! {
     /// # Return Value
     ///
     /// < 0 on error
-    pub fn sceHprmPeekCurrentKey(key: *mut Key) -> i32;
+    pub fn sceHprmPeekCurrentKey(key: *mut HprmKey) -> i32;
 
     #[psp(0x2BCEC83E)]
     /// Peek at the current latch data.

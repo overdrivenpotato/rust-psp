@@ -231,11 +231,7 @@ fn psp_filename(filename: &str) -> *const u8 {
 
 fn write_to_psp_output_fd(fd: SceUid, msg: &str) {
     unsafe {
-        sys::sceIoWrite(
-            fd,
-            msg.as_bytes().as_ptr() as *const u8 as *const c_void,
-            msg.len(),
-        );
+        sys::sceIoWrite(fd, msg.as_bytes().as_ptr() as *const c_void, msg.len());
     }
 }
 

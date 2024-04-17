@@ -938,7 +938,7 @@ extern "C" fn callback_sig(id: i32, arg: *mut c_void) {
         (*settings).signal_history[idx] = (id & 0xffff) as i16;
         (*settings).signal_offset += 1;
 
-        if (*settings).sig != None {
+        if (*settings).sig.is_some() {
             // Convert Option<fn(i32, *mut c_void)> -> fn(i32)
             // This is fine because we are transmuting a nullable function
             // pointer to another function pointer. The requirement here is that
@@ -1064,8 +1064,7 @@ pub unsafe extern "C" fn sceGuDrawBuffer(psm: DisplayPixelFormat, fbp: *mut c_vo
     );
     send_command_i(
         GeCommand::FrameBufWidth,
-        ((DRAW_BUFFER.frame_buffer as u32 & 0xff000000) >> 8) as i32
-            | DRAW_BUFFER.frame_width as i32,
+        ((DRAW_BUFFER.frame_buffer as u32 & 0xff000000) >> 8) as i32 | DRAW_BUFFER.frame_width,
     );
     send_command_i(
         GeCommand::ZBufPtr,
@@ -1073,8 +1072,7 @@ pub unsafe extern "C" fn sceGuDrawBuffer(psm: DisplayPixelFormat, fbp: *mut c_vo
     );
     send_command_i(
         GeCommand::ZBufWidth,
-        ((DRAW_BUFFER.depth_buffer as u32 & 0xff000000) >> 8) as i32
-            | DRAW_BUFFER.depth_width as i32,
+        ((DRAW_BUFFER.depth_buffer as u32 & 0xff000000) >> 8) as i32 | DRAW_BUFFER.depth_width,
     );
 }
 
@@ -1467,7 +1465,7 @@ pub unsafe extern "C" fn sceGuInit() {
     GE_LIST_EXECUTED[0] = sys::sceGeListEnQueue(
         (&INIT_LIST as *const _ as u32 & 0x1fffffff) as *const _,
         core::ptr::null_mut(),
-        SETTINGS.ge_callback_id as i32,
+        SETTINGS.ge_callback_id,
         core::ptr::null_mut(),
     );
 
@@ -1648,7 +1646,7 @@ pub unsafe extern "C" fn sceGuGetMemory(mut size: i32) -> *mut c_void {
 #[allow(non_snake_case)]
 #[no_mangle]
 pub unsafe extern "C" fn sceGuStart(context_type: GuContextType, list: *mut c_void) {
-    let mut context = &mut CONTEXTS[context_type as usize];
+    let context = &mut CONTEXTS[context_type as usize];
     let local_list = ((list as u32) | 0x4000_0000) as *mut u32;
 
     // setup display list
@@ -1664,7 +1662,7 @@ pub unsafe extern "C" fn sceGuStart(context_type: GuContextType, list: *mut c_vo
         GE_LIST_EXECUTED[0] = crate::sys::sceGeListEnQueue(
             local_list as *mut c_void,
             local_list as *mut c_void,
-            SETTINGS.ge_callback_id as i32,
+            SETTINGS.ge_callback_id,
             core::ptr::null_mut(),
         );
 
@@ -1720,7 +1718,7 @@ pub unsafe extern "C" fn sceGuStart(context_type: GuContextType, list: *mut c_vo
             send_command_i(
                 GeCommand::FrameBufWidth,
                 ((DRAW_BUFFER.frame_buffer as u32 & 0xff00_0000) >> 8) as i32
-                    | (DRAW_BUFFER.frame_width as i32),
+                    | DRAW_BUFFER.frame_width,
             );
         }
     }
@@ -1880,12 +1878,10 @@ pub unsafe extern "C" fn sceGuSendList(
 
     let list_id = match mode {
         GuQueueMode::Head => {
-            crate::sys::sceGeListEnQueueHead(list, null_mut(), callback as i32, &mut args)
+            crate::sys::sceGeListEnQueueHead(list, null_mut(), callback, &mut args)
         }
 
-        GuQueueMode::Tail => {
-            crate::sys::sceGeListEnQueue(list, null_mut(), callback as i32, &mut args)
-        }
+        GuQueueMode::Tail => crate::sys::sceGeListEnQueue(list, null_mut(), callback, &mut args),
     };
 
     GE_LIST_EXECUTED[1] = list_id;
@@ -2514,7 +2510,7 @@ pub unsafe extern "C" fn sceGuColorFunc(func: ColorFunc, color: u32, mask: u32) 
 #[allow(non_snake_case)]
 #[no_mangle]
 pub unsafe extern "C" fn sceGuColorMaterial(components: LightComponent) {
-    send_command_i(GeCommand::MaterialUpdate, components.bits() as i32);
+    send_command_i(GeCommand::MaterialUpdate, components.bits());
 }
 
 /// Set the alpha test parameters
@@ -2619,7 +2615,7 @@ pub unsafe extern "C" fn sceGuModelColor(emissive: u32, ambient: u32, diffuse: u
 pub unsafe extern "C" fn sceGuStencilFunc(func: StencilFunc, ref_: i32, mask: i32) {
     send_command_i(
         GeCommand::StencilTest,
-        func as i32 | ((ref_ as i32 & 0xff) << 8) | ((mask as i32 & 0xff) << 16),
+        func as i32 | ((ref_ & 0xff) << 8) | ((mask & 0xff) << 16),
     );
 }
 
@@ -2793,10 +2789,7 @@ pub unsafe extern "C" fn sceGuCopyImage(
         (((dest as u32) & 0xff000000) >> 8) as i32 | destw,
     );
     send_command_i(GeCommand::TransferDstPos, (dy << 10) | dx);
-    send_command_i(
-        GeCommand::TransferSize,
-        ((height as i32 - 1) << 10) | (width - 1),
-    );
+    send_command_i(GeCommand::TransferSize, ((height - 1) << 10) | (width - 1));
 
     let is_32_bit_texel = if let DisplayPixelFormat::Psm8888 = psm {
         1
@@ -2948,7 +2941,7 @@ pub unsafe extern "C" fn sceGuTexImage(
     send_command_i(TBP_CMD_TBL[mipmap as usize], (tbp as i32) & 0xffffff);
     send_command_i(
         TBW_CMD_TBL[mipmap as usize],
-        ((tbp as u32 >> 8) as i32 & 0x0f0000) | tbw as i32,
+        ((tbp as u32 >> 8) as i32 & 0x0f0000) | tbw,
     );
     send_command_i(
         TSIZE_CMD_TBL[mipmap as usize],
@@ -3552,7 +3545,7 @@ pub unsafe extern "C" fn sceGuDebugPrint(x: i32, mut y: i32, mut color: u32, mut
         }
         DisplayPixelFormat::Psm5551 => {
             iVar2 = (uVar1 >> 3) as i32;
-            uVar1 = (((color >> 24) >> 7) << 0xf | (iVar4 as u32) << 10) as u32;
+            uVar1 = ((color >> 24) >> 7) << 0xf | (iVar4 as u32) << 10;
             uVar1 = (uVar1 | iVar2 as u32) << 5;
             color = (color & 0xff) >> 3;
             color |= uVar1;

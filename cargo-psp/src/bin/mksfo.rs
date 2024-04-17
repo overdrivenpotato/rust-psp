@@ -1,9 +1,8 @@
-use clap::{App, Arg};
-use std::collections::HashMap;
-use std::fs::File;
+use clap::Parser;
 use std::io::prelude::*;
 use std::io::SeekFrom;
-use std::path::Path;
+use std::{collections::HashMap, path::PathBuf};
+use std::{error::Error, fs::File};
 
 #[repr(C, packed)]
 struct SfoHeader {
@@ -15,7 +14,7 @@ struct SfoHeader {
 }
 
 impl SfoHeader {
-    fn to_le_bytes(self) -> [u8; 20] {
+    fn to_le_bytes(&self) -> [u8; 20] {
         let mut buf = [0u8; 20];
 
         buf[0..=3].copy_from_slice(&self.magic.to_le_bytes());
@@ -55,11 +54,11 @@ impl SfoEntry {
 }
 
 #[repr(u8)]
-#[derive(Clone, Copy, Eq, PartialEq)]
+#[derive(Clone, Copy, Eq, PartialEq, Debug)]
 enum EntryType {
     // TODO this type is undocumented, unused in mksfoext
     Binary = 0,
-    String_ = 2,
+    String = 2,
     Dword = 4,
 }
 
@@ -67,60 +66,63 @@ const MAX_OPTIONS: usize = 256;
 const PSF_MAGIC: u32 = 0x46535000;
 const PSF_VERSION: u32 = 0x00000101;
 
+#[derive(Parser, Debug)]
+#[command(
+    name = "mksfo",
+    author = "Paul Sajna <sajattack@gmail.com>",
+    version = "0.1",
+    about = "Creates SFO files used for building Sony PSP EBOOT executables"
+)]
+struct Args {
+    #[arg(
+        long,
+        action,
+        help = "Do not set any default values. Ignores the <TITLE> value if set."
+    )]
+    bare: bool,
+    #[arg(
+        short, long,
+        value_parser = parse_key_val::<String, u32>,
+        number_of_values = 1,
+        help = "key=VALUE Add a new DWORD value"
+    )]
+    dword: Vec<(String, u32)>,
+    #[arg(
+        short, long,
+        value_parser = parse_key_val::<String, String>,
+        number_of_values = 1,
+        help = "key=VALUE Add a new STRING value"
+    )]
+    string: Vec<(String, String)>,
+    #[arg(help = "Display title")]
+    title: String,
+    #[arg(help = "Output file name")]
+    output: PathBuf,
+}
+
+fn parse_key_val<T, U>(s: &str) -> Result<(T, U), Box<dyn Error + Send + Sync + 'static>>
+where
+    T: std::str::FromStr,
+    T::Err: Error + Send + Sync + 'static,
+    U: std::str::FromStr,
+    U::Err: Error + Send + Sync + 'static,
+{
+    let pos = s
+        .find('=')
+        .ok_or_else(|| format!("invalid KEY=value: no `=` found in `{s}`"))?;
+    Ok((s[..pos].parse()?, s[pos + 1..].parse()?))
+}
+
 fn main() {
-    let matches = App::new("mksfo")
-        .version("0.1")
-        .author("Paul Sajna <sajattack@gmail.com>")
-        .about("Creates SFO files used for building Sony PSP EBOOT executables")
-        .arg(
-            Arg::with_name("bare")
-                .long("bare")
-                .help("Do not set any default values. Ignores the <title> value if set."),
-        )
-        .arg(
-            Arg::with_name("dword")
-                .short("d")
-                .long("dword")
-                .help("key=VALUE Add a new DWORD value")
-                .multiple(true)
-                .number_of_values(1)
-                .takes_value(true),
-        )
-        .arg(
-            Arg::with_name("string")
-                .short("s")
-                .long("string")
-                .help("key=STRING Add a new string value")
-                .multiple(true)
-                .number_of_values(1)
-                .takes_value(true),
-        )
-        .arg(
-            Arg::with_name("title")
-                .takes_value(true)
-                .required(true)
-                .help("Display title"),
-        )
-        .arg(
-            Arg::with_name("output")
-                .takes_value(true)
-                .required(true)
-                .help("Output file name"),
-        )
-        .get_matches();
-
-    let bare = matches.is_present("bare");
-
-    let mut strings: HashMap<String, String> = HashMap::new();
-
+    let args = Args::parse();
     // TODO this type is undocumented, unused in mksfoext
     //let mut binaries: HashMap<String, Vec<u8>> = HashMap::new();
-    let mut dwords: HashMap<String, u32> = HashMap::new();
 
-    let title = matches.value_of("title").unwrap();
+    let mut strings: HashMap<String, String> = args.string.into_iter().collect();
+    let mut dwords: HashMap<String, u32> = args.dword.into_iter().collect();
 
-    if !bare {
-        strings.insert("TITLE".to_string(), title.to_string());
+    if !args.bare {
+        strings.insert("TITLE".to_string(), args.title);
 
         // Default Values
         strings.insert("CATEGORY".to_string(), "MG".to_string());
@@ -135,34 +137,34 @@ fn main() {
 
     let valid: HashMap<&'static str, (EntryType, bool, bool, bool, bool)> = [
         ("BOOTABLE", (EntryType::Dword, false, false, true, true)),
-        ("CATEGORY", (EntryType::String_, false, true, true, true)),
-        ("DISC_ID", (EntryType::String_, false, false, true, true)),
+        ("CATEGORY", (EntryType::String, false, true, true, true)),
+        ("DISC_ID", (EntryType::String, false, false, true, true)),
         ("DISC_NUMBER", (EntryType::Dword, false, false, false, true)),
         (
             "DISC_VERSION",
-            (EntryType::String_, false, false, true, true),
+            (EntryType::String, false, false, true, true),
         ),
         (
             "DRIVER_PATH",
-            (EntryType::String_, false, false, true, false),
+            (EntryType::String, false, false, true, false),
         ),
-        ("LANGUAGE", (EntryType::String_, false, false, true, false)),
+        ("LANGUAGE", (EntryType::String, false, false, true, false)),
         (
             "PARENTAL_LEVEL",
             (EntryType::Dword, false, true, true, true),
         ),
         (
             "PSP_SYSTEM_VER",
-            (EntryType::String_, false, false, true, true),
+            (EntryType::String, false, false, true, true),
         ),
         ("REGION", (EntryType::Dword, false, false, true, true)),
         (
             "SAVEDATA_DETAIL",
-            (EntryType::String_, false, true, false, false),
+            (EntryType::String, false, true, false, false),
         ),
         (
             "SAVEDATA_DIRECTORY",
-            (EntryType::String_, false, true, false, false),
+            (EntryType::String, false, true, false, false),
         ),
         (
             "SAVEDATA_FILE_LIST",
@@ -174,54 +176,35 @@ fn main() {
         ),
         (
             "SAVEDATA_TITLE",
-            (EntryType::String_, false, true, false, false),
+            (EntryType::String, false, true, false, false),
         ),
-        ("TITLE", (EntryType::String_, false, true, true, true)),
-        ("TITLE_0", (EntryType::String_, false, true, true, true)),
-        ("TITLE_2", (EntryType::String_, false, true, true, true)),
-        ("TITLE_3", (EntryType::String_, false, true, true, true)),
-        ("TITLE_4", (EntryType::String_, false, true, true, true)),
-        ("TITLE_5", (EntryType::String_, false, true, true, true)),
-        ("TITLE_6", (EntryType::String_, false, true, true, true)),
-        ("TITLE_7", (EntryType::String_, false, true, true, true)),
-        ("TITLE_8", (EntryType::String_, false, true, true, true)),
+        ("TITLE", (EntryType::String, false, true, true, true)),
+        ("TITLE_0", (EntryType::String, false, true, true, true)),
+        ("TITLE_2", (EntryType::String, false, true, true, true)),
+        ("TITLE_3", (EntryType::String, false, true, true, true)),
+        ("TITLE_4", (EntryType::String, false, true, true, true)),
+        ("TITLE_5", (EntryType::String, false, true, true, true)),
+        ("TITLE_6", (EntryType::String, false, true, true, true)),
+        ("TITLE_7", (EntryType::String, false, true, true, true)),
+        ("TITLE_8", (EntryType::String, false, true, true, true)),
         (
             "UPDATER_VER",
-            (EntryType::String_, false, false, true, false),
+            (EntryType::String, false, false, true, false),
         ),
     ]
     .iter()
     .cloned()
     .collect();
 
-    if matches.values_of("string").is_some() {
-        for s in matches.values_of("string").unwrap() {
-            let key_value_pair: Vec<String> = s.split("=").map(|s: &str| s.to_string()).collect();
-            strings.insert(key_value_pair[0].clone(), key_value_pair[1].clone());
-        }
-    }
-
-    if matches.values_of("dword").is_some() {
-        for s in matches.values_of("dword").unwrap() {
-            let key_value_pair: Vec<String> = s.split("=").map(|s: &str| s.to_string()).collect();
-            dwords.insert(
-                key_value_pair[0].clone(),
-                str::parse::<u32>(&key_value_pair[1]).unwrap(),
-            );
-        }
-    }
-
     let category = strings.get("CATEGORY").unwrap();
 
-    // TODO reduce copypasta
-
-    for (key, _value) in &strings {
-        if !valid.contains_key(key.as_str()) {
+    let validate = |key: &str, entry_type: EntryType| {
+        if !valid.contains_key(key) {
             panic!("Invalid option {}", key);
         }
-        let (type_, wg, ms, mg, ug) = valid.get(key.as_str()).unwrap();
-        if *type_ != EntryType::String_ {
-            panic!("Key {} does not take a string value", key)
+        let (t, wg, ms, mg, ug) = valid.get(key).unwrap();
+        if *t != entry_type {
+            panic!("Key {} does not take a {:?} value", key, entry_type)
         }
         if category == "WG" && !wg {
             panic!("Key {} is not valid for category WG", key);
@@ -235,31 +218,17 @@ fn main() {
         if category == "UG" && !ug {
             panic!("Key {} is not valid for category UG", key);
         }
+    };
+
+    for key in strings.keys() {
+        validate(key, EntryType::String);
     }
 
-    for (key, _value) in &dwords {
-        if !valid.contains_key(key.as_str()) {
-            panic!("Invalid option {}", key);
-        }
-        let (type_, wg, ms, mg, ug) = valid.get(key.as_str()).unwrap();
-        if *type_ != EntryType::Dword {
-            panic!("Key {} does not take a dword value", key)
-        }
-        if category == "WG" && !wg {
-            panic!("Key {} is not valid for category WG", key);
-        }
-        if category == "MS" && !ms {
-            panic!("Key {} is not valid for category MS", key);
-        }
-        if category == "MG" && !mg {
-            panic!("Key {} is not valid for category MG", key);
-        }
-        if category == "UG" && !ug {
-            panic!("Key {} is not valid for category UG", key);
-        }
+    for key in dwords.keys() {
+        validate(key, EntryType::Dword);
     }
 
-    let outpath = Path::new(matches.value_of("output").unwrap());
+    let outpath = args.output;
 
     let mut header = SfoHeader {
         magic: PSF_MAGIC,
@@ -306,7 +275,7 @@ fn main() {
                 ..Default::default()
             };
             let idx = key_offset as usize;
-            &keys[idx..idx + key.len()].copy_from_slice(key.as_bytes());
+            keys[idx..idx + key.len()].copy_from_slice(key.as_bytes());
             key_offset += key.len() as u16 + 1;
             sfo_entry.val_size = 4;
             sfo_entry.total_size = 4;
@@ -321,11 +290,11 @@ fn main() {
                 key_offset,
                 data_offset,
                 alignment: 4,
-                type_: EntryType::String_ as u8,
+                type_: EntryType::String as u8,
                 ..Default::default()
             };
             let idx = key_offset as usize;
-            &keys[idx..idx + key.len()].copy_from_slice(key.as_bytes());
+            keys[idx..idx + key.len()].copy_from_slice(key.as_bytes());
             key_offset += key.len() as u16 + 1;
 
             let val_size = value.len() + 1;

@@ -1,97 +1,105 @@
-use clap::{App, AppSettings, Arg};
+use clap::Parser;
 use goblin::elf32::{
     header::Header,
     program_header::{ProgramHeader, PT_LOAD},
-    reloc::Rel,
-    section_header::{SectionHeader, SHF_ALLOC, SHT_REL},
+    reloc::{Rel, R_MIPS_GPREL16, R_MIPS_PC16, SIZEOF_REL},
+    section_header::{SectionHeader, SHF_ALLOC, SHT_LOPROC, SHT_REL, SHT_SYMTAB},
+    sym::{Sym, SIZEOF_SYM},
 };
 use scroll::{
     ctx::{TryFromCtx, TryIntoCtx},
     Endian,
 };
-use std::{collections::HashMap, fs, path::Path};
+use std::{collections::HashMap, ffi::CStr, fs, path::PathBuf};
 
-const PRX_ELF_TYPE: u16 = 0xffa0;
-const PRX_SHT_REL: u32 = 0x700000A0;
+const ELF_EXEC_TYPE: u16 = 0x0002;
+const ELF_MACHINE_MIPS: u16 = 0x0008;
 
-fn main() {
-    let matches = App::new("prxgen")
-        .version("0.1")
-        .author("Marko Mijalkovic <marko.mijalkovic97@gmail.com>")
-        .about("Convert PSP ELF files to PRX format")
-        .setting(AppSettings::ColoredHelp)
-        .arg(
-            Arg::with_name("in_file.elf")
-                .takes_value(true)
-                .help("Input ELF file")
-                .required(true),
-        )
-        .arg(
-            Arg::with_name("out_file.prx")
-                .takes_value(true)
-                .help("Output PRX file")
-                .required(true),
-        )
-        .arg(
-            Arg::with_name("minfo")
-                .long("minfo")
-                .takes_value(true)
-                .default_value(".rodata.sceModuleInfo")
-                .help("Alternative name for .rodata.sceModuleInfo section"),
-        )
-        .get_matches();
+const PRX_EXEC_TYPE: u16 = 0xFFA0;
+const PRX_SHT_REL: u32 = SHT_LOPROC | 0xA0;
 
-    let in_file = matches.value_of("in_file.elf").unwrap();
-    let mod_info_sh_name = matches.value_of("minfo").unwrap();
-
-    let mut prx_gen = PrxGen::load(in_file, mod_info_sh_name);
-    prx_gen.modify();
-    prx_gen.save(matches.value_of("out_file.prx").unwrap());
+#[derive(Parser, Debug)]
+#[command(
+    name = "prxgen",
+    author = "Marko Mijalkovic <marko.mijalkovic97@gmail.com>, Josh Wood <sk83rjosh@gmail.com>",
+    version = "0.1",
+    about = "Convert PSP ELF files to PRX format"
+)]
+struct Args {
+    #[arg(name = "in_file.elf", help = "Input ELF file")]
+    in_file: PathBuf,
+    #[arg(name = "out_file.prx", help = "Output PRX file")]
+    out_file: PathBuf,
+    #[arg(
+        default_value = ".rodata.sceModuleInfo",
+        help = "Alternative name for .rodata.sceModuleInfo section"
+    )]
+    minfo: String,
 }
 
-struct PrxGen<'a> {
+fn main() {
+    let args = Args::parse();
+    PrxBuilder::new(args.in_file, &args.minfo)
+        .modify()
+        .save(args.out_file);
+}
+
+struct PrxBuilder<'a> {
     mod_info_sh_name: &'a str,
-
     elf_bytes: Vec<u8>,
-
     header: Header,
     section_headers: Vec<SectionHeader>,
     program_headers: Vec<ProgramHeader>,
-
-    // Section index -> Vec<Rel>
     relocations: HashMap<usize, Vec<Rel>>,
 }
 
-impl<'a> PrxGen<'a> {
+impl<'a> PrxBuilder<'a> {
     /// Load the input ELF file and parse important structures.
-    fn load<P: AsRef<Path>>(path: P, mod_info_sh_name: &'a str) -> Self {
-        let bytes = fs::read(path).unwrap();
-        let header = Header::parse(&bytes).unwrap();
-        let section_headers =
-            SectionHeader::from_bytes(&bytes[header.e_shoff as usize..], header.e_shnum as usize);
-        let program_headers =
-            ProgramHeader::from_bytes(&bytes[header.e_phoff as usize..], header.e_phnum as usize);
+    fn new(path: PathBuf, mod_info_sh_name: &'a str) -> Self {
+        let elf_bytes = fs::read(path).unwrap();
+        let header = Header::parse(&elf_bytes).unwrap();
 
-        let relocations = section_headers
+        // Validate ELF header.
+        assert_eq!(header.e_type, ELF_EXEC_TYPE);
+        assert_eq!(header.e_machine, ELF_MACHINE_MIPS);
+        assert!(header.e_shstrndx < header.e_shnum);
+
+        let section_headers = SectionHeader::from_bytes(
+            &elf_bytes[header.e_shoff as usize..],
+            header.e_shnum as usize,
+        );
+        let program_headers = ProgramHeader::from_bytes(
+            &elf_bytes[header.e_phoff as usize..],
+            header.e_phnum as usize,
+        );
+
+        let relocations: HashMap<usize, Vec<Rel>> = section_headers
             .iter()
             .enumerate()
-            .filter(|(_, sh)| sh.sh_type == SHT_REL)
+            .filter(|(_, sh)| {
+                if sh.sh_type == SHT_REL || sh.sh_type == PRX_SHT_REL {
+                    let sh_target = section_headers[sh.sh_info as usize];
+                    sh_target.sh_flags & SHF_ALLOC != 0
+                } else {
+                    false
+                }
+            })
             .map(|(i, sh)| {
                 let start_idx = sh.sh_offset as usize;
                 let end_idx = sh.sh_size as usize + start_idx;
-
-                let relocs = (&bytes[start_idx..end_idx])
-                    .chunks(8)
+                let relocs = elf_bytes[start_idx..end_idx]
+                    .chunks(SIZEOF_REL)
                     .map(|rel_bytes| Rel::try_from_ctx(rel_bytes, Endian::Little).unwrap().0)
                     .collect();
 
                 (i, relocs)
             })
             .collect();
+        assert!(!relocations.is_empty());
 
         Self {
             mod_info_sh_name,
-            elf_bytes: bytes,
+            elf_bytes,
             header,
             section_headers,
             program_headers,
@@ -100,71 +108,81 @@ impl<'a> PrxGen<'a> {
     }
 
     /// Modify the inner structures to create a PRX format file.
-    fn modify(&mut self) {
-        // Change ELF type
-        self.header.e_type = PRX_ELF_TYPE;
-
-        // Immutable copy for indexing.
-        let section_headers = self.section_headers.clone();
-
-        // Change relocation section types
-        for section_header in &mut self.section_headers {
-            if section_header.sh_type == SHT_REL {
-                let sh_target = section_headers[section_header.sh_info as usize];
-
-                if sh_target.sh_flags & SHF_ALLOC != 0 {
-                    section_header.sh_type = PRX_SHT_REL;
-                }
-            }
-        }
+    fn modify(mut self) -> Self {
+        // Change ELF type, and program header count.
+        self.header.e_type = PRX_EXEC_TYPE;
+        self.header.e_phnum = 1;
 
         // Change all relocation types.
         for (i, rels) in &mut self.relocations {
-            if self.section_headers[*i].sh_type == PRX_SHT_REL {
-                for rel in rels {
-                    // Set upper 24 bits to 0 (OFS_BASE, ADDR_BASE).
-                    rel.r_info &= 0xff;
+            let relocation_header = &self.section_headers[*i];
+
+            // Don't touch relocations with invalid links.
+            let Some(symbols_header) =
+                &self.section_headers.get(relocation_header.sh_link as usize)
+            else {
+                continue;
+            };
+
+            // Don't touch relocations without symbols.
+            if symbols_header.sh_type != SHT_SYMTAB {
+                continue;
+            }
+
+            // Load symbols.
+            let symbols = {
+                let start_idx = symbols_header.sh_offset as usize;
+                let end_idx = symbols_header.sh_size as usize + start_idx;
+                self.elf_bytes[start_idx..end_idx]
+                    .chunks(SIZEOF_SYM)
+                    .map(|rel_bytes| Sym::try_from_ctx(rel_bytes, Endian::Little).unwrap().0)
+                    .collect::<Vec<Sym>>()
+            };
+
+            // Remove weak relocations.
+            rels.retain(|rel| {
+                // 16-bit relocs are unsupported.
+                if matches!(rel.r_info & 0xFF, R_MIPS_GPREL16 | R_MIPS_PC16) {
+                    false
+                // relocs outside of section zero must be removed.
+                } else if let Some(symbol) = symbols.get((rel.r_info >> 8) as usize) {
+                    symbol.st_shndx != 0
+                // relocs with invalid symbols must be removed.
+                } else {
+                    false
                 }
+            });
+
+            // Set upper 24 bits to 0 (OFS_BASE, ADDR_BASE).
+            for rel in rels {
+                rel.r_info &= 0xff;
             }
         }
 
-        // Change first program header physical address to module info file offset
-        // TODO: Kernel mode support
-        self.program_headers[0].p_paddr = {
-            // Section header string table
-            let sh_string_table = self.section_headers[self.header.e_shstrndx as usize];
+        // Update all relocation headers.
+        for (i, rels) in &mut self.relocations {
+            let section_header = &mut self.section_headers[*i];
+            section_header.sh_type = PRX_SHT_REL;
+            section_header.sh_size = (rels.len() * SIZEOF_REL) as u32;
+        }
 
+        // Get module info
+        let module_info = {
+            let sh_string_table = self.section_headers[self.header.e_shstrndx as usize];
             let start_idx = sh_string_table.sh_offset as usize;
             let end_idx = start_idx + sh_string_table.sh_size as usize;
-
             let section_names = &self.elf_bytes[start_idx..end_idx];
+            let section_name = self.mod_info_sh_name;
 
-            self.section_headers
-                .iter()
-                .find_map(|sh| {
-                    let name = &section_names[sh.sh_name as usize..]
-                        .split(|b| *b == 0)
-                        .next()
-                        .map(Vec::from)
-                        .map(String::from_utf8)
-                        // All section header names should be utf8 or something is
-                        // severely wrong.
-                        .map(Result::unwrap)
-                        .unwrap();
+            self.section_headers.iter().find(|sh| {
+                CStr::from_bytes_until_nul(&section_names[sh.sh_name as usize..])
+                    .is_ok_and(|n| n.to_str().is_ok_and(|n| n == section_name))
+            })
+        }
+        .expect("failed to get module info");
 
-                    if name == self.mod_info_sh_name {
-                        Some(sh.sh_offset)
-                    } else {
-                        None
-                    }
-                })
-                .unwrap()
-        };
-
-        // Merge all segments. The PSP seems to only be able to handle 1 `LOAD`
-        // segment. This code assumes that all load segments appear sequentially
-        // and that the first segment is loaded at virtual address 0. Assertions
-        // ensure this is the case.
+        // Merge all `LOAD` segments, as the PSP seems to only be able to handle one.
+        // This code assumes all segments appear sequentially, and start at zero.
         {
             let load_segments = || {
                 self.program_headers
@@ -172,8 +190,11 @@ impl<'a> PrxGen<'a> {
                     .filter(|ph| ph.p_type == PT_LOAD)
             };
 
-            // First segment needs to be loaded to 0.
-            assert_eq!(0, load_segments().next().unwrap().p_vaddr);
+            let start_vaddr = load_segments()
+                .next()
+                .expect("program had no LOAD segments")
+                .p_vaddr;
+            assert_eq!(start_vaddr, 0);
 
             let start_offset = load_segments().next().unwrap().p_offset;
 
@@ -187,48 +208,61 @@ impl<'a> PrxGen<'a> {
                 .max()
                 .unwrap();
 
-            self.program_headers[0].p_filesz = file_size;
-            self.program_headers[0].p_memsz = mem_size;
-
-            self.header.e_phnum = 1;
+            let program_header = &mut self.program_headers[0];
+            program_header.p_type = 1;
+            program_header.p_vaddr = 0;
+            program_header.p_paddr = program_header.p_offset + {
+                // Check if we are a kernel module.
+                if module_info.sh_flags & 0x100 != 0 {
+                    0x80000000 | module_info.sh_offset
+                } else {
+                    module_info.sh_offset
+                }
+            };
+            program_header.p_filesz = file_size;
+            program_header.p_memsz = mem_size;
+            program_header.p_flags = 5;
+            program_header.p_align = 0x10;
         }
+
+        self
     }
 
     /// Write out the changes to a file.
-    fn save<P: AsRef<Path>>(self, output: P) {
+    fn save(self, output: PathBuf) {
         let mut bytes = self.elf_bytes;
 
-        // Write header to buffer
+        // Write header to buffer.
         self.header
             .try_into_ctx(&mut bytes, Endian::Little)
-            .unwrap();
+            .expect("failed to write header");
 
-        // Write relocations to buffer
+        // Write updated relocations to buffer.
         for (i, rels) in self.relocations {
             let offset = self.section_headers[i].sh_offset as usize;
-
             for (j, rel) in rels.into_iter().enumerate() {
-                rel.try_into_ctx(&mut bytes[offset + j * 8..], Endian::Little)
-                    .unwrap();
+                let offset = offset + j * SIZEOF_REL;
+                rel.try_into_ctx(&mut bytes[offset..], Endian::Little)
+                    .expect("failed to write relocation");
             }
         }
 
-        // Write section headers to buffer
+        // Write section headers to buffer.
         for (i, section_header) in self.section_headers.into_iter().enumerate() {
             let offset = self.header.e_shoff as usize + i * self.header.e_shentsize as usize;
             section_header
                 .try_into_ctx(&mut bytes[offset..], Endian::Little)
-                .unwrap();
+                .expect("failed to write section header");
         }
 
-        // Write program headers to buffer
+        // Write program headers to buffer.
         for (i, program_header) in self.program_headers.into_iter().enumerate() {
             let offset = self.header.e_phoff as usize + i * self.header.e_phentsize as usize;
             program_header
                 .try_into_ctx(&mut bytes[offset..], Endian::Little)
-                .unwrap();
+                .expect("failed to write program headers");
         }
 
-        fs::write(output, bytes).unwrap();
+        fs::write(output, bytes).expect("failed to write file");
     }
 }

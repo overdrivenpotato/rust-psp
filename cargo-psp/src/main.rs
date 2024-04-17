@@ -1,4 +1,7 @@
-use cargo_metadata::{Message as CargoMessage, MetadataCommand};
+use cargo_metadata::{
+    semver::{BuildMetadata, Prerelease},
+    Message as CargoMessage, MetadataCommand,
+};
 use rustc_version::{Channel, Version};
 use std::{
     collections::HashSet,
@@ -105,7 +108,7 @@ struct CommitDate {
 
 impl CommitDate {
     fn parse(date: &str) -> Option<Self> {
-        let mut iter = date.split("-");
+        let mut iter = date.split('-');
 
         let year = iter.next()?.parse().ok()?;
         let month = iter.next()?.parse().ok()?;
@@ -121,20 +124,32 @@ impl fmt::Display for CommitDate {
     }
 }
 
-// Minimum 2022-09-03, remember to update both commit date and version too,
+impl core::ops::Add<CommitDate> for CommitDate {
+    type Output = CommitDate;
+
+    fn add(self, rhs: CommitDate) -> Self::Output {
+        Self {
+            year: self.year + rhs.year,
+            month: self.month + rhs.month,
+            day: self.day + rhs.day,
+        }
+    }
+}
+
+// Minimum 2023-03-27, remember to update both commit date and version too,
 // below. Note that the `day` field lags by one day, as the toolchain always
 // contains the previous days' nightly rustc.
 const MINIMUM_COMMIT_DATE: CommitDate = CommitDate {
-    year: 2022,
-    month: 09,
-    day: 03,
+    year: 2024,
+    month: 3,
+    day: 4,
 };
 const MINIMUM_RUSTC_VERSION: Version = Version {
     major: 1,
-    minor: 63,
+    minor: 78,
     patch: 0,
-    pre: Vec::new(),
-    build: Vec::new(),
+    pre: Prerelease::EMPTY,
+    build: BuildMetadata::EMPTY,
 };
 
 fn main() {
@@ -152,7 +167,7 @@ fn main() {
     let old_version = MINIMUM_RUSTC_VERSION
         > Version {
             // Remove `-nightly` pre-release tag for comparison.
-            pre: Vec::new(),
+            pre: Prerelease::EMPTY,
             ..rustc_version.semver.clone()
         };
 
@@ -167,15 +182,20 @@ fn main() {
     if old_version || old_commit {
         println!(
             "cargo-psp requires rustc nightly version >= {}",
-            MINIMUM_COMMIT_DATE,
+            MINIMUM_COMMIT_DATE
+                + CommitDate {
+                    year: 0,
+                    month: 0,
+                    day: 1
+                },
         );
         println!("Please run `rustup update nightly` to upgrade your nightly version");
 
         process::exit(1);
     }
 
-    let config = match fs::read(CONFIG_NAME) {
-        Ok(bytes) => match toml::from_slice(&bytes) {
+    let config = match fs::read_to_string(CONFIG_NAME) {
+        Ok(value) => match toml::from_str(&value) {
             Ok(config) => config,
             Err(e) => {
                 println!("Failed to read Psp.toml: {}", e);
@@ -183,7 +203,6 @@ fn main() {
                 process::exit(1);
             }
         },
-
         Err(e) if e.kind() == ErrorKind::NotFound => PspConfig::default(),
         Err(e) => panic!("{}", e),
     };
@@ -275,11 +294,13 @@ fn main() {
 
         fix_imports::fix(&elf_path);
 
-        Command::new("prxgen")
+        let status = Command::new("prxgen")
             .arg(&elf_path)
             .arg(&prx_path)
             .status()
             .expect("failed to run prxgen");
+
+        assert!(status.success(), "prxgen failed: {}", status);
 
         let config_args = vec![
             ("-s", "DISC_ID", config.disc_id.clone()),
@@ -303,7 +324,7 @@ fn main() {
             ("-s", "UPDATER_VER", config.updater_version.clone()),
         ];
 
-        Command::new("mksfo")
+        let status = Command::new("mksfo")
             // Add the optional config args
             .args({
                 config_args
@@ -325,7 +346,9 @@ fn main() {
             .status()
             .expect("failed to run mksfo");
 
-        Command::new("pack-pbp")
+        assert!(status.success(), "mksfo failed: {}", status);
+
+        let status = Command::new("pack-pbp")
             .arg(&pbp_path)
             .arg(&sfo_path)
             .arg(config.xmb_icon_png.as_deref().unwrap_or("NULL"))
@@ -342,5 +365,7 @@ fn main() {
             .arg(config.psar.as_deref().unwrap_or("NULL"))
             .status()
             .expect("failed to run pack-pbp");
+
+        assert!(status.success(), "pack-pbp failed: {}", status);
     }
 }

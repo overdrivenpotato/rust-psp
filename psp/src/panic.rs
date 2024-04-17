@@ -12,11 +12,14 @@ use core::{any::Any, mem::ManuallyDrop};
 use core::{
     any::Any,
     mem::{self, ManuallyDrop},
-    panic::{BoxMeUp, Location, PanicInfo},
+    panic::{Location, PanicInfo, PanicPayload as BoxMeUp},
 };
 
 #[cfg(not(feature = "std"))]
 use core::fmt;
+
+#[cfg(not(feature = "std"))]
+use core::intrinsics;
 
 #[cfg(not(feature = "std"))]
 use alloc::{
@@ -85,7 +88,13 @@ fn panic_impl(info: &PanicInfo) -> ! {
 
     let loc = info.location().unwrap();
     let msg = info.message().unwrap();
-    rust_panic_with_hook(&mut PanicPayload::new(msg), info.message(), loc, true);
+    rust_panic_with_hook(
+        &mut PanicPayload::new(msg),
+        info.message(),
+        loc,
+        true,
+        false,
+    );
 }
 
 /// Central point for dispatching panics.
@@ -99,6 +108,7 @@ fn rust_panic_with_hook(
     message: Option<&fmt::Arguments<'_>>,
     location: &Location<'_>,
     can_unwind: bool,
+    force_no_backtrace: bool,
 ) -> ! {
     let panics = update_panic_count(1);
 
@@ -106,7 +116,8 @@ fn rust_panic_with_hook(
         print_and_die("thread panicked while processing panic. aborting.".into());
     }
 
-    let mut info = PanicInfo::internal_constructor(message, location, can_unwind);
+    let mut info =
+        PanicInfo::internal_constructor(message, location, can_unwind, force_no_backtrace);
     info.set_payload(payload.get());
 
     dprintln!("{}", info.to_string());
@@ -145,9 +156,9 @@ extern "C-unwind" {
 #[inline(never)]
 #[no_mangle]
 #[cfg(not(feature = "std"))]
-fn rust_panic(mut msg: &mut dyn BoxMeUp) -> ! {
+fn rust_panic(msg: &mut dyn BoxMeUp) -> ! {
     let code = unsafe {
-        let obj = &mut msg as *mut &mut dyn BoxMeUp;
+        let obj = msg;
         panic_unwind::__rust_start_panic(obj as _)
     };
 
@@ -180,7 +191,7 @@ pub fn catch_unwind<R, F: FnOnce() -> R>(f: F) -> Result<R, Box<dyn Any + Send>>
     let data_ptr = &mut data as *mut _ as *mut u8;
 
     return unsafe {
-        if core::intrinsics::r#try(do_call::<F, R>, data_ptr, do_catch::<F, R>) == 0 {
+        if intrinsics::catch_unwind(do_call::<F, R>, data_ptr, do_catch::<F, R>) == 0 {
             Ok(ManuallyDrop::into_inner(data.r))
         } else {
             Err(ManuallyDrop::into_inner(data.p))
