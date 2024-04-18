@@ -2,7 +2,7 @@
 
 set -euo pipefail
 
-/ppsspp/build-sdl/PPSSPPHeadless rust-build-dir/EBOOT.PBP --timeout=10 -r .
+/ppsspp/build-sdl/PPSSPPHeadless rust-build-dir/test_cases.EBOOT.PBP --timeout=10 -r .
 
 cat psp_output_file.log
 
