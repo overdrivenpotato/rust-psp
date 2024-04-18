@@ -8,3 +8,4 @@ members = [
 ]
 # native target
 exclude = ["cargo-psp"]
+resolver="2"

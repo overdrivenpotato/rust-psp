@@ -43,11 +43,7 @@ if test $status -ne 0
 fi
 
 # build cargo-psp
-pushd repo/cargo-psp/
-cargo build
-popd
-
-PATH="$(pwd)/repo/target/debug:$PATH"
+cargo install --path repo/cargo-psp
 
 # build the test project
 pushd repo/ci/tests
@@ -58,4 +54,4 @@ popd
 # concourse task.
 mkdir -p rust-build-dir
 
-cp -r repo/ci/tests/target/mipsel-sony-psp/debug/* rust-build-dir
+cp -r repo/target/mipsel-sony-psp/debug/* rust-build-dir
