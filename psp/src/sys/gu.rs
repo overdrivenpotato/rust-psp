@@ -5,7 +5,7 @@ use crate::sys::{
     kernel::SceUid,
     types::{ScePspFMatrix4, ScePspFVector3, ScePspIMatrix4, ScePspIVector4},
 };
-use core::{ffi::c_void, mem, ptr::null_mut};
+use core::{ffi::c_void, mem, ptr::null_mut, ptr::addr_of_mut};
 use num_enum::TryFromPrimitive;
 
 #[allow(clippy::approx_constant)]
@@ -903,27 +903,28 @@ unsafe fn reset_values() {
     DRAW_BUFFER.width = 480;
     DRAW_BUFFER.height = 272;
 
-    for context in &mut CONTEXTS {
-        context.scissor_enable = 0;
-        context.scissor_start = [0, 0];
-        context.scissor_end = [0, 0];
+    for i in 0..CONTEXTS.len() {
+        let context = addr_of_mut!(CONTEXTS[i]);
+        (*context).scissor_enable = 0;
+        (*context).scissor_start = [0, 0];
+        (*context).scissor_end = [0, 0];
 
-        context.near_plane = 0;
-        context.far_plane = 1;
+        (*context).near_plane = 0;
+        (*context).far_plane = 1;
 
-        context.depth_offset = 0;
-        context.fragment_2x = 0;
-        context.texture_function = 0;
-        context.texture_proj_map_mode = TextureProjectionMapMode::Position;
-        context.texture_map_mode = TextureMapMode::TextureCoords;
-        context.sprite_mode[0] = 0;
-        context.sprite_mode[1] = 0;
-        context.sprite_mode[2] = 0;
-        context.sprite_mode[3] = 0;
-        context.clear_color = 0;
-        context.clear_stencil = 0;
-        context.clear_depth = 0xffff;
-        context.texture_mode = TexturePixelFormat::Psm5650;
+        (*context).depth_offset = 0;
+        (*context).fragment_2x = 0;
+        (*context).texture_function = 0;
+        (*context).texture_proj_map_mode = TextureProjectionMapMode::Position;
+        (*context).texture_map_mode = TextureMapMode::TextureCoords;
+        (*context).sprite_mode[0] = 0;
+        (*context).sprite_mode[1] = 0;
+        (*context).sprite_mode[2] = 0;
+        (*context).sprite_mode[3] = 0;
+        (*context).clear_color = 0;
+        (*context).clear_stencil = 0;
+        (*context).clear_depth = 0xffff;
+        (*context).texture_mode = TexturePixelFormat::Psm5650;
     }
 
     SETTINGS.sig = None;
@@ -1451,9 +1452,9 @@ pub unsafe extern "C" fn sceGuInit() {
 
     let mut callback = crate::sys::GeCallbackData {
         signal_func: Some(callback_sig),
-        signal_arg: &mut SETTINGS as *mut _ as *mut c_void,
+        signal_arg: addr_of_mut!(SETTINGS) as *mut _ as *mut c_void,
         finish_func: Some(callback_fin),
-        finish_arg: &mut SETTINGS as *mut _ as *mut c_void,
+        finish_arg: addr_of_mut!(SETTINGS) as *mut _ as *mut c_void,
     };
 
     SETTINGS.ge_callback_id = crate::sys::sceGeSetCallback(&mut callback);
@@ -1499,7 +1500,7 @@ pub unsafe extern "C" fn sceGuTerm() {
 pub unsafe extern "C" fn sceGuBreak(mode: i32) {
     static mut UNUSED_BREAK: GeBreakParam = GeBreakParam { buf: [0; 4] };
 
-    sys::sceGeBreak(mode, &mut UNUSED_BREAK);
+    sys::sceGeBreak(mode, addr_of_mut!(UNUSED_BREAK));
 }
 
 #[allow(non_snake_case)]
@@ -2945,7 +2946,7 @@ pub unsafe extern "C" fn sceGuTexImage(
     );
     send_command_i(
         TSIZE_CMD_TBL[mipmap as usize],
-        ((31 - ctlz(height & 0x3ff)) << 8) | (31 - ctlz(width & 0x3ff)),
+        (((31 - ctlz(height & 0x3ff)) << 8) | (31 - ctlz(width & 0x3ff))) as i32
     );
     sceGuTexFlush();
 }
@@ -3525,7 +3526,7 @@ pub unsafe extern "C" fn sceGuDebugPrint(x: i32, mut y: i32, mut color: u32, mut
     let iVar2: i32;
     let mut cur_x: i32;
     let mut char_struct_ptr: *mut DebugCharStruct =
-        &mut CHAR_BUFFER as *mut _ as *mut DebugCharStruct;
+        addr_of_mut!(CHAR_BUFFER) as *mut _ as *mut DebugCharStruct;
 
     let mut i = CHAR_BUFFER_USED;
     if i >= 0x3ff {
@@ -3597,7 +3598,7 @@ pub unsafe extern "C" fn sceGuDebugFlush() {
     let mut char_buffer_used = CHAR_BUFFER_USED;
     let mut y: i32;
     let mut char_struct_ptr: *mut DebugCharStruct =
-        &mut CHAR_BUFFER as *mut _ as *mut DebugCharStruct;
+        addr_of_mut!(CHAR_BUFFER) as *mut _ as *mut DebugCharStruct;
 
     if char_buffer_used != 0 {
         loop {
