@@ -32,9 +32,9 @@ fi
 # Test formatting
 rustup component add rustfmt
 {
-    cargo fmt --check --message-format=short --manifest-path=repo/cargo-psp/Cargo.toml;
+    cargo fmt --message-format=short --manifest-path=repo/cargo-psp/Cargo.toml -- --check
     # TODO: remove `-ppsp` after formatting new workspace
-    cargo fmt --check --message-format=short --manifest-path=repo/Cargo.toml -ppsp;
+    cargo fmt --manifest-path=repo/Cargo.toml -p psp -- --check
 }
 status=$?
 if test $status -ne 0
