@@ -1452,16 +1452,16 @@ pub unsafe extern "C" fn sceGuInit() {
 
     let mut callback = crate::sys::GeCallbackData {
         signal_func: Some(callback_sig),
-        signal_arg: addr_of_mut!(SETTINGS) as *mut _ as *mut c_void,
+        signal_arg: addr_of_mut!(SETTINGS).cast::<c_void>(),
         finish_func: Some(callback_fin),
-        finish_arg: addr_of_mut!(SETTINGS) as *mut _ as *mut c_void,
+        finish_arg: addr_of_mut!(SETTINGS).cast::<c_void>(),
     };
 
     SETTINGS.ge_callback_id = crate::sys::sceGeSetCallback(&mut callback);
     SETTINGS.swap_buffers_callback = None;
     SETTINGS.swap_buffers_behaviour = super::display::DisplaySetBufSync::Immediate;
 
-    GE_EDRAM_ADDRESS = sys::sceGeEdramGetAddr() as *mut c_void;
+    GE_EDRAM_ADDRESS = sys::sceGeEdramGetAddr().cast::<c_void>();
 
     GE_LIST_EXECUTED[0] = sys::sceGeListEnQueue(
         (&INIT_LIST as *const _ as u32 & 0x1fffffff) as *const _,
@@ -1630,10 +1630,10 @@ pub unsafe extern "C" fn sceGuGetMemory(mut size: i32) -> *mut c_void {
     (*LIST).current = new_ptr;
 
     if let GuContextType::Direct = CURR_CONTEXT {
-        crate::sys::sceGeListUpdateStallAddr(GE_LIST_EXECUTED[0], new_ptr as *mut _);
+        crate::sys::sceGeListUpdateStallAddr(GE_LIST_EXECUTED[0], new_ptr.cast::<c_void>());
     }
 
-    orig_ptr.add(2) as *mut _
+    orig_ptr.add(2).cast::<c_void>()
 }
 
 /// Start filling a new display-context
@@ -1898,8 +1898,8 @@ pub unsafe extern "C" fn sceGuSendList(
 pub unsafe extern "C" fn sceGuSwapBuffers() -> *mut c_void {
     if let Some(cb) = SETTINGS.swap_buffers_callback {
         cb(
-            &mut DRAW_BUFFER.disp_buffer as *mut _,
-            &mut DRAW_BUFFER.frame_buffer as *mut _,
+            addr_of_mut!(DRAW_BUFFER.disp_buffer),
+            addr_of_mut!(DRAW_BUFFER.frame_buffer),
         );
     } else {
         mem::swap(&mut DRAW_BUFFER.disp_buffer, &mut DRAW_BUFFER.frame_buffer);
@@ -3526,7 +3526,7 @@ pub unsafe extern "C" fn sceGuDebugPrint(x: i32, mut y: i32, mut color: u32, mut
     let iVar2: i32;
     let mut cur_x: i32;
     let mut char_struct_ptr: *mut DebugCharStruct =
-        addr_of_mut!(CHAR_BUFFER) as *mut _ as *mut DebugCharStruct;
+        addr_of_mut!(CHAR_BUFFER).cast::<DebugCharStruct>();
 
     let mut i = CHAR_BUFFER_USED;
     if i >= 0x3ff {
@@ -3598,7 +3598,7 @@ pub unsafe extern "C" fn sceGuDebugFlush() {
     let mut char_buffer_used = CHAR_BUFFER_USED;
     let mut y: i32;
     let mut char_struct_ptr: *mut DebugCharStruct =
-        addr_of_mut!(CHAR_BUFFER) as *mut _ as *mut DebugCharStruct;
+        addr_of_mut!(CHAR_BUFFER).cast::<DebugCharStruct>();
 
     if char_buffer_used != 0 {
         loop {
