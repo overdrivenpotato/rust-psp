@@ -5,7 +5,7 @@ use crate::sys::{
     kernel::SceUid,
     types::{ScePspFMatrix4, ScePspFVector3, ScePspIMatrix4, ScePspIVector4},
 };
-use core::{ffi::c_void, mem, ptr::null_mut, ptr::addr_of_mut};
+use core::{ffi::c_void, mem, ptr::addr_of_mut, ptr::null_mut};
 use num_enum::TryFromPrimitive;
 
 #[allow(clippy::approx_constant)]
@@ -2946,7 +2946,7 @@ pub unsafe extern "C" fn sceGuTexImage(
     );
     send_command_i(
         TSIZE_CMD_TBL[mipmap as usize],
-        (((31 - ctlz(height & 0x3ff)) << 8) | (31 - ctlz(width & 0x3ff))) as i32
+        (((31 - ctlz(height & 0x3ff)) << 8) | (31 - ctlz(width & 0x3ff))) as i32,
     );
     sceGuTexFlush();
 }
