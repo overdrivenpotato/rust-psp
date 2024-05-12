@@ -211,7 +211,7 @@ impl<'a> PrxBuilder<'a> {
             let program_header = &mut self.program_headers[0];
             program_header.p_type = 1;
             program_header.p_vaddr = 0;
-            program_header.p_paddr = program_header.p_offset + {
+            program_header.p_paddr = {
                 // Check if we are a kernel module.
                 if module_info.sh_flags & 0x100 != 0 {
                     0x80000000 | module_info.sh_offset
