@@ -157,7 +157,7 @@ xmb_background_png = "path/to/24bit_480x272_background.png"
 xmb_music_at3 = "path/to/ATRAC3_audio.at3"
 ```
 
-More options can be found in the schema defintion [here](/cargo-psp/src/main.rs#L11-L91).
+More options can be found in the schema defintion [here](/cargo-psp/src/main.rs#L18-L100).
 
 ## `error[E0460]: found possibly newer version of crate ...`
 
