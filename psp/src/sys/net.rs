@@ -1468,6 +1468,21 @@ psp_extern! {
     ) -> i32;
 
     #[psp(0x410B34AA)]
+    /// Connect a socket
+    ///
+    /// # Parameters
+    ///
+    /// - `s`: The socket.
+    /// - `serv_addr`: The address to connect to.
+    /// - `addr_len`: The length of the address (in bytes).
+    ///
+    /// # Return Value
+    ///
+    /// 0 on success, < 0 on error.
+    /// 
+    /// # Notes
+    /// The parameter `s` is the socket's file descriptor, i.e. the
+    /// value returned by [`sceNetInetSocket()`](crate::sys::net::sceNetInetSocket).
     pub fn sceNetInetConnect(
         s: i32,
         serv_addr: *const sockaddr,
@@ -1490,12 +1505,24 @@ psp_extern! {
     ) -> i32;
 
     #[psp(0xCDA85C99)]
+    /// Receive a message
+    /// 
+    /// # Parameters
+    /// 
+    /// - `s`: The socket.
+    /// - `buf`: The buffer to receive the message.
+    /// - `len`: The length of the buffer.
+    /// - `flags`: Flags.
+    /// 
+    /// # Return Value
+    /// 
+    /// The number of bytes received, < 0 on error.
     pub fn sceNetInetRecv(
         s: i32,
         buf: *mut c_void,
         len: usize,
         flags: i32,
-    ) -> usize;
+    ) -> isize;
 
     #[psp(0xC91142E4, i6)]
     pub fn sceNetInetRecvfrom(
@@ -1505,7 +1532,7 @@ psp_extern! {
         flags: i32,
         from: *mut sockaddr,
         from_len: *mut socklen_t,
-    ) -> i32;
+    ) -> isize;
 
     #[psp(0x7AA671BC)]
     pub fn sceNetInetSend(
@@ -1513,7 +1540,7 @@ psp_extern! {
         buf: *const c_void,
         len: usize,
         flags: i32,
-    ) -> i32;
+    ) -> isize;
 
     #[psp(0x05038FC7, i6)]
     pub fn sceNetInetSendto(
@@ -1523,7 +1550,7 @@ psp_extern! {
         flags: i32,
         to: *const sockaddr,
         to_len: socklen_t,
-    ) -> usize;
+    ) -> isize;
 
     #[psp(0x2FE71FE7, i5)]
     pub fn sceNetInetSetsockopt(
@@ -1542,6 +1569,16 @@ psp_extern! {
     ) -> i32;
 
     #[psp(0x8B7B220F)]
+    /// Create a socket
+    /// 
+    /// # Parameters
+    /// 
+    /// - `domain`: The socket's domain (`2` IPv4).
+    /// - `type_`: The socket's type (`1` = TCP, `2` = UDP).
+    /// - `protocol`: The socket's protocol (`0` = default).
+    /// 
+    /// # Return Value
+    /// - the socket's file descriptor on success, `-1` on error.
     pub fn sceNetInetSocket(
         domain: i32,
         type_: i32,
