@@ -26,7 +26,7 @@ stub-only = []
 paste = "1.0.1"
 bitflags = "1.2.1"
 libm = "0.2.1"
-embedded-graphics = { version = "0.7.1", optional = true, features = ["fixed_point"] }
+embedded-graphics = { version = "0.8.1", optional = true, features = ["fixed_point"] }
 unstringify = "0.1.4"
 
 [dependencies.num_enum]
