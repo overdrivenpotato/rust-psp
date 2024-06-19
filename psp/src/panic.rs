@@ -95,7 +95,7 @@ fn panic_impl(info: &PanicInfo) -> ! {
         }
     }
 
-    rust_panic_with_hook(&mut PanicPayload::new(&info), info);
+    rust_panic_with_hook(&mut PanicPayload::new(&info));
 }
 
 /// Central point for dispatching panics.
@@ -104,14 +104,14 @@ fn panic_impl(info: &PanicInfo) -> ! {
 /// panics, panic hooks, and finally dispatching to the panic runtime to either
 /// abort or unwind.
 #[cfg(not(feature = "std"))]
-fn rust_panic_with_hook(payload: &mut dyn BoxMeUp, info: &PanicInfo) -> ! {
+fn rust_panic_with_hook(payload: &mut dyn BoxMeUp) -> ! {
     let panics = update_panic_count(1);
 
     fn die_nested() -> ! {
         print_and_die("thread panicked while processing panic. aborting.".into());
     }
 
-    dprintln!("{:#?}", info);
+    dprintln!("{}", payload);
 
     if panics > 1 {
         // If a thread panics while it's already unwinding then we
