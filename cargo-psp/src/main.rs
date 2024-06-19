@@ -142,7 +142,7 @@ impl core::ops::Add<CommitDate> for CommitDate {
 const MINIMUM_COMMIT_DATE: CommitDate = CommitDate {
     year: 2024,
     month: 6,
-    day: 18,
+    day: 17,
 };
 const MINIMUM_RUSTC_VERSION: Version = Version {
     major: 1,
