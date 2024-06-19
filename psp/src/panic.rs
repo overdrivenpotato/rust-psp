@@ -12,14 +12,11 @@ use core::{any::Any, mem::ManuallyDrop};
 use core::{
     any::Any,
     mem::{self, ManuallyDrop},
-    panic::{PanicInfo, PanicMessage, PanicPayload as BoxMeUp},
+    panic::{Location, PanicInfo, PanicMessage, PanicPayload as BoxMeUp},
 };
 
 #[cfg(not(feature = "std"))]
-use alloc::{
-    boxed::Box,
-    string::{String, ToString},
-};
+use alloc::{boxed::Box, string::String};
 
 #[link(name = "unwind", kind = "static")]
 extern "C" {}
@@ -48,21 +45,31 @@ fn panic_impl(info: &PanicInfo) -> ! {
     use core::fmt;
 
     struct PanicPayload<'a> {
-        inner: &'a PanicMessage<'a>,
+        message: PanicMessage<'a>,
+        location: &'a Location<'a>,
         string: Option<String>,
     }
 
     impl<'a> PanicPayload<'a> {
-        fn new(inner: &'a PanicMessage<'a>) -> PanicPayload<'a> {
+        fn new(info: &'a PanicInfo<'a>) -> PanicPayload<'a> {
+            let message = info.message();
+            let location = info.location().unwrap();
             PanicPayload {
-                inner,
+                message,
+                location,
                 string: None,
             }
         }
 
         fn fill(&mut self) -> &mut String {
-            use alloc::format;
-            let s = self.inner.as_str().unwrap().to_string();
+            let s = alloc::format!(
+                "panicked at {}:{}:{}: {}",
+                self.location.file(),
+                self.location.line(),
+                self.location.column(),
+                self.message.as_str().unwrap_or_default()
+            );
+
             self.string.get_or_insert_with(|| s)
         }
     }
@@ -80,12 +87,15 @@ fn panic_impl(info: &PanicInfo) -> ! {
 
     impl fmt::Display for PanicPayload<'_> {
         fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-            write!(f, "{:#?}", self.inner)
+            if let Some(s) = &self.string {
+                s.fmt(f)
+            } else {
+                Err(fmt::Error)
+            }
         }
     }
 
-    let msg = info.message();
-    rust_panic_with_hook(&mut PanicPayload::new(&msg), info);
+    rust_panic_with_hook(&mut PanicPayload::new(&info), info);
 }
 
 /// Central point for dispatching panics.
