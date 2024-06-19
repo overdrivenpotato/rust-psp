@@ -5,8 +5,8 @@ bitflags::bitflags! {
     ///
     /// Home, Note, Screen, VolUp, VolDown, Disc, WlanUp, Remote, and MS can only be
     /// read in kernel mode.
-    #[derive(Default)]
     #[repr(transparent)]
+    #[derive(Clone, Copy, Debug, Default)]
     pub struct CtrlButtons: u32 {
         /// Select button.
         const SELECT = 0x000001;

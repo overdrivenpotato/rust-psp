@@ -36,6 +36,7 @@ pub struct SceIoStat {
 
 bitflags::bitflags! {
     #[repr(transparent)]
+    #[derive(Debug, Copy, Clone)]
     pub struct IoStatMode: i32 {
         /// Symbolic Link
         const IFLNK = 0x4000;
@@ -72,6 +73,7 @@ bitflags::bitflags! {
 
 bitflags::bitflags! {
     #[repr(transparent)]
+    #[derive(Debug, Copy, Clone)]
     pub struct IoStatAttr: u32 {
         /// Symlink
         const IFLNK = 0x0008;
