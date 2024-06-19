@@ -111,6 +111,7 @@ fn rust_panic_with_hook(payload: &mut dyn BoxMeUp) -> ! {
         print_and_die("thread panicked while processing panic. aborting.".into());
     }
 
+    payload.get(); // populate the payload's string
     dprintln!("{}", payload);
 
     if panics > 1 {
