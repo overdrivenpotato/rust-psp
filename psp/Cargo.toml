@@ -25,7 +25,7 @@ embedded-graphics = [ "dep:embedded-graphics-core" ]
 
 [dependencies]
 paste = "1.0.1"
-bitflags = "1.2.1"
+bitflags = "2.5.0"
 libm = "0.2.1"
 embedded-graphics-core = { version = "0.4.0", optional = true }
 unstringify = "0.1.4"
