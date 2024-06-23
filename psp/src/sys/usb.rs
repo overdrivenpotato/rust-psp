@@ -273,6 +273,7 @@ pub enum UsbCamResolutionEx {
 bitflags::bitflags! {
     /// Flags for reverse effects.
     #[repr(transparent)]
+    #[derive(Copy, Clone, Debug)]
     pub struct UsbCamReverseFlags: i32 {
         const FLIP = 1;
         const MIRROR = 0x100;
