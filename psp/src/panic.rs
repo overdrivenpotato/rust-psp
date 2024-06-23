@@ -12,20 +12,11 @@ use core::{any::Any, mem::ManuallyDrop};
 use core::{
     any::Any,
     mem::{self, ManuallyDrop},
-    panic::{Location, PanicInfo, PanicPayload as BoxMeUp},
+    panic::{Location, PanicInfo, PanicMessage, PanicPayload as BoxMeUp},
 };
 
 #[cfg(not(feature = "std"))]
-use core::fmt;
-
-#[cfg(not(feature = "std"))]
-use core::intrinsics;
-
-#[cfg(not(feature = "std"))]
-use alloc::{
-    boxed::Box,
-    string::{String, ToString},
-};
+use alloc::{boxed::Box, string::String};
 
 #[link(name = "unwind", kind = "static")]
 extern "C" {}
@@ -51,27 +42,35 @@ fn panic(info: &PanicInfo) -> ! {
 #[cfg_attr(not(target_os = "psp"), allow(unused))]
 #[cfg(not(feature = "std"))]
 fn panic_impl(info: &PanicInfo) -> ! {
+    use core::fmt;
+
     struct PanicPayload<'a> {
-        inner: &'a fmt::Arguments<'a>,
+        message: PanicMessage<'a>,
+        location: &'a Location<'a>,
         string: Option<String>,
     }
 
     impl<'a> PanicPayload<'a> {
-        fn new(inner: &'a fmt::Arguments<'a>) -> PanicPayload<'a> {
+        fn new(info: &'a PanicInfo<'a>) -> PanicPayload<'a> {
+            let message = info.message();
+            let location = info.location().unwrap();
             PanicPayload {
-                inner,
+                message,
+                location,
                 string: None,
             }
         }
 
         fn fill(&mut self) -> &mut String {
-            use fmt::Write;
-            let inner = self.inner;
-            self.string.get_or_insert_with(|| {
-                let mut s = String::new();
-                let _ = s.write_fmt(*inner);
-                s
-            })
+            let s = alloc::format!(
+                "panicked at {}:{}:{}: {}",
+                self.location.file(),
+                self.location.line(),
+                self.location.column(),
+                self.message.as_str().unwrap_or_default()
+            );
+
+            self.string.get_or_insert_with(|| s)
         }
     }
 
@@ -86,15 +85,17 @@ fn panic_impl(info: &PanicInfo) -> ! {
         }
     }
 
-    let loc = info.location().unwrap();
-    let msg = info.message().unwrap();
-    rust_panic_with_hook(
-        &mut PanicPayload::new(msg),
-        info.message(),
-        loc,
-        true,
-        false,
-    );
+    impl fmt::Display for PanicPayload<'_> {
+        fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+            if let Some(s) = &self.string {
+                s.fmt(f)
+            } else {
+                Err(fmt::Error)
+            }
+        }
+    }
+
+    rust_panic_with_hook(&mut PanicPayload::new(&info));
 }
 
 /// Central point for dispatching panics.
@@ -103,24 +104,15 @@ fn panic_impl(info: &PanicInfo) -> ! {
 /// panics, panic hooks, and finally dispatching to the panic runtime to either
 /// abort or unwind.
 #[cfg(not(feature = "std"))]
-fn rust_panic_with_hook(
-    payload: &mut dyn BoxMeUp,
-    message: Option<&fmt::Arguments<'_>>,
-    location: &Location<'_>,
-    can_unwind: bool,
-    force_no_backtrace: bool,
-) -> ! {
+fn rust_panic_with_hook(payload: &mut dyn BoxMeUp) -> ! {
     let panics = update_panic_count(1);
 
     fn die_nested() -> ! {
         print_and_die("thread panicked while processing panic. aborting.".into());
     }
 
-    let mut info =
-        PanicInfo::internal_constructor(message, location, can_unwind, force_no_backtrace);
-    info.set_payload(payload.get());
-
-    dprintln!("{}", info.to_string());
+    payload.get(); // populate the payload's string
+    dprintln!("{}", payload);
 
     if panics > 1 {
         // If a thread panics while it's already unwinding then we
@@ -191,7 +183,7 @@ pub fn catch_unwind<R, F: FnOnce() -> R>(f: F) -> Result<R, Box<dyn Any + Send>>
     let data_ptr = &mut data as *mut _ as *mut u8;
 
     return unsafe {
-        if intrinsics::catch_unwind(do_call::<F, R>, data_ptr, do_catch::<F, R>) == 0 {
+        if core::intrinsics::catch_unwind(do_call::<F, R>, data_ptr, do_catch::<F, R>) == 0 {
             Ok(ManuallyDrop::into_inner(data.r))
         } else {
             Err(ManuallyDrop::into_inner(data.p))
