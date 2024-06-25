@@ -8,6 +8,7 @@ const NUM_MATRICES: usize = 8;
 
 bitflags::bitflags! {
     #[repr(transparent)]
+    #[derive(Copy, Clone, Debug)]
     pub struct MatrixSet: u8 {
         const VMAT0 = 0b0000_0001;
         const VMAT1 = 0b0000_0010;
@@ -88,7 +89,7 @@ impl Context {
                 _ => core::intrinsics::unreachable(),
             }
 
-            self.saved &= !MatrixSet::from_bits_unchecked(1 << matrix_idx);
+            self.saved &= !MatrixSet::from_bits_retain(1 << matrix_idx);
         }
     }
 
@@ -121,13 +122,13 @@ impl Context {
                 _ => core::intrinsics::unreachable(),
             }
 
-            self.saved |= MatrixSet::from_bits_unchecked(1 << matrix_idx);
+            self.saved |= MatrixSet::from_bits_retain(1 << matrix_idx);
         }
     }
 
     pub unsafe fn prepare(&mut self, in_out: MatrixSet, clobber: MatrixSet) {
         for i in 0..8 {
-            let matrix = MatrixSet::from_bits_unchecked(1 << i);
+            let matrix = MatrixSet::from_bits_retain(1 << i);
 
             if in_out.intersects(matrix) && self.saved.intersects(matrix) {
                 self.restore(i);
