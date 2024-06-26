@@ -1479,7 +1479,7 @@ psp_extern! {
     /// # Return Value
     ///
     /// 0 on success, < 0 on error.
-    /// 
+    ///
     /// # Notes
     /// The parameter `s` is the socket's file descriptor, i.e. the
     /// value returned by [`sceNetInetSocket()`](crate::sys::net::sceNetInetSocket).
@@ -1506,16 +1506,16 @@ psp_extern! {
 
     #[psp(0xCDA85C99)]
     /// Receive a message
-    /// 
+    ///
     /// # Parameters
-    /// 
+    ///
     /// - `s`: The socket.
     /// - `buf`: The buffer to receive the message.
     /// - `len`: The length of the buffer.
     /// - `flags`: Flags.
-    /// 
+    ///
     /// # Return Value
-    /// 
+    ///
     /// The number of bytes received, < 0 on error.
     pub fn sceNetInetRecv(
         s: i32,
@@ -1570,13 +1570,13 @@ psp_extern! {
 
     #[psp(0x8B7B220F)]
     /// Create a socket
-    /// 
+    ///
     /// # Parameters
-    /// 
+    ///
     /// - `domain`: The socket's domain (`2` IPv4).
     /// - `type_`: The socket's type (`1` = TCP, `2` = UDP).
     /// - `protocol`: The socket's protocol (`0` = default).
-    /// 
+    ///
     /// # Return Value
     /// - the socket's file descriptor on success, `-1` on error.
     pub fn sceNetInetSocket(
