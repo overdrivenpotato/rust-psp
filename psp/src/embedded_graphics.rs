@@ -3,7 +3,7 @@
 use crate::sys;
 use crate::{BUF_WIDTH, SCREEN_HEIGHT, SCREEN_WIDTH};
 use core::convert::TryInto;
-use embedded_graphics::{draw_target::*, geometry::Size, pixelcolor::*, prelude::*, Pixel};
+use embedded_graphics_core::{draw_target::*, geometry::Size, pixelcolor::*, prelude::*, Pixel};
 
 pub struct Framebuffer {
     vram_base: *mut u16,
@@ -31,7 +31,7 @@ impl DrawTarget for Framebuffer {
 
     fn draw_iter<I>(&mut self, pixels: I) -> Result<(), Self::Error>
     where
-        I: IntoIterator<Item = embedded_graphics::Pixel<Self::Color>>,
+        I: IntoIterator<Item = embedded_graphics_core::Pixel<Self::Color>>,
     {
         for p in pixels.into_iter() {
             self.draw_pixel(p)?;
