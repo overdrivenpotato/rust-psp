@@ -260,7 +260,7 @@ fn main() {
             .iter()
             .filter(|p| workspace_members.contains(&p.id))
             .flat_map(|p| &p.targets)
-            .filter(|t| t.crate_types.iter().any(|ct| *ct == "bin"))
+            .filter(|t| t.crate_types.iter().any(|ct| *ct == "bin".into()))
             .count();
 
         total_executables == 1
