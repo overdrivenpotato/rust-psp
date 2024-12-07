@@ -26,9 +26,9 @@ name = "prxmin"
 
 [dependencies]
 clap = { version = "4.5", features = ["derive"] }
-goblin = "0.8"
+goblin = "0.9"
 scroll = "0.12"
-cargo_metadata = "0.18"
+cargo_metadata = "0.19.1"
 rustc_version = "0.4"
 serde = "1.0"
 serde_derive = "1.0"
