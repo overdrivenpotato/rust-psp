@@ -25,7 +25,7 @@ name = "mksfo"
 name = "prxmin"
 
 [dependencies]
-clap = { version = "4.4", features = ["derive"] }
+clap = { version = "4.5", features = ["derive"] }
 goblin = "0.8"
 scroll = "0.12"
 cargo_metadata = "0.18"
