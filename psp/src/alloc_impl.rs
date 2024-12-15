@@ -7,6 +7,10 @@ struct SystemAlloc;
 
 unsafe impl GlobalAlloc for SystemAlloc {
     unsafe fn alloc(&self, layout: Layout) -> *mut u8 {
+        if layout.size() == 0 {
+            return ptr::null_mut();
+        }
+
         let size = layout.size()
             // We need to store the memory block ID.
             + mem::size_of::<SceUid>()
@@ -16,8 +20,6 @@ unsafe impl GlobalAlloc for SystemAlloc {
             // here, in the last byte.
             + layout.align();
 
-        // crate::debug::print_num(size);
-
         let id = sys::sceKernelAllocPartitionMemory(
             SceSysMemPartitionId::SceKernelPrimaryUserPartition,
             &b"block\0"[0],
@@ -26,7 +28,10 @@ unsafe impl GlobalAlloc for SystemAlloc {
             ptr::null_mut(),
         );
 
-        // TODO: Error handling.
+        if id.0 < 0 {
+            return ptr::null_mut();
+        }
+
         let mut ptr: *mut u8 = sys::sceKernelGetBlockHeadAddr(id).cast();
         *ptr.cast() = id;
 
@@ -44,7 +49,6 @@ unsafe impl GlobalAlloc for SystemAlloc {
 
         let id = *ptr.sub(align_padding as usize).cast::<SceUid>().offset(-1);
 
-        // TODO: Error handling.
         sys::sceKernelFreePartitionMemory(id);
     }
 }
