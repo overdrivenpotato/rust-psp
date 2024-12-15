@@ -65,8 +65,20 @@ psp_extern! {
 
 /// UIDs are used to describe many different kernel objects.
 #[repr(transparent)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub struct SceUid(pub i32);
+
+impl From<SceUid> for i32 {
+    fn from(uid: SceUid) -> i32 {
+        uid.0
+    }
+}
+
+impl From<i32> for SceUid {
+    fn from(uid: i32) -> SceUid {
+        SceUid(uid)
+    }
+}
 
 // https://github.com/uofw/uofw/blob/f099b78dc0937df4e7346e2e417b63f471f8a3af/include/sysmem_user.h#L12
 #[repr(i32)]
