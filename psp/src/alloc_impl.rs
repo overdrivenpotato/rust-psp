@@ -7,10 +7,6 @@ struct SystemAlloc;
 
 unsafe impl GlobalAlloc for SystemAlloc {
     unsafe fn alloc(&self, layout: Layout) -> *mut u8 {
-        if layout.size() == 0 {
-            return ptr::null_mut();
-        }
-
         let size = layout.size()
             // We need to store the memory block ID.
             + mem::size_of::<SceUid>()
