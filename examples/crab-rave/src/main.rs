@@ -34,7 +34,6 @@ const CHANNEL: i32 = 0;
 fn psp_main() {
     psp::enable_home_button();
 
-    let np_vertex_format: VertexType = VertexType::NORMAL_32BITF | VertexType::VERTEX_32BITF;
 
     unsafe { 
         sceAudioChReserve(CHANNEL, MAX_SAMPLES as i32, psp::sys::AudioFormat::Stereo) 
@@ -175,6 +174,9 @@ fn psp_main() {
             };
             sys::sceGumLoadIdentity();
             sys::sceGumRotateXYZ(&rot);
+
+
+            let np_vertex_format: VertexType = VertexType::NORMAL_32BITF | VertexType::VERTEX_32BITF;
 
             sys::sceGuColor(0xff0000ff);
             sys::sceGumDrawArray(
