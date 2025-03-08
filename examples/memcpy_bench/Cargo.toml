@@ -1,0 +1,11 @@
+[package]
+name = "psp-memcpy-bench"
+version = "0.1.0"
+authors = ["Paul Sajna <sajattack@gmail.com>"]
+edition = "2021"
+
+[dependencies]
+psp = { path = "../../psp" }
+
+[profile.release]
+debug=true
