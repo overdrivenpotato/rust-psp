@@ -159,7 +159,7 @@ fn rust_panic(msg: &mut dyn BoxMeUp) -> ! {
     print_and_die(alloc::format!("failed to initiate panic, error {}", code))
 }
 
-#[cfg(not(test))]
+#[cfg(not(feature = "std"))]
 #[cfg_attr(not(bootstrap), rustc_std_internal_symbol)]
 extern "C" fn __rust_drop_panic() -> ! {
     print_and_die("Rust panics must be rethrown".into());
