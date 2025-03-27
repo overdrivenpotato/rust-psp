@@ -13,7 +13,7 @@
     core_intrinsics,
     c_variadic,
     lang_items,
-    rustc_attrs,
+    rustc_attrs
 )]
 // For unwinding support
 #![feature(std_internals, panic_info_message, panic_internals, c_unwind)]
