@@ -137,11 +137,13 @@ fn update_panic_count(amt: isize) -> usize {
 
 #[allow(improper_ctypes)]
 extern "C" {
+    #[cfg_attr(not(bootstrap), rustc_std_internal_symbol)]
     fn __rust_panic_cleanup(payload: *mut u8) -> *mut (dyn Any + Send + 'static);
 }
 
 #[allow(improper_ctypes)]
 extern "C-unwind" {
+    #[cfg_attr(not(bootstrap), rustc_std_internal_symbol)]
     fn __rust_start_panic(payload: usize) -> u32;
 }
 
@@ -157,9 +159,8 @@ fn rust_panic(msg: &mut dyn BoxMeUp) -> ! {
     print_and_die(alloc::format!("failed to initiate panic, error {}", code))
 }
 
-#[cfg(not(test))]
-#[no_mangle]
 #[cfg(not(feature = "std"))]
+#[cfg_attr(not(bootstrap), rustc_std_internal_symbol)]
 extern "C" fn __rust_drop_panic() -> ! {
     print_and_die("Rust panics must be rethrown".into());
 }

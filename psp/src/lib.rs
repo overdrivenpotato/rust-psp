@@ -12,7 +12,8 @@
     const_if_match,
     core_intrinsics,
     c_variadic,
-    lang_items
+    lang_items,
+    rustc_attrs
 )]
 // For unwinding support
 #![feature(std_internals, panic_info_message, panic_internals, c_unwind)]
@@ -76,8 +77,8 @@ fn panic(_: &core::panic::PanicInfo) -> ! {
     }
 }
 
-#[cfg(not(feature = "std"))]
-#[no_mangle]
+#[cfg(not(test))]
+#[cfg_attr(not(bootstrap), rustc_std_internal_symbol)]
 extern "C" fn __rust_foreign_exception() -> ! {
     loop {
         core::hint::spin_loop()
