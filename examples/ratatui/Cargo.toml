@@ -8,6 +8,6 @@ psp = { path = "../../psp", features = ["embedded-graphics"] }
 embedded-graphics = { version = "0.8.1", features = ["fixed_point"]}
 
 # Ratatui 0.30.0 has no_std support
-ratatui = { version = "0.30.0-alpha.4", default-features = false }
+ratatui = { version = "0.30.0-alpha.5", default-features = false }
 # Use git dependency for mousefood which depends on ratatui alpha
-mousefood = { git = "https://github.com/j-g00da/mousefood", rev = "8d78348cebad78ee9929fd09b656bf7382fcd4b5" }
+mousefood = { git = "https://github.com/j-g00da/mousefood", rev = "1028ac24f83920fd95a5585a85ef943901ee63ac" }
