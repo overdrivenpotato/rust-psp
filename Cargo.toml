@@ -9,3 +9,9 @@ members = [
 # native target
 exclude = ["cargo-psp"]
 resolver="2"
+
+# `unicode-width` crate panics for mips targets
+# This patch disables alignment as a workaround
+# See <https://git.sr.ht/~sajattack/unicode-width/commit/114ac4742ac29a7b69be8e0e7b1e45af43ed6d83>
+[patch.crates-io]
+unicode-width = { git = "https://git.sr.ht/~sajattack/unicode-width" }
