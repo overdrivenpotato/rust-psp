@@ -7,10 +7,8 @@ edition = "2018"
 psp = { path = "../../psp", features = ["embedded-graphics"] }
 embedded-graphics = { version = "0.8.1", features = ["fixed_point"]}
 
-# Ratatui 0.30.0 has no_std support
-ratatui = { version = "0.30.0-alpha.5", default-features = false }
-# Use git dependency for mousefood which depends on ratatui alpha
-mousefood = { git = "https://github.com/j-g00da/mousefood", rev = "1028ac24f83920fd95a5585a85ef943901ee63ac" }
+ratatui = { version = "0.30.0", default-features = false }
+mousefood = "0.3.0"
 
 # ⚠️ Note:
 # The `unicode-width` dependency needs to be patched for this to work without crashes.
