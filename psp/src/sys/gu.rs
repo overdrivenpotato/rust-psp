@@ -1850,7 +1850,7 @@ pub unsafe extern "C" fn sceGuCallMode(mode: i32) {
 #[allow(non_snake_case)]
 #[no_mangle]
 pub unsafe extern "C" fn sceGuCheckList() -> i32 {
-    (*LIST).current.sub((*LIST).start as usize) as i32
+    (*LIST).current.byte_offset_from((*LIST).start) as i32
 }
 
 /// Send a list to the GE directly
