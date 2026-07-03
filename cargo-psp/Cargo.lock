@@ -80,7 +80,7 @@ dependencies = [
 
 [[package]]
 name = "cargo-psp"
-version = "0.2.8"
+version = "0.2.9"
 dependencies = [
  "bincode",
  "cargo_metadata",
