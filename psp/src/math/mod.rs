@@ -1,5 +1,5 @@
 #[no_mangle]
-pub unsafe extern "C" fn fminf(x: f32, y: f32) -> f32 {
+pub extern "C" fn fminf(x: f32, y: f32) -> f32 {
     let out: f32;
     if x.is_nan() && !y.is_nan() {
         out = y;
@@ -8,28 +8,30 @@ pub unsafe extern "C" fn fminf(x: f32, y: f32) -> f32 {
     } else if x.is_nan() && y.is_nan() {
         out = core::f32::NAN;
     } else {
-        vfpu_asm! (
-            "mfc1 {tmp1}, {x}",
-            "mfc1 {tmp2}, {y}",
-            "mtv {tmp1}, S000",
-            "mtv {tmp2}, S001",
-            "vmin.s S000, S000, S001",
-            "mfv {tmp1}, S000",
-            "mtc1 {tmp1}, {out}",
-            "nop",
-            x = in(freg) x,
-            y = in(freg) y,
-            tmp1 = out(reg) _,
-            tmp2 = out(reg) _,
-            out = out(freg) out,
-            options(nostack, nomem),
-        );
+        unsafe {
+            vfpu_asm! (
+                "mfc1 {tmp1}, {x}",
+                "mfc1 {tmp2}, {y}",
+                "mtv {tmp1}, S000",
+                "mtv {tmp2}, S001",
+                "vmin.s S000, S000, S001",
+                "mfv {tmp1}, S000",
+                "mtc1 {tmp1}, {out}",
+                "nop",
+                x = in(freg) x,
+                y = in(freg) y,
+                tmp1 = out(reg) _,
+                tmp2 = out(reg) _,
+                out = out(freg) out,
+                options(nostack, nomem),
+            );
+        }
     }
     out
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn fmaxf(x: f32, y: f32) -> f32 {
+pub extern "C" fn fmaxf(x: f32, y: f32) -> f32 {
     let out: f32;
     if x.is_nan() && !y.is_nan() {
         out = y;
@@ -38,20 +40,44 @@ pub unsafe extern "C" fn fmaxf(x: f32, y: f32) -> f32 {
     } else if x.is_nan() && y.is_nan() {
         out = core::f32::NAN;
     } else {
+        unsafe {
+            vfpu_asm! (
+                "mfc1 {tmp1}, {x}",
+                "mfc1 {tmp2}, {y}",
+                "mtv {tmp1}, S000",
+                "mtv {tmp2}, S001",
+                "vmax.s S000, S000, S001",
+                "mfv {tmp1}, S000",
+                "mtc1 {tmp1}, {out}",
+                "nop",
+                x = in(freg) x,
+                y = in(freg) y,
+                tmp1 = out(reg) _,
+                tmp2 = out(reg) _,
+                out = out(freg) out,
+                options(nostack, nomem),
+            );
+        }
+    }
+    out
+}
+
+#[no_mangle]
+pub extern "C" fn cosf(scalar: f32) -> f32 {
+    let out: f32;
+    unsafe {
         vfpu_asm! (
-            "mfc1 {tmp1}, {x}",
-            "mfc1 {tmp2}, {y}",
-            "mtv {tmp1}, S000",
-            "mtv {tmp2}, S001",
-            "vmax.s S000, S000, S001",
-            "mfv {tmp1}, S000",
-            "mtc1 {tmp1}, {out}",
+            "mfc1 {tmp}, {scalar}",
+            "mtv {tmp}, S000",
             "nop",
-            x = in(freg) x,
-            y = in(freg) y,
-            tmp1 = out(reg) _,
-            tmp2 = out(reg) _,
-            out = out(freg) out,
+            "vcst.s S001, VFPU_2_PI",
+            "vmul.s S000, S000, S001",
+            "vcos.s S000, S000",
+            "mfv {tmp}, S000",
+            "mtc1 {tmp}, {scalar}",
+            "nop",
+            scalar = inlateout(freg) scalar => out,
+            tmp = out(reg) _,
             options(nostack, nomem),
         );
     }
@@ -59,42 +85,24 @@ pub unsafe extern "C" fn fmaxf(x: f32, y: f32) -> f32 {
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn cosf(scalar: f32) -> f32 {
+pub extern "C" fn sinf(scalar: f32) -> f32 {
     let out: f32;
-    vfpu_asm! (
-        "mfc1 {tmp}, {scalar}",
-        "mtv {tmp}, S000",
-        "nop",
-        "vcst.s S001, VFPU_2_PI",
-        "vmul.s S000, S000, S001",
-        "vcos.s S000, S000",
-        "mfv {tmp}, S000",
-        "mtc1 {tmp}, {scalar}",
-        "nop",
-        scalar = inlateout(freg) scalar => out,
-        tmp = out(reg) _,
-        options(nostack, nomem),
-    );
-    out
-}
-
-#[no_mangle]
-pub unsafe extern "C" fn sinf(scalar: f32) -> f32 {
-    let out: f32;
-    vfpu_asm! (
-        "mfc1 {tmp}, {scalar}",
-        "mtv {tmp}, S000",
-        "nop",
-        "vcst.s S001, VFPU_2_PI",
-        "vmul.s S000, S000, S001",
-        "vsin.s S000, S000",
-        "mfv {tmp}, S000",
-        "mtc1 {tmp}, {scalar}",
-        "nop",
-        scalar = inlateout(freg) scalar => out,
-        tmp = out(reg) _,
-        options(nostack, nomem),
-    );
+    unsafe {
+        vfpu_asm! (
+            "mfc1 {tmp}, {scalar}",
+            "mtv {tmp}, S000",
+            "nop",
+            "vcst.s S001, VFPU_2_PI",
+            "vmul.s S000, S000, S001",
+            "vsin.s S000, S000",
+            "mfv {tmp}, S000",
+            "mtc1 {tmp}, {scalar}",
+            "nop",
+            scalar = inlateout(freg) scalar => out,
+            tmp = out(reg) _,
+            options(nostack, nomem),
+        );
+    }
     out
 }
 // borrowed from https://github.com/samcrow/cmsis_dsp.rs/blob/master/src/libm_c.rs
