@@ -232,7 +232,7 @@ unsafe extern "C" fn rust_eh_personality() {}
 #[cfg(all(target_os = "psp", not(feature = "stub-only")))]
 mod libunwind_shims {
     #[no_mangle]
-    unsafe extern "C" fn fprintf(_stream: *const u8, _format: *const u8, _:...) -> isize {
+    unsafe extern "C" fn fprintf(_stream: *const u8, _format: *const u8, _: ...) -> isize {
         -1
     }
 
