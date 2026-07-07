@@ -1,0 +1,14 @@
+platform: windows
+
+params:
+  RUSTUP_TOOLCHAIN: nightly-2023-09-26
+
+inputs:
+  - name: repo
+
+caches:
+  - path: repo/ci/tests/target/
+  - path: repo/target/
+
+run:
+  path: repo/ci/concourse/build-rust.bat
