@@ -458,7 +458,6 @@ pub unsafe extern "C" fn sceGumPopMatrix() {
 #[allow(non_snake_case)]
 #[no_mangle]
 pub unsafe extern "C" fn sceGumPushMatrix() {
-    CURRENT_MATRIX = CURRENT_MATRIX.offset(1);
     get_context_unchecked().prepare(MatrixSet::VMAT3, MatrixSet::empty());
 
     vfpu_asm!(
@@ -469,6 +468,10 @@ pub unsafe extern "C" fn sceGumPushMatrix() {
         in(reg) CURRENT_MATRIX,
         options(nostack),
     );
+
+    // Advance only after the store: `CURRENT_MATRIX` mirrors the live matrix, so the saved copy has
+    // to land in the slot below it, which is where `sceGumPopMatrix` looks.
+    CURRENT_MATRIX = CURRENT_MATRIX.offset(1);
 }
 
 /// Rotate around the X axis
