@@ -1,4 +1,5 @@
-//! Regression tests for the sceGum matrix stack: a pop restores what its matching push saved.
+//! Regression tests for sceGum: any function creates the VFPU context it needs, and a pop restores
+//! what its matching push saved.
 //!
 //! Only the translation column is compared, since it is enough to tell the cases apart and reads
 //! better in a failure message than sixteen floats.
@@ -31,17 +32,18 @@ fn translate(x: f32, y: f32, z: f32) {
     unsafe { sys::sceGumTranslate(&ScePspFVector3 { x, y, z }) };
 }
 
-/// The leading `sceGumLoadIdentity` is not redundant: it and `sceGumLoadMatrix` are the only entry
-/// points that create the VFPU context, and `sceGumMatrixMode` on a cold one traps. See #189.
 fn reset() {
     unsafe {
-        sys::sceGumLoadIdentity();
         sys::sceGumMatrixMode(MatrixMode::Model);
         sys::sceGumLoadIdentity();
     }
 }
 
 pub fn test_main(test_runner: &mut TestRunner) {
+    // Before anything else, while the context is still cold.
+    let cold = cold_matrix_mode();
+    test_runner.check("gum_cold_matrix_mode", cold, (1.0, 2.0, 3.0));
+
     test_runner.check_list(&[
         (
             "gum_push_pop_restores_translation",
@@ -64,6 +66,15 @@ pub fn test_main(test_runner: &mut TestRunner) {
             (1.0, 2.0, 3.0),
         ),
     ]);
+}
+
+/// Opening with `sceGumMatrixMode` rather than a load, then reading the matrix back to show the
+/// context it created is usable. Before the fix for #189 the cold call reached `unreachable()` and
+/// the run died on a break instruction rather than failing this case.
+fn cold_matrix_mode() -> (f32, f32, f32) {
+    reset();
+    translate(1.0, 2.0, 3.0);
+    translation()
 }
 
 fn push_pop_restores() -> (f32, f32, f32) {
