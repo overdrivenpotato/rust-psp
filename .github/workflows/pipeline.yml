@@ -1,0 +1,82 @@
+name: Rust-PSP Main Pipeline
+on: 
+  push:
+    branches:
+    - master
+    - gh-actions-migration
+  pull_request:
+    branches:
+    - master
+
+jobs:
+  build:
+    strategy:
+      matrix: 
+        platform: [ubuntu-latest, macos-latest, windows-latest]
+
+    runs-on: ${{ matrix.platform }}
+    env: 
+      RUSTUP_TOOLCHAIN: nightly-2026-05-30
+    steps:
+      - name: Checkout sources
+        uses: actions/checkout@v7
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+            toolchain: ${{ env.RUSTUP_TOOLCHAIN }}
+            components: clippy, rust-src, rustfmt
+
+      - name: Test Formatting
+        shell: bash
+        run: |
+          cargo fmt --message-format=short --manifest-path=cargo-psp/Cargo.toml -- --check
+          cargo fmt --manifest-path=Cargo.toml -p psp -- --check
+          status=$?
+          if test $status -ne 0
+            then echo "Formatting errors: Please run cargo fmt on your changes"
+            exit 1
+          fi
+
+      - name: Setup Cache
+        uses: Swatinem/rust-cache@v2
+
+      - name: Build Cargo-PSP for ${{ matrix.platform }}
+        run:  cargo install --path ./cargo-psp 
+
+      - name: Build Test Project for PSP on ${{ matrix.platform }}
+        run: |
+          cargo psp --manifest-path=./ci/tests/Cargo.toml
+
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v7
+        with:
+          name: ${{ matrix.platform }}-psp-ci-test
+          path: target/mipsel-sony-psp/debug/test_cases.EBOOT.PBP
+
+
+  run-tests:
+    needs: build
+    strategy:
+      matrix:
+        platform: [ubuntu-latest, macos-latest, windows-latest]
+    runs-on: [ubuntu-latest]
+    container: rustpsp/ppsspp-headless:latest
+    steps:
+      - name: Download Artifact
+        uses: actions/download-artifact@v8
+        with: 
+          name: ${{ matrix.platform }}-psp-ci-test
+      - name: Run Tests
+        shell: bash
+        run: |
+          set -euo pipefail
+          /ppsspp/build-sdl/PPSSPPHeadless --graphics=software ./test_cases.EBOOT.PBP --timeout=10 -r .
+          cat psp_output_file.log
+          if [ "$(tail -n 1 psp_output_file.log)" = "FINAL_SUCCESS" ]; then
+              echo Test passed
+          else
+              echo Test failed
+              exit 1
+          fi
+
