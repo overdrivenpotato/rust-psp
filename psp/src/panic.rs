@@ -12,11 +12,11 @@ use core::{any::Any, mem::ManuallyDrop};
 use core::{
     any::Any,
     mem::{self, ManuallyDrop},
-    panic::{Location, PanicInfo, PanicMessage, PanicPayload as BoxMeUp},
+    panic::{Location, PanicInfo, PanicMessage},
 };
 
 #[cfg(not(feature = "std"))]
-use alloc::{boxed::Box, string::String};
+use alloc::{boxed::Box, panicking::PanicPayload as BoxMeUp, string::String};
 
 #[link(name = "unwind", kind = "static")]
 extern "C" {}
@@ -74,10 +74,10 @@ fn panic_impl(info: &PanicInfo) -> ! {
         }
     }
 
-    unsafe impl<'a> BoxMeUp for PanicPayload<'a> {
-        fn take_box(&mut self) -> *mut (dyn Any + Send) {
+    impl<'a> BoxMeUp for PanicPayload<'a> {
+        fn take_box(&mut self) -> Box<dyn Any + Send> {
             let contents = mem::take(self.fill());
-            Box::into_raw(Box::new(contents))
+            Box::new(contents)
         }
 
         fn get(&mut self) -> &(dyn Any + Send) {
