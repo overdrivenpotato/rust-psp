@@ -1,0 +1,82 @@
+name: Rust-PSP Nightly Pipeline
+on: 
+  schedule:
+    - cron: "* 21 * * *"
+  workflow_dispatch:
+
+env:
+  GHA_RUN_URL: "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+
+jobs:
+  build:
+    runs-on: [ubuntu-latest]
+    env: 
+      RUSTUP_TOOLCHAIN: nightly
+    steps:
+      - name: Checkout sources
+        uses: actions/checkout@v7
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+            toolchain: ${{ env.RUSTUP_TOOLCHAIN }}
+            components: clippy, rust-src
+
+      - name: Setup Cache
+        uses: Swatinem/rust-cache@v2
+
+      - name: Build Cargo-PSP on Nightly
+        run:  cargo install --path ./cargo-psp 
+
+      - name: Build Test Project for PSP on Nightly
+        run: |
+          cargo psp --manifest-path=./ci/tests/Cargo.toml
+
+      - name: Discord Webhook Action
+        if: failure()
+        run: |
+          BODY='{"username": "GitHub Actions", "content": "Rust-PSP Failed with latest nightly\r\n${{ env.GHA_RUN_URL }}"}'
+          curl \
+          -H "Content-Type: application/json" \
+          -d "${BODY}" \
+          ${{ secrets.DISCORD_WEBHOOK_URL }}
+
+
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v7
+        with:
+          name: nightly-psp-ci-test
+          path: target/mipsel-sony-psp/debug/test_cases.EBOOT.PBP
+
+
+  run-tests:
+    needs: build
+    runs-on: ubuntu-latest 
+    container: rustpsp/ppsspp-headless:latest
+    steps:
+      - name: Download Artifact
+        uses: actions/download-artifact@v8
+        with: 
+          name: nightly-psp-ci-test
+      - name: Run Tests
+        id: test
+        shell: bash
+        run: |
+          set -euo pipefail
+          /ppsspp/build-sdl/PPSSPPHeadless --graphics=software ./test_cases.EBOOT.PBP --timeout=10 -r .
+          cat psp_output_file.log
+          if [ "$(tail -n 1 psp_output_file.log)" = "FINAL_SUCCESS" ]; then
+              echo Test passed
+          else
+              exit 1
+          fi
+      - name: Discord Webhook Action
+        if: failure()
+        run: |
+          BODY='{"username": "GH Actions", "content": "Rust-PSP Failed with latest nightly\r\n${{ env.GHA_RUN_URL }}"}'
+          curl \
+          -H "Content-Type: application/json" \
+          -d "${BODY}" \
+          ${{ secrets.DISCORD_WEBHOOK_URL }}
+
+
