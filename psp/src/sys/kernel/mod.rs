@@ -840,7 +840,7 @@ psp_extern! {
         option: *mut SceKernelLMOption,
     ) -> SceUid;
 
-    #[psp(0x50F0C1EC)]
+    #[psp(0x50F0C1EC, i5)]
     /// Start a loaded module.
     ///
     /// # Parameters
