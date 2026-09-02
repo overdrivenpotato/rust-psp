@@ -16,7 +16,7 @@ jobs:
 
     runs-on: ${{ matrix.platform }}
     env: 
-      RUSTUP_TOOLCHAIN: nightly-2026-05-30
+      RUSTUP_TOOLCHAIN: nightly-2026-08-26
     steps:
       - name: Checkout sources
         uses: actions/checkout@v7
