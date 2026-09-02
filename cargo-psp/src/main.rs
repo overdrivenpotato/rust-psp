@@ -136,17 +136,17 @@ impl core::ops::Add<CommitDate> for CommitDate {
     }
 }
 
-// Minimum 2023-03-27, remember to update both commit date and version too,
+// Minimum 2026-08-26, remember to update both commit date and version too,
 // below. Note that the `day` field lags by one day, as the toolchain always
 // contains the previous days' nightly rustc.
 const MINIMUM_COMMIT_DATE: CommitDate = CommitDate {
     year: 2026,
-    month: 05,
-    day: 29,
+    month: 08,
+    day: 25,
 };
 const MINIMUM_RUSTC_VERSION: Version = Version {
     major: 1,
-    minor: 96,
+    minor: 100,
     patch: 0,
     pre: Prerelease::EMPTY,
     build: BuildMetadata::EMPTY,
