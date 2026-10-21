@@ -661,8 +661,8 @@ psp_extern! {
 
 psp_extern! {
     #![name = "Kernel_Library"]
-    #![flags = 0x0001]
-    #![version = (0x00, 0x00)]
+    #![flags = 0x0011]
+    #![version = (0x00, 0x01)]
 
     #[psp(0x092968F4)]
     /// Suspend all interrupts.
@@ -707,6 +707,12 @@ psp_extern! {
     ///
     /// 1 if interrupts are currently enabled.
     pub fn sceKernelIsCpuIntrEnable() -> i32;
+
+    #[psp(0x1839852A)]
+    pub fn sceKernelMemcpy(dst: *mut u32, src: *const u32, num: usize) -> *mut u32;
+
+    #[psp(0xA089ECA4)]
+    pub fn sceKernelMemset(dst: *mut u32, val: u32, num: usize) -> *mut u32;
 }
 
 #[repr(C)]
