@@ -1,21 +1,25 @@
 name: Rust-PSP Main Pipeline
-on: 
+on:
   push:
     branches:
     - master
     - gh-actions-migration
   pull_request:
-    branches:
-    - master
+    paths-ignore:
+      - "**.md"
+      - "**/LICENSE"
+      - .github/FUNDING.yml
+      - .editorconfig
+      - .gitignore
 
 jobs:
   build:
     strategy:
-      matrix: 
+      matrix:
         platform: [ubuntu-latest, macos-latest, windows-latest]
 
     runs-on: ${{ matrix.platform }}
-    env: 
+    env:
       RUSTUP_TOOLCHAIN: nightly-2026-08-26
     steps:
       - name: Checkout sources
@@ -42,7 +46,7 @@ jobs:
         uses: Swatinem/rust-cache@v2
 
       - name: Build Cargo-PSP for ${{ matrix.platform }}
-        run:  cargo install --path ./cargo-psp 
+        run:  cargo install --path ./cargo-psp
 
       - name: Build Test Project for PSP on ${{ matrix.platform }}
         run: |
@@ -65,7 +69,7 @@ jobs:
     steps:
       - name: Download Artifact
         uses: actions/download-artifact@v8
-        with: 
+        with:
           name: ${{ matrix.platform }}-psp-ci-test
       - name: Run Tests
         shell: bash
