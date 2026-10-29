@@ -1,7 +1,15 @@
 name: Rust-PSP Nightly Pipeline
-on: 
+on:
   schedule:
     - cron: "* 21 * * *"
+  pull_request:
+    paths-ignore:
+      - 'readme.md'
+      - 'todo.md'
+      - 'LICENSE'
+      - 'Dockerfile'
+      - '**/README.md'
+      - 'docs/**'
   workflow_dispatch:
 
 env:
@@ -10,7 +18,7 @@ env:
 jobs:
   build:
     runs-on: [ubuntu-latest]
-    env: 
+    env:
       RUSTUP_TOOLCHAIN: nightly
     steps:
       - name: Checkout sources
@@ -26,14 +34,14 @@ jobs:
         uses: Swatinem/rust-cache@v2
 
       - name: Build Cargo-PSP on Nightly
-        run:  cargo install --path ./cargo-psp 
+        run:  cargo install --path ./cargo-psp
 
       - name: Build Test Project for PSP on Nightly
         run: |
           cargo psp --manifest-path=./ci/tests/Cargo.toml
 
       - name: Discord Webhook Action
-        if: failure()
+        if: github.event_name == 'schedule' && failure()
         run: |
           BODY='{"username": "GitHub Actions", "content": "Rust-PSP Failed with latest nightly\r\n${{ env.GHA_RUN_URL }}"}'
           curl \
@@ -51,12 +59,12 @@ jobs:
 
   run-tests:
     needs: build
-    runs-on: ubuntu-latest 
+    runs-on: ubuntu-latest
     container: rustpsp/ppsspp-headless:latest
     steps:
       - name: Download Artifact
         uses: actions/download-artifact@v8
-        with: 
+        with:
           name: nightly-psp-ci-test
       - name: Run Tests
         id: test
@@ -71,7 +79,7 @@ jobs:
               exit 1
           fi
       - name: Discord Webhook Action
-        if: failure()
+        if: github.event_name == 'schedule' && failure()
         run: |
           BODY='{"username": "GH Actions", "content": "Rust-PSP Failed with latest nightly\r\n${{ env.GHA_RUN_URL }}"}'
           curl \
