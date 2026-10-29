@@ -2960,16 +2960,7 @@ pub unsafe extern "C" fn sceGuTexImage(
 #[allow(non_snake_case)]
 #[no_mangle]
 pub unsafe extern "C" fn sceGuTexLevelMode(mode: TextureLevelMode, bias: f32) {
-    // Linker error if this is not here.
-    #[no_mangle]
-    #[cfg(target_os = "psp")]
-    #[allow(deprecated)]
-    unsafe extern "C" fn truncf(mut x: f32) -> f32 {
-        core::arch::asm!("cvt.w.s {0}, {0}", inout(freg) x);
-        x
-    }
-
-    let mut offset = core::intrinsics::truncf32(bias * 16.0) as i32;
+    let mut offset = (bias * 16.0) as i32;
 
     // PSPSDK: mip map bias?
     if offset >= 128 {

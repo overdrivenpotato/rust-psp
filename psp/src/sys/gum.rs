@@ -679,10 +679,8 @@ pub unsafe extern "C" fn sceGumUpdateMatrix() {
 }
 
 fn gum_normalize(v: &mut ScePspFVector3) {
-    let l = unsafe {
-        use core::intrinsics::sqrtf32;
-        sqrtf32((v.x * v.x) + (v.y * v.y) + (v.z * v.z))
-    };
+    let mut l = (v.x * v.x) + (v.y * v.y) + (v.z * v.z);
+    unsafe { core::arch::asm!("sqrt.s {0}, {0}", inout(freg) l, options(pure, nomem, nostack)) };
 
     if l > EPSILON {
         let il = 1.0 / l;

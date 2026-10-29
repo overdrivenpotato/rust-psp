@@ -187,6 +187,7 @@ forward! {
     floor(f64),
     floorf(f32),
     trunc(f64),
+    truncf(f32),
     round(f64),
     roundf(f32),
 }
