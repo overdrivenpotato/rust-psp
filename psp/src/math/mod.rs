@@ -99,9 +99,17 @@ pub unsafe extern "C" fn sinf(scalar: f32) -> f32 {
 }
 
 #[no_mangle]
-pub extern "C" fn truncf(mut x: f32) -> f32 {
-    unsafe { core::arch::asm!("cvt.w.s {0}, {0}", inout(freg) x) };
-    x
+pub extern "C" fn truncf(x: f32) -> f32 {
+    let mut out = x;
+    unsafe { core::arch::asm!("cvt.w.s {0}, {0}", inout(freg) out, options(pure, nomem, nostack)) };
+    out
+}
+
+#[no_mangle]
+pub extern "C" fn sqrtf(x: f32) -> f32 {
+    let mut out = x;
+    unsafe { core::arch::asm!("sqrt.s {0}, {0}", inout(freg) out, options(pure, nomem, nostack)) };
+    out
 }
 
 // borrowed from https://github.com/samcrow/cmsis_dsp.rs/blob/master/src/libm_c.rs
@@ -155,7 +163,6 @@ forward! {
     log2f(f32),
     log1p(f64),
     log1pf(f32),
-    sqrtf(f32),
     sqrt(f64),
     cbrtf(f32),
     cbrt(f64),
