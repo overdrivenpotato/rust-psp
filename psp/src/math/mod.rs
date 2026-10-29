@@ -97,6 +97,13 @@ pub unsafe extern "C" fn sinf(scalar: f32) -> f32 {
     );
     out
 }
+
+#[no_mangle]
+pub extern "C" fn truncf(mut x: f32) -> f32 {
+    unsafe { core::arch::asm!("cvt.w.s {0}, {0}", inout(freg) x) };
+    x
+}
+
 // borrowed from https://github.com/samcrow/cmsis_dsp.rs/blob/master/src/libm_c.rs
 macro_rules! forward {
     // One argument, argument and return types are the same
