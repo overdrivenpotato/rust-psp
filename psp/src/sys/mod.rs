@@ -249,7 +249,7 @@ pub unsafe fn MScmIsMediumInserted() -> i32 {
 
 /// Registers a memory stick ejection callback.
 ///
-/// See `MsCbEvent`.
+/// See [`MsCbEvent`].
 ///
 /// # Parameters
 ///

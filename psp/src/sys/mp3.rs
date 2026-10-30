@@ -34,7 +34,7 @@ psp_extern! {
     #[psp(0x07EC321A)]
     /// # Parameters
     ///
-    /// - `args`: Pointer to `SceMp3InitArg` structure
+    /// - `args`: Pointer to [`SceMp3InitArg`] structure
     ///
     /// # Return Value
     ///

@@ -511,7 +511,7 @@ psp_extern! {
     ///
     /// # Return value
     ///
-    /// The specified queue status, one of `GeListState`.
+    /// The specified queue status, one of [`GeListState`].
     pub fn sceGeListSync(qid: i32, sync_type: i32) -> GeListState;
 
     #[psp(0xB287BD61)]

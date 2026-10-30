@@ -108,7 +108,7 @@ psp_extern! {
     #[psp(0x37295ED8, i6)]
     /// # Parameters
     ///
-    /// - `ringbuffer`: pointer to a `SceMpegRingbuffer` struct
+    /// - `ringbuffer`: pointer to a [`SceMpegRingbuffer`] struct
     /// - `packets`: number of packets in the ringbuffer
     /// - `data`: pointer to allocated memory
     /// - `size`: size of allocated memory, shoud be `sceMpegRingbufferQueryMemSize`(iPackets)
@@ -130,13 +130,13 @@ psp_extern! {
     #[psp(0x13407F13)]
     /// # Parameters
     ///
-    /// - `ringbuffer`: pointer to a `SceMpegRingbuffer` struct
+    /// - `ringbuffer`: pointer to a [`SceMpegRingbuffer`] struct
     pub fn sceMpegRingbufferDestruct(ringbuffer: *mut SceMpegRingbuffer);
 
     #[psp(0xB5F6DC87)]
     /// # Parameters
     ///
-    /// - `ringbuffer`: pointer to a `SceMpegRingbuffer` struct
+    /// - `ringbuffer`: pointer to a [`SceMpegRingbuffer`] struct
     ///
     /// # Return Value
     ///
@@ -146,7 +146,7 @@ psp_extern! {
     #[psp(0xB240A59E)]
     /// # Parameters
     ///
-    /// - `ringbuffer`: pointer to a `SceMpegRingbuffer` struct
+    /// - `ringbuffer`: pointer to a [`SceMpegRingbuffer`] struct
     /// - `num_packets`: num packets to put into the ringbuffer
     /// - `available`: free packets in the ringbuffer, should be `sceMpegRingbufferAvailableSize()`
     ///
@@ -285,7 +285,7 @@ psp_extern! {
     ///
     /// - `handle`: Instance handle
     /// - `es_buffer`: prevously allocated Es buffer
-    /// - `au`: will contain pointer to `SceMpegAu`
+    /// - `au`: will contain pointer to [`SceMpegAu`]
     ///
     /// # Return Value
     ///
@@ -297,7 +297,7 @@ psp_extern! {
     ///
     /// - `handle`: Instance handle
     /// - `stream`: associated stream
-    /// - `au`: will contain pointer to `SceMpegAu`
+    /// - `au`: will contain pointer to [`SceMpegAu`]
     /// - `unk`: unknown
     ///
     /// # Return Value
@@ -314,7 +314,7 @@ psp_extern! {
     /// # Parameters
     ///
     /// - `handle`: Instance handle
-    /// - `mode`: pointer to `SceMpegAvcMode` struct defining the decode mode (pixelformat)
+    /// - `mode`: pointer to [`SceMpegAvcMode`] struct defining the decode mode (pixelformat)
     ///
     /// # Return Value
     ///
@@ -325,7 +325,7 @@ psp_extern! {
     /// # Parameters
     ///
     /// - `handle`: Instance handle
-    /// - `au`: video `SceMpegAu`
+    /// - `au`: video [`SceMpegAu`]
     /// - `iframe_width`: output buffer width, set to 512 if writing to framebuffer
     /// - `buffer`: buffer that will contain the decoded frame
     /// - `init`: will be set to 0 on first call, then 1
@@ -364,7 +364,7 @@ psp_extern! {
     ///
     /// - `handle`: Instance handle
     /// - `stream`: associated stream
-    /// - `au`: will contain pointer to `SceMpegAu`
+    /// - `au`: will contain pointer to [`SceMpegAu`]
     /// - `unk`: unknown
     ///
     /// # Return Value
@@ -381,7 +381,7 @@ psp_extern! {
     /// # Parameters
     ///
     /// - `handle`: Instance handle
-    /// - `au`: video `SceMpegAu`
+    /// - `au`: video [`SceMpegAu`]
     /// - `buffer`: buffer that will contain the decoded frame
     /// - `init`: set this to 1 on first call
     ///

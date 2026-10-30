@@ -46,7 +46,7 @@ pub enum PowerTick {
 /// # Parameters
 ///
 /// - `unknown`: Unknown function, appears to cycle between 1, 2, and 3.
-/// - `power_info`: Combination of `PowerInfo` flags.
+/// - `power_info`: Combination of [`PowerInfo`] flags.
 pub type PowerCallback = extern "C" fn(unknown: i32, power_info: PowerInfo);
 
 psp_extern! {

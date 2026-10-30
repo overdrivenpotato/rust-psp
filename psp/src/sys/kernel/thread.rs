@@ -50,7 +50,7 @@ pub type SceKernelThreadEntry = unsafe extern "C" fn(args: usize, argp: *mut c_v
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct SceKernelThreadOptParam {
-    /// Size of the `SceKernelThreadOptParam` structure.
+    /// Size of the [`SceKernelThreadOptParam`] structure.
     pub size: usize,
 
     /// UID of the memory block (?) allocated for the thread's stack.
@@ -170,7 +170,7 @@ pub struct SceKernelThreadRunStatus {
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct SceKernelSemaOptParam {
-    /// Size of the `SceKernelSemaOptParam` structure.
+    /// Size of the [`SceKernelSemaOptParam`] structure.
     pub size: usize,
 }
 
@@ -178,7 +178,7 @@ pub struct SceKernelSemaOptParam {
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct SceKernelSemaInfo {
-    /// Size of the `SceKernelSemaInfo` structure.
+    /// Size of the [`SceKernelSemaInfo`] structure.
     pub size: usize,
     /// Null terminated name of the semaphore.
     pub name: [u8; 32],
@@ -209,7 +209,7 @@ pub struct SceKernelEventFlagInfo {
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct SceKernelEventFlagOptParam {
-    /// Size of the `SceKernelEventFlagOptParam` structure?
+    /// Size of the [`SceKernelEventFlagOptParam`] structure?
     pub size: usize,
 }
 
@@ -217,7 +217,7 @@ pub struct SceKernelEventFlagOptParam {
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct SceKernelMbxOptParam {
-    /// Size of the `SceKernelMbxOptParam` structure.
+    /// Size of the [`SceKernelMbxOptParam`] structure.
     pub size: usize,
 }
 
@@ -225,7 +225,7 @@ pub struct SceKernelMbxOptParam {
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct SceKernelMbxInfo {
-    /// Size of the `SceKernelMbxInfo` structure.
+    /// Size of the [`SceKernelMbxInfo`] structure.
     pub size: usize,
     /// Null terminated name of the messagebox.
     pub name: [u8; 32usize],
@@ -252,7 +252,7 @@ pub type SceKernelVTimerHandlerWide =
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct SceKernelVTimerInfo {
-    /// Size of the `SceKernelVTimerInfo` structure?
+    /// Size of the [`SceKernelVTimerInfo`] structure?
     pub size: usize,
     pub name: [u8; 32],
     pub active: i32,
@@ -351,7 +351,7 @@ pub struct SceKernelMppInfo {
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct SceKernelVplOptParam {
-    /// Size of the `SceKernelVplOptParam` structure?
+    /// Size of the [`SceKernelVplOptParam`] structure?
     pub size: usize,
 }
 
@@ -359,7 +359,7 @@ pub struct SceKernelVplOptParam {
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct SceKernelVplInfo {
-    /// Size of the `SceKernelVplInfo` structure?
+    /// Size of the [`SceKernelVplInfo`] structure?
     pub size: usize,
     pub name: [u8; 32],
     pub attr: u32,
@@ -371,7 +371,7 @@ pub struct SceKernelVplInfo {
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct SceKernelFplOptParam {
-    /// Size of the `SceKernelFplOptParam` structure?
+    /// Size of the [`SceKernelFplOptParam`] structure?
     pub size: usize,
 }
 
@@ -391,7 +391,7 @@ pub struct SceKernelFplInfo {
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct SceKernelVTimerOptParam {
-    /// Size of the `SceKernelVTimerOptParam` structure?
+    /// Size of the [`SceKernelVTimerOptParam`] structure?
     pub size: usize,
 }
 
@@ -466,8 +466,8 @@ psp_extern! {
     /// - `entry`: The thread function to run when started.
     /// - `init_priority`: The initial priority of the thread. Less if higher priority.
     /// - `stack_size`: The size of the initial stack.
-    /// - `attr`: The thread attributes, zero or more of `ThreadAttributes`.
-    /// - `option`: Additional options specified by `SceKernelThreadOptParam`.
+    /// - `attr`: The thread attributes, zero or more of [`ThreadAttributes`].
+    /// - `option`: Additional options specified by [`SceKernelThreadOptParam`].
     ///
     /// # Return Value
     ///
@@ -705,7 +705,7 @@ psp_extern! {
     /// # Parameters
     ///
     /// - `unknown`: Set to 0.
-    /// - `attr`: The thread attributes to modify.  One of `ThreadAttributes`.
+    /// - `attr`: The thread attributes to modify.  One of [`ThreadAttributes`].
     ///
     /// # Return Value
     ///
@@ -830,7 +830,7 @@ psp_extern! {
     /// # Parameters
     ///
     /// - `thid`: UID of the thread to retrive status.
-    /// - `status`: Pointer to a `SceKernelThreadRunStatus` struct to receive the runtime status.
+    /// - `status`: Pointer to a [`SceKernelThreadRunStatus`] struct to receive the runtime status.
     ///
     /// # Return Value
     ///
@@ -947,7 +947,7 @@ psp_extern! {
     /// # Parameters
     ///
     /// - `sema_id`: UID of the semaphore to retrieve info for.
-    /// - `info`: Pointer to a `SceKernelSemaInfo` struct to receive the info.
+    /// - `info`: Pointer to a [`SceKernelSemaInfo`] struct to receive the info.
     ///
     /// # Return Value
     ///
@@ -1072,7 +1072,7 @@ psp_extern! {
     /// # Parameters
     ///
     /// - `name`: The name of the event flag.
-    /// - `attr`: Attributes from `EventFlagAttributes`.
+    /// - `attr`: Attributes from [`EventFlagAttributes`].
     /// - `bits`: Initial bit pattern.
     /// - `opt`: Options, set to null.
     ///
@@ -1119,7 +1119,7 @@ psp_extern! {
     ///
     /// - `ev_id`: The event id returned by `sceKernelCreateEventFlag`.
     /// - `bits`: The bit pattern to poll for.
-    /// - `wait`: Wait type, one or more of `EventFlagWaitTypes` or'ed together
+    /// - `wait`: Wait type, one or more of [`EventFlagWaitTypes`] or'ed together
     /// - `out_bits`: The bit pattern that was matched.
     ///
     /// # Return Value
@@ -1139,7 +1139,7 @@ psp_extern! {
     ///
     /// - `ev_id`: The event id returned by sceKernelCreateEventFlag.
     /// - `bits`: The bit pattern to poll for.
-    /// - `wait`: Wait type, one or more of `EventFlagWaitTypes` or'ed together
+    /// - `wait`: Wait type, one or more of [`EventFlagWaitTypes`] or'ed together
     /// - `out_bits`: The bit pattern that was matched.
     /// - `timeout`: Timeout in microseconds
     ///
@@ -1161,7 +1161,7 @@ psp_extern! {
     ///
     /// - `ev_id`: The event id returned by `sceKernelCreateEventFlag`.
     /// - `bits`: The bit pattern to poll for.
-    /// - `wait`: Wait type, one or more of `EventFlagWaitTypes` or'ed together
+    /// - `wait`: Wait type, one or more of [`EventFlagWaitTypes`] or'ed together
     /// - `out_bits`: The bit pattern that was matched.
     /// - `timeout`: Timeout in microseconds
     /// # Return Value
@@ -1193,7 +1193,7 @@ psp_extern! {
     /// # Parameters
     ///
     /// - `event`: The UID of the event.
-    /// - `status`: A pointer to a `SceKernelEventFlagInfo` structure.
+    /// - `status`: A pointer to a [`SceKernelEventFlagInfo`] structure.
     ///
     /// # Return Value
     ///
@@ -1327,7 +1327,7 @@ psp_extern! {
     /// # Parameters
     ///
     /// - `mbx_id`: UID of the messagebox to retrieve info for.
-    /// - `info`: Pointer to a `SceKernelMbxInfo` struct to receive the info.
+    /// - `info`: Pointer to a [`SceKernelMbxInfo`] struct to receive the info.
     ///
     /// # Return Value
     ///
@@ -1343,7 +1343,7 @@ psp_extern! {
     /// # Parameters
     ///
     /// - `clock`: The number of micro seconds till the alarm occurrs.
-    /// - `handler`: Pointer to a `SceKernelAlarmHandler`
+    /// - `handler`: Pointer to a [`SceKernelAlarmHandler`]
     /// - `common`: Common pointer for the alarm handler
     ///
     /// # Return Value
@@ -1356,12 +1356,12 @@ psp_extern! {
     ) -> SceUid;
 
     #[psp(0xB2C25152)]
-    /// Set an alarm using a `SceKernelSysClock` structure for the time
+    /// Set an alarm using a [`SceKernelSysClock`] structure for the time
     ///
     /// # Parameters
     ///
-    /// - `clock`: Pointer to a `SceKernelSysClock` structure
-    /// - `handler`: Pointer to a `SceKernelAlarmHandler`
+    /// - `clock`: Pointer to a [`SceKernelSysClock`] structure
+    /// - `handler`: Pointer to a [`SceKernelAlarmHandler`]
     /// - `common`: Common pointer for the alarm handler.
     ///
     /// # Return Value
@@ -1391,7 +1391,7 @@ psp_extern! {
     /// # Parameters
     ///
     /// - `alarm_id`: UID of the alarm to get the info of
-    /// - `info`: Pointer to a `SceKernelAlarmInfo` structure
+    /// - `info`: Pointer to a [`SceKernelAlarmInfo`] structure
     ///
     /// # Return Value
     ///
@@ -1502,9 +1502,9 @@ psp_extern! {
     ///
     /// # Parameters
     ///
-    /// - `type`: The type of resource to list, one of `SceKernelIdListType`.
+    /// - `type`: The type of resource to list, one of [`SceKernelIdListType`].
     /// - `read_buf`: A pointer to a buffer to store the list.
-    /// - `read_buf_size`: The size of the buffer in `SceUid` units.
+    /// - `read_buf_size`: The size of the buffer in [`SceUid`] units.
     /// - `id_count`: Pointer to an integer in which to return the number of IDs in the list.
     ///
     /// # Return Value
@@ -1522,7 +1522,7 @@ psp_extern! {
     ///
     /// # Parameters
     ///
-    /// - `status`: Pointer to a `SceKernelSystemStatus` structure.
+    /// - `status`: Pointer to a [`SceKernelSystemStatus`] structure.
     ///
     /// # Return Value
     ///
@@ -1727,7 +1727,7 @@ psp_extern! {
     /// # Parameters
     ///
     /// - `uid`: The uid of the Message Pipe
-    /// - `info`: Pointer to a `SceKernelMppInfo` structure
+    /// - `info`: Pointer to a [`SceKernelMppInfo`] structure
     ///
     /// # Return Value
     ///
@@ -1867,7 +1867,7 @@ psp_extern! {
     /// # Parameters
     ///
     /// - `uid`: The uid of the VPL
-    /// - `info`: Pointer to a `SceKernelVplInfo` structure
+    /// - `info`: Pointer to a [`SceKernelVplInfo`] structure
     ///
     /// # Return Value
     ///
@@ -2003,7 +2003,7 @@ psp_extern! {
     /// # Parameters
     ///
     /// - `uid`: The uid of the FPL
-    /// - `info`: Pointer to a `SceKernelFplInfo` structure
+    /// - `info`: Pointer to a [`SceKernelFplInfo`] structure
     ///
     /// # Return Value
     ///
@@ -2014,12 +2014,12 @@ psp_extern! {
     ) -> i32;
 
     #[psp(0x110DEC9A)]
-    /// Convert a number of microseconds to a `SceKernelSysClock` structure
+    /// Convert a number of microseconds to a [`SceKernelSysClock`] structure
     ///
     /// # Parameters
     ///
     /// - `usec`: Number of microseconds
-    /// - `clock`: Pointer to a `SceKernelSysClock` structure
+    /// - `clock`: Pointer to a [`SceKernelSysClock`] structure
     ///
     /// # Return Value
     ///
@@ -2042,11 +2042,11 @@ psp_extern! {
     pub fn sceKernelUSec2SysClockWide(usec: u32) -> i64;
 
     #[psp(0xBA6B92E2)]
-    /// Convert a `SceKernelSysClock` structure to microseconds
+    /// Convert a [`SceKernelSysClock`] structure to microseconds
     ///
     /// # Parameters
     ///
-    /// - `clock`: Pointer to a `SceKernelSysClock` structure
+    /// - `clock`: Pointer to a [`SceKernelSysClock`] structure
     /// - `low`: Pointer to the low part of the time
     /// - `high`: Pointer to the high part of the time
     ///
@@ -2082,7 +2082,7 @@ psp_extern! {
     ///
     /// # Parameters
     ///
-    /// - `time`: Pointer to a `SceKernelSysClock` structure
+    /// - `time`: Pointer to a [`SceKernelSysClock`] structure
     ///
     /// # Return Value
     ///
@@ -2111,7 +2111,7 @@ psp_extern! {
     /// # Parameters
     ///
     /// - `name`: Name for the timer.
-    /// - `opt`: Pointer to an `SceKernelVTimerOptParam` (can be set to null)
+    /// - `opt`: Pointer to an [`SceKernelVTimerOptParam`] (can be set to null)
     ///
     /// # Return Value
     ///
@@ -2139,7 +2139,7 @@ psp_extern! {
     /// # Parameters
     ///
     /// - `uid`: UID of the vtimer
-    /// - `base`: Pointer to a `SceKernelSysClock` structure
+    /// - `base`: Pointer to a [`SceKernelSysClock`] structure
     ///
     /// # Return Value
     ///
@@ -2167,7 +2167,7 @@ psp_extern! {
     /// # Parameters
     ///
     /// - `uid`: UID of the vtimer
-    /// - `time`: Pointer to a `SceKernelSysClock` structure
+    /// - `time`: Pointer to a [`SceKernelSysClock`] structure
     ///
     /// # Return Value
     ///
@@ -2195,7 +2195,7 @@ psp_extern! {
     /// # Parameters
     ///
     /// - `uid`: UID of the vtimer
-    /// - `time`: Pointer to a `SceKernelSysClock` structure
+    /// - `time`: Pointer to a [`SceKernelSysClock`] structure
     ///
     /// # Return Value
     ///
@@ -2211,7 +2211,7 @@ psp_extern! {
     /// # Parameters
     ///
     /// - `uid`: UID of the vtimer
-    /// - `time`: Pointer to a `SceKernelSysClock` structure
+    /// - `time`: Pointer to a [`SceKernelSysClock`] structure
     ///
     /// # Return Value
     ///
@@ -2300,7 +2300,7 @@ psp_extern! {
     /// # Parameters
     ///
     /// - `uid`: The uid of the VTimer
-    /// - `info`: Pointer to a `SceKernelVTimerInfo` structure
+    /// - `info`: Pointer to a [`SceKernelVTimerInfo`] structure
     ///
     /// # Return Value
     ///
@@ -2318,7 +2318,7 @@ psp_extern! {
     /// - `name`: Name for the thread event handler
     /// - `thread_id`: Thread ID to monitor
     /// - `mask`: Bit mask for what events to handle (only lowest 4 bits valid)
-    /// - `handler`: Pointer to a `SceKernelThreadEventHandler` function
+    /// - `handler`: Pointer to a [`SceKernelThreadEventHandler`] function
     /// - `common`: Common pointer
     ///
     /// # Return Value
@@ -2350,7 +2350,7 @@ psp_extern! {
     /// # Parameters
     ///
     /// - `uid`: The UID of the event handler
-    /// - `info`: Pointer to a `SceKernelThreadEventHandlerInfo` structure
+    /// - `info`: Pointer to a [`SceKernelThreadEventHandlerInfo`] structure
     ///
     /// # Return Value
     ///

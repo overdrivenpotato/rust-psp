@@ -65,12 +65,12 @@ psp_extern! {
     /// # Parameters
     ///
     /// - `channel`: Use a value between 0-7 to reserve a specific channel. Pass
-    ///   `AUDIO_NEXT_CHANNEL` to get the first available channel.
+    ///   [`AUDIO_NEXT_CHANNEL`] to get the first available channel.
     /// - `sample_count`: The number of samples that can be output on the channel
-    ///   per output call. It must be a value between `AUDIO_SAMPLE_MIN` and
-    ///   `AUDIO_SAMPLE_MAX`, and it must be aligned to 64 bytes. Use
+    ///   per output call. It must be a value between [`AUDIO_SAMPLE_MIN`] and
+    ///   [`AUDIO_SAMPLE_MAX`], and it must be aligned to 64 bytes. Use
     ///   `audio_sample_align()` to align it.
-    /// - `format`: The output format to use for the channel. One of `AudioFormat`.
+    /// - `format`: The output format to use for the channel. One of [`AudioFormat`].
     ///
     /// # Return value
     ///
@@ -192,7 +192,7 @@ psp_extern! {
     /// # Parameters
     ///
     /// - `channel`: The channel number.
-    /// - `format`: One of `AudioFormat`.
+    /// - `format`: One of [`AudioFormat`].
     ///
     /// # Return value
     ///
@@ -272,7 +272,7 @@ psp_extern! {
     /// # Parameters
     ///
     /// - `sample_count`: The number of samples to output in one output call (min 17, max 4111).
-    /// - `freq`: One of `AudioOutputFrequency`.
+    /// - `freq`: One of [`AudioOutputFrequency`].
     /// - `channels`: Number of channels. Pass 2 (stereo).
     ///
     /// # Return value
@@ -320,7 +320,7 @@ psp_extern! {
     ///
     /// # Parameters
     ///
-    /// - `params`: A pointer to an `AudioInputParams` struct.
+    /// - `params`: A pointer to an [`AudioInputParams`] struct.
     ///
     /// # Return value
     ///
@@ -333,7 +333,7 @@ psp_extern! {
     /// # Parameters
     ///
     /// - `sample_count`: Number of samples.
-    /// - `freq`: One of `AudioInputFrequency`.
+    /// - `freq`: One of [`AudioInputFrequency`].
     /// - `buf`: Pointer to where the audio data will be stored.
     ///
     /// # Return value
@@ -347,7 +347,7 @@ psp_extern! {
     /// # Parameters
     ///
     /// - `sample_count`: Number of samples.
-    /// - `freq`: One of `AudioInputFrequency`.
+    /// - `freq`: One of [`AudioInputFrequency`].
     /// - `buf`: Pointer to where the audio data will be stored.
     ///
     /// # Return value
