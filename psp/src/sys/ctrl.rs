@@ -70,7 +70,7 @@ pub enum CtrlMode {
 pub struct SceCtrlData {
     /// The current read frame.
     pub timestamp: u32,
-    /// Bit mask containing zero or more of `CtrlButtons`.
+    /// Bit mask containing zero or more of [`CtrlButtons`].
     pub buttons: CtrlButtons,
     /// Analogue stick, X axis.
     pub lx: u8,
@@ -123,7 +123,7 @@ psp_extern! {
     ///
     /// # Parameters
     ///
-    /// - `mode`: One of `CtrlMode`.
+    /// - `mode`: One of [`CtrlMode`].
     ///
     /// # Return Value
     ///
@@ -153,8 +153,8 @@ psp_extern! {
     ///
     /// # Parameters
     ///
-    /// - `pad_data`: Pointer to a `SceCtrlData` structure used to hold the returned pad data.
-    /// - `count`: Number of `SceCtrlData` buffers to read.
+    /// - `pad_data`: Pointer to a [`SceCtrlData`] structure used to hold the returned pad data.
+    /// - `count`: Number of [`SceCtrlData`] buffers to read.
     pub fn sceCtrlReadBufferPositive(pad_data: *mut SceCtrlData, count: i32) -> i32;
 
     #[psp(0x60B81F86)]

@@ -55,7 +55,7 @@ psp_extern! {
     ///
     /// # Parameters
     ///
-    /// - `time`: pointer to `ScePspDateTime` struct to receive time
+    /// - `time`: pointer to [`ScePspDateTime`] struct to receive time
     /// - `tz`: time zone to adjust to (minutes from UTC)
     /// # Return Value
     ///
@@ -63,11 +63,11 @@ psp_extern! {
     pub fn sceRtcGetCurrentClock(time: *mut ScePspDateTime, tz: i32) -> i32;
 
     #[psp(0xE7C27D1B)]
-    /// Get current local time into a `ScePspDateTime` struct
+    /// Get current local time into a [`ScePspDateTime`] struct
     ///
     /// # Parameters
     ///
-    /// - `time`: pointer to `ScePspDateTime` struct to receive time
+    /// - `time`: pointer to [`ScePspDateTime`] struct to receive time
     /// # Return Value
     ///
     /// 0 on success, < 0 on error
@@ -145,11 +145,11 @@ psp_extern! {
     pub fn sceRtcGetDayOfWeek(year: i32, month: i32, day: i32) -> i32;
 
     #[psp(0x4B1B5E82)]
-    /// Validate `ScePspDateTime` component ranges
+    /// Validate [`ScePspDateTime`] component ranges
     ///
     /// # Parameters
     ///
-    /// - `date`: pointer to `ScePspDateTime` struct to be checked
+    /// - `date`: pointer to [`ScePspDateTime`] struct to be checked
     ///
     /// # Return Value
     ///
@@ -157,11 +157,11 @@ psp_extern! {
     pub fn sceRtcCheckValid(date: *const ScePspDateTime) -> i32;
 
     #[psp(0x7ED29E40)]
-    /// Set a `ScePspDateTime` struct based on ticks
+    /// Set a [`ScePspDateTime`] struct based on ticks
     ///
     /// # Parameters
     ///
-    /// - `date`: pointer to `ScePspDateTime` struct to set
+    /// - `date`: pointer to [`ScePspDateTime`] struct to set
     /// - `tick`: pointer to ticks to convert
     ///
     /// # Return Value
@@ -170,11 +170,11 @@ psp_extern! {
     pub fn sceRtcSetTick(date: *mut ScePspDateTime, tick: *const u64) -> i32;
 
     #[psp(0x6FF40ACC)]
-    /// Set ticks based on a `ScePspDateTime` struct
+    /// Set ticks based on a [`ScePspDateTime`] struct
     ///
     /// # Parameters
     ///
-    /// - `date`: pointer to `ScePspDateTime` to convert
+    /// - `date`: pointer to [`ScePspDateTime`] to convert
     /// - `tick`: pointer to tick to set
     ///
     /// # Return Value

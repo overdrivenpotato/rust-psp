@@ -51,7 +51,7 @@ psp_extern! {
     /// # Parameters
     ///
     /// - `file`: The file to execute.
-    /// - `param`: Pointer to a `SceKernelLoadExecParam` structure, or NULL.
+    /// - `param`: Pointer to a [`SceKernelLoadExecParam`] structure, or NULL.
     ///
     /// # Return Value
     ///
@@ -767,7 +767,7 @@ psp_extern! {
     ///
     /// - `path`: The path to the module to load.
     /// - `flags`: Unused, always 0 .
-    /// - `option`: Pointer to a `SceKernelLMOption` structure. Can be null.
+    /// - `option`: Pointer to a [`SceKernelLMOption`] structure. Can be null.
     ///
     /// # Return Value
     ///
@@ -787,7 +787,7 @@ psp_extern! {
     ///
     /// - `path`: The path to the module to load.
     /// - `flags`: Unused, set to 0.
-    /// - `option`: Pointer to a `SceKernelLMOption` structure. Can be NULL.
+    /// - `option`: Pointer to a [`SceKernelLMOption`] structure. Can be NULL.
     ///
     /// # Return Value
     ///
@@ -805,7 +805,7 @@ psp_extern! {
     ///
     /// - `fid`: The module's file UID.
     /// - `flags`: Unused, always 0.
-    /// - `option`: Pointer to an optional `SceKernelLMOption` structure.
+    /// - `option`: Pointer to an optional [`SceKernelLMOption`] structure.
     ///
     /// # Return Value
     ///
@@ -828,7 +828,7 @@ psp_extern! {
     /// - `buf`: Pointer to a buffer containing the module to load. The buffer
     ///          must reside at an address that is a multiple of 64 bytes.
     /// - `flags`: Unused, always 0.
-    /// - `option`: Pointer to an optional `SceKernelLMOption` structure.
+    /// - `option`: Pointer to an optional [`SceKernelLMOption`] structure.
     ///
     /// # Return Value
     ///
@@ -849,7 +849,7 @@ psp_extern! {
     /// - `arg_size`: Length of the args.
     /// - `argp`: A pointer to the arguments to the module.
     /// - `status`: Returns the status of the start.
-    /// - `option`: Pointer to an optional `SceKernelSMOption` structure.
+    /// - `option`: Pointer to an optional [`SceKernelSMOption`] structure.
     ///
     /// # Return Value
     ///
@@ -871,7 +871,7 @@ psp_extern! {
     /// - `arg_size`: The length of the arguments pointed to by argp.
     /// - `argp`: Pointer to arguments to pass to the module's `module_stop` routine.
     /// - `status`: Return value of the module's `module_stop` routine.
-    /// - `option`: Pointer to an optional `SceKernelSMOption` structure.
+    /// - `option`: Pointer to an optional [`SceKernelSMOption`] structure.
     ///
     /// # Return Value
     ///
@@ -922,7 +922,7 @@ psp_extern! {
     /// - `arg_size`: Size (in bytes) of the arguments that will be passed to `module_stop`.
     /// - `argp`: Poitner to arguments that will be passed to `module_stop`.
     /// - `status`: Return value from `module_stop`.
-    /// - `option`: Pointer to an optional `SceKernelSMOption` structure.
+    /// - `option`: Pointer to an optional [`SceKernelSMOption`] structure.
     ///
     /// # Return Value
     ///
@@ -946,7 +946,7 @@ psp_extern! {
     /// # Parameters
     ///
     /// - `mod_id`: The UID of the loaded module.
-    /// - `info`: Pointer to a `SceKernelModuleInfo` structure.
+    /// - `info`: Pointer to a [`SceKernelModuleInfo`] structure.
     ///
     /// # Return Value
     ///

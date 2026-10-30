@@ -386,7 +386,7 @@ psp_extern! {
     /// # Parameters
     ///
     /// - `fd`: Already opened file descriptor (using sceIoDopen)
-    /// - `dir`: Pointer to an `SceIoDirent` structure to hold the file information
+    /// - `dir`: Pointer to an [`SceIoDirent`] structure to hold the file information
     ///
     /// # Return value
     ///
@@ -440,7 +440,7 @@ psp_extern! {
     /// - `dev1`: The device name to assign.
     /// - `dev2`: The block device to assign from.
     /// - `dev3`: The filesystem device to mape the block device to dev1
-    /// - `mode`: Read/Write mode. One of `IoAssignPerms`.
+    /// - `mode`: Read/Write mode. One of [`IoAssignPerms`].
     /// - `unk1`: Unknown, set to NULL.
     /// - `unk2`: Unknown, set to 0.
     ///
@@ -474,7 +474,7 @@ psp_extern! {
     /// # Parameters
     ///
     /// - `file`: The path to the file.
-    /// - `stat`: A pointer to an `SceIoStat` structure.
+    /// - `stat`: A pointer to an [`SceIoStat`] structure.
     ///
     /// # Return value
     ///
@@ -487,7 +487,7 @@ psp_extern! {
     /// # Parameters
     ///
     /// - `file`: The path to the file.
-    /// - `stat`: A pointer to an `SceIoStat` structure.
+    /// - `stat`: A pointer to an [`SceIoStat`] structure.
     /// - `bits`: Bitmask defining which bits to change.
     ///
     /// # Return value

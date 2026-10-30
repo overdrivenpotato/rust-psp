@@ -95,7 +95,7 @@ psp_extern! {
     /// - `top_addr`: Pointer to void* to receive address of start of framebuffer
     /// - `buffer_width`: Pointer to usize to receive buffer width (must be power of 2)
     /// - `pixelformat`: Pointer to receive DisplayPixelFormat.
-    /// - `sync`: One of `DisplaySetBufSync`
+    /// - `sync`: One of [`DisplaySetBufSync`]
     pub fn sceDisplayGetFrameBuf(
         top_addr: *mut *mut c_void,
         buffer_width: *mut usize,

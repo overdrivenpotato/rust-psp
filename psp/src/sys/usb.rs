@@ -29,7 +29,7 @@ psp_extern! {
     /// # Parameters
     ///
     /// - `driver_name`: name of the USB driver to start. You probably want to
-    ///   use `USB_BUS_DRIVER_NAME`. Other driver name constants are also
+    ///   use [`USB_BUS_DRIVER_NAME`]. Other driver name constants are also
     ///   available for the camera.
     /// - `size`: Size of arguments to pass to USB driver start
     /// - `args`: Arguments to pass to USB driver start
@@ -67,7 +67,7 @@ psp_extern! {
     /// # Parameters
     ///
     /// - `pid`: Product ID for the default USB Driver. An example is the
-    ///   constant `USB_CAM_PID`.
+    ///   constant [`USB_CAM_PID`].
     ///
     /// # Return Value
     ///
@@ -111,13 +111,13 @@ psp_extern! {
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct UsbCamSetupStillParam {
-    /// Size of the `UsbCamSetupStillParam` structure.
+    /// Size of the [`UsbCamSetupStillParam`] structure.
     pub size: i32,
     /// Resolution.
     pub resolution: UsbCamResolution,
     /// Size of the jpeg image.
     pub jpeg_size: i32,
-    /// Reverse effect to apply. Zero or more of `UsbCamReverseFlags`.
+    /// Reverse effect to apply. Zero or more of [`UsbCamReverseFlags`].
     pub reverse_flags: UsbCamReverseFlags,
     /// Delay to apply to take the picture.
     pub delay: UsbCamDelay,
@@ -131,7 +131,7 @@ pub struct UsbCamSetupStillParam {
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct UsbCamSetupStillExParam {
-    /// Size of the `UsbCamSetupStillExParam` structure.
+    /// Size of the [`UsbCamSetupStillExParam`] structure.
     pub size: i32,
     /// Unknown, set it to 9 at the moment.
     pub unk: u32,
@@ -160,7 +160,7 @@ pub struct UsbCamSetupStillExParam {
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct UsbCamSetupVideoParam {
-    /// Size of the `UsbCamSetupVideoParam` structure.
+    /// Size of the [`UsbCamSetupVideoParam`] structure.
     pub size: i32,
     /// Resolution.
     pub resolution: UsbCamResolution,
@@ -189,7 +189,7 @@ pub struct UsbCamSetupVideoParam {
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct UsbCamSetupVideoExParam {
-    /// Size of the `UsbCamSetupVideoParam` structure
+    /// Size of the [`UsbCamSetupVideoParam`] structure
     pub size: i32,
     pub unk: u32,
     /// Resolution.
@@ -385,7 +385,7 @@ psp_extern! {
     ///
     /// # Parameters
     ///
-    /// - `param`: pointer to a `UsbCamSetupStillParam`
+    /// - `param`: pointer to a [`UsbCamSetupStillParam`]
     ///
     /// # Return Value
     ///
@@ -397,7 +397,7 @@ psp_extern! {
     ///
     /// # Parameters
     ///
-    /// - `param`: pointer to a `UsbCamSetupStillExParam`
+    /// - `param`: pointer to a [`UsbCamSetupStillExParam`]
     ///
     /// # Return Value
     ///
@@ -473,7 +473,7 @@ psp_extern! {
     ///
     /// # Parameters
     ///
-    /// - `param`: Pointer to a `UsbCamSetupVideoParam` structure.
+    /// - `param`: Pointer to a [`UsbCamSetupVideoParam`] structure.
     /// - `work_area`: Pointer to a buffer used as work area by the driver.
     /// - `work_area_size`: Size of the work area.
     ///
@@ -491,7 +491,7 @@ psp_extern! {
     ///
     /// # Parameters
     ///
-    /// - `param`: Pointer to a `UsbCamSetupVideoExParam` structure.
+    /// - `param`: Pointer to a [`UsbCamSetupVideoExParam`] structure.
     /// - `work_area`: Pointer to a buffer used as work area by the driver.
     /// - `work_area_size`: Size of the work area.
     ///
@@ -627,7 +627,7 @@ psp_extern! {
     ///
     /// # Parameters
     ///
-    /// - `effect_mode`: The effect mode, one of `UsbCamEffectMode`
+    /// - `effect_mode`: The effect mode, one of [`UsbCamEffectMode`]
     ///
     /// # Return Value
     ///
@@ -639,7 +639,7 @@ psp_extern! {
     ///
     /// # Parameters
     ///
-    /// - `exposure_level`: The exposure level, one of `UsbCamEvLevel`
+    /// - `exposure_level`: The exposure level, one of [`UsbCamEvLevel`]
     ///
     /// # Return Value
     ///
@@ -651,7 +651,7 @@ psp_extern! {
     ///
     /// # Parameters
     ///
-    /// - `reverse_flags`: The reverse flags, zero or more of `UsbCamReverseFlags`
+    /// - `reverse_flags`: The reverse flags, zero or more of [`UsbCamReverseFlags`]
     ///
     /// # Return Value
     ///

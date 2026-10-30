@@ -1924,8 +1924,8 @@ pub unsafe extern "C" fn sceGuSwapBuffers() -> *mut c_void {
 ///
 /// # Parameters
 ///
-/// - `mode`: What to wait for, one of `GuSyncMode`
-/// - `behavior`: How to sync, one of `GuSyncBehavior`
+/// - `mode`: What to wait for, one of [`GuSyncMode`]
+/// - `behavior`: How to sync, one of [`GuSyncBehavior`]
 ///
 /// # Return Value
 ///
@@ -2121,7 +2121,7 @@ pub unsafe extern "C" fn sceGuGetAllStatus() -> i32 {
 ///
 /// # Parameters
 ///
-/// - `state`: Which state to enable, one of `GuState`
+/// - `state`: Which state to enable, one of [`GuState`]
 #[allow(non_snake_case)]
 #[no_mangle]
 pub unsafe extern "C" fn sceGuEnable(state: GuState) {
@@ -2174,7 +2174,7 @@ pub unsafe extern "C" fn sceGuEnable(state: GuState) {
 ///
 /// # Parameters
 ///
-/// - `state`: Which state to disable, one of `GuState`
+/// - `state`: Which state to disable, one of [`GuState`]
 #[allow(non_snake_case)]
 #[no_mangle]
 pub unsafe extern "C" fn sceGuDisable(state: GuState) {
@@ -2225,8 +2225,8 @@ pub unsafe extern "C" fn sceGuDisable(state: GuState) {
 /// # Parameters
 ///
 /// - `light`: Light index
-/// - `type`: Light type, one of `LightType`
-/// - `components`: Light components, one or more of `LightComponent`
+/// - `type`: Light type, one of [`LightType`]
+/// - `components`: Light components, one or more of [`LightComponent`]
 /// - `position`: Light position
 // FIXME: light components seem to be a subset here.
 #[allow(non_snake_case)]
@@ -2661,7 +2661,7 @@ pub unsafe extern "C" fn sceGuSpecular(power: f32) {
 ///
 /// # Parameters
 ///
-/// - `order`: Which order to use, one of `FrontFaceDirection`
+/// - `order`: Which order to use, one of [`FrontFaceDirection`]
 #[allow(non_snake_case)]
 #[no_mangle]
 pub unsafe extern "C" fn sceGuFrontFace(order: FrontFaceDirection) {
@@ -2733,7 +2733,7 @@ pub unsafe extern "C" fn sceGuSetDither(matrix: &ScePspIMatrix4) {
 ///
 /// # Parameters
 ///
-/// - `mode`: Which mode to use, one of `ShadingModel`.
+/// - `mode`: Which mode to use, one of [`ShadingModel`].
 #[allow(non_snake_case)]
 #[no_mangle]
 pub unsafe extern "C" fn sceGuShadeModel(mode: ShadingModel) {
@@ -3388,7 +3388,7 @@ pub unsafe extern "C" fn sceGuSetMatrix(type_: MatrixMode, matrix: &ScePspFMatri
 /// skinning matrices, you will multiply each vertex every weight and vertex
 /// passed.
 ///
-/// Please see `VertexType` for vertex format information.
+/// Please see [`VertexType`] for vertex format information.
 ///
 /// # Parameters
 ///
@@ -3423,7 +3423,7 @@ pub unsafe extern "C" fn sceGuBoneMatrix(index: u32, matrix: &ScePspFMatrix4) {
 /// and by setting the morph weights for every vertex entry in the array,
 /// you can blend between them.
 ///
-/// Please see `VertexType` for vertex format information.
+/// Please see [`VertexType`] for vertex format information.
 ///
 /// # Parameters
 ///

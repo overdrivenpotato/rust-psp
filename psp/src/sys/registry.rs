@@ -13,7 +13,7 @@ pub struct RegistryHandle(u32);
 #[derive(Copy, Clone)]
 pub struct RegistryKey {
     pub key_type: KeyType,
-    /// Seemingly never used, set to `SYSTEM_REGISTRY`.
+    /// Seemingly never used, set to [`SYSTEM_REGISTRY`].
     pub name: [u8; 256usize],
     /// Length of the name.
     pub name_len: u32,

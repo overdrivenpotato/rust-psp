@@ -80,7 +80,7 @@ impl SimpleVramAllocator {
     ///
     /// This resets the allocator's counter, but does not change the contents of
     /// VRAM. Since this method requires `&mut Self`, it cannot overlap with any
-    /// previously allocated `VramMemChunk`s since they have the lifetime of the
+    /// previously allocated [`VramMemChunk`]s since they have the lifetime of the
     /// `&Self` that allocated them.
     pub fn free_all(&mut self) {
         self.offset.store(0, Ordering::Relaxed);
@@ -90,7 +90,7 @@ impl SimpleVramAllocator {
     /// Allocates `size` bytes of VRAM
     ///
     /// The returned VRAM chunk has the same lifetime as the
-    /// `SimpleVramAllocator` borrow (i.e. `&self`) that allocated it.
+    /// [`SimpleVramAllocator`] borrow (i.e. `&self`) that allocated it.
     pub fn alloc(&self, size: u32) -> VramMemChunk<'_> {
         let old_offset = self.offset.load(Ordering::Relaxed);
         let new_offset = old_offset + size;

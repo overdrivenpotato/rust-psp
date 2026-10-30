@@ -50,7 +50,7 @@ psp_extern! {
     ///
     /// # Parameters
     ///
-    /// - `info`: An out pointer to a `UmdInfo` instance.
+    /// - `info`: An out pointer to a [`UmdInfo`] instance.
     ///
     /// # Return Value
     ///
@@ -146,7 +146,7 @@ psp_extern! {
     ///
     /// # Return Value
     ///
-    /// < 0 on error, one or more of `UmdStateFlags` on success
+    /// < 0 on error, one or more of [`UmdStateFlags`] on success
     pub fn sceUmdGetDriveStat() -> i32;
 
     #[psp(0x20628E6F)]
@@ -163,7 +163,7 @@ psp_extern! {
     /// # Parameters
     ///
     /// - `cbid`: A callback ID created from `sceKernelCreateCallback`.
-    ///   Callback should be of type `UmdCallback`.
+    ///   Callback should be of type [`UmdCallback`].
     ///
     /// # Return Value
     ///
